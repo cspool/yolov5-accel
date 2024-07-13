@@ -3,9 +3,9 @@
 // Company: 
 // Engineer: 
 // 
-// Create Date: 07/07/2024 07:59:55 PM
+// Create Date: 07/13/2024 08:45:02 PM
 // Design Name: 
-// Module Name: SA
+// Module Name: SA_op
 // Project Name: 
 // Target Devices: 
 // Tool Versions: 
@@ -20,9 +20,11 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module SA(clk, reset, en, mode, channel_out_reset,channel_out_en, row_in, column_in, out);
+module SA_op(
+clk, reset, en, mode, channel_out_reset,channel_out_en, row_in, column_in, out
+    );
     
-parameter row_num = 32;
+    parameter row_num = 32;
 parameter column_num = 32; 
 //parameter row_num = 3;
 //parameter column_num = 3; 
@@ -60,15 +62,48 @@ wire [pixel_width * 2 * column_num - 1 : 0]row_output_18  [1:0];//row results
 
 genvar i, j;
 
-wire [15:0] up[row_num - 1 : 0][column_num - 1 : 0];
-wire [15:0] bottom[row_num - 1 : 0][column_num - 1 : 0];
-wire [7:0] left[row_num - 1 : 0][column_num - 1 : 0];
-wire [7:0] right[row_num - 1 : 0][column_num - 1 : 0];
+wire [23:0] up[row_num - 1 : 0][column_num - 1 : 0];
+wire [23:0] bottom[row_num - 1 : 0][column_num - 1 : 0];
+wire [17:0] left[row_num - 1 : 0][column_num - 1 : 0];
+wire [17:0] right[row_num - 1 : 0][column_num - 1 : 0];
 
 reg [row_counter_width-1 : 0] row_counter; 
 
+wire [23:0] I_As[column_num - 1 : 0];
+wire [17:0] I_Bs[row_num - 1 : 0];
+
+//assign mult_A = (mode == 0) ? ({I_A[15:8], 16'b0} + {{16{I_A[7]}}, I_A[7:0]}) :
+//                           (mode == 1)?  ({{3{I_B[1]}},1'b1, 20'b0} + {{23{I_B[0]}},1'b1}):
+//                            24'b0;
+
+//assign mult_B = (mode == 0) ? ({{10{I_B[7]}}, I_B[7:0]}) :
+//                            (mode == 1)? ({I_A[15:8], 10'b0} + {{10{I_A[7]}}, I_A[7:0]}):
+//                            18'b0;
+
+//fill into left[*][0] //xxxxxxxxxxxxxx
+generate
+    for (i = 0; i < row_num; i = i + 1) begin
+    // column_in[i*16:i*16+15]
+    // row_in[i*8:i*8+7]
+           assign left[i][0] = (mode == 0) ? ({column_in[15:8], 16'b0} + {{16{column_in[7]}}, column_in[7:0]}) :
+                           (mode == 1)?  ({{3{row_in[1]}},1'b1, 20'b0} + {{23{row_in[0]}},1'b1}):
+                            24'b0;
+    end
+endgenerate
+
+//fill into up[0][*]
+generate
+    for (j = 0; j < column_num; j= j + 1) begin
+    // column_in[i*16:i*16+15]
+    // row_in[i*8:i*8+7]
+           assign up[0][j] = (mode == 0) ? ({{10{row_in[7]}}, row_in[7:0]}) :
+                            (mode == 1)? ({column_in[15:8], 10'b0} + {{10{column_in[7]}}, column_in[7:0]}):
+                            18'b0;
+    end
+endgenerate
+
 ////j=0,i=0
-//PE pe00 (
+//PE_op pe_op00 (
 //        .clk(clk),
 //        .reset(reset),
 //        .mode(mode),
@@ -86,7 +121,7 @@ reg [row_counter_width-1 : 0] row_counter;
 ////j=0,i>0
 //generate
 //    for (i = 1; i < row_num; i = i + 1) begin: row0
-//        PE pe (
+//        PE_op pe_op (
 //            .clk(clk),
 //            .reset(reset),
 //            .mode(mode),
@@ -106,7 +141,7 @@ reg [row_counter_width-1 : 0] row_counter;
 ////i=0, j>0
 //generate
 //    for (j = 1; j < column_num; j = j + 1) begin: column0        
-//        PE pe (
+//        PE_op pe_op (
 //            .clk(clk),
 //            .reset(reset),
 //            .mode(mode),
@@ -127,7 +162,7 @@ reg [row_counter_width-1 : 0] row_counter;
 //generate
 //    for (i = 1; i < row_num; i = i + 1) begin: row
 //        for (j = 1; j < column_num; j = j + 1) begin: column        
-//            PE pe (
+//            PE_op pe_op (
 //                .clk(clk),
 //                .reset(reset),
 //                .mode(mode),
@@ -145,10 +180,12 @@ reg [row_counter_width-1 : 0] row_counter;
 //    end
 //endgenerate
 
+//output need row scale or column scale, all_out[i][j]
+
 generate
     for (i = 0; i < row_num; i = i + 1) begin: row
         for (j = 0; j < column_num; j = j + 1) begin: column        
-            PE pe (
+            PE_op pe_op (
                 .clk(clk),
                 .reset(reset),
                 .mode(mode),

@@ -1,25 +1,4 @@
-`timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date: 07/04/2024 04:50:08 PM
-// Design Name: 
-// Module Name: signed_mac_dsp_88_18
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: 
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
-//////////////////////////////////////////////////////////////////////////////////
-
-module signed_mac_dsp_88_18(clk,reset, en, I_A,I_B,mode,O);
+module signed_mac_dsp_88_18_op(clk,reset, en, I_A,I_B,mode,O);
  
 
 parameter headroom = 4;
@@ -39,30 +18,18 @@ parameter pixel_width = pixel_width_88;
 input clk;
 input reset;
 input en;
-input [15:0] I_A;
-input [7:0] I_B;
+input [23:0] I_A;
+input [17:0] I_B;
 input mode;
 output reg [pe_out_width-1:0] O ;
   
 wire [41:0] mult_O;
 
-wire [23:0] mult_A;
-wire [17:0] mult_B;
-
-//maybe outside the loop
-
-assign mult_A = (mode == 0) ? ({I_A[15:8], 16'b0} + {{16{I_A[7]}}, I_A[7:0]}) :
-                           (mode == 1)?  ({{3{I_B[1]}},1'b1, 20'b0} + {{23{I_B[0]}},1'b1}):
-                            24'b0;
-
-assign mult_B = (mode == 0) ? ({{10{I_B[7]}}, I_B[7:0]}) :
-                            (mode == 1)? ({I_A[15:8], 10'b0} + {{10{I_A[7]}}, I_A[7:0]}):
-                            18'b0;
   
 signed_mult_dsp mult (
   .CLK(clk),  // input wire CLK
-  .A(mult_A),      // input wire [23 : 0] A
-  .B(mult_B),      // input wire [17 : 0] B
+  .A(I_A),      // input wire [23 : 0] A
+  .B(I_B),      // input wire [17 : 0] B
   .P(mult_O)      // output wire [41 : 0] P
 );
    

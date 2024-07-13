@@ -50,6 +50,9 @@ wire [16 * actual_column_num - 1:0] actual_column_in;
 
 wire [pixel_width * 2 * column_num - 1: 0] out; 
 
+wire [pixel_width * 2 - 1 : 0] out1_1;
+wire [pixel_width * 2 - 1 : 0] out1_2;
+
 ///////////////////xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 reg[0:16 * 2 - 1] ox_88_flows0 = {16'h7c68, 16'h0};
 reg[0:16 * 2 - 1] ox_88_flows1 = {16'h0, 16'h7d12};
@@ -93,6 +96,9 @@ assign actual_row_in[8 * actual_row_num - 1:0] = (counter == 6'b111111)? 0:
 assign column_in = {{(column_num-actual_column_num){16'b0}}, actual_column_in};
 assign row_in = {{(row_num-actual_row_num){8'b0}}, actual_row_in};
 
+assign out1_1 = out[pixel_width * 2 - 1 : 0];
+assign out1_2 = out[pixel_width * 4 - 1 : pixel_width * 2];
+
 always #5 clk = ~clk;
 
 SA sa(
@@ -110,53 +116,52 @@ SA sa(
 
 initial begin
     // mode =0
-//    clk = 0; 
-//    reset = 1; en=0;mode = 0; cnt_rst = 1; cnt_en = 0; channel_out_reset=1;channel_out_en=0;
+    clk = 0; 
+    reset = 1; en=0;mode = 0; cnt_rst = 1; cnt_en = 0; channel_out_reset=1;channel_out_en=0;
   
-//    #10; // A B  reset
+    #10; // A B  reset
     
-//    reset = 1; en=0;mode = 0; cnt_rst = 0; cnt_en = 0; channel_out_reset=0;channel_out_en=0;
+    reset = 1; en=0;mode = 0; cnt_rst = 0; cnt_en = 0; channel_out_reset=0;channel_out_en=0;
     
-//    #10;//mac reset, beacause xx(inititial of a) * xx(initial of b) has entered mac before
+    #10;//mac reset, beacause xx(inititial of a) * xx(initial of b) has entered mac before
     
-//    reset = 0; en=1;mode = 0; cnt_rst = 0; cnt_en = 1; channel_out_reset=0;channel_out_en=0; 
+    reset = 0; en=1;mode = 0; cnt_rst = 0; cnt_en = 1; channel_out_reset=0;channel_out_en=0; 
    
-//    #10; // A B has valid value(1,1) , data begin entering
+    #10; // A B has valid value(1,1) , data begin entering
     
-//    reset = 0; en=1;mode = 0; cnt_rst = 0; cnt_en = 1; channel_out_reset=0;channel_out_en=0;
+    reset = 0; en=1;mode = 0; cnt_rst = 0; cnt_en = 1; channel_out_reset=0;channel_out_en=0;
     
-//    #10;  //A B has valid value(1,2)(2,1)
+    #10;  //A B has valid value(1,2)(2,1)
     
-//     reset = 0; en=1; mode = 0; cnt_rst = 1; cnt_en = 0; channel_out_reset=0;channel_out_en=0;
+     reset = 0; en=1; mode = 0; cnt_rst = 1; cnt_en = 0; channel_out_reset=0;channel_out_en=0;
     
-//    #10; //  row 1 col 1  mac res , A B has valid value(2,2), data finish entering
+    #10; //  row 1 col 1  mac res , A B has valid value(2,2), data finish entering
     
-//    reset = 0; en=1; mode = 0; cnt_rst = 0; cnt_en = 0; channel_out_reset=0;channel_out_en=0;
+    reset = 0; en=1; mode = 0; cnt_rst = 0; cnt_en = 0; channel_out_reset=0;channel_out_en=0;
     
-//    #10; // row 1 col 2 mac res, row 2 col 1 mac res, 
+    #10; // row 1 col 2 mac res, row 2 col 1 mac res, 
     
-//    reset = 0; en=1; mode = 0; cnt_rst = 0; cnt_en = 0; channel_out_reset=0;channel_out_en=0;
+    reset = 0; en=1; mode = 0; cnt_rst = 0; cnt_en = 0; channel_out_reset=0;channel_out_en=0;
     
-//    #10; // row 2 col 2 mac res, row 
+    #10; // row 2 col 2 mac res, row 
     
-//    reset = 0; en=0; mode = 0; cnt_rst = 0; cnt_en = 0; channel_out_reset=0;channel_out_en=1;
+    reset = 0; en=0; mode = 0; cnt_rst = 0; cnt_en = 0; channel_out_reset=0;channel_out_en=1;
     
-//   #10; // channel 1 output
+   #10; // channel 1 output
     
-//    reset = 0; en=0; mode = 0; cnt_rst = 0; cnt_en = 0; channel_out_reset=0;channel_out_en=1;
+    reset = 0; en=0; mode = 0; cnt_rst = 0; cnt_en = 0; channel_out_reset=0;channel_out_en=1;
     
-//    #10; // channel 2 output
+    #10; // channel 2 output
     
-//    reset = 0; en=0; mode = 0; cnt_rst = 0; cnt_en = 0; channel_out_reset=1;channel_out_en=0;
+    reset = 0; en=0; mode = 0; cnt_rst = 0; cnt_en = 0; channel_out_reset=1;channel_out_en=0;
     
-//     #10; // 
+     #10; // 
     
-//    reset = 0; en=0; mode = 0; cnt_rst = 0; cnt_en = 0; channel_out_reset=0;channel_out_en=0;
+    reset = 0; en=0; mode = 0; cnt_rst = 0; cnt_en = 0; channel_out_reset=0;channel_out_en=0;
     
-    
+     #10;
     
     //mode = 1
-    clk = 0; 
     reset = 1; en=0;mode = 1; cnt_rst = 1; cnt_en = 0; channel_out_reset=1;channel_out_en=0;
   
     #10; // A B  reset
