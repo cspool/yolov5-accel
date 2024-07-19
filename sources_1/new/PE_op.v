@@ -24,10 +24,11 @@ module PE_op(
 clk, reset, en, mode, left, up, right, bottom, out
     );
     
-    parameter headroom = 4;
+parameter headroom = 8;
 
 parameter pixel_width_88 = 16 + headroom;
-parameter pixel_width_18 = 10 + headroom;
+//parameter pixel_width_18 = 10 + headroom;
+parameter pixel_width_18 = 8 + headroom;
 
 parameter pe_parallel_pixel_88 = 2;
 parameter pe_parallel_weight_88 = 1;

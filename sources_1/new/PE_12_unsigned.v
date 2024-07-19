@@ -3,9 +3,9 @@
 // Company: 
 // Engineer: 
 // 
-// Create Date: 07/07/2024 07:56:29 PM
+// Create Date: 07/16/2024 02:47:28 PM
 // Design Name: 
-// Module Name: PE
+// Module Name: PE_12_signed
 // Project Name: 
 // Target Devices: 
 // Tool Versions: 
@@ -20,30 +20,28 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module PE(clk, reset, en, mode, left, up, right, bottom, out);
+module PE_12_unsigned(
+clk, reset, en, left, up, right, bottom, out
+    );
+    
+     parameter headroom = 6;
 
-parameter headroom = 8;
+parameter pixel_width_12 = 2 + headroom;
 
-parameter pixel_width_88 = 16 + headroom;
-//parameter pixel_width_18 = 10 + headroom;
-parameter pixel_width_18 = 8 + headroom;
+parameter pe_parallel_pixel_12 = 4;
+parameter pe_parallel_weight_12 = 4;
 
-parameter pe_parallel_pixel_88 = 2;
-parameter pe_parallel_weight_88 = 1;
-parameter pe_parallel_pixel_18 = 2; 
-parameter pe_parallel_weight_18 = 2; 
+parameter pe_out_width =  (pixel_width_12) * pe_parallel_pixel_12 *  pe_parallel_weight_12;
 
-parameter pe_out_width =  (pixel_width_18) * pe_parallel_pixel_18 *  pe_parallel_weight_18;
+parameter pixel_width = pixel_width_12;
 
-parameter pixel_width = pixel_width_88;
+input clk, reset, en;
 
-input clk, reset, en, mode;
+input [20:0] up;
+input [11:0] left;
 
-input [15:0] up;
-input [7:0] left;
-
-output reg [15:0] bottom;
-output reg [7:0] right;
+output reg [20:0] bottom;
+output reg [11:0] right;
 output [pe_out_width - 1 : 0] out;
 
 always @(posedge clk) begin
@@ -61,13 +59,12 @@ always @(posedge clk) begin
     end
 end
 
-signed_mac_dsp_88_18 mac(
+unsigned_mac_dsp_12 mac(
     .clk(clk),
     .reset(reset),
     .en(en),
     .I_A(up),
     .I_B(left),
-    .mode(mode),
     .O(out)
 );
 endmodule

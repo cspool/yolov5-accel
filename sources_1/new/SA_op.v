@@ -30,36 +30,41 @@ parameter column_num = 32;
 
 //parameter row_num = 3;
 //parameter column_num = 3; 
-parameter headroom = 4;
+
+parameter headroom = 8;
 
 parameter pixel_width_88 = 16 + headroom;
-parameter pixel_width_18 = 10 + headroom;
+//parameter pixel_width_18 = 10 + headroom;
+parameter pixel_width_18 = 8 + headroom;
 
 parameter pe_parallel_pixel_88 = 2;
 parameter pe_parallel_weight_88 = 1;
 parameter pe_parallel_pixel_18 = 2; 
 parameter pe_parallel_weight_18 = 2; 
 
-parameter pe_out_width =  (pixel_width_18) * pe_parallel_pixel_18 *  pe_parallel_weight_18;
-
-parameter pixel_width = pixel_width_88;
+parameter pe_out_width =  (pixel_width_18) * pe_parallel_pixel_18 *  pe_parallel_weight_18; // width of 18 is bigger than 88
 
 parameter row_counter_width = ($clog2(row_num+1));
+
+parameter out_width = pixel_width_18 * pe_parallel_pixel_18 * pe_parallel_weight_18 * column_num;
+parameter out_width_88 = pixel_width_88 * pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num;
+parameter out_width_18 = pixel_width_18 * pe_parallel_pixel_18 * pe_parallel_weight_18 * column_num;
 
 input clk, reset, en, mode, channel_out_reset,channel_out_en;
 
 input [8 * row_num - 1:0] row_in; //weight
 input [16 * column_num - 1:0] column_in;  //feature map
 
-output [pixel_width * 2 * column_num - 1: 0] out; // pox res per channel
+output [out_width - 1: 0] out; // pox res per channel
+//pe_parallel_pixel_88 = pe_parallel_pixel_18
 
 wire [pe_out_width-1 : 0] all_out [row_num - 1: 0][column_num - 1 : 0]; // all results
 
 wire [pe_out_width * column_num - 1 : 0] row_output;//row results
-wire [pixel_width * 2 * column_num - 1 : 0] row_output_88;//row results
+wire [out_width_88 - 1 : 0] row_output_88;//row results
 
 wire [pe_out_width * row_num - 1 : 0] column_output;//column results
-wire [pixel_width * 2 * row_num - 1 : 0]column_output_18  [1:0];//column results
+wire [out_width_18 - 1 : 0] column_output_18;//column results
 
 genvar i, j;
 
@@ -112,25 +117,17 @@ generate
     end
 endgenerate
 
-reg low_or_high;
-
 always@(posedge clk) begin
     if (channel_out_reset) begin
         row_counter <= -1;
-        low_or_high <= 1;
     
     end
     else if (channel_out_en) begin 
-        row_counter <= (mode == 0)? (row_counter + 1) : 
-                                    (mode == 1)? (((row_counter+1) & ({(row_counter_width){1'b1}}))>>1) :
-                                    0;
-        low_or_high <= ~low_or_high;
-       
+        row_counter <= (row_counter + 1);
+      
     end
     else begin
         row_counter <= row_counter;
-        low_or_high <= low_or_high;
-        
     end
 end
 
@@ -151,17 +148,16 @@ generate
 endgenerate
 
 assign  out = (row_counter == {(row_counter_width){1'b1}})? 0: 
-                    (mode == 0)? row_output_88 :
-                    (mode == 1)? column_output_18[low_or_high]:
+                     (mode == 0)? {{(out_width - out_width_88){1'b0}},row_output_88} :
+                    (mode == 1)? {{(out_width - out_width_18){1'b0}},column_output_18}:
                     0;
 
 // a row is a channel, mode = 0
 generate
     for (j = 0; j < column_num; j = j+1) begin
-            
-        assign row_output_88[((2 * j) * pixel_width) +: (2 * pixel_width)]
-        = {{{(pixel_width-pixel_width_88){1'b0}},all_out[row_counter][j][(0+pixel_width_88)+: (pixel_width_88)]},
-        {{(pixel_width-pixel_width_88){1'b0}},all_out[row_counter][j][(0)+: (pixel_width_88)]}};
+        assign row_output_88[((2 * j) * pixel_width_88) +: (2 * pixel_width_88)]
+        = {{all_out[row_counter][j][(0+pixel_width_88)+: (pixel_width_88)]},
+        {all_out[row_counter][j][(0)+: (pixel_width_88)]}};
 
     end
 
@@ -170,15 +166,15 @@ endgenerate
 // a column is a channel, mode = 1
 generate
     for (i = 0; i < row_num; i = i+1) begin
-
-        assign column_output_18[0][((2 * i) * pixel_width)+: (2*pixel_width)]
-        = {{{(pixel_width-pixel_width_18){1'b0}},all_out[i][row_counter][(0+(pixel_width_18)) +: (pixel_width_18)]},
-        {{(pixel_width-pixel_width_18){1'b0}}, all_out[i][row_counter][(0) +: (pixel_width_18)]}};
+        
+        assign column_output_18[0 + ((2 * i) * pixel_width_18)+: (2*pixel_width_18)]
+        = {{all_out[i][row_counter][(0+(pixel_width_18)) +: (pixel_width_18)]},
+        {all_out[i][row_counter][(0) +: (pixel_width_18)]}};
        
         
-        assign column_output_18[1][((2 * i) * pixel_width)+: (2* pixel_width)]
-        ={{{(pixel_width-pixel_width_18){1'b0}},all_out[i][row_counter][(0+(3*pixel_width_18)) +: (pixel_width_18)]},
-        {{(pixel_width-pixel_width_18){1'b0}},all_out[i][row_counter][(0+(2*pixel_width_18))+: (pixel_width_18)]}};
+        assign column_output_18[pixel_width_18 * pe_parallel_pixel_18 * column_num + ((2 * i) * pixel_width_18)+: (2* pixel_width_18)]
+        ={{all_out[i][row_counter][(0+(3*pixel_width_18)) +: (pixel_width_18)]},
+        {all_out[i][row_counter][(0+(2*pixel_width_18))+: (pixel_width_18)]}};
         
     end
 
