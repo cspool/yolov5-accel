@@ -25,34 +25,47 @@ module SA_18_tb(
     );
     
     reg clk, reset, en,channel_out_reset,channel_out_en;
+    
+    reg mode;
+    
 parameter actual_row_num = 2; // 1 / 2
 parameter actual_column_num = 2;
 parameter row_num = 32;
 parameter column_num = 32;  
 
-parameter headroom = 4;
+parameter headroom = 8;
 
 parameter pixel_width_88 = 16 + headroom;
-parameter pixel_width_18 = 10 + headroom;
+//parameter pixel_width_18 = 10 + headroom;
+parameter pixel_width_18 = 8 + headroom;
 
 parameter pe_parallel_pixel_88 = 2;
 parameter pe_parallel_weight_88 = 1;
 parameter pe_parallel_pixel_18 = 2; 
 parameter pe_parallel_weight_18 = 2; 
 
-parameter pe_out_width =  (pixel_width_18) * pe_parallel_pixel_18 *  pe_parallel_weight_18;
+parameter pe_out_width =  (pixel_width_18) * pe_parallel_pixel_18 *  pe_parallel_weight_18; // width of 18 is bigger than 88
 
-parameter pixel_width = pixel_width_88;
+parameter row_counter_width = ($clog2(row_num+1));
+
+parameter out_width = pixel_width_18 * pe_parallel_pixel_18 * pe_parallel_weight_18 * column_num;
+parameter out_width_88 = pixel_width_88 * pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num;
+parameter out_width_18 = pixel_width_18 * pe_parallel_pixel_18 * pe_parallel_weight_18 * column_num;
 
 wire [8 * row_num - 1:0] row_in;
 wire [16 * column_num - 1:0] column_in;
 wire [8 * actual_row_num - 1:0] actual_row_in;
 wire [16 * actual_column_num - 1:0] actual_column_in;
 
-wire [pixel_width * 2 * column_num - 1: 0] out; 
+wire [out_width  - 1: 0] out; 
 
-wire [pixel_width * 2 - 1 : 0] out1_1;
-wire [pixel_width * 2 - 1 : 0] out1_2;
+wire [out_width_18 -1 : 0] out_18;
+
+wire [pixel_width_18 * 2 - 1 : 0] out_18_1_1_f0;
+wire [pixel_width_18 * 2 - 1 : 0] out_18_1_2_f0;
+
+wire [pixel_width_18 * 2 - 1 : 0] out_18_1_1_f1;
+wire [pixel_width_18 * 2 - 1 : 0] out_18_1_2_f1;
 
 reg[0:16 * 2 - 1] ox_18_flows0 = {16'hed40, 16'h0};
 reg[0:16 * 2 - 1] ox_18_flows1 = {16'h0, 16'hc910};
@@ -86,8 +99,14 @@ assign actual_row_in[8 * actual_row_num - 1:0] = (counter == 6'b111111)? 0:
 assign column_in = {{(column_num-actual_column_num){16'b0}}, actual_column_in};
 assign row_in = {{(row_num-actual_row_num){8'b0}}, actual_row_in};
 
-assign out1_1 = out[pixel_width * 2 - 1 : 0];
-assign out1_2 = out[pixel_width * 4 - 1 : pixel_width * 2];
+
+assign out_18 = out[out_width_18 - 1: 0];
+
+assign out_18_1_1_f0 = out_18[0 +: pixel_width_18 * 2];
+assign out_18_1_2_f0 = out_18[pixel_width_18 * 2 +: pixel_width_18 * 2];
+
+assign out_18_1_1_f1 = out_18[pixel_width_18 * pe_parallel_pixel_18 * column_num +: pixel_width_18 * 2];
+assign out_18_1_2_f1 = out_18[pixel_width_18 * pe_parallel_pixel_18 * column_num + pixel_width_18 * 2 +: pixel_width_18 * 2];
 
 always #5 clk = ~clk;
 
@@ -107,43 +126,43 @@ initial begin
     clk = 0;
     
     //mode = 1
-    reset = 1; en=0; cnt_rst = 1; cnt_en = 0; channel_out_reset=1;channel_out_en=0;
+    reset = 1; en=0;mode = 1; cnt_rst = 1; cnt_en = 0; channel_out_reset=1;channel_out_en=0;
   
     #10; // A B  reset
     
-    reset = 1; en=0; cnt_rst = 0; cnt_en = 0; channel_out_reset=0;channel_out_en=0;
+    reset = 1; en=0;mode = 1; cnt_rst = 0; cnt_en = 0; channel_out_reset=0;channel_out_en=0;
     
     #10;//mac reset
     
-    reset = 0; en=1;cnt_rst = 0; cnt_en = 1; channel_out_reset=0;channel_out_en=0; 
+    reset = 0; en=1;mode = 1; cnt_rst = 0; cnt_en = 1; channel_out_reset=0;channel_out_en=0; 
    
     #10; // A B has valid value(1,1) 
     
-    reset = 0; en=1;cnt_rst = 0; cnt_en = 1; channel_out_reset=0;channel_out_en=0;
+    reset = 0; en=1;mode = 1; cnt_rst = 0; cnt_en = 1; channel_out_reset=0;channel_out_en=0;
     
     #10;  //A B has valid value(1,2)
     
-     reset = 0; en=1; cnt_rst = 1; cnt_en = 0; channel_out_reset=0;channel_out_en=0;
+     reset = 0; en=1; mode = 1; cnt_rst = 1; cnt_en = 0; channel_out_reset=0;channel_out_en=0;
     
     #10; //  row 1 col 1  mac res
     
-    reset = 0; en=1;cnt_rst = 0; cnt_en = 0; channel_out_reset=0;channel_out_en=0;
+    reset = 0; en=1; mode = 1; cnt_rst = 0; cnt_en = 0; channel_out_reset=0;channel_out_en=0;
     
     #10; // row 1 col 2 mac res
     
-    reset = 0; en=0; cnt_rst = 0; cnt_en = 0; channel_out_reset=0;channel_out_en=1;
+    reset = 0; en=0; mode = 1; cnt_rst = 0; cnt_en = 0; channel_out_reset=0;channel_out_en=1;
     
-   #10; // channel 1 output
+   #10; // channel 1 2 output
    
-   reset = 0; en=0; cnt_rst = 0; cnt_en = 0; channel_out_reset=0;channel_out_en=1;
+//   reset = 0; en=0; mode = 1; cnt_rst = 0; cnt_en = 0; channel_out_reset=0;channel_out_en=1;
     
-   #10; // channel 2 output
+//   #10; // channel 2 output
     
-    reset = 0; en=0; cnt_rst = 0; cnt_en = 0; channel_out_reset=1;channel_out_en=0;
+    reset = 0; en=0; mode = 1; cnt_rst = 0; cnt_en = 0; channel_out_reset=0;channel_out_en=0;
     
-     #10; // 
+     #10; // stay a cycle
     
-    reset = 0; en=0; cnt_rst = 0; cnt_en = 0; channel_out_reset=0;channel_out_en=0;
+    reset = 0; en=0; mode = 1; cnt_rst = 0; cnt_en = 0; channel_out_reset=1;channel_out_en=0;
    
 end
 endmodule

@@ -24,10 +24,11 @@ module PE_18(
 clk, reset, en, left, up, right, bottom, out
     );
    
-   parameter headroom = 4;
+parameter headroom = 8;
 
 parameter pixel_width_88 = 16 + headroom;
-parameter pixel_width_18 = 10 + headroom;
+//parameter pixel_width_18 = 10 + headroom;
+parameter pixel_width_18 = 8 + headroom;
 
 parameter pe_parallel_pixel_88 = 2;
 parameter pe_parallel_weight_88 = 1;
@@ -40,11 +41,11 @@ parameter pixel_width = pixel_width_88;
 
 input clk, reset, en;
 
-input [15:0] up;
-input [7:0] left;
+input [23:0] up;
+input [17:0] left;
 
-output reg [15:0] bottom;
-output reg [7:0] right;
+output reg [23:0] bottom;
+output reg [17:0] right;
 output [pe_out_width - 1 : 0] out;
 
 always @(posedge clk) begin
