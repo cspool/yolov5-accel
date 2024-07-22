@@ -63,7 +63,7 @@ always @(posedge clk) begin
     end
 end
 
-signed_mac_dsp_88_18_op mac(
+signed_mac_dsp_88_18_op_v2 mac(
     .clk(clk),
     .reset(reset),
     .en(en),
@@ -72,4 +72,15 @@ signed_mac_dsp_88_18_op mac(
     .mode(mode),
     .O(out)
 );
+
+//signed_mac_dsp_88_18_op mac(
+//    .clk(clk),
+//    .reset(reset),
+//    .en(en),
+//    .I_A(up),
+//    .I_B(left),
+//    .mode(mode),
+//    .O(out)
+//);
+
 endmodule

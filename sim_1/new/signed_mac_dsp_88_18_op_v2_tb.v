@@ -3,9 +3,9 @@
 // Company: 
 // Engineer: 
 // 
-// Create Date: 07/04/2024 09:22:44 PM
+// Create Date: 07/22/2024 01:42:20 PM
 // Design Name: 
-// Module Name: signed_mac_dsp_88_81_tb
+// Module Name: signed_mac_dsp_88_18_op_v2_tb
 // Project Name: 
 // Target Devices: 
 // Tool Versions: 
@@ -20,9 +20,11 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module signed_mac_dsp_88_81_tb();
+module signed_mac_dsp_88_18_op_v2_tb(
 
-parameter headroom = 8;
+    );
+    
+    parameter headroom = 8;
 
 parameter pixel_width_88 = 16 + headroom;
 //parameter pixel_width_18 = 10 + headroom;
@@ -43,7 +45,7 @@ parameter pixel_width = pixel_width_88;
     reg mode;
     wire [pe_out_width-1:0] out;
     
-    signed_mac_dsp_88_18 mac(
+    signed_mac_dsp_88_18_op_v2 mac(
         .clk(clk),
         .reset(reset),
         .en(en),
