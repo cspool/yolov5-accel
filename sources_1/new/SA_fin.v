@@ -3,9 +3,9 @@
 // Company: 
 // Engineer: 
 // 
-// Create Date: 07/13/2024 08:45:02 PM
+// Create Date: 07/22/2024 06:46:55 PM
 // Design Name: 
-// Module Name: SA_op
+// Module Name: SA_fin
 // Project Name: 
 // Target Devices: 
 // Tool Versions: 
@@ -20,19 +20,17 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module SA_op(
+module SA_fin(
 clk, reset, en, mode, channel_out_reset,channel_out_en, row_in, column_in, out
     );
     
-//    parameter row_num = 32;
-//parameter column_num = 32; 
+    parameter row_num = 32;
+parameter column_num = 32; 
 
-    parameter row_num = 16;
-parameter column_num = 16; 
-//row_num = column_num
+//    parameter row_num = 16;
+//parameter column_num = 16; 
 
-//parameter row_num = 3;
-//parameter column_num = 3; 
+
 
 parameter headroom = 8;
 
@@ -65,9 +63,8 @@ wire [pe_out_width-1 : 0] all_out [row_num - 1: 0][column_num - 1 : 0]; // all r
 
 wire [pe_out_width * column_num - 1 : 0] row_output;//row results
 wire [out_width_88 - 1 : 0] row_output_88;//row results
+wire [out_width_18 - 1 : 0] row_output_18;//column results
 
-wire [pe_out_width * row_num - 1 : 0] column_output;//column results
-wire [out_width_18 - 1 : 0] column_output_18;//column results
 
 genvar i, j;
 
@@ -86,7 +83,8 @@ wire [17:0] I_Bs[row_num - 1 : 0];
 generate
     for (i = 0; i < column_num; i = i + 1) begin
         assign I_As[i] = (mode == 1'b0)?   ({column_in[(i * 16 + 8) +: 8], 16'b0} + {{16{column_in[(i * 16 + 7)]}}, column_in[(i * 16) +: 8]}) :
-                                   (mode == 1'b1)?  ({{3{row_in[i * 8 +1]}},1'b1, 20'b0} + {{23{row_in[i * 8]}},1'b1}):
+                                   (mode == 1'b1)?  ({{8{column_in[(i * 16 + 15)]}}, column_in[(i * 16 + 8) +: 8], 8'b0} +
+                                    {{16{column_in[(i * 16 + 7)]}}, column_in[(i * 16) +: 8]}):
                                    24'b0;
     end
 endgenerate
@@ -94,7 +92,7 @@ endgenerate
 generate
     for (i = 0; i < row_num; i = i + 1) begin
         assign I_Bs[i] = (mode == 1'b0)?  ({{10{row_in[i * 8 + 7]}}, row_in[(i * 8) +: 8]}) :
-                                   (mode == 1'b1)? ({column_in[(i * 16 + 8) +: 8], 10'b0} + {{10{column_in[(i * 16 + 7)]}}, column_in[(i * 16) +: 8]}):
+                                   (mode == 1'b1)?  ({{row_in[i * 8 +1]},1'b1, 16'b0} + {{17{row_in[i * 8]}},1'b1}):
                                    18'b0;
     end
 endgenerate
@@ -102,7 +100,7 @@ endgenerate
 generate
     for (i = 0; i < row_num; i = i + 1) begin: row
         for (j = 0; j < column_num; j = j + 1) begin: column        
-            PE_op pe_op (
+            PE_fin pe_fin (
                 .clk(clk),
                 .reset(reset),
                 .mode(mode),
@@ -134,53 +132,36 @@ always@(posedge clk) begin
     end
 end
 
-//assign row_output = (row_counter == {(row_counter_width){1'b1}})? 0: all_out[row_counter];
-
-// row_num = column_num
-//row_counter = column_counter
 generate
     for (j = 0; j < column_num; j = j + 1) begin
         assign row_output[j * pe_out_width +:pe_out_width] = (row_counter == {(row_counter_width){1'b1}})? 0: all_out[row_counter][j];
     end
 endgenerate
 
-generate
-    for (i = 0; i < row_num; i = i + 1) begin
-        assign column_output[i * pe_out_width +:pe_out_width] = (row_counter == {(row_counter_width){1'b1}})? 0: all_out[i][row_counter];
-    end
-endgenerate
 
 assign  out = (row_counter == {(row_counter_width){1'b1}})? 0: 
                      (mode == 0)? {{(out_width - out_width_88){1'b0}},row_output_88} :
-                    (mode == 1)? {{(out_width - out_width_18){1'b0}},column_output_18}:
+                    (mode == 1)? {{(out_width - out_width_18){1'b0}},row_output_18}:
                     0;
 
-// a row is a channel, mode = 0
 generate
     for (j = 0; j < column_num; j = j+1) begin
         assign row_output_88[((2 * j) * pixel_width_88) +: (2 * pixel_width_88)]
         = {{all_out[row_counter][j][(0+pixel_width_88)+: (pixel_width_88)]},
         {all_out[row_counter][j][(0)+: (pixel_width_88)]}};
-
-    end
-
-endgenerate
-
-// a column is a channel, mode = 1
-generate
-    for (i = 0; i < row_num; i = i+1) begin
         
-        assign column_output_18[0 + ((2 * i) * pixel_width_18)+: (2*pixel_width_18)]
-        = {{all_out[i][row_counter][(0+(pixel_width_18)) +: (pixel_width_18)]},
-        {all_out[i][row_counter][(0) +: (pixel_width_18)]}};
+        assign row_output_18[0 + ((2 * j) * pixel_width_18)+: (2*pixel_width_18)]
+        = {{all_out[row_counter][j][(0+(pixel_width_18)) +: (pixel_width_18)]},
+        {all_out[row_counter][j][(0) +: (pixel_width_18)]}};
        
         
-        assign column_output_18[pixel_width_18 * pe_parallel_pixel_18 * column_num + ((2 * i) * pixel_width_18)+: (2* pixel_width_18)]
-        ={{all_out[i][row_counter][(0+(3*pixel_width_18)) +: (pixel_width_18)]},
-        {all_out[i][row_counter][(0+(2*pixel_width_18))+: (pixel_width_18)]}};
-        
+        assign row_output_18[pixel_width_18 * pe_parallel_pixel_18 * column_num + ((2 * j) * pixel_width_18)+: (2* pixel_width_18)]
+        ={{all_out[row_counter][j][(0+(3*pixel_width_18)) +: (pixel_width_18)]},
+        {all_out[row_counter][j][(0+(2*pixel_width_18))+: (pixel_width_18)]}};
+
     end
 
 endgenerate
+
 
 endmodule
