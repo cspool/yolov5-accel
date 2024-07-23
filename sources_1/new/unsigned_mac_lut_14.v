@@ -3,9 +3,9 @@
 // Company: 
 // Engineer: 
 // 
-// Create Date: 07/13/2024 11:05:50 AM
+// Create Date: 07/23/2024 03:39:41 PM
 // Design Name: 
-// Module Name: sign_mac_lut_14
+// Module Name: unsigned_mac_lut_14
 // Project Name: 
 // Target Devices: 
 // Tool Versions: 
@@ -20,7 +20,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module sign_mac_lut_14(A, B, clk, en, reset, O
+module unsigned_mac_lut_14(A, B, clk, en, reset, O
     );
     
     
@@ -43,22 +43,14 @@ parameter pixel_width = pixel_width_14;
 //    input [pe_out_width-1 :0] psum;
     output reg [pe_out_width-1 :0] O;
     
-    wire [4-1:0] BB;
-    
-    wire [4-1:0] AB;
-    
-    assign BB = {4{B}};
-    
-    assign AB = A ^ BB + {{(4-1){1'b0}},{B}};
-    
     always @(posedge clk) begin
 if (reset) begin
     O <= 0;
 //        O <= psum;
 end
-else if(en) begin
+else if(en & B) begin
 
-        O <= O + {{(pe_out_width-4){AB[3]}},AB};
+        O <= O + {{(pe_out_width - 4){1'b0}},A};
     
 end
     

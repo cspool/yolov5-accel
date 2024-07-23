@@ -24,7 +24,7 @@ module SA_fin(
 clk, reset, en, mode, channel_out_reset,channel_out_en, row_in, column_in, out
     );
     
-    parameter row_num = 32;
+    parameter row_num = 8;
 parameter column_num = 32; 
 
 //    parameter row_num = 16;

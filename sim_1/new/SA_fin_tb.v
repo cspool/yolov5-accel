@@ -27,7 +27,8 @@ module SA_fin_tb(
      reg clk, reset, en, mode,channel_out_reset,channel_out_en;
 parameter actual_row_num = 2; // 1 / 2
 parameter actual_column_num = 2;
-parameter row_num = 32;
+
+parameter row_num = 8;
 parameter column_num = 32;  
 
 parameter headroom = 8;
