@@ -41,10 +41,10 @@ parameter pixel_width = pixel_width_88;
 
 input clk, reset, en;
 
-input [23:0] up;
+input [15:0] up;
 input [17:0] left;
 
-output reg [23:0] bottom;
+output reg [15:0] bottom;
 output reg [17:0] right;
 output [pe_out_width - 1 : 0] out;
 

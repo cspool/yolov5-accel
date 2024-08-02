@@ -55,32 +55,32 @@ wire [pe_out_width-1 : 0] all_out [row_num - 1: 0][column_num - 1 : 0]; // all r
 
 wire [pe_out_width * column_num - 1 : 0] row_output;//row results
 
-wire [pe_out_width * row_num - 1 : 0] column_output;//column results
-wire [out_width_18 - 1 : 0] column_output_18;//column results
+wire [out_width_18 - 1 : 0] row_output_18;//column results
 
 
 genvar i, j;
 
-wire [23:0] up[row_num - 1 : 0][column_num - 1 : 0];
-wire [23:0] bottom[row_num - 1 : 0][column_num - 1 : 0];
+wire [15:0] up[row_num - 1 : 0][column_num - 1 : 0];
+wire [15:0] bottom[row_num - 1 : 0][column_num - 1 : 0];
 wire [17:0] left[row_num - 1 : 0][column_num - 1 : 0];
 wire [17:0] right[row_num - 1 : 0][column_num - 1 : 0];
 
 reg [row_counter_width-1 : 0] row_counter; 
 
-wire [23:0] I_As[column_num - 1 : 0];
+wire [15:0] I_As[column_num - 1 : 0];
 wire [17:0] I_Bs[row_num - 1 : 0];
+
 
 generate
     for (i = 0; i < column_num; i = i + 1) begin
-        assign I_As[i] = ({{3{row_in[i * 8 +1]}},1'b1, 20'b0} + {{23{row_in[i * 8]}},1'b1});
+        assign I_As[i] = ({ column_in[(i * 16 + 8) +: 8], 8'b0} +
+                                    {{8{column_in[(i * 16 + 7)]}}, column_in[(i * 16) +: 8]});
     end
 endgenerate
 
 generate
     for (i = 0; i < row_num; i = i + 1) begin
-        assign I_Bs[i] =({column_in[(i * 16 + 8) +: 8], 10'b0} + {{10{column_in[(i * 16 + 7)]}}, column_in[(i * 16) +: 8]});
-                                 
+        assign I_Bs[i] = ({{row_in[i * 8 +1]},1'b1, 16'b0} + {{17{row_in[i * 8]}},1'b1});
     end
 endgenerate
 
@@ -119,29 +119,29 @@ always@(posedge clk) begin
 end
 
 generate
-    for (i = 0; i < row_num; i = i + 1) begin
-        assign column_output[i * pe_out_width +:pe_out_width] = (row_counter == {(row_counter_width){1'b1}})? 0: all_out[i][row_counter];
+    for (j = 0; j < column_num; j = j + 1) begin
+        assign row_output[j * pe_out_width +:pe_out_width] = (row_counter == {(row_counter_width){1'b1}})? 0: all_out[row_counter][j];
     end
 endgenerate
+
 
 assign  out = (row_counter == {(row_counter_width){1'b1}})? 0: 
-                     {{(out_width - out_width_18){1'b0}},column_output_18};
+                    {{(out_width - out_width_18){1'b0}},row_output_18};
 
-// a column is a channel, mode = 1
 generate
-    for (i = 0; i < row_num; i = i+1) begin
+    for (j = 0; j < column_num; j = j+1) begin
         
-        assign column_output_18[0 + ((2 * i) * pixel_width_18)+: (2*pixel_width_18)]
-        = {{all_out[i][row_counter][(0+(pixel_width_18)) +: (pixel_width_18)]},
-        {all_out[i][row_counter][(0) +: (pixel_width_18)]}};
+        assign row_output_18[0 + ((2 * j) * pixel_width_18)+: (2*pixel_width_18)]
+        = {{all_out[row_counter][j][(0+(pixel_width_18)) +: (pixel_width_18)]},
+        {all_out[row_counter][j][(0) +: (pixel_width_18)]}};
        
         
-        assign column_output_18[pixel_width_18 * pe_parallel_pixel_18 * column_num + ((2 * i) * pixel_width_18)+: (2* pixel_width_18)]
-        ={{all_out[i][row_counter][(0+(3*pixel_width_18)) +: (pixel_width_18)]},
-        {all_out[i][row_counter][(0+(2*pixel_width_18))+: (pixel_width_18)]}};
-        
+        assign row_output_18[pixel_width_18 * pe_parallel_pixel_18 * column_num + ((2 * j) * pixel_width_18)+: (2* pixel_width_18)]
+        ={{all_out[row_counter][j][(0+(3*pixel_width_18)) +: (pixel_width_18)]},
+        {all_out[row_counter][j][(0+(2*pixel_width_18))+: (pixel_width_18)]}};
+
     end
 
 endgenerate
- 
+
 endmodule

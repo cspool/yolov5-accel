@@ -28,8 +28,8 @@ module SA_fin_tb(
 parameter actual_row_num = 2; // 1 / 2
 parameter actual_column_num = 2;
 
-parameter row_num = 8;
-parameter column_num = 32;  
+parameter row_num = 16;
+parameter column_num = 16;  
 
 parameter headroom = 8;
 
@@ -167,27 +167,27 @@ initial begin
     
     #10; // row 1 col 2 mac res, row 2 col 1 mac res, 
     
-    reset = 0; en=1; mode = 0; cnt_rst = 0; cnt_en = 0; channel_out_reset=0;channel_out_en=0;
+    reset = 0; en=1; mode = 0; cnt_rst = 0; cnt_en = 0; channel_out_reset=0;channel_out_en=1;
     
-    #10; // row 2 col 2 mac res, row 
-    
-    reset = 0; en=0; mode = 0; cnt_rst = 0; cnt_en = 0; channel_out_reset=0;channel_out_en=1;
-    
-   #10; // channel 1 output
-   
-   reset = 0; en=0; mode = 0; cnt_rst = 0; cnt_en = 0; channel_out_reset=0;channel_out_en=0;
-    
-     #10; // stay a cycle
-    
-    reset = 0; en=0; mode = 0; cnt_rst = 0; cnt_en = 0; channel_out_reset=0;channel_out_en=1;
-    
-    #10; // channel 2 output
+    #10; // row 2 col 2 mac res, row  // channel 1 output
     
     reset = 0; en=0; mode = 0; cnt_rst = 0; cnt_en = 0; channel_out_reset=0;channel_out_en=0;
     
-     #10; // stay a cycle
+   #10; // stay a cycle
+   
+   reset = 0; en=0; mode = 0; cnt_rst = 0; cnt_en = 0; channel_out_reset=0;channel_out_en=1;
+    
+     #10; // channel 2 output 
+    
+    reset = 0; en=0; mode = 0; cnt_rst = 0; cnt_en = 0; channel_out_reset=0;channel_out_en=0;
+    
+    #10; // stay a cycle
     
     reset = 0; en=0; mode = 0; cnt_rst = 0; cnt_en = 0; channel_out_reset=1;channel_out_en=0;
+    
+     #10; 
+    
+    reset = 0; en=0; mode = 0; cnt_rst = 0; cnt_en = 0; channel_out_reset=0;channel_out_en=0;
     
      #10;
     

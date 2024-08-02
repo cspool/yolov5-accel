@@ -40,14 +40,14 @@ parameter pixel_width = pixel_width_88;
 input clk;
 input reset;
 input en;
-input [23:0] I_A;
+input [15:0] I_A;
 input [17:0] I_B;
 
 //input [15:0] I_A;
 //input [7:0] I_B;
 output reg [pe_out_width-1:0] O ;
   
-wire [41:0] mult_O;
+wire [33:0] mult_O;
 
 //wire [23:0] mult_A;
 //wire [17:0] mult_B;
@@ -56,7 +56,7 @@ wire [41:0] mult_O;
 
 //assign mult_B = ({I_A[15:8], 10'b0} + {{10{I_A[7]}}, I_A[7:0]});
   
-signed_mult_dsp mult (
+signed_mult_dsp_18 mult (
   .CLK(clk),  // input wire CLK
   .A(I_A),      // input wire [23 : 0] A
   .B(I_B),      // input wire [17 : 0] B
@@ -70,10 +70,10 @@ if (reset) begin
     O <= 0;
 end
 else if(en) begin
-     O[0 +: (pixel_width_18)]                   <= O[0 +: (pixel_width_18)] + {{(pixel_width_18 - 10){mult_O[9]}}, mult_O[9:0]};
-    O[(pixel_width_18) +: (pixel_width_18)]      <= O[(pixel_width_18) +: (pixel_width_18)] + {{(pixel_width_18 - 10){mult_O[19]}}, mult_O[19:10]} + mult_O[9];
-    O[(2 * pixel_width_18) +: (pixel_width_18)] <= O[(2 * pixel_width_18) +: (pixel_width_18)] + {{(pixel_width_18 - 10){mult_O[29]}}, mult_O[29 -: 10]} + mult_O[19];
-    O[(3 * pixel_width_18) +: (pixel_width_18)] <= O[(3 * pixel_width_18) +: (pixel_width_18)] + {{(pixel_width_18 - 10){mult_O[39]}}, mult_O[39 -: 10]} + mult_O[29];
+     O[0 +: (pixel_width_18)]                   <= O[0 +: (pixel_width_18)] + {{(pixel_width_18 - 8){mult_O[7]}}, mult_O[7:0]};
+    O[(pixel_width_18) +: (pixel_width_18)]      <= O[(pixel_width_18) +: (pixel_width_18)] + {{(pixel_width_18 - 8){mult_O[15]}}, mult_O[15:8]} + mult_O[7];
+    O[(2 * pixel_width_18) +: (pixel_width_18)] <= O[(2 * pixel_width_18) +: (pixel_width_18)] + {{(pixel_width_18 - 8){mult_O[23]}}, mult_O[23 -: 8]} + mult_O[15];
+    O[(3 * pixel_width_18) +: (pixel_width_18)] <= O[(3 * pixel_width_18) +: (pixel_width_18)] + {{(pixel_width_18 - 8){mult_O[31]}}, mult_O[31 -: 8]} + mult_O[23];
 end
 else begin
         O <= O;

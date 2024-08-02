@@ -24,8 +24,8 @@ module SA_fin(
 clk, reset, en, mode, channel_out_reset,channel_out_en, row_in, column_in, out
     );
     
-    parameter row_num = 8;
-parameter column_num = 32; 
+    parameter row_num = 16;
+parameter column_num = 16; 
 
 //    parameter row_num = 16;
 //parameter column_num = 16; 
@@ -78,7 +78,6 @@ reg [row_counter_width-1 : 0] row_counter;
 wire [23:0] I_As[column_num - 1 : 0];
 wire [17:0] I_Bs[row_num - 1 : 0];
 
-//column_num = row_num
 
 generate
     for (i = 0; i < column_num; i = i + 1) begin
