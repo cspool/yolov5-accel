@@ -33,7 +33,9 @@ conv_tiling_add_end,
 west_pad, slab_num, east_pad,
 row_start_idx, row_end_idx,
 reg_start_idx, reg_end_idx,
-conv_pixels_add_end
+conv_pixels_add_end,
+
+conv_min_pixels_add_end
     );
     
    parameter pixels_in_row = 32;
@@ -53,6 +55,8 @@ conv_pixels_add_end
    output [15:0] reg_start_idx, reg_end_idx;
    
    output conv_pixels_add_end;
+   
+   output conv_min_pixels_add_end;
    
    wire [15:0] ix_start;
    
@@ -295,6 +299,11 @@ conv_pixels_add_end
                       || (loop_adr2_add_end == 1'b1)) ? right_pad:
                       0;
     
+//    assign reg_start_idx = (row_start_idx == row_start_fix)? 1:
+//                           (adr_switch == 1'b0)? reg_from:
+//                           (adr_switch == 1'b1)? reg_from_2:
+//                           16'hffff;
+                           
     assign reg_start_idx = (adr_switch == 1'b0)? reg_from:
                            (adr_switch == 1'b1)? reg_from_2:
                            16'hffff;
@@ -305,4 +314,8 @@ conv_pixels_add_end
     
     assign conv_pixels_add_end = ((row_end_min_fix == row_end_fix) && (loop_adr1_add_end == 1'b1))
                        || (loop_adr2_add_end == 1'b1);
+                       
+    
+    assign conv_min_pixels_add_end = loop_adr1_add_end;
+    
 endmodule

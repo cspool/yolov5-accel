@@ -30,6 +30,8 @@ clk, reset, en,
 
 row_y,
 
+idx_in_k,
+
 conv_pixels_add_end,
 
 conv_rows_add_end
@@ -44,6 +46,8 @@ conv_rows_add_end
     input [3:0]  k, s, p;
     
     output [15:0] row_y;
+    
+    output [15:0] idx_in_k;
     
     input conv_pixels_add_end;
     
@@ -120,5 +124,7 @@ conv_rows_add_end
     
 //    assign conv_rows_add_end = loop_irow_y_add_end;
     assign conv_rows_add_end = loop_ky_add_end;
+    
+    assign idx_in_k  =ky;
     
 endmodule

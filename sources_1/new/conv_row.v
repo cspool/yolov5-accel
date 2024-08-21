@@ -296,7 +296,8 @@ conv_row_add_end
                       || (loop_adr2_add_end == 1'b1)) ? right_pad:
                       0;
     
-    assign reg_start_idx = (adr_switch == 1'b0)? reg_from:
+    assign reg_start_idx = (row_start_idx == row_start_fix)? 1:
+                           (adr_switch == 1'b0)? reg_from:
                            (adr_switch == 1'b1)? reg_from_2:
                            16'hffff;
                            
