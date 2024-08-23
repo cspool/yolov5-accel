@@ -26,18 +26,20 @@ module ROM_tb(
     
     reg clk;
 reg ena;
- reg [12:0] address;
+reg [3:0]s;
+ reg [14:0] address;
  wire [255:0] data;
 
     
     
     
-//    ROM_32_32_512_1_1_0_controller rom1_ctrl(
-//    .clk(clk),
-//    .ena(ena),
-//    .address(address),
-//    .data(data)
-//    );
+    ROM1_handler rom1_handler(
+    .clk(clk),
+    .ena(ena),
+    .s(s),
+    .address({{1'b0},address}),
+    .data(data)
+    );
     
     always  begin
         #5; 
@@ -49,19 +51,40 @@ reg ena;
         clk = 0;
         ena = 0;
         address = 0;
-        
+        s = 1;
         
         #10;
-        
         ena = 1;
         address = 0;
         
-        #20;
-        
+        #10;
         address = 1;
         
-        #20;
+        #10;
+        address = 8;
         
+        #10;
+        address = 9;
+        
+        #10;
+        address = 16;
+        
+        #10;
+        s = 2;        
+        ena = 1;
+        address = 0;
+        
+        #10;
+        address = 1;
+        
+        #10;
+        address = 8;
+        
+        #10;
+        address = 9;
+        
+        #10;
+        address = 16;
     
     
     end
