@@ -26,8 +26,11 @@ k, s, p,
 clk, en, reset,
 nif_in_2pow,
 ix_in_2pow,
+shift_add_end,
 
-west_pad, slab_num, east_pad,
+slab_num, 
+row_slab_start_idx,
+west_pad, east_pad,
 row1_idx, row2_idx, row3_idx, 
 row_start_idx, row_end_idx,
 reg_start_idx, reg_end_idx,
@@ -42,7 +45,14 @@ row1_buf_idx,
 row2_buf_adr,
 row2_buf_idx,
 row3_buf_adr,
-row3_buf_idx
+row3_buf_idx,
+
+row1_slab_adr,
+row1_slab_idx,
+row2_slab_adr,
+row2_slab_idx,
+row3_slab_adr,
+row3_slab_idx
     );
     
     parameter pixels_in_row = 32;
@@ -60,6 +70,8 @@ row3_buf_idx
     input clk, en, reset; // reset is valid a cycle before en being valid
     
     input [15:0] nif_in_2pow, ix_in_2pow;
+    
+    input shift_add_end;
     
     output [3:0] west_pad, slab_num, east_pad;
     output [15:0] row1_idx, row2_idx, row3_idx;
@@ -79,6 +91,15 @@ row3_buf_idx
     
     output [15:0] row3_buf_adr;
     output [1:0] row3_buf_idx;
+    
+    output [15:0] row_slab_start_idx;
+    
+    output [15:0] row1_slab_adr;
+    output [1:0] row1_slab_idx;
+    output [15:0] row2_slab_adr;
+    output [1:0] row2_slab_idx;
+    output [15:0] row3_slab_adr;
+    output [1:0] row3_slab_idx;
     
     wire [15:0] row1_buf_adr_in_row;
     
@@ -281,6 +302,8 @@ row3_buf_idx
         
         .conv_tiling_add_end(conv_tiling_add_end),
         
+        .shift_add_end(shift_add_end),
+        
         .west_pad(west_pad), 
         .slab_num(slab_num), 
         .east_pad(east_pad),
@@ -443,5 +466,20 @@ row3_buf_idx
                         ((row3_buf_adr_in_row << (nif_in_2pow + ix_in_2pow - pixels_in_row_in_2pow))
                         + (row_start_idx << (nif_in_2pow - pixels_in_row_in_2pow)));                                         
     
+    
+    //slab
+    assign row_slab_start_idx = (slab_num > 0)? (row_start_idx - 16'd32): 16'hffff;
+    
+    assign row1_slab_idx = row1_buf_idx;
+                          
+    assign row1_slab_adr = (slab_num > 0)? (row1_buf_adr - nif): 16'hffff;
+    
+    assign row2_slab_idx = row2_buf_idx;  
+                          
+    assign row2_slab_adr = (slab_num > 0)? (row2_buf_adr - nif): 16'hffff;
+    
+    assign row3_slab_idx = row3_buf_idx;
+                          
+    assign row3_slab_adr = (slab_num > 0)? (row3_buf_adr - nif): 16'hffff;
     
 endmodule

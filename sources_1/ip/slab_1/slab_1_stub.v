@@ -1,10 +1,10 @@
 // Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
 // Tool Version: Vivado v.2018.3 (win64) Build 2405991 Thu Dec  6 23:38:27 MST 2018
-// Date        : Fri Aug 23 18:32:42 2024
+// Date        : Sat Aug 24 20:00:30 2024
 // Host        : zack running 64-bit major release  (build 9200)
 // Command     : write_verilog -force -mode synth_stub
-//               d:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sources_1/ip/slab_1/slab_1_stub.v
+//               D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sources_1/ip/slab_1/slab_1_stub.v
 // Design      : slab_1
 // Purpose     : Stub declaration of top-level module interface
 // Device      : xc7vx690tffg1761-2

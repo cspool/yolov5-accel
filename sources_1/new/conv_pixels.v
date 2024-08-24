@@ -30,6 +30,8 @@ next_ox_start,
 
 conv_tiling_add_end,
 
+shift_add_end,
+
 west_pad, slab_num, east_pad,
 row_start_idx, row_end_idx,
 reg_start_idx, reg_end_idx,
@@ -49,6 +51,8 @@ conv_min_pixels_add_end
    input [15:0] next_ox_start;
    
    input conv_tiling_add_end;
+   
+   input shift_add_end;
    
    output [3:0] west_pad, slab_num, east_pad;
    output [15:0] row_start_idx, row_end_idx;
@@ -220,7 +224,7 @@ conv_min_pixels_add_end
         end
     end  
     
-    assign loop_adr1_add_begin = (signal_add1 == 1'b1);
+    assign loop_adr1_add_begin = (signal_add1 == 1'b1) && (shift_add_end == 1'b1);
     assign loop_adr1_add_end = loop_adr1_add_begin && ((adr1 + pixels_in_row) > (row_end_min_fix - row_start_fix));
     
     assign reg_to = (row_start_idx + pixels_in_row_minus_1 > row_end_min_fix)?

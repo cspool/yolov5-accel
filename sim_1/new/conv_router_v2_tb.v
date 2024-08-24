@@ -31,6 +31,7 @@ module conv_router_v2_tb(
     reg clk, en, reset; // reset is valid a cycle before en being valid
     
     reg [15:0] nif_in_2pow, ix_in_2pow;
+    reg shift_add_end;
     
     wire [3:0] west_pad, slab_num, east_pad;
     wire [15:0] row1_idx, row2_idx, row3_idx; 
@@ -62,6 +63,7 @@ module conv_router_v2_tb(
         .reset(reset),
         .nif_in_2pow(nif_in_2pow), 
         .ix_in_2pow(ix_in_2pow),
+        .shift_add_end(shift_add_end),
         
         .west_pad(west_pad), 
         .slab_num(slab_num), 
@@ -98,30 +100,45 @@ module conv_router_v2_tb(
     // cfg 0
         clk = 0;
         reset = 1; en = 0;
-        k = 6; s = 2; p = 2; ox = 32; oy = 32; ix = 128; iy = 128; nif = 1;
+        k = 3; s = 1; p = 1; ox = 32; oy = 32; ix = 128; iy = 128; nif = 1;
         nif_in_2pow = 0; ix_in_2pow = 7;
+        shift_add_end = 0;
         
         #10;
-        
         reset = 0; en = 1;
+        shift_add_end = 0;
         
         #10;
         reset = 0; en = 0;
+        shift_add_end = 0;
         
         #10;
         reset = 0; en = 0;
+        shift_add_end = 1;
         
         #10;
         reset = 0; en = 0;
+        shift_add_end = 0;
         
         #10;
         reset = 0; en = 0;
+        shift_add_end = 0;
         
         #10;
         reset = 0; en = 0;
+        shift_add_end = 0;
         
         #10;
         reset = 0; en = 0;
+        shift_add_end = 0;
+        
+        #10;
+        reset = 0; en = 0;
+        shift_add_end = 1;
+        
+        #16;
+        reset = 0; en = 0;
+        shift_add_end = 0;
         
     end
       

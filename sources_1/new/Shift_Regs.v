@@ -50,7 +50,9 @@ conv_pixels_add_end,
 
 re_row1_pixels,
 re_row2_pixels,
-re_row3_pixels
+re_row3_pixels,
+
+shift_add_end
     );
     
     parameter shift_regs_num = 70;
@@ -73,6 +75,8 @@ re_row3_pixels
     input conv_min_pixels_add_end, conv_pixels_add_end;
     
     output [pixels_in_row*8-1:0] re_row1_pixels, re_row2_pixels, re_row3_pixels;
+    
+    output shift_add_end;
     
     wire [shift_regs_num * 8 - 1 : 0] row1_buf;
     wire [shift_regs_num * 8 - 1 : 0] row1_slab_buf;
@@ -194,6 +198,8 @@ re_row3_pixels
     
     assign loop_shift_add_end = loop_shift_add_begin && ((shift_counter + 1) == k);
     
+    assign shift_add_end = loop_shift_add_end;
+    
     assign ops_0_buf_0 = ({(shift_regs_num){2'd1}} >> (ops_right_shift << 1)) 
     & ({(shift_regs_num){2'd1}} << (ops_left_shift << 1));
     
@@ -209,7 +215,7 @@ re_row3_pixels
                  ((state_conv_min_pixels_end == 1'b1) && (state_conv_pixels_end == 1'b1) && (loop_shift_add_end == 1'b0)) ?
                  ops_shift:
                  {(shift_regs_num){2'd3}};
-                    
+                   
 
     genvar i;
     
