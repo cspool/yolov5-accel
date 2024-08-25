@@ -37,7 +37,9 @@ row_start_idx, row_end_idx,
 reg_start_idx, reg_end_idx,
 conv_pixels_add_end,
 
-conv_min_pixels_add_end
+conv_min_pixels_add_end,
+
+valid_adr
     );
     
    parameter pixels_in_row = 32;
@@ -61,6 +63,8 @@ conv_min_pixels_add_end
    output conv_pixels_add_end;
    
    output conv_min_pixels_add_end;
+   
+   output valid_adr;
    
    wire [15:0] ix_start;
    
@@ -186,6 +190,8 @@ conv_min_pixels_add_end
    
    //next reg_from_initial
    assign next_reg_from_initial = next_left_pad + {{12'b0}, next_overlap} + 1;                          
+   
+   assign valid_adr = signal_add1;
    
    // for adr1 in range(0, row_end_min_fix - row_start_fix + 1, pixels_in_row)
    always@(posedge clk) begin

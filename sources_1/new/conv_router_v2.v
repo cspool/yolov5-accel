@@ -52,7 +52,11 @@ row1_slab_idx,
 row2_slab_adr,
 row2_slab_idx,
 row3_slab_adr,
-row3_slab_idx
+row3_slab_idx,
+
+valid_row1_adr,
+valid_row2_adr,
+valid_row3_adr
     );
     
     parameter pixels_in_row = 32;
@@ -100,6 +104,10 @@ row3_slab_idx
     output [1:0] row2_slab_idx;
     output [15:0] row3_slab_adr;
     output [1:0] row3_slab_idx;
+    
+    output valid_row1_adr, valid_row2_adr, valid_row3_adr;
+    
+    wire valid_adr;
     
     wire [15:0] row1_buf_adr_in_row;
     
@@ -313,8 +321,13 @@ row3_slab_idx
         .reg_end_idx(reg_end_idx),
         
         .conv_pixels_add_end(conv_pixels_add_end),
-        .conv_min_pixels_add_end(conv_min_pixels_add_end)
+        .conv_min_pixels_add_end(conv_min_pixels_add_end),
+        .valid_adr(valid_adr)
     );
+    
+    assign valid_row1_adr = (poy < 1)? 0 : valid_adr;
+    assign valid_row2_adr = (poy < 2)? 0 : valid_adr;
+    assign valid_row3_adr = (poy < 3)? 0 : valid_adr;
     
     //address translation
     //clr downside

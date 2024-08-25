@@ -23,6 +23,8 @@
 module conv_bram_handler(
 reset,clk,en,
 
+valid_adr,
+
 row1_buf_adr,
 row1_buf_idx,
 row2_buf_adr,
@@ -45,6 +47,8 @@ slab1_pixels_2,
 slab2_pixels_2,
 slab3_pixels_2,
 
+valid_row1_adr, valid_row2_adr, valid_row3_adr,
+
 buf1_adr,
 buf2_adr,
 buf3_adr,
@@ -52,6 +56,8 @@ buf3_adr,
 slab1_adr,
 slab2_adr,
 slab3_adr,
+
+valid_mem1_adr, valid_mem2_adr, valid_mem3_adr,
 
 row1_pixels_32,
 row2_pixels_32,
@@ -66,13 +72,15 @@ slab2_adr_wr,
 slab3_adr_wr,
 slab1_pixels_2_wr,
 slab2_pixels_2_wr,
-slab3_pixels_2_wr
+slab3_pixels_2_wr,
+valid_slab1_adr_wr, valid_slab2_adr_wr, valid_slab3_adr_wr
     );
     
     parameter pixels_in_row = 32;
     
     input reset,clk,en;
     
+    input valid_adr;
     //buffer
     input [15:0] row1_buf_adr;
     input [1:0] row1_buf_idx;
@@ -97,6 +105,9 @@ slab3_pixels_2_wr
     input [15:0] slab2_pixels_2;
     input [15:0] slab3_pixels_2;
     
+    //valid
+    input valid_row1_adr, valid_row2_adr, valid_row3_adr;
+    
     //buffer
     output [15:0] buf1_adr;
     output [15:0] buf2_adr;
@@ -115,6 +126,8 @@ slab3_pixels_2_wr
     output [15:0] row2_slab_2;
     output [15:0] row3_slab_2;
     
+    output valid_mem1_adr, valid_mem2_adr, valid_mem3_adr;
+    
     //slab write
     output reg [15:0] slab1_adr_wr;
     output reg [15:0] slab2_adr_wr;
@@ -123,6 +136,8 @@ slab3_pixels_2_wr
     output [15:0] slab1_pixels_2_wr;
     output [15:0] slab2_pixels_2_wr;
     output [15:0] slab3_pixels_2_wr;
+    
+    output reg valid_slab1_adr_wr, valid_slab2_adr_wr, valid_slab3_adr_wr;
     
     //in buffer
     
@@ -187,23 +202,48 @@ slab3_pixels_2_wr
                       (row3_slab_idx == 2'd3)? slab3_pixels_2:
                       0;
     
+    //valid
+    //row_i_buf_idx == row_i_slab_idx
+    assign valid_mem1_adr = (row1_buf_idx == 2'd1)? valid_row1_adr:
+                      (row2_buf_idx == 2'd1)? valid_row2_adr: 
+                      (row3_buf_idx == 2'd1)? valid_row3_adr:
+                      0;
+    
+    assign valid_mem2_adr = (row1_buf_idx == 2'd2)? valid_row1_adr:
+                      (row2_buf_idx == 2'd2)? valid_row2_adr: 
+                      (row3_buf_idx == 2'd2)? valid_row3_adr:
+                      0;
+                      
+    assign valid_mem3_adr = (row1_buf_idx == 2'd3)? valid_row1_adr:
+                      (row2_buf_idx == 2'd3)? valid_row2_adr: 
+                      (row3_buf_idx == 2'd3)? valid_row3_adr:
+                      0;
+    
     //slab write
     always@(posedge clk) begin
         if (reset == 1'b1) begin
             slab1_adr_wr <= 16'hffff;
             slab2_adr_wr <= 16'hffff;
             slab3_adr_wr <= 16'hffff;
+            valid_slab1_adr_wr <= 0;
+            valid_slab2_adr_wr <= 0;
+            valid_slab3_adr_wr <= 0;
         end
         else if (en == 1'b1) begin
             slab1_adr_wr <= buf1_adr;
             slab2_adr_wr <= buf2_adr;
             slab3_adr_wr <= buf3_adr;
-            
+            valid_slab1_adr_wr <= valid_mem1_adr;
+            valid_slab2_adr_wr <= valid_mem2_adr;
+            valid_slab3_adr_wr <= valid_mem3_adr;
         end
         else begin
             slab1_adr_wr <= slab1_adr_wr;
             slab2_adr_wr <= slab2_adr_wr;
             slab3_adr_wr <= slab3_adr_wr;
+            valid_slab1_adr_wr <= valid_slab1_adr_wr;
+            valid_slab2_adr_wr <= valid_slab2_adr_wr;
+            valid_slab3_adr_wr <= valid_slab3_adr_wr;
         end
     end
     
