@@ -3,9 +3,9 @@
 // Company: 
 // Engineer: 
 // 
-// Create Date: 2024/08/19 22:33:06
+// Create Date: 2024/08/28 13:16:21
 // Design Name: 
-// Module Name: Shift_Regs
+// Module Name: Row_Regs
 // Project Name: 
 // Target Devices: 
 // Tool Versions: 
@@ -20,7 +20,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module Shift_Regs(
+module Row_Regs(
 reset,
 clk,
 en,
@@ -49,9 +49,9 @@ row3_slab_2,
 conv_min_pixels_add_end,
 conv_pixels_add_end,
 
-re_row1_pixels,
-re_row2_pixels,
-re_row3_pixels,
+row1_pixels,
+row2_pixels,
+row3_pixels,
 
 shift_add2_end,
 stall
@@ -76,7 +76,7 @@ stall
     
     input conv_min_pixels_add_end, conv_pixels_add_end;
     
-    output [pixels_in_row*8-1:0] re_row1_pixels, re_row2_pixels, re_row3_pixels;
+    output [shift_regs_num*8-1:0] row1_pixels, row2_pixels, row3_pixels;
     
     output reg shift_add2_end;
     
@@ -392,17 +392,11 @@ stall
     //output
     generate 
         for (j = 0; j < pixels_in_row; j = j + 1) begin
-            assign re_row1_pixels[j*8 +: 8] = (s == 4'd1)? shift_regs_1[j*8 +: 8]:
-                                         (s == 4'd2)? shift_regs_1[j*16 +: 8]:
-                                         0;
+            assign row1_pixels[j*8 +: 8] = shift_regs_1[j*8 +: 8];
                                          
-            assign re_row2_pixels[j*8 +: 8] = (s == 4'd1)? shift_regs_2[j*8 +: 8]:
-                                         (s == 4'd2)? shift_regs_2[j*16 +: 8]:
-                                         0;   
+            assign row2_pixels[j*8 +: 8] = shift_regs_2[j*8 +: 8];   
                                          
-            assign re_row3_pixels[j*8 +: 8] = (s == 4'd1)? shift_regs_3[j*8 +: 8]:
-                                         (s == 4'd2)? shift_regs_3[j*16 +: 8]:
-                                         0;                                          
+            assign row3_pixels[j*8 +: 8] = shift_regs_3[j*8 +: 8];                                          
         end
     endgenerate
     

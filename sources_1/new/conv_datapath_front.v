@@ -67,6 +67,8 @@ re_row1_pixels, re_row2_pixels, re_row3_pixels
     wire [15:0] row3_buf_adr;
     wire [1:0] row3_buf_idx;
     
+    wire [15:0] row_slab_start_idx;
+    
     wire valid_row1_adr, valid_row2_adr, valid_row3_adr;
     
     //cv_bram_handler wire
@@ -115,7 +117,8 @@ re_row1_pixels, re_row2_pixels, re_row3_pixels
     
     //shift regs
     wire [pixels_in_row * 8 - 1: 0] row1_pixels_32, row2_pixels_32, row3_pixels_32;
-    wire shift_add_end;
+    wire shift_add2_end;
+    wire stall;
     
     conv_router_v2 cv_router(
         .ox(ox), 
@@ -131,7 +134,8 @@ re_row1_pixels, re_row2_pixels, re_row3_pixels
         .reset(reset),
         .nif_in_2pow(nif_in_2pow), 
         .ix_in_2pow(ix_in_2pow),
-        .shift_add_end(shift_add_end),
+        .shift_add2_end(shift_add2_end),
+        .stall(stall),
         
         .west_pad(west_pad), 
         .slab_num(slab_num), 
@@ -147,8 +151,11 @@ re_row1_pixels, re_row2_pixels, re_row3_pixels
         .reg_start_idx(reg_start_idx), 
         .reg_end_idx(reg_end_idx),
         
-        .conv_end(conv_end),
         .if_idx(if_idx),
+        
+        .conv_end(conv_end),
+        .conv_min_pixels_add_end(conv_min_pixels_add_end), 
+        .conv_pixels_add_end(conv_pixels_add_end),
         
         .row1_buf_adr(row1_buf_adr),
         .row1_buf_idx(row1_buf_idx),
@@ -156,6 +163,15 @@ re_row1_pixels, re_row2_pixels, re_row3_pixels
         .row2_buf_idx(row2_buf_idx),
         .row3_buf_adr(row3_buf_adr),
         .row3_buf_idx(row3_buf_idx),
+        
+        .row_slab_start_idx(row_slab_start_idx),
+    
+        .row1_slab_adr(row1_slab_adr),
+        .row1_slab_idx(row1_slab_idx),
+        .row2_slab_adr(row2_slab_adr),
+        .row2_slab_idx(row2_slab_idx),
+        .row3_slab_adr(row3_slab_adr),
+        .row3_slab_idx(row3_slab_idx),
         
         .valid_row1_adr(valid_row1_adr),
         .valid_row2_adr(valid_row2_adr),
@@ -165,6 +181,7 @@ re_row1_pixels, re_row2_pixels, re_row3_pixels
     Shift_Regs shift_regs(
         .reset(reset),
         .clk(clk),
+        .en(en),
         
         .k(k),
         .s(s),
@@ -194,7 +211,8 @@ re_row1_pixels, re_row2_pixels, re_row3_pixels
         .re_row1_pixels(re_row1_pixels),
         .re_row2_pixels(re_row2_pixels),
         .re_row3_pixels(re_row3_pixels),
-        .shift_add_end(shift_add_end)
+        .shift_add2_end(shift_add2_end),
+        .stall(stall)
     );
     
         

@@ -23,8 +23,6 @@
 module conv_bram_handler(
 reset,clk,en,
 
-valid_adr,
-
 row1_buf_adr,
 row1_buf_idx,
 row2_buf_adr,
@@ -79,8 +77,6 @@ valid_slab1_adr_wr, valid_slab2_adr_wr, valid_slab3_adr_wr
     parameter pixels_in_row = 32;
     
     input reset,clk,en;
-    
-    input valid_adr;
     //buffer
     input [15:0] row1_buf_adr;
     input [1:0] row1_buf_idx;

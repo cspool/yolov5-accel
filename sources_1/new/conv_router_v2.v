@@ -26,7 +26,8 @@ k, s, p,
 clk, en, reset,
 nif_in_2pow,
 ix_in_2pow,
-shift_add_end,
+//shift_add2_end,
+//stall,
 
 slab_num, 
 row_slab_start_idx,
@@ -37,8 +38,9 @@ reg_start_idx, reg_end_idx,
 if_idx,
 
 conv_end,
-conv_min_pixels_add_end,
-conv_pixels_add_end,
+//conv_min_pixels_add_end,
+//conv_pixels_add_end,
+conv_row_begin,
 
 row1_buf_adr,
 row1_buf_idx,
@@ -75,7 +77,8 @@ valid_row3_adr
     
     input [15:0] nif_in_2pow, ix_in_2pow;
     
-    input shift_add_end;
+//    input shift_add2_end;
+//    input stall;
     
     output [3:0] west_pad, slab_num, east_pad;
     output [15:0] row1_idx, row2_idx, row3_idx;
@@ -85,7 +88,8 @@ valid_row3_adr
     output [15:0] if_idx;
     
     output conv_end;
-    output conv_min_pixels_add_end, conv_pixels_add_end;
+//    output conv_min_pixels_add_end, conv_pixels_add_end;
+    output conv_row_begin;
     
     output [15:0] row1_buf_adr;
     output [1:0] row1_buf_idx;
@@ -131,7 +135,6 @@ valid_row3_adr
 //    wire [15:0] irow_y_size1, irow_y_size2, irow_y_size3;
     
     wire conv_pixels_add_end;
-    
     
     //address translation
     
@@ -310,8 +313,10 @@ valid_row3_adr
         
         .conv_tiling_add_end(conv_tiling_add_end),
         
-        .shift_add_end(shift_add_end),
+//        .shift_add2_end(shift_add2_end),
+//        .stall(stall),
         
+        .conv_row_begin(conv_row_begin),
         .west_pad(west_pad), 
         .slab_num(slab_num), 
         .east_pad(east_pad),
@@ -321,7 +326,7 @@ valid_row3_adr
         .reg_end_idx(reg_end_idx),
         
         .conv_pixels_add_end(conv_pixels_add_end),
-        .conv_min_pixels_add_end(conv_min_pixels_add_end),
+//        .conv_min_pixels_add_end(conv_min_pixels_add_end),
         .valid_adr(valid_adr)
     );
     
@@ -447,7 +452,7 @@ valid_row3_adr
                           
     assign row1_buf_adr = (row1_idx == 16'hffff)? 16'hffff:
                         ((row1_buf_adr_in_row << (nif_in_2pow + ix_in_2pow - pixels_in_row_in_2pow))
-                        + (row_start_idx << (nif_in_2pow - pixels_in_row_in_2pow)));                                         
+                        + ((row_start_idx << nif_in_2pow) >> pixels_in_row_in_2pow));                                         
     
     assign row2_buf_idx = (row2_idx == 16'hffff)? 0 :
                           ((s == 4'd1)? row2_buf_idx_s1:
@@ -462,7 +467,7 @@ valid_row3_adr
                           
     assign row2_buf_adr = (row2_idx == 16'hffff)? 16'hffff :
                         ((row2_buf_adr_in_row << (nif_in_2pow + ix_in_2pow - pixels_in_row_in_2pow))
-                        + (row_start_idx << (nif_in_2pow - pixels_in_row_in_2pow)));                                         
+                        + ((row_start_idx << nif_in_2pow) >> pixels_in_row_in_2pow));                                         
     
     assign row3_buf_idx = (row3_idx == 16'hffff)? 0 :
                           ((s == 4'd1)? row3_buf_idx_s1:
@@ -477,7 +482,7 @@ valid_row3_adr
                           
     assign row3_buf_adr = (row3_idx == 16'hffff)? 16'hffff :
                         ((row3_buf_adr_in_row << (nif_in_2pow + ix_in_2pow - pixels_in_row_in_2pow))
-                        + (row_start_idx << (nif_in_2pow - pixels_in_row_in_2pow)));                                         
+                        + ((row_start_idx << nif_in_2pow) >> pixels_in_row_in_2pow));                                         
     
     
     //slab

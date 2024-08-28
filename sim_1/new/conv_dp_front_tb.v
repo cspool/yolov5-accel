@@ -24,8 +24,8 @@ module conv_dp_front_tb(
 
     );
     
-        parameter pixels_in_row = 32;
-    parameter pixels_in_row_in_2pow = 5;
+   parameter pixels_in_row = 32;
+   parameter pixels_in_row_in_2pow = 5;
    parameter buffers_num = 3;
    parameter pixels_in_row_minus_1 = pixels_in_row-1;
    parameter buffers_num_minus_1 = buffers_num-1;
@@ -71,8 +71,8 @@ end
     // cfg 0
         clk = 0;
         reset = 1; en = 0;
-        k = 1; s = 1; p = 0; ox = 64; oy = 64; ix = 128; iy = 128; nif = 1;
-        nif_in_2pow = 0; ix_in_2pow = 7;
+        k = 1; s = 1; p = 0; ox = 64; oy = 64; ix = 256; iy = 256; nif = 1;
+        nif_in_2pow = 0; ix_in_2pow = 8;
         
         
         #10;
