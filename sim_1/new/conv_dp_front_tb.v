@@ -71,7 +71,7 @@ end
     // cfg 0
         clk = 0;
         reset = 1; en = 0;
-        k = 1; s = 1; p = 0; ox = 64; oy = 64; ix = 256; iy = 256; nif = 1;
+        k = 6; s = 2; p = 2; ox = 32; oy = 3; ix = 256; iy = 256; nif = 1;
         nif_in_2pow = 0; ix_in_2pow = 8;
         
         

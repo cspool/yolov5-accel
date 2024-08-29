@@ -28,9 +28,9 @@ nif_in_2pow,
 ix_in_2pow,
 //shift_add2_end,
 //stall,
-
-slab_num, 
 row_slab_start_idx,
+slab_num, 
+
 west_pad, east_pad,
 row1_idx, row2_idx, row3_idx, 
 row_start_idx, row_end_idx,
@@ -39,8 +39,7 @@ if_idx,
 
 conv_end,
 //conv_min_pixels_add_end,
-//conv_pixels_add_end,
-conv_row_begin,
+conv_pixels_add_end,
 
 row1_buf_adr,
 row1_buf_idx,
@@ -89,7 +88,7 @@ valid_row3_adr
     
     output conv_end;
 //    output conv_min_pixels_add_end, conv_pixels_add_end;
-    output conv_row_begin;
+    output conv_pixels_add_end;
     
     output [15:0] row1_buf_adr;
     output [1:0] row1_buf_idx;
@@ -133,8 +132,6 @@ valid_row3_adr
     
     //conv tile module
 //    wire [15:0] irow_y_size1, irow_y_size2, irow_y_size3;
-    
-    wire conv_pixels_add_end;
     
     //address translation
     
@@ -316,7 +313,6 @@ valid_row3_adr
 //        .shift_add2_end(shift_add2_end),
 //        .stall(stall),
         
-        .conv_row_begin(conv_row_begin),
         .west_pad(west_pad), 
         .slab_num(slab_num), 
         .east_pad(east_pad),

@@ -46,15 +46,17 @@ row1_slab_2,
 row2_slab_2, 
 row3_slab_2,
 
-conv_min_pixels_add_end,
+valid_row1_adr,
+valid_row2_adr,
+valid_row3_adr,
+
 conv_pixels_add_end,
 
-row1_pixels,
-row2_pixels,
-row3_pixels,
+row_regs_1,
+row_regs_2,
+row_regs_3,
 
-shift_add2_end,
-stall
+shift_start
     );
     
     parameter shift_regs_num = 70;
@@ -74,14 +76,16 @@ stall
     input [pixels_in_row * 8 - 1: 0] row1_pixels_32, row2_pixels_32, row3_pixels_32;
     input [2 * 8 - 1: 0] row1_slab_2, row2_slab_2, row3_slab_2;
     
-    input conv_min_pixels_add_end, conv_pixels_add_end;
+//    input conv_min_pixels_add_end, conv_pixels_add_end;
+    input conv_pixels_add_end;
     
-    output [shift_regs_num*8-1:0] row1_pixels, row2_pixels, row3_pixels;
-    
-    output reg shift_add2_end;
-    
-    output stall;
-    
+    input valid_row1_adr, valid_row2_adr, valid_row3_adr;
+        
+    output reg [shift_regs_num * 8 -1 : 0] row_regs_1;
+    output reg [shift_regs_num * 8 -1 : 0] row_regs_2;
+    output reg [shift_regs_num * 8 -1 : 0] row_regs_3;
+    output reg shift_start;
+
     wire [shift_regs_num * 8 - 1 : 0] row1_buf;
     wire [shift_regs_num * 8 - 1 : 0] row1_slab_buf;
     wire [shift_regs_num * 8 - 1 : 0] row1_fill;
@@ -94,309 +98,204 @@ stall
     wire [shift_regs_num * 8 - 1 : 0] row3_slab_buf;
     wire [shift_regs_num * 8 - 1 : 0] row3_fill;
     
-    reg [shift_regs_num * 8 -1 : 0] shift_regs_1;
-    reg [shift_regs_num * 8 -1 : 0] shift_regs_2;
-    reg [shift_regs_num * 8 -1 : 0] shift_regs_3;
-    
-    wire [shift_regs_num * 2 -1 : 0] ops;
+    wire [shift_regs_num * 2 -1 : 0] ops_1, ops_2, ops_3;
     
     //001111111...11 && ...
     wire [shift_regs_num * 8 - 1 : 0] row1_buf_mask;
     wire [shift_regs_num * 8 - 1 : 0] row1_buf_pix;
     
-    assign row1_buf_mask = {(shift_regs_num){8'hff}} >> ((shift_regs_num - reg_end_idx)<<3);
-    assign row1_buf_pix = row1_pixels_32 << ((reg_start_idx - 1)<<3);
+    wire [15:0] ops_right_shift;
+    wire [15:0] ops_left_shift;
+    wire [15:0] ops_right_shift_2;
+
+    wire [shift_regs_num * 2 -1 : 0] ops_0_buf_0;
+    
+    reg state_valid_row1_adr, state_valid_row2_adr, state_valid_row3_adr;
+    
+    reg state_conv_pixels_add_end;
+    
+    reg [3:0] last_west_pad, last_slab_num, last_east_pad;
+    reg [15:0] last_row1_idx, last_row2_idx, last_row3_idx;
+
+    reg [15:0] last_row_start_idx, last_row_end_idx;
+    
+    reg [15:0] last_reg_start_idx, last_reg_end_idx;
+    
+    assign row1_buf_mask = {(shift_regs_num){8'hff}} >> ((shift_regs_num - last_reg_end_idx)<<3);
+    assign row1_buf_pix = row1_pixels_32 << ((last_reg_start_idx - 1)<<3);
     
     assign row1_buf = (row1_buf_mask) & (row1_buf_pix);
     
     //slab_num > 0
-    assign row1_slab_buf = (slab_num == 4'd2)? {{(shift_regs_num - 2){8'h0}}, row1_slab_2} :
-                           (slab_num == 4'd1)? {{(shift_regs_num - 1){8'h0}}, row1_slab_2[7:0]} :
+    assign row1_slab_buf = (last_slab_num == 4'd2)? {{(shift_regs_num - 2){8'h0}}, row1_slab_2} :
+                           (last_slab_num == 4'd1)? {{(shift_regs_num - 1){8'h0}}, row1_slab_2[7:0]} :
                            0;
     
     assign row1_fill = row1_buf | row1_slab_buf;
     
     //001111111...11 && ...
-    assign row2_buf = ({(shift_regs_num){8'hff}} >> ((shift_regs_num - reg_end_idx)<<3)) & (row2_pixels_32 << ((reg_start_idx - 1)<<3));
+    assign row2_buf = ({(shift_regs_num){8'hff}} >> ((shift_regs_num - last_reg_end_idx)<<3)) 
+    & (row2_pixels_32 << ((last_reg_start_idx - 1)<<3));
     
     //slab_num > 0
-    assign row2_slab_buf = (slab_num == 4'd2)? {{(shift_regs_num - 2){8'h0}}, row2_slab_2} :
-                           (slab_num == 4'd1)? {{(shift_regs_num - 1){8'h0}}, row2_slab_2[7:0]} : 0;
+    assign row2_slab_buf = (last_slab_num == 4'd2)? {{(shift_regs_num - 2){8'h0}}, row2_slab_2} :
+                           (last_slab_num == 4'd1)? {{(shift_regs_num - 1){8'h0}}, row2_slab_2[7:0]} : 0;
     
     assign row2_fill = row2_buf | row2_slab_buf;
     
     //001111111...11 && ...
-    assign row3_buf = ({(shift_regs_num){8'hff}} >> ((shift_regs_num - reg_end_idx)<<3)) & (row3_pixels_32 << ((reg_start_idx - 1)<<3));
+    assign row3_buf = ({(shift_regs_num){8'hff}} >> ((shift_regs_num - last_reg_end_idx)<<3)) 
+    & (row3_pixels_32 << ((last_reg_start_idx - 1)<<3));
     
     //slab_num > 0
-    assign row3_slab_buf = (slab_num == 4'd2)? {{(shift_regs_num - 2){8'h0}}, row3_slab_2} :
-                           (slab_num == 4'd1)? {{(shift_regs_num - 1){8'h0}}, row3_slab_2[7:0]} : 0;
+    assign row3_slab_buf = (last_slab_num == 4'd2)? {{(shift_regs_num - 2){8'h0}}, row3_slab_2} :
+                           (last_slab_num == 4'd1)? {{(shift_regs_num - 1){8'h0}}, row3_slab_2[7:0]} : 0;
     
     assign row3_fill = row3_buf | row3_slab_buf;
     
-    wire [15:0] ops_right_shift = (shift_regs_num - reg_end_idx - {12'b0,east_pad});
+    assign ops_right_shift = (shift_regs_num - last_reg_end_idx - {12'b0,last_east_pad});
     
-    wire [15:0] ops_left_shift = (reg_start_idx - {12'b0,slab_num} - {12'b0,west_pad} - 1);
+    assign ops_left_shift = (last_reg_start_idx - {12'b0,last_slab_num} - {12'b0,last_west_pad} - 1);
     
-    wire [15:0] ops_right_shift_2 = (shift_regs_num - ops_left_shift);
-    
-    wire [shift_regs_num * 2 -1 : 0] ops_shift_buf;
-    
-    wire [shift_regs_num * 2 -1 : 0] ops_0_buf_0;
-    
-    wire [shift_regs_num * 2 -1 : 0] ops_shift;
-    
-    reg [15:0] shift_counter;//0...k-1, from the cycle of loop_shift_add_begin being 1
-    wire loop_shift_add_begin, loop_shift_add_end;
-    
-    reg state_conv_min_pixels_end, state_conv_pixels_end;
+    assign ops_right_shift_2 = (shift_regs_num - ops_left_shift);
 
     
     always@(posedge clk) begin
         if (reset == 1'b1) begin
-            state_conv_min_pixels_end <= 0;  
-        end
-        else if (conv_min_pixels_add_end == 1'b1) begin
-            state_conv_min_pixels_end <= 1;
-        end
-        else if (loop_shift_add_end == 1'b1) begin // all end
-            state_conv_min_pixels_end <= 0;
-        end
-        else begin
-            state_conv_min_pixels_end <= state_conv_min_pixels_end;
-        end
-    end
-    
-    always@(posedge clk) begin
-        if (reset == 1'b1) begin
-            state_conv_pixels_end <= 0;  
-        end
-        else if (conv_pixels_add_end == 1'b1) begin
-            state_conv_pixels_end <= 1;
-        end
-        else if (loop_shift_add_end == 1'b1) begin // all end
-            state_conv_pixels_end <= 0;
+            state_conv_pixels_add_end <= 0;  
+            state_valid_row1_adr <= 0; 
+            state_valid_row2_adr <= 0;  
+            state_valid_row3_adr <= 0;  
+            last_west_pad <= 0; 
+            last_slab_num <= 0;
+            last_east_pad <= 0; 
+            last_row1_idx <= 16'hffff;
+            last_row2_idx <= 16'hffff;
+            last_row3_idx <= 16'hffff;
+            last_row_start_idx <= 16'hffff;
+            last_row_end_idx <= 16'hffff;
+            last_reg_start_idx <= 16'hffff;
+            last_reg_end_idx <= 16'hffff;
         end
         else begin
-            state_conv_pixels_end <= state_conv_pixels_end;
+            state_conv_pixels_add_end <= conv_pixels_add_end;
+            state_valid_row1_adr <= valid_row1_adr;
+            state_valid_row2_adr <= valid_row2_adr;
+            state_valid_row3_adr <= valid_row3_adr;
+            last_west_pad <= west_pad; 
+            last_slab_num <= slab_num;
+            last_east_pad <= east_pad;
+            last_row1_idx <= row1_idx;
+            last_row2_idx <= row2_idx;
+            last_row3_idx <= row3_idx;
+            last_row_start_idx <= row_start_idx;
+            last_row_end_idx <= row_end_idx;
+            last_reg_start_idx <= reg_start_idx;
+            last_reg_end_idx <= reg_end_idx;
         end
-    end
-    
-    always@(posedge clk) begin
-        if (reset == 1'b1) begin
-            shift_counter <= 0;  
-        end
-        else if (loop_shift_add_begin == 1'b1) begin
-            if (loop_shift_add_end == 1'b1) begin // all end
-                shift_counter <= 0;
-            end
-            else begin
-                shift_counter <= shift_counter + 1;
-            end
-        end
-        else begin
-            shift_counter <= shift_counter;
-        end
-    end
-    
-    assign loop_shift_add_begin = state_conv_min_pixels_end;
-    
-    assign loop_shift_add_end = loop_shift_add_begin && ((shift_counter + 1) == k);
-    
-    
-//    always@(posedge clk) begin
-//        if (reset == 1'b1) begin
-//            shift_add2_end <= 0;  
-//        end
-//        else if (conv_min_pixels_add_end == 1'b1) begin
-//            shift_add2_end <= 1;
-//        end
-//        else if (loop_shift_add_end == 1'b1) begin // all end
-//            shift_add2_end <= 0;
-//        end
-//        else begin
-//            shift_add2_end <= shift_add2_end;
-//        end
-//    end
-    
-//    assign shift_add2_end = (loop_shift_add_begin && ((shift_counter + 2) == k)) ? 1:
-//    ((k == 16'd1) && (conv_pixels_add_end == 1'b1)) ? 1:
-//    (en == 1'b1)? 1: 0;
+    end    
 
-    assign stall = (k == 4'd1)? 0 : 1;
+    always@(posedge clk) begin
+        if (reset == 1'b1) begin
+            shift_start <= 0;  
+        end
+        else if (state_conv_pixels_add_end == 1'b1) begin
+            shift_start <= 1;
+        end
+        else if ((state_conv_pixels_add_end == 1'b0) && (shift_start == 1'b1)) begin
+            shift_start <= 0;
+        end
+        else begin
+            shift_start <= shift_start;
+        end
+    end
     
     assign ops_0_buf_0 = ({(shift_regs_num){2'd1}} >> (ops_right_shift << 1)) 
     & ({(shift_regs_num){2'd1}} << (ops_left_shift << 1));
     
-    assign ops_shift = {(shift_regs_num){2'd2}};
-    
-    assign ops_shift_buf = ops_0_buf_0
-    | (ops_shift >> (ops_right_shift_2 << 1));
-    
-    assign ops = ((state_conv_min_pixels_end == 1'b0) && (state_conv_pixels_end == 1'b0)) ?
-                 ops_0_buf_0:
-                 ((state_conv_min_pixels_end == 1'b1) && (state_conv_pixels_end == 1'b0)) ?
-                 ops_shift_buf:
-                 ((state_conv_min_pixels_end == 1'b1) && (state_conv_pixels_end == 1'b1) && (loop_shift_add_end == 1'b0)) ?
-                 ops_shift:
-                 ((state_conv_min_pixels_end == 1'b1) && (state_conv_pixels_end == 1'b1) && (loop_shift_add_end == 1'b1)) ?
+    assign ops_1 = (state_valid_row1_adr == 1'b1) ?
                  ops_0_buf_0:
                  {(shift_regs_num){2'd3}};
-                   
+                 
+    assign ops_2 = (state_valid_row2_adr == 1'b1) ?
+                 ops_0_buf_0:
+                 {(shift_regs_num){2'd3}};
+    
+    assign ops_3 = (state_valid_row3_adr == 1'b1) ?
+                 ops_0_buf_0:
+                 {(shift_regs_num){2'd3}};             
 
     genvar i;
     
-    //shift regs 1
+    //row regs 1
     generate 
-        for (i = 0; i < shift_regs_num - 1; i = i + 1) begin
+        for (i = 0; i < shift_regs_num; i = i + 1) begin
             always@(posedge clk) begin
                 if (reset == 1'b1) begin
-                    shift_regs_1[i*8 +: 8] <= 0;
+                    row_regs_1[i*8 +: 8] <= 0;
                 end
-                else if (ops[i*2 +: 2] == 2'd0) begin // stay
-                    shift_regs_1[i*8 +: 8] <= shift_regs_1[i*8 +: 8];
+                else if (ops_1[i*2 +: 2] == 2'd0) begin // stay or first clr
+                    row_regs_1[i*8 +: 8] <= 
+                    (shift_start == 1'b1)? 0 : row_regs_1[i*8 +: 8];
                 end
-                else if (ops[i*2 +: 2] == 2'd1) begin // from buffer, pad
-                    shift_regs_1[i*8 +: 8] <= row1_fill[i*8 +: 8];
+                else if (ops_1[i*2 +: 2] == 2'd1) begin // from buffer, pad
+                    row_regs_1[i*8 +: 8] <= row1_fill[i*8 +: 8];
                 end
-                else if (ops[i*2 +: 2] == 2'd2) begin // from reg nearby(shift)
-                    shift_regs_1[i*8 +: 8] <= shift_regs_1[(i*8+8) +: 8];
-                end
-                else if (ops[i*2 +: 2] == 2'd3) begin // 0
-                    shift_regs_1[i*8 +: 8] <= 0;
+                else if (ops_1[i*2 +: 2] == 2'd3) begin // 0
+                    row_regs_1[i*8 +: 8] <= 0;
                 end
                 else begin
-                    shift_regs_1[i*8 +: 8] <= shift_regs_1[i*8 +: 8];
+                    row_regs_1[i*8 +: 8] <= row_regs_1[i*8 +: 8];
                 end
             end
         end
     endgenerate
     
-    always@(posedge clk) begin
-        if (reset == 1'b1) begin
-            shift_regs_1[69*8 +: 8] <= 0;
-        end
-        else if (ops[69*8 +: 8] == 2'd0) begin // stay
-            shift_regs_1[69*8 +: 8] <= shift_regs_1[69*8 +: 8];
-        end
-        else if (ops[69*8 +: 8] == 2'd1) begin // from buffer, pad
-            shift_regs_1[69*8 +: 8] <= row1_fill[69*8 +: 8];
-        end
-        else if (ops[69*8 +: 8] == 2'd2) begin // from reg nearby(shift)
-            shift_regs_1[69*8 +: 8] <= shift_regs_1[69*8 +: 8];
-        end
-        else if (ops[69*8 +: 8] == 2'd3) begin // 0
-            shift_regs_1[69*8 +: 8] <= 0;
-        end
-        else begin
-            shift_regs_1[69*8 +: 8] <= shift_regs_1[69*8 +: 8];
-        end
-    end
-    
-    //shift regs 2
+    //row regs 2
     generate 
-        for (i = 0; i < shift_regs_num - 1; i = i + 1) begin
+        for (i = 0; i < shift_regs_num; i = i + 1) begin
             always@(posedge clk) begin
                 if (reset == 1'b1) begin
-                    shift_regs_2[i*8 +: 8] <= 0;
+                    row_regs_2[i*8 +: 8] <= 0;
                 end
-                else if (ops[i*2 +: 2] == 2'd0) begin // stay
-                    shift_regs_2[i*8 +: 8] <= shift_regs_2[i*8 +: 8];
+                else if (ops_2[i*2 +: 2] == 2'd0) begin // stay
+                    row_regs_2[i*8 +: 8] <= 
+                    (shift_start == 1'b1)? 0 : row_regs_2[i*8 +: 8];
                 end
-                else if (ops[i*2 +: 2] == 2'd1) begin // from buffer, pad
-                    shift_regs_2[i*8 +: 8] <= row2_fill[i*8 +: 8];
+                else if (ops_2[i*2 +: 2] == 2'd1) begin // from buffer, pad
+                    row_regs_2[i*8 +: 8] <= row2_fill[i*8 +: 8];
                 end
-                else if (ops[i*2 +: 2] == 2'd2) begin // from reg nearby(shift)
-                    shift_regs_2[i*8 +: 8] <= shift_regs_2[(i*8+8) +: 8];
-                end
-                else if (ops[i*2 +: 2] == 2'd3) begin // 0
-                    shift_regs_2[i*8 +: 8] <= 0;
+                else if (ops_2[i*2 +: 2] == 2'd3) begin // 0
+                    row_regs_2[i*8 +: 8] <= 0;
                 end
                 else begin
-                    shift_regs_2[i*8 +: 8] <= shift_regs_2[i*8 +: 8];
+                    row_regs_2[i*8 +: 8] <= row_regs_2[i*8 +: 8];
                 end
             end
         end
     endgenerate
     
-    always@(posedge clk) begin
-        if (reset == 1'b1) begin
-            shift_regs_2[69*8 +: 8] <= 0;
-        end
-        else if (ops[69*8 +: 8] == 2'd0) begin // stay
-            shift_regs_2[69*8 +: 8] <= shift_regs_2[69*8 +: 8];
-        end
-        else if (ops[69*8 +: 8] == 2'd1) begin // from buffer, pad
-            shift_regs_2[69*8 +: 8] <= row2_fill[69*8 +: 8];
-        end
-        else if (ops[69*8 +: 8] == 2'd2) begin // from reg nearby(shift)
-            shift_regs_2[69*8 +: 8] <= shift_regs_2[69*8 +: 8];
-        end
-        else if (ops[69*8 +: 8] == 2'd3) begin // 0
-            shift_regs_2[69*8 +: 8] <= 0;
-        end
-        else begin
-            shift_regs_2[69*8 +: 8] <= shift_regs_2[69*8 +: 8];
-        end
-    end
-    
-    //shift regs 3
+    //row regs 3
     generate 
-        for (i = 0; i < shift_regs_num - 1; i = i + 1) begin
+        for (i = 0; i < shift_regs_num; i = i + 1) begin
             always@(posedge clk) begin
                 if (reset == 1'b1) begin
-                    shift_regs_3[i*8 +: 8] <= 0;
+                    row_regs_3[i*8 +: 8] <= 0;
                 end
-                else if (ops[i*2 +: 2] == 2'd0) begin // stay
-                    shift_regs_3[i*8 +: 8] <= shift_regs_3[i*8 +: 8];
+                else if (ops_3[i*2 +: 2] == 2'd0) begin // stay
+                    row_regs_3[i*8 +: 8] <= 
+                    (shift_start == 1'b1)? 0 : row_regs_3[i*8 +: 8];
                 end
-                else if (ops[i*2 +: 2] == 2'd1) begin // from buffer, pad
-                    shift_regs_3[i*8 +: 8] <= row3_fill[i*8 +: 8];
+                else if (ops_3[i*2 +: 2] == 2'd1) begin // from buffer, pad
+                    row_regs_3[i*8 +: 8] <= row3_fill[i*8 +: 8];
                 end
-                else if (ops[i*2 +: 2] == 2'd2) begin // from reg nearby(shift)
-                    shift_regs_3[i*8 +: 8] <= shift_regs_3[(i*8+8) +: 8];
-                end
-                else if (ops[i*2 +: 2] == 2'd3) begin // 0
-                    shift_regs_3[i*8 +: 8] <= 0;
+                else if (ops_3[i*2 +: 2] == 2'd3) begin // 0
+                    row_regs_3[i*8 +: 8] <= 0;
                 end
                 else begin
-                    shift_regs_3[i*8 +: 8] <= shift_regs_3[i*8 +: 8];
+                    row_regs_3[i*8 +: 8] <= row_regs_3[i*8 +: 8];
                 end
             end
-        end
-    endgenerate
-    
-    always@(posedge clk) begin
-        if (reset == 1'b1) begin
-            shift_regs_3[69*8 +: 8] <= 0;
-        end
-        else if (ops[69*8 +: 8] == 2'd0) begin // stay
-            shift_regs_3[69*8 +: 8] <= shift_regs_3[69*8 +: 8];
-        end
-        else if (ops[69*8 +: 8] == 2'd1) begin // from buffer, pad
-            shift_regs_3[69*8 +: 8] <= row3_fill[69*8 +: 8];
-        end
-        else if (ops[69*8 +: 8] == 2'd2) begin // from reg nearby(shift)
-            shift_regs_3[69*8 +: 8] <= shift_regs_3[69*8 +: 8];
-        end
-        else if (ops[69*8 +: 8] == 2'd3) begin // 0
-            shift_regs_3[69*8 +: 8] <= 0;
-        end
-        else begin
-            shift_regs_3[69*8 +: 8] <= shift_regs_3[69*8 +: 8];
-        end
-    end
-    
-    genvar j;
-    
-    //output
-    generate 
-        for (j = 0; j < pixels_in_row; j = j + 1) begin
-            assign row1_pixels[j*8 +: 8] = shift_regs_1[j*8 +: 8];
-                                         
-            assign row2_pixels[j*8 +: 8] = shift_regs_2[j*8 +: 8];   
-                                         
-            assign row3_pixels[j*8 +: 8] = shift_regs_3[j*8 +: 8];                                          
         end
     endgenerate
     

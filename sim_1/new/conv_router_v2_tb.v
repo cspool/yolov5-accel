@@ -50,7 +50,16 @@ module conv_router_v2_tb(
     wire [15:0] row3_buf_adr;
     wire [1:0] row3_buf_idx;
     
-    wire conv_row_begin;
+    wire [15:0] row_slab_start_idx;
+    
+    wire [15:0] row1_slab_adr;
+    wire [1:0] row1_slab_idx;
+    wire [15:0] row2_slab_adr;
+    wire [1:0] row2_slab_idx;
+    wire [15:0] row3_slab_adr;
+    wire [1:0] row3_slab_idx;
+    
+    wire valid_row1_adr, valid_row2_adr, valid_row3_adr;
     
     conv_router_v2 cv_router(
         .ox(ox), 
@@ -80,19 +89,31 @@ module conv_router_v2_tb(
         .row_start_idx(row_start_idx), 
         .row_end_idx(row_end_idx),
         
+        .row_slab_start_idx(row_slab_start_idx),
+        
         .reg_start_idx(reg_start_idx), 
         .reg_end_idx(reg_end_idx),
         
         .conv_end(conv_end),
         .if_idx(if_idx),
-        .conv_row_begin(conv_row_begin),
         
         .row1_buf_adr(row1_buf_adr),
         .row1_buf_idx(row1_buf_idx),
         .row2_buf_adr(row2_buf_adr),
         .row2_buf_idx(row2_buf_idx),
         .row3_buf_adr(row3_buf_adr),
-        .row3_buf_idx(row3_buf_idx)
+        .row3_buf_idx(row3_buf_idx),
+        
+        .row1_slab_adr(row1_slab_adr),
+        .row1_slab_idx(row1_slab_idx),
+        .row2_slab_adr(row2_slab_adr),
+        .row2_slab_idx(row2_slab_idx),
+        .row3_slab_adr(row3_slab_adr),
+        .row3_slab_idx(row3_slab_idx),
+
+        .valid_row1_adr(valid_row1_adr),
+        .valid_row2_adr(valid_row2_adr),
+        .valid_row3_adr(valid_row3_adr)
     );
     
     

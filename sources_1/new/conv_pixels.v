@@ -30,7 +30,6 @@ next_ox_start,
 
 conv_tiling_add_end,
 
-conv_row_begin,
 conv_pixels_add_end,
 west_pad, slab_num, east_pad,
 row_start_idx, row_end_idx,
@@ -50,8 +49,6 @@ valid_adr
    input [15:0] next_ox_start;
    
    input conv_tiling_add_end;
-   
-   output conv_row_begin;
    
    output conv_pixels_add_end;
    
@@ -259,8 +256,6 @@ valid_adr
     assign reg_to = (row_start_idx + pixels_in_row_minus_1 > row_end)?
                     (reg_from + row_end - row_start_idx):
                     (reg_from + pixels_in_row_minus_1);       
-
-    assign conv_row_begin = loop_adr1_add_begin;
     
     //stall
     always@(posedge clk) begin

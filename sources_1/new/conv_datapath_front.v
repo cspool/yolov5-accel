@@ -36,6 +36,8 @@ re_row1_pixels, re_row2_pixels, re_row3_pixels
    parameter buffers_num_minus_1 = buffers_num-1;
    parameter shift_regs_num = 70;
    
+   parameter weights_in_row = 128; // 8bit
+    parameter weight_row_length = weights_in_row * 8;
     
     //cv router wire
     input [3:0] k, s, p;
@@ -56,7 +58,7 @@ re_row1_pixels, re_row2_pixels, re_row3_pixels
     wire [15:0] if_idx;
     
     wire conv_end;
-    wire conv_min_pixels_add_end, conv_pixels_add_end;
+    wire conv_pixels_add_end;
     
     wire [15:0] row1_buf_adr;
     wire [1:0] row1_buf_idx;
@@ -115,10 +117,18 @@ re_row1_pixels, re_row2_pixels, re_row3_pixels
         
     //in buf handler
     
+    //row regs
+    wire [shift_regs_num * 8 -1 : 0] row_regs_1;
+    wire [shift_regs_num * 8 -1 : 0] row_regs_2;
+    wire [shift_regs_num * 8 -1 : 0] row_regs_3;
+    wire shift_start;
+        
     //shift regs
     wire [pixels_in_row * 8 - 1: 0] row1_pixels_32, row2_pixels_32, row3_pixels_32;
-    wire shift_add2_end;
-    wire stall;
+    wire re_fm_en, re_fm_end;
+    
+    //weight buf
+    wire [weight_row_length-1 : 0] weights_vector;
     
     conv_router_v2 cv_router(
         .ox(ox), 
@@ -134,8 +144,8 @@ re_row1_pixels, re_row2_pixels, re_row3_pixels
         .reset(reset),
         .nif_in_2pow(nif_in_2pow), 
         .ix_in_2pow(ix_in_2pow),
-        .shift_add2_end(shift_add2_end),
-        .stall(stall),
+        
+        .row_slab_start_idx(row_slab_start_idx),
         
         .west_pad(west_pad), 
         .slab_num(slab_num), 
@@ -154,7 +164,6 @@ re_row1_pixels, re_row2_pixels, re_row3_pixels
         .if_idx(if_idx),
         
         .conv_end(conv_end),
-        .conv_min_pixels_add_end(conv_min_pixels_add_end), 
         .conv_pixels_add_end(conv_pixels_add_end),
         
         .row1_buf_adr(row1_buf_adr),
@@ -163,8 +172,6 @@ re_row1_pixels, re_row2_pixels, re_row3_pixels
         .row2_buf_idx(row2_buf_idx),
         .row3_buf_adr(row3_buf_adr),
         .row3_buf_idx(row3_buf_idx),
-        
-        .row_slab_start_idx(row_slab_start_idx),
     
         .row1_slab_adr(row1_slab_adr),
         .row1_slab_idx(row1_slab_idx),
@@ -178,7 +185,7 @@ re_row1_pixels, re_row2_pixels, re_row3_pixels
         .valid_row3_adr(valid_row3_adr)
     );
     
-    Shift_Regs shift_regs(
+    Row_Regs row_regs(
         .reset(reset),
         .clk(clk),
         .en(en),
@@ -205,14 +212,38 @@ re_row1_pixels, re_row2_pixels, re_row3_pixels
         .row2_slab_2(row2_slab_2), 
         .row3_slab_2(row3_slab_2),
         
-        .conv_min_pixels_add_end(conv_min_pixels_add_end),
+        .valid_row1_adr(valid_row1_adr),
+        .valid_row2_adr(valid_row2_adr),
+        .valid_row3_adr(valid_row3_adr),
+        
         .conv_pixels_add_end(conv_pixels_add_end),
+        
+        .row_regs_1(row_regs_1),
+        .row_regs_2(row_regs_2),
+        .row_regs_3(row_regs_3),
+        
+        .shift_start(shift_start)
+    );
+    
+    Shift_Regs shift_regs(
+        .reset(reset),
+        .clk(clk),
+        .en(en),
+        
+        .k(k),
+        .s(s),
+        
+        .row_regs_1(row_regs_1),
+        .row_regs_2(row_regs_2),
+        .row_regs_3(row_regs_3),
+        
+        .shift_start(shift_start),
         
         .re_row1_pixels(re_row1_pixels),
         .re_row2_pixels(re_row2_pixels),
         .re_row3_pixels(re_row3_pixels),
-        .shift_add2_end(shift_add2_end),
-        .stall(stall)
+        .re_fm_en(re_fm_en),
+        .re_fm_end(re_fm_end)
     );
     
         
@@ -341,6 +372,17 @@ re_row1_pixels, re_row2_pixels, re_row3_pixels
       .enb(valid_mem3_adr),      // input wire enb
       .addrb(slab3_adr),  // input wire [14 : 0] addrb
       .doutb(slab3_pixels_2)  // output wire [15 : 0] doutb
+    );
+    
+    cv_weights_handler cv_weights_handler(
+        .clk(clk), 
+        .reset(reset),
+
+        .re_fm_en(re_fm_en),
+        .re_fm_end(re_fm_end),
+        
+        .weights_vector(weights_vector)
+    
     );
     
     

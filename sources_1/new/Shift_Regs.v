@@ -27,34 +27,18 @@ en,
 
 k,s,
 
-west_pad,
-slab_num,
-east_pad,
-row1_idx, 
-row2_idx, 
-row3_idx,
-row_start_idx, 
-row_end_idx,
-    
-reg_start_idx, 
-reg_end_idx,
-    
-row1_pixels_32, 
-row2_pixels_32, 
-row3_pixels_32,
-row1_slab_2, 
-row2_slab_2, 
-row3_slab_2,
+row_regs_1,
+row_regs_2,
+row_regs_3,
 
-conv_min_pixels_add_end,
-conv_pixels_add_end,
+shift_start,
 
 re_row1_pixels,
 re_row2_pixels,
 re_row3_pixels,
 
-shift_add2_end,
-stall
+re_fm_en,
+re_fm_end
     );
     
     parameter shift_regs_num = 70;
@@ -64,35 +48,14 @@ stall
     
     input [3:0] k, s;
     
-    input [3:0] west_pad, slab_num, east_pad;
-    input [15:0] row1_idx, row2_idx, row3_idx;
-
-    input [15:0] row_start_idx, row_end_idx;
-    
-    input [15:0] reg_start_idx, reg_end_idx;
-    
-    input [pixels_in_row * 8 - 1: 0] row1_pixels_32, row2_pixels_32, row3_pixels_32;
-    input [2 * 8 - 1: 0] row1_slab_2, row2_slab_2, row3_slab_2;
-    
-    input conv_min_pixels_add_end, conv_pixels_add_end;
+    input [shift_regs_num * 8 -1 : 0] row_regs_1;
+    input [shift_regs_num * 8 -1 : 0] row_regs_2;
+    input [shift_regs_num * 8 -1 : 0] row_regs_3;
+    input shift_start;
     
     output [pixels_in_row*8-1:0] re_row1_pixels, re_row2_pixels, re_row3_pixels;
     
-    output reg shift_add2_end;
-    
-    output stall;
-    
-    wire [shift_regs_num * 8 - 1 : 0] row1_buf;
-    wire [shift_regs_num * 8 - 1 : 0] row1_slab_buf;
-    wire [shift_regs_num * 8 - 1 : 0] row1_fill;
-    
-    wire [shift_regs_num * 8 - 1 : 0] row2_buf;
-    wire [shift_regs_num * 8 - 1 : 0] row2_slab_buf;
-    wire [shift_regs_num * 8 - 1 : 0] row2_fill;
-    
-    wire [shift_regs_num * 8 - 1 : 0] row3_buf;
-    wire [shift_regs_num * 8 - 1 : 0] row3_slab_buf;
-    wire [shift_regs_num * 8 - 1 : 0] row3_fill;
+    output re_fm_en, re_fm_end;
     
     reg [shift_regs_num * 8 -1 : 0] shift_regs_1;
     reg [shift_regs_num * 8 -1 : 0] shift_regs_2;
@@ -100,85 +63,30 @@ stall
     
     wire [shift_regs_num * 2 -1 : 0] ops;
     
-    //001111111...11 && ...
-    wire [shift_regs_num * 8 - 1 : 0] row1_buf_mask;
-    wire [shift_regs_num * 8 - 1 : 0] row1_buf_pix;
-    
-    assign row1_buf_mask = {(shift_regs_num){8'hff}} >> ((shift_regs_num - reg_end_idx)<<3);
-    assign row1_buf_pix = row1_pixels_32 << ((reg_start_idx - 1)<<3);
-    
-    assign row1_buf = (row1_buf_mask) & (row1_buf_pix);
-    
-    //slab_num > 0
-    assign row1_slab_buf = (slab_num == 4'd2)? {{(shift_regs_num - 2){8'h0}}, row1_slab_2} :
-                           (slab_num == 4'd1)? {{(shift_regs_num - 1){8'h0}}, row1_slab_2[7:0]} :
-                           0;
-    
-    assign row1_fill = row1_buf | row1_slab_buf;
-    
-    //001111111...11 && ...
-    assign row2_buf = ({(shift_regs_num){8'hff}} >> ((shift_regs_num - reg_end_idx)<<3)) & (row2_pixels_32 << ((reg_start_idx - 1)<<3));
-    
-    //slab_num > 0
-    assign row2_slab_buf = (slab_num == 4'd2)? {{(shift_regs_num - 2){8'h0}}, row2_slab_2} :
-                           (slab_num == 4'd1)? {{(shift_regs_num - 1){8'h0}}, row2_slab_2[7:0]} : 0;
-    
-    assign row2_fill = row2_buf | row2_slab_buf;
-    
-    //001111111...11 && ...
-    assign row3_buf = ({(shift_regs_num){8'hff}} >> ((shift_regs_num - reg_end_idx)<<3)) & (row3_pixels_32 << ((reg_start_idx - 1)<<3));
-    
-    //slab_num > 0
-    assign row3_slab_buf = (slab_num == 4'd2)? {{(shift_regs_num - 2){8'h0}}, row3_slab_2} :
-                           (slab_num == 4'd1)? {{(shift_regs_num - 1){8'h0}}, row3_slab_2[7:0]} : 0;
-    
-    assign row3_fill = row3_buf | row3_slab_buf;
-    
-    wire [15:0] ops_right_shift = (shift_regs_num - reg_end_idx - {12'b0,east_pad});
-    
-    wire [15:0] ops_left_shift = (reg_start_idx - {12'b0,slab_num} - {12'b0,west_pad} - 1);
-    
-    wire [15:0] ops_right_shift_2 = (shift_regs_num - ops_left_shift);
-    
-    wire [shift_regs_num * 2 -1 : 0] ops_shift_buf;
+    wire [shift_regs_num * 2 -1 : 0] ops_shift;
     
     wire [shift_regs_num * 2 -1 : 0] ops_0_buf_0;
-    
-    wire [shift_regs_num * 2 -1 : 0] ops_shift;
     
     reg [15:0] shift_counter;//0...k-1, from the cycle of loop_shift_add_begin being 1
     wire loop_shift_add_begin, loop_shift_add_end;
     
-    reg state_conv_min_pixels_end, state_conv_pixels_end;
+    reg state_shift_start;
 
     
     always@(posedge clk) begin
         if (reset == 1'b1) begin
-            state_conv_min_pixels_end <= 0;  
+            state_shift_start <= 0;  
         end
-        else if (conv_min_pixels_add_end == 1'b1) begin
-            state_conv_min_pixels_end <= 1;
-        end
-        else if (loop_shift_add_end == 1'b1) begin // all end
-            state_conv_min_pixels_end <= 0;
-        end
-        else begin
-            state_conv_min_pixels_end <= state_conv_min_pixels_end;
-        end
-    end
-    
-    always@(posedge clk) begin
-        if (reset == 1'b1) begin
-            state_conv_pixels_end <= 0;  
-        end
-        else if (conv_pixels_add_end == 1'b1) begin
-            state_conv_pixels_end <= 1;
-        end
-        else if (loop_shift_add_end == 1'b1) begin // all end
-            state_conv_pixels_end <= 0;
+        else if (k > 1) begin
+            if (shift_start == 1'b1) begin
+                state_shift_start <= 1; // need shift
+            end
+            else if ((shift_counter) == k) begin // last 2 shift
+                state_shift_start <= 0; // shift end, next should be load
+            end
         end
         else begin
-            state_conv_pixels_end <= state_conv_pixels_end;
+            state_shift_start <= state_shift_start;
         end
     end
     
@@ -187,8 +95,13 @@ stall
             shift_counter <= 0;  
         end
         else if (loop_shift_add_begin == 1'b1) begin
-            if (loop_shift_add_end == 1'b1) begin // all end
-                shift_counter <= 0;
+            if (loop_shift_add_end == 1'b1) begin
+                if (shift_start == 1'b1) begin
+                    shift_counter <= 1;
+                end
+                else begin  // all end
+                    shift_counter <= 0;
+                end
             end
             else begin
                 shift_counter <= shift_counter + 1;
@@ -199,50 +112,23 @@ stall
         end
     end
     
-    assign loop_shift_add_begin = state_conv_min_pixels_end;
+    assign loop_shift_add_begin = (shift_start == 1'b1) || (state_shift_start == 1'b1);
     
-    assign loop_shift_add_end = loop_shift_add_begin && ((shift_counter + 1) == k);
+    assign loop_shift_add_end = loop_shift_add_begin && ((shift_counter) == k);
     
-    
-//    always@(posedge clk) begin
-//        if (reset == 1'b1) begin
-//            shift_add2_end <= 0;  
-//        end
-//        else if (conv_min_pixels_add_end == 1'b1) begin
-//            shift_add2_end <= 1;
-//        end
-//        else if (loop_shift_add_end == 1'b1) begin // all end
-//            shift_add2_end <= 0;
-//        end
-//        else begin
-//            shift_add2_end <= shift_add2_end;
-//        end
-//    end
-    
-//    assign shift_add2_end = (loop_shift_add_begin && ((shift_counter + 2) == k)) ? 1:
-//    ((k == 16'd1) && (conv_pixels_add_end == 1'b1)) ? 1:
-//    (en == 1'b1)? 1: 0;
-
-    assign stall = (k == 4'd1)? 0 : 1;
-    
-    assign ops_0_buf_0 = ({(shift_regs_num){2'd1}} >> (ops_right_shift << 1)) 
-    & ({(shift_regs_num){2'd1}} << (ops_left_shift << 1));
+    assign ops_0_buf_0 = {(shift_regs_num){2'd1}};
     
     assign ops_shift = {(shift_regs_num){2'd2}};
     
-    assign ops_shift_buf = ops_0_buf_0
-    | (ops_shift >> (ops_right_shift_2 << 1));
-    
-    assign ops = ((state_conv_min_pixels_end == 1'b0) && (state_conv_pixels_end == 1'b0)) ?
+    assign ops = (shift_start == 1'b1) ?
                  ops_0_buf_0:
-                 ((state_conv_min_pixels_end == 1'b1) && (state_conv_pixels_end == 1'b0)) ?
-                 ops_shift_buf:
-                 ((state_conv_min_pixels_end == 1'b1) && (state_conv_pixels_end == 1'b1) && (loop_shift_add_end == 1'b0)) ?
+                 ((state_shift_start == 1'b1) && (loop_shift_add_end == 1'b0)) ?
                  ops_shift:
-                 ((state_conv_min_pixels_end == 1'b1) && (state_conv_pixels_end == 1'b1) && (loop_shift_add_end == 1'b1)) ?
-                 ops_0_buf_0:
                  {(shift_regs_num){2'd3}};
-                   
+    
+    assign re_fm_en = loop_shift_add_begin;
+    
+    assign re_fm_end = ((loop_shift_add_end == 1'b1) && (shift_start == 1'b0)) ? 1 : 0;
 
     genvar i;
     
@@ -253,11 +139,8 @@ stall
                 if (reset == 1'b1) begin
                     shift_regs_1[i*8 +: 8] <= 0;
                 end
-                else if (ops[i*2 +: 2] == 2'd0) begin // stay
-                    shift_regs_1[i*8 +: 8] <= shift_regs_1[i*8 +: 8];
-                end
-                else if (ops[i*2 +: 2] == 2'd1) begin // from buffer, pad
-                    shift_regs_1[i*8 +: 8] <= row1_fill[i*8 +: 8];
+                else if (ops[i*2 +: 2] == 2'd1) begin // from row regs
+                    shift_regs_1[i*8 +: 8] <= row_regs_1[i*8 +: 8];
                 end
                 else if (ops[i*2 +: 2] == 2'd2) begin // from reg nearby(shift)
                     shift_regs_1[i*8 +: 8] <= shift_regs_1[(i*8+8) +: 8];
@@ -276,11 +159,8 @@ stall
         if (reset == 1'b1) begin
             shift_regs_1[69*8 +: 8] <= 0;
         end
-        else if (ops[69*8 +: 8] == 2'd0) begin // stay
-            shift_regs_1[69*8 +: 8] <= shift_regs_1[69*8 +: 8];
-        end
-        else if (ops[69*8 +: 8] == 2'd1) begin // from buffer, pad
-            shift_regs_1[69*8 +: 8] <= row1_fill[69*8 +: 8];
+        else if (ops[69*8 +: 8] == 2'd1) begin
+            shift_regs_1[69*8 +: 8] <= row_regs_1[69*8 +: 8];
         end
         else if (ops[69*8 +: 8] == 2'd2) begin // from reg nearby(shift)
             shift_regs_1[69*8 +: 8] <= shift_regs_1[69*8 +: 8];
@@ -300,11 +180,8 @@ stall
                 if (reset == 1'b1) begin
                     shift_regs_2[i*8 +: 8] <= 0;
                 end
-                else if (ops[i*2 +: 2] == 2'd0) begin // stay
-                    shift_regs_2[i*8 +: 8] <= shift_regs_2[i*8 +: 8];
-                end
-                else if (ops[i*2 +: 2] == 2'd1) begin // from buffer, pad
-                    shift_regs_2[i*8 +: 8] <= row2_fill[i*8 +: 8];
+                else if (ops[i*2 +: 2] == 2'd1) begin
+                    shift_regs_2[i*8 +: 8] <= row_regs_2[i*8 +: 8];
                 end
                 else if (ops[i*2 +: 2] == 2'd2) begin // from reg nearby(shift)
                     shift_regs_2[i*8 +: 8] <= shift_regs_2[(i*8+8) +: 8];
@@ -323,11 +200,8 @@ stall
         if (reset == 1'b1) begin
             shift_regs_2[69*8 +: 8] <= 0;
         end
-        else if (ops[69*8 +: 8] == 2'd0) begin // stay
-            shift_regs_2[69*8 +: 8] <= shift_regs_2[69*8 +: 8];
-        end
-        else if (ops[69*8 +: 8] == 2'd1) begin // from buffer, pad
-            shift_regs_2[69*8 +: 8] <= row2_fill[69*8 +: 8];
+        else if (ops[69*8 +: 8] == 2'd1) begin
+            shift_regs_2[69*8 +: 8] <= row_regs_2[69*8 +: 8];
         end
         else if (ops[69*8 +: 8] == 2'd2) begin // from reg nearby(shift)
             shift_regs_2[69*8 +: 8] <= shift_regs_2[69*8 +: 8];
@@ -347,11 +221,8 @@ stall
                 if (reset == 1'b1) begin
                     shift_regs_3[i*8 +: 8] <= 0;
                 end
-                else if (ops[i*2 +: 2] == 2'd0) begin // stay
-                    shift_regs_3[i*8 +: 8] <= shift_regs_3[i*8 +: 8];
-                end
-                else if (ops[i*2 +: 2] == 2'd1) begin // from buffer, pad
-                    shift_regs_3[i*8 +: 8] <= row3_fill[i*8 +: 8];
+                else if (ops[i*2 +: 2] == 2'd1) begin
+                    shift_regs_3[i*8 +: 8] <= row_regs_3[i*8 +: 8];
                 end
                 else if (ops[i*2 +: 2] == 2'd2) begin // from reg nearby(shift)
                     shift_regs_3[i*8 +: 8] <= shift_regs_3[(i*8+8) +: 8];
@@ -370,11 +241,8 @@ stall
         if (reset == 1'b1) begin
             shift_regs_3[69*8 +: 8] <= 0;
         end
-        else if (ops[69*8 +: 8] == 2'd0) begin // stay
-            shift_regs_3[69*8 +: 8] <= shift_regs_3[69*8 +: 8];
-        end
-        else if (ops[69*8 +: 8] == 2'd1) begin // from buffer, pad
-            shift_regs_3[69*8 +: 8] <= row3_fill[69*8 +: 8];
+        else if (ops[69*8 +: 8] == 2'd1) begin
+            shift_regs_3[69*8 +: 8] <= row_regs_3[69*8 +: 8];
         end
         else if (ops[69*8 +: 8] == 2'd2) begin // from reg nearby(shift)
             shift_regs_3[69*8 +: 8] <= shift_regs_3[69*8 +: 8];
