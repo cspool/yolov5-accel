@@ -30,7 +30,7 @@ weights_vector
     );
     
     
-    parameter weights_in_row = 128; // 8bit
+   parameter weights_in_row = 64; // 8bit
     parameter weight_row_length = weights_in_row * 8;
     
     input reset,clk;
@@ -45,7 +45,7 @@ weights_vector
     
     always@(posedge clk) begin
         if (reset == 1'b1) begin
-            adr <= 0;  
+            adr <= 0;   //first adr
         end
         else if (re_fm_en == 1'b1) begin
             if (re_fm_end == 1'b1) begin
@@ -65,8 +65,8 @@ weights_vector
     weights_buffer weights_buffer (
       .clka(clk),    // input wire clka
       .ena(weight_en),      // input wire ena
-      .addra(adr),  // input wire [10 : 0] addra
-      .douta(weights_vector)  // output wire [1023 : 0] douta
+      .addra(adr[10:0]),  // input wire [10 : 0] addra
+      .douta(weights_vector)  // output wire [511 : 0] douta
     );
     
     

@@ -26,9 +26,26 @@ k, s, p,
 clk, en, reset,
 nif_in_2pow,
 ix_in_2pow,
+mode,
 
-re_row1_pixels, re_row2_pixels, re_row3_pixels
+channel_out_reset, channel_out_en,
+
+out_row1_channel_set1, // pox res per channel
+out_row1_channel_set2, // pox res per channel
+out_row1_channel_set3, // pox res per channel
+out_row1_channel_set4, // pox res per channel
+out_row2_channel_set1, // pox res per channel
+out_row2_channel_set2, // pox res per channel
+out_row2_channel_set3, // pox res per channel
+out_row2_channel_set4, // pox res per channel
+out_row3_channel_set1, // pox res per channel
+out_row3_channel_set2, // pox res per channel
+out_row3_channel_set3, // pox res per channel
+out_row3_channel_set4 // pox res per channel
     );
+    
+            parameter row_num = 16;
+parameter column_num = 16; 
     parameter pixels_in_row = 32;
     parameter pixels_in_row_in_2pow = 5;
    parameter buffers_num = 3;
@@ -36,10 +53,32 @@ re_row1_pixels, re_row2_pixels, re_row3_pixels
    parameter buffers_num_minus_1 = buffers_num-1;
    parameter shift_regs_num = 70;
    
-   parameter weights_in_row = 128; // 8bit
+   parameter weights_in_row = row_num * 4; // 8bit
     parameter weight_row_length = weights_in_row * 8;
-    
+
+    parameter headroom = 8;
+
+parameter pixel_width_88 = 16 + headroom;
+//parameter pixel_width_18 = 10 + headroom;
+parameter pixel_width_18 = 8 + headroom;
+
+parameter pe_parallel_pixel_88 = 2;
+parameter pe_parallel_weight_88 = 1;
+parameter pe_parallel_pixel_18 = 2; 
+parameter pe_parallel_weight_18 = 2; 
+
+parameter pe_out_width =  (pixel_width_18) * pe_parallel_pixel_18 *  pe_parallel_weight_18; // width of 18 is bigger than 88
+
+parameter row_counter_width = ($clog2(row_num+1));
+
+parameter out_width = pixel_width_18 * pe_parallel_pixel_18 * pe_parallel_weight_18 * column_num;
+parameter out_width_88 = pixel_width_88 * pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num;
+parameter out_width_18 = pixel_width_18 * pe_parallel_pixel_18 * pe_parallel_weight_18 * column_num;
+
+
     //cv router wire
+    input mode;
+    
     input [3:0] k, s, p;
     
     input [15:0] ox, oy, ix, iy, nif;
@@ -48,7 +87,7 @@ re_row1_pixels, re_row2_pixels, re_row3_pixels
     
     input [15:0] nif_in_2pow, ix_in_2pow;
     
-    output [pixels_in_row*8-1:0] re_row1_pixels, re_row2_pixels, re_row3_pixels;
+    wire [pixels_in_row*8-1:0] re_row1_pixels, re_row2_pixels, re_row3_pixels;
     
     wire [3:0] west_pad, slab_num, east_pad;
     wire [15:0] row1_idx, row2_idx, row3_idx;
@@ -128,7 +167,30 @@ re_row1_pixels, re_row2_pixels, re_row3_pixels
     wire re_fm_en, re_fm_end;
     
     //weight buf
-    wire [weight_row_length-1 : 0] weights_vector;
+    wire [weight_row_length-1 : 0] weights_vector; //(16 * 4) * 8 or (32 * 4) * 1
+    
+    //delay regs pixels
+    wire [column_num*16-1:0] delay_row1_pixels, delay_row2_pixels, delay_row3_pixels;
+    
+    //delay regs weights
+    wire [row_num*8-1:0] delay_weights_1, delay_weights_2, delay_weights_3, delay_weights_4;
+    
+    //sa
+    reg sa_en;
+    input channel_out_reset, channel_out_en; //need logic
+    output [out_width - 1: 0] out_row1_channel_set1; // pox res per channel
+    output [out_width - 1: 0] out_row1_channel_set2; // pox res per channel
+    output [out_width - 1: 0] out_row1_channel_set3; // pox res per channel
+    output [out_width - 1: 0] out_row1_channel_set4; // pox res per channel
+    output [out_width - 1: 0] out_row2_channel_set1; // pox res per channel
+    output [out_width - 1: 0] out_row2_channel_set2; // pox res per channel
+    output [out_width - 1: 0] out_row2_channel_set3; // pox res per channel
+    output [out_width - 1: 0] out_row2_channel_set4; // pox res per channel
+    output [out_width - 1: 0] out_row3_channel_set1; // pox res per channel
+    output [out_width - 1: 0] out_row3_channel_set2; // pox res per channel
+    output [out_width - 1: 0] out_row3_channel_set3; // pox res per channel
+    output [out_width - 1: 0] out_row3_channel_set4; // pox res per channel
+    
     
     conv_router_v2 cv_router(
         .ox(ox), 
@@ -314,7 +376,7 @@ re_row1_pixels, re_row2_pixels, re_row3_pixels
         .valid_slab3_adr_wr(valid_slab3_adr_wr)
     );
     
-    ROM1_handler rom1_handler(
+    ROM1_handler rom1_handler( //in buf 1
         .clk(clk),
         .ena(valid_mem1_adr),
         .s(s),
@@ -377,14 +439,236 @@ re_row1_pixels, re_row2_pixels, re_row3_pixels
     cv_weights_handler cv_weights_handler(
         .clk(clk), 
         .reset(reset),
-
         .re_fm_en(re_fm_en),
         .re_fm_end(re_fm_end),
-        
         .weights_vector(weights_vector)
     
     );
     
+    Delay_Regs_Pixels delay_regs_pixels_1(
+        .clk(clk), 
+        .reset(reset), 
+        .re_fm_en(re_fm_en), 
+        .re_fm_end(re_fm_end),
+        .re_row_pixels(re_row1_pixels),
+        .delay_row_pixels(delay_row1_pixels)
+    );
+    
+    Delay_Regs_Pixels delay_regs_pixels_2(
+        .clk(clk), 
+        .reset(reset), 
+        .re_fm_en(re_fm_en), 
+        .re_fm_end(re_fm_end),
+        .re_row_pixels(re_row2_pixels),
+        .delay_row_pixels(delay_row2_pixels)
+    );
+    
+    Delay_Regs_Pixels delay_regs_pixels_3(
+        .clk(clk), 
+        .reset(reset), 
+        .re_fm_en(re_fm_en), 
+        .re_fm_end(re_fm_end),
+        .re_row_pixels(re_row3_pixels),
+        .delay_row_pixels(delay_row3_pixels)
+    );
+    
+    Delay_Regs_Weights delay_regs_weights_1(
+        .clk(clk), 
+        .reset(reset), 
+        .re_fm_en(re_fm_en), 
+        .re_fm_end(re_fm_end),
+        .weights(weights_vector[(1-1)* row_num * 8 +: (row_num * 8)]),
+        .delay_weights(delay_weights_1)
+    );
+    
+    Delay_Regs_Weights delay_regs_weights_2(
+        .clk(clk), 
+        .reset(reset), 
+        .re_fm_en(re_fm_en), 
+        .re_fm_end(re_fm_end),
+        .weights(weights_vector[(2-1)* row_num * 8 +: (row_num * 8)]),
+        .delay_weights(delay_weights_2)
+    );
+    
+    Delay_Regs_Weights delay_regs_weights_3(
+        .clk(clk), 
+        .reset(reset), 
+        .re_fm_en(re_fm_en), 
+        .re_fm_end(re_fm_end),
+        .weights(weights_vector[(3-1)* row_num * 8 +: (row_num * 8)]),
+        .delay_weights(delay_weights_3)
+    );
+    
+    Delay_Regs_Weights delay_regs_weights_4(
+        .clk(clk), 
+        .reset(reset), 
+        .re_fm_en(re_fm_en), 
+        .re_fm_end(re_fm_end),
+        .weights(weights_vector[(4-1)* row_num * 8 +: (row_num * 8)]),
+        .delay_weights(delay_weights_4)
+    );
+    
+    //sa 1
+    SA_fin sa_row1_channel_set1(
+        .clk(clk), 
+        .reset(reset), 
+        .en(sa_en), 
+        .mode(mode), 
+        .channel_out_reset(channel_out_reset),
+        .channel_out_en(channel_out_en), 
+        .row_in(delay_weights_1), //weights 
+        .column_in(delay_row1_pixels), //pixels
+        .out(out_row1_channel_set1)
+    );
+    
+    SA_fin sa_row1_channel_set2(
+        .clk(clk), 
+        .reset(reset), 
+        .en(sa_en), 
+        .mode(mode), 
+        .channel_out_reset(channel_out_reset),
+        .channel_out_en(channel_out_en), 
+        .row_in(delay_weights_2), //weights 
+        .column_in(delay_row1_pixels), //pixels
+        .out(out_row1_channel_set2)
+    );
+    
+    SA_fin sa_row1_channel_set3(
+        .clk(clk), 
+        .reset(reset), 
+        .en(sa_en), 
+        .mode(mode), 
+        .channel_out_reset(channel_out_reset),
+        .channel_out_en(channel_out_en), 
+        .row_in(delay_weights_3), //weights 
+        .column_in(delay_row1_pixels), //pixels
+        .out(out_row1_channel_set3)
+    );
+    
+    SA_fin sa_row1_channel_set4(
+        .clk(clk), 
+        .reset(reset), 
+        .en(sa_en), 
+        .mode(mode), 
+        .channel_out_reset(channel_out_reset),
+        .channel_out_en(channel_out_en), 
+        .row_in(delay_weights_4), //weights 
+        .column_in(delay_row1_pixels), //pixels
+        .out(out_row1_channel_set4)
+    );
+    
+    //sa 2
+    SA_fin sa_row2_channel_set1(
+        .clk(clk), 
+        .reset(reset), 
+        .en(sa_en), 
+        .mode(mode), 
+        .channel_out_reset(channel_out_reset),
+        .channel_out_en(channel_out_en), 
+        .row_in(delay_weights_1), //weights 
+        .column_in(delay_row2_pixels), //pixels
+        .out(out_row2_channel_set1)
+    );
+    
+    SA_fin sa_row2_channel_set2(
+        .clk(clk), 
+        .reset(reset), 
+        .en(sa_en), 
+        .mode(mode), 
+        .channel_out_reset(channel_out_reset),
+        .channel_out_en(channel_out_en), 
+        .row_in(delay_weights_2), //weights 
+        .column_in(delay_row2_pixels), //pixels
+        .out(out_row2_channel_set2)
+    );
+    
+    SA_fin sa_row2_channel_set3(
+        .clk(clk), 
+        .reset(reset), 
+        .en(sa_en), 
+        .mode(mode), 
+        .channel_out_reset(channel_out_reset),
+        .channel_out_en(channel_out_en), 
+        .row_in(delay_weights_3), //weights 
+        .column_in(delay_row2_pixels), //pixels
+        .out(out_row2_channel_set3)
+    );
+    
+    SA_fin sa_row2_channel_set4(
+        .clk(clk), 
+        .reset(reset), 
+        .en(sa_en), 
+        .mode(mode), 
+        .channel_out_reset(channel_out_reset),
+        .channel_out_en(channel_out_en), 
+        .row_in(delay_weights_4), //weights 
+        .column_in(delay_row2_pixels), //pixels
+        .out(out_row2_channel_set4)
+    );
+    
+    //sa 3
+    SA_fin sa_row3_channel_set1(
+        .clk(clk), 
+        .reset(reset), 
+        .en(sa_en), 
+        .mode(mode), 
+        .channel_out_reset(channel_out_reset),
+        .channel_out_en(channel_out_en), 
+        .row_in(delay_weights_1), //weights 
+        .column_in(delay_row3_pixels), //pixels
+        .out(out_row3_channel_set1)
+    );
+    
+    SA_fin sa_row3_channel_set2(
+        .clk(clk), 
+        .reset(reset), 
+        .en(sa_en), 
+        .mode(mode), 
+        .channel_out_reset(channel_out_reset),
+        .channel_out_en(channel_out_en), 
+        .row_in(delay_weights_2), //weights 
+        .column_in(delay_row3_pixels), //pixels
+        .out(out_row3_channel_set2)
+    );
+    
+    SA_fin sa_row3_channel_set3(
+        .clk(clk), 
+        .reset(reset), 
+        .en(sa_en), 
+        .mode(mode), 
+        .channel_out_reset(channel_out_reset),
+        .channel_out_en(channel_out_en), 
+        .row_in(delay_weights_3), //weights 
+        .column_in(delay_row3_pixels), //pixels
+        .out(out_row3_channel_set3)
+    );
+    
+    SA_fin sa_row3_channel_set4(
+        .clk(clk), 
+        .reset(reset), 
+        .en(sa_en), 
+        .mode(mode), 
+        .channel_out_reset(channel_out_reset),
+        .channel_out_en(channel_out_en), 
+        .row_in(delay_weights_4), //weights 
+        .column_in(delay_row3_pixels), //pixels
+        .out(out_row3_channel_set4)
+    );
+    
+    always @(posedge clk) begin
+        if (reset == 1'b1) begin
+            sa_en <= 0;
+        end
+        else if (re_fm_en == 1'b1) begin
+            sa_en <= 1;
+        end
+        else if (channel_out_en == 1'b1) begin //maybe late but may be ok
+            sa_en <= 0;
+        end
+        else begin
+            sa_en <= sa_en;
+        end
+    end
     
 endmodule
 

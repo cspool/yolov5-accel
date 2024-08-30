@@ -1,7 +1,7 @@
 -- Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2018.3 (win64) Build 2405991 Thu Dec  6 23:38:27 MST 2018
--- Date        : Thu Aug 29 19:42:23 2024
+-- Date        : Fri Aug 30 21:43:15 2024
 -- Host        : zack running 64-bit major release  (build 9200)
 -- Command     : write_vhdl -force -mode synth_stub
 --               d:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sources_1/ip/weights_buffer/weights_buffer_stub.vhdl
@@ -17,7 +17,7 @@ entity weights_buffer is
     clka : in STD_LOGIC;
     ena : in STD_LOGIC;
     addra : in STD_LOGIC_VECTOR ( 10 downto 0 );
-    douta : out STD_LOGIC_VECTOR ( 1023 downto 0 )
+    douta : out STD_LOGIC_VECTOR ( 511 downto 0 )
   );
 
 end weights_buffer;
@@ -26,7 +26,7 @@ architecture stub of weights_buffer is
 attribute syn_black_box : boolean;
 attribute black_box_pad_pin : string;
 attribute syn_black_box of stub : architecture is true;
-attribute black_box_pad_pin of stub : architecture is "clka,ena,addra[10:0],douta[1023:0]";
+attribute black_box_pad_pin of stub : architecture is "clka,ena,addra[10:0],douta[511:0]";
 attribute x_core_info : string;
 attribute x_core_info of stub : architecture is "blk_mem_gen_v8_4_2,Vivado 2018.3";
 begin

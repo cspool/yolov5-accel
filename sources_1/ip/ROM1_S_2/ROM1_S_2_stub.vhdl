@@ -1,11 +1,11 @@
 -- Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2018.3 (win64) Build 2405991 Thu Dec  6 23:38:27 MST 2018
--- Date        : Fri Aug 23 15:31:16 2024
+-- Date        : Fri Aug 30 21:44:04 2024
 -- Host        : zack running 64-bit major release  (build 9200)
--- Command     : write_vhdl -force -mode synth_stub -rename_top ROM1_S_2 -prefix
---               ROM1_S_2_ rom1_s2_stub.vhdl
--- Design      : rom1_s2
+-- Command     : write_vhdl -force -mode synth_stub
+--               D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sources_1/ip/ROM1_S_2/ROM1_S_2_stub.vhdl
+-- Design      : ROM1_S_2
 -- Purpose     : Stub declaration of top-level module interface
 -- Device      : xc7vx690tffg1761-2
 -- --------------------------------------------------------------------------------

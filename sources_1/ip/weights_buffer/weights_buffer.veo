@@ -58,7 +58,7 @@ weights_buffer your_instance_name (
   .clka(clka),    // input wire clka
   .ena(ena),      // input wire ena
   .addra(addra),  // input wire [10 : 0] addra
-  .douta(douta)  // output wire [1023 : 0] douta
+  .douta(douta)  // output wire [511 : 0] douta
 );
 // INST_TAG_END ------ End INSTANTIATION Template ---------
 

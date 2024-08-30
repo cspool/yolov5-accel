@@ -24,12 +24,37 @@ module conv_dp_front_tb(
 
     );
     
-   parameter pixels_in_row = 32;
-   parameter pixels_in_row_in_2pow = 5;
+            parameter row_num = 16;
+parameter column_num = 16; 
+    parameter pixels_in_row = 32;
+    parameter pixels_in_row_in_2pow = 5;
    parameter buffers_num = 3;
    parameter pixels_in_row_minus_1 = pixels_in_row-1;
    parameter buffers_num_minus_1 = buffers_num-1;
    parameter shift_regs_num = 70;
+   
+   parameter weights_in_row = row_num * 4; // 8bit
+    parameter weight_row_length = weights_in_row * 8;
+
+    parameter headroom = 8;
+
+parameter pixel_width_88 = 16 + headroom;
+//parameter pixel_width_18 = 10 + headroom;
+parameter pixel_width_18 = 8 + headroom;
+
+parameter pe_parallel_pixel_88 = 2;
+parameter pe_parallel_weight_88 = 1;
+parameter pe_parallel_pixel_18 = 2; 
+parameter pe_parallel_weight_18 = 2; 
+
+parameter pe_out_width =  (pixel_width_18) * pe_parallel_pixel_18 *  pe_parallel_weight_18; // width of 18 is bigger than 88
+
+parameter row_counter_width = ($clog2(row_num+1));
+
+parameter out_width = pixel_width_18 * pe_parallel_pixel_18 * pe_parallel_weight_18 * column_num;
+parameter out_width_88 = pixel_width_88 * pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num;
+parameter out_width_18 = pixel_width_18 * pe_parallel_pixel_18 * pe_parallel_weight_18 * column_num;
+
     
     reg [3:0] k, s, p;
     
@@ -39,7 +64,20 @@ module conv_dp_front_tb(
     
     reg [15:0] nif_in_2pow, ix_in_2pow;
     
-    wire [pixels_in_row*8-1:0] re_row1_pixels, re_row2_pixels, re_row3_pixels;
+    reg mode, channel_out_reset, channel_out_en;
+    
+    wire [out_width - 1: 0] out_row1_channel_set1; // pox res per channel
+    wire [out_width - 1: 0] out_row1_channel_set2; // pox res per channel
+    wire [out_width - 1: 0] out_row1_channel_set3; // pox res per channel
+    wire [out_width - 1: 0] out_row1_channel_set4; // pox res per channel
+    wire [out_width - 1: 0] out_row2_channel_set1; // pox res per channel
+    wire [out_width - 1: 0] out_row2_channel_set2; // pox res per channel
+    wire [out_width - 1: 0] out_row2_channel_set3; // pox res per channel
+    wire [out_width - 1: 0] out_row2_channel_set4; // pox res per channel
+    wire [out_width - 1: 0] out_row3_channel_set1; // pox res per channel
+    wire [out_width - 1: 0] out_row3_channel_set2; // pox res per channel
+    wire [out_width - 1: 0] out_row3_channel_set3; // pox res per channel
+    wire [out_width - 1: 0] out_row3_channel_set4; // pox res per channel
 
 conv_datapath_front cv_datapath_front(
     .ox(ox), 
@@ -56,9 +94,23 @@ conv_datapath_front cv_datapath_front(
     .nif_in_2pow(nif_in_2pow),
     .ix_in_2pow(ix_in_2pow),
     
-    .re_row1_pixels(re_row1_pixels), 
-    .re_row2_pixels(re_row2_pixels), 
-    .re_row3_pixels(re_row3_pixels)
+    .mode(mode),
+
+    .channel_out_reset(channel_out_reset), 
+    .channel_out_en(channel_out_en),
+    
+    .out_row1_channel_set1(out_row1_channel_set1), // pox res per channel
+    .out_row1_channel_set2(out_row1_channel_set2), // pox res per channel
+    .out_row1_channel_set3(out_row1_channel_set3), // pox res per channel
+    .out_row1_channel_set4(out_row1_channel_set4), // pox res per channel
+    .out_row2_channel_set1(out_row2_channel_set1), // pox res per channel
+    .out_row2_channel_set2(out_row2_channel_set2), // pox res per channel
+    .out_row2_channel_set3(out_row2_channel_set3), // pox res per channel
+    .out_row2_channel_set4(out_row2_channel_set4), // pox res per channel
+    .out_row3_channel_set1(out_row3_channel_set1), // pox res per channel
+    .out_row3_channel_set2(out_row3_channel_set2), // pox res per channel
+    .out_row3_channel_set3(out_row3_channel_set3), // pox res per channel
+    .out_row3_channel_set4(out_row3_channel_set4) // pox res per channel
 );
 
 
@@ -71,31 +123,23 @@ end
     // cfg 0
         clk = 0;
         reset = 1; en = 0;
-        k = 6; s = 2; p = 2; ox = 32; oy = 3; ix = 256; iy = 256; nif = 1;
+        k = 1; s = 1; p = 0; ox = 32; oy = 3; ix = 256; iy = 256; nif = 1;
         nif_in_2pow = 0; ix_in_2pow = 8;
+        mode = 0;
+        channel_out_reset = 1;channel_out_en = 0;
         
         
         #10;
         
         reset = 0; en = 1;
         
-        #10;
+        #500;
         reset = 0; en = 0;
         
         #10;
-        reset = 0; en = 0;
+        channel_out_reset = 0; channel_out_en = 1;
         
-        #10;
-        reset = 0; en = 0;
-        
-        #10;
-        reset = 0; en = 0;
-        
-        #10;
-        reset = 0; en = 0;
-        
-        #10;
-        reset = 0; en = 0;
+      
         
     end
 
