@@ -21,7 +21,8 @@
 
 
 module conv_router_v2(
-ox, oy, ix, iy, nif,
+mode,
+of, ox, oy, ix, iy, nif,
 k, s, p,
 clk, en, reset,
 nif_in_2pow,
@@ -67,10 +68,11 @@ valid_row3_adr
    parameter buffers_num_minus_1 = buffers_num-1;
     
     // conv tiling module
+    input mode;
     
     input [3:0] k, s, p;
     
-    input [15:0] ox, oy, ix, iy, nif;
+    input [15:0] of, ox, oy, ix, iy, nif;
     
     input clk, en, reset; // reset is valid a cycle before en being valid
     
@@ -182,6 +184,8 @@ valid_row3_adr
     //conv tiling module
     
     conv_tiling_v2 cv_tiling(
+        .mode(mode),
+        .of(of),
         .ox(ox), 
         .oy(oy), 
         .ix(ix), 

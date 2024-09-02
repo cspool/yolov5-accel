@@ -23,10 +23,11 @@
 module conv_router_v2_tb(
 
     );
+    reg mode;
     
     reg [3:0] k, s, p;
     
-    reg [15:0] ox, oy, ix, iy, nif;
+    reg [15:0] ox, oy, of, ix, iy, nif;
     
     reg clk, en, reset; // reset is valid a cycle before en being valid
     
@@ -62,6 +63,8 @@ module conv_router_v2_tb(
     wire valid_row1_adr, valid_row2_adr, valid_row3_adr;
     
     conv_router_v2 cv_router(
+        .mode(mode),
+        .of(of),
         .ox(ox), 
         .oy(oy), 
         .ix(ix), 
@@ -126,7 +129,8 @@ module conv_router_v2_tb(
     // cfg 0
         clk = 0;
         reset = 1; en = 0;
-        k = 3; s = 1; p = 1; ox = 64; oy = 64; ix = 256; iy = 256; nif = 1;
+        mode = 0;
+        k = 3; s = 1; p = 1; of = 64; ox = 32; oy = 3; ix = 256; iy = 256; nif = 1;
         nif_in_2pow = 0; ix_in_2pow = 8;
 //        shift_add2_end = 1;
 //        stall = 0;

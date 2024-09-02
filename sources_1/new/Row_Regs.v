@@ -27,30 +27,30 @@ en,
 
 k,s,
 
-west_pad,
-slab_num,
-east_pad,
-row1_idx, 
-row2_idx, 
-row3_idx,
-row_start_idx, 
-row_end_idx,
+last_west_pad,
+last_slab_num,
+last_east_pad,
+last_row1_idx, 
+last_row2_idx, 
+last_row3_idx,
+last_row_start_idx, 
+last_row_end_idx,
     
-reg_start_idx, 
-reg_end_idx,
+last_reg_start_idx, 
+last_reg_end_idx,
     
-row1_pixels_32, 
-row2_pixels_32, 
-row3_pixels_32,
-row1_slab_2, 
-row2_slab_2, 
-row3_slab_2,
+last_row1_pixels_32, 
+last_row2_pixels_32, 
+last_row3_pixels_32,
+last_row1_slab_2, 
+last_row2_slab_2, 
+last_row3_slab_2,
 
-valid_row1_adr,
-valid_row2_adr,
-valid_row3_adr,
+state_valid_row1_adr,
+state_valid_row2_adr,
+state_valid_row3_adr,
 
-conv_pixels_add_end,
+state_conv_pixels_add_end,
 
 row_regs_1,
 row_regs_2,
@@ -66,20 +66,27 @@ shift_start
     
     input [3:0] k, s;
     
-    input [3:0] west_pad, slab_num, east_pad;
-    input [15:0] row1_idx, row2_idx, row3_idx;
+//    input [3:0] west_pad, slab_num, east_pad;
+//    input [15:0] row1_idx, row2_idx, row3_idx;
 
-    input [15:0] row_start_idx, row_end_idx;
+//    input [15:0] row_start_idx, row_end_idx;
     
-    input [15:0] reg_start_idx, reg_end_idx;
+//    input [15:0] reg_start_idx, reg_end_idx;
     
-    input [pixels_in_row * 8 - 1: 0] row1_pixels_32, row2_pixels_32, row3_pixels_32;
-    input [2 * 8 - 1: 0] row1_slab_2, row2_slab_2, row3_slab_2;
+    input [pixels_in_row * 8 - 1: 0] last_row1_pixels_32, last_row2_pixels_32, last_row3_pixels_32;
+    input [2 * 8 - 1: 0] last_row1_slab_2, last_row2_slab_2, last_row3_slab_2;
     
 //    input conv_min_pixels_add_end, conv_pixels_add_end;
-    input conv_pixels_add_end;
+    input state_conv_pixels_add_end;
     
-    input valid_row1_adr, valid_row2_adr, valid_row3_adr;
+    input [3:0] last_west_pad, last_slab_num, last_east_pad;
+    input [15:0] last_row1_idx, last_row2_idx, last_row3_idx;
+
+    input [15:0] last_row_start_idx, last_row_end_idx;
+    
+    input [15:0] last_reg_start_idx, last_reg_end_idx;
+    
+    input state_valid_row1_adr, state_valid_row2_adr, state_valid_row3_adr;
         
     output reg [shift_regs_num * 8 -1 : 0] row_regs_1;
     output reg [shift_regs_num * 8 -1 : 0] row_regs_2;
@@ -110,46 +117,36 @@ shift_start
 
     wire [shift_regs_num * 2 -1 : 0] ops_0_buf_0;
     
-    reg state_valid_row1_adr, state_valid_row2_adr, state_valid_row3_adr;
-    
-    reg state_conv_pixels_add_end;
-    
-    reg [3:0] last_west_pad, last_slab_num, last_east_pad;
-    reg [15:0] last_row1_idx, last_row2_idx, last_row3_idx;
-
-    reg [15:0] last_row_start_idx, last_row_end_idx;
-    
-    reg [15:0] last_reg_start_idx, last_reg_end_idx;
     
     assign row1_buf_mask = {(shift_regs_num){8'hff}} >> ((shift_regs_num - last_reg_end_idx)<<3);
-    assign row1_buf_pix = row1_pixels_32 << ((last_reg_start_idx - 1)<<3);
+    assign row1_buf_pix = last_row1_pixels_32 << ((last_reg_start_idx - 1)<<3);
     
     assign row1_buf = (row1_buf_mask) & (row1_buf_pix);
     
     //slab_num > 0
-    assign row1_slab_buf = (last_slab_num == 4'd2)? {{(shift_regs_num - 2){8'h0}}, row1_slab_2} :
-                           (last_slab_num == 4'd1)? {{(shift_regs_num - 1){8'h0}}, row1_slab_2[7:0]} :
+    assign row1_slab_buf = (last_slab_num == 4'd2)? {{(shift_regs_num - 2){8'h0}}, last_row1_slab_2} :
+                           (last_slab_num == 4'd1)? {{(shift_regs_num - 1){8'h0}}, last_row1_slab_2[7:0]} :
                            0;
     
     assign row1_fill = row1_buf | row1_slab_buf;
     
     //001111111...11 && ...
     assign row2_buf = ({(shift_regs_num){8'hff}} >> ((shift_regs_num - last_reg_end_idx)<<3)) 
-    & (row2_pixels_32 << ((last_reg_start_idx - 1)<<3));
+    & (last_row2_pixels_32 << ((last_reg_start_idx - 1)<<3));
     
     //slab_num > 0
-    assign row2_slab_buf = (last_slab_num == 4'd2)? {{(shift_regs_num - 2){8'h0}}, row2_slab_2} :
-                           (last_slab_num == 4'd1)? {{(shift_regs_num - 1){8'h0}}, row2_slab_2[7:0]} : 0;
+    assign row2_slab_buf = (last_slab_num == 4'd2)? {{(shift_regs_num - 2){8'h0}}, last_row2_slab_2} :
+                           (last_slab_num == 4'd1)? {{(shift_regs_num - 1){8'h0}}, last_row2_slab_2[7:0]} : 0;
     
     assign row2_fill = row2_buf | row2_slab_buf;
     
     //001111111...11 && ...
     assign row3_buf = ({(shift_regs_num){8'hff}} >> ((shift_regs_num - last_reg_end_idx)<<3)) 
-    & (row3_pixels_32 << ((last_reg_start_idx - 1)<<3));
+    & (last_row3_pixels_32 << ((last_reg_start_idx - 1)<<3));
     
     //slab_num > 0
-    assign row3_slab_buf = (last_slab_num == 4'd2)? {{(shift_regs_num - 2){8'h0}}, row3_slab_2} :
-                           (last_slab_num == 4'd1)? {{(shift_regs_num - 1){8'h0}}, row3_slab_2[7:0]} : 0;
+    assign row3_slab_buf = (last_slab_num == 4'd2)? {{(shift_regs_num - 2){8'h0}}, last_row3_slab_2} :
+                           (last_slab_num == 4'd1)? {{(shift_regs_num - 1){8'h0}}, last_row3_slab_2[7:0]} : 0;
     
     assign row3_fill = row3_buf | row3_slab_buf;
     
@@ -158,42 +155,7 @@ shift_start
     assign ops_left_shift = (last_reg_start_idx - {12'b0,last_slab_num} - {12'b0,last_west_pad} - 1);
     
     assign ops_right_shift_2 = (shift_regs_num - ops_left_shift);
-
-    
-    always@(posedge clk) begin
-        if (reset == 1'b1) begin
-            state_conv_pixels_add_end <= 0;  
-            state_valid_row1_adr <= 0; 
-            state_valid_row2_adr <= 0;  
-            state_valid_row3_adr <= 0;  
-            last_west_pad <= 0; 
-            last_slab_num <= 0;
-            last_east_pad <= 0; 
-            last_row1_idx <= 16'hffff;
-            last_row2_idx <= 16'hffff;
-            last_row3_idx <= 16'hffff;
-            last_row_start_idx <= 16'hffff;
-            last_row_end_idx <= 16'hffff;
-            last_reg_start_idx <= 16'hffff;
-            last_reg_end_idx <= 16'hffff;
-        end
-        else begin
-            state_conv_pixels_add_end <= conv_pixels_add_end;
-            state_valid_row1_adr <= valid_row1_adr;
-            state_valid_row2_adr <= valid_row2_adr;
-            state_valid_row3_adr <= valid_row3_adr;
-            last_west_pad <= west_pad; 
-            last_slab_num <= slab_num;
-            last_east_pad <= east_pad;
-            last_row1_idx <= row1_idx;
-            last_row2_idx <= row2_idx;
-            last_row3_idx <= row3_idx;
-            last_row_start_idx <= row_start_idx;
-            last_row_end_idx <= row_end_idx;
-            last_reg_start_idx <= reg_start_idx;
-            last_reg_end_idx <= reg_end_idx;
-        end
-    end    
+   
 
     always@(posedge clk) begin
         if (reset == 1'b1) begin

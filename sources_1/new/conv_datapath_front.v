@@ -21,7 +21,7 @@
 
 
 module conv_datapath_front(
-ox, oy, ix, iy, nif,
+of, ox, oy, ix, iy, nif,
 k, s, p,
 clk, en, reset,
 nif_in_2pow,
@@ -81,7 +81,7 @@ parameter out_width_18 = pixel_width_18 * pe_parallel_pixel_18 * pe_parallel_wei
     
     input [3:0] k, s, p;
     
-    input [15:0] ox, oy, ix, iy, nif;
+    input [15:0] of, ox, oy, ix, iy, nif;
     
     input clk, en, reset; // reset is valid a cycle before en being valid
     
@@ -139,9 +139,9 @@ parameter out_width_18 = pixel_width_18 * pe_parallel_pixel_18 * pe_parallel_wei
     
     wire valid_mem1_adr, valid_mem2_adr, valid_mem3_adr;
     
-    wire [15:0] row1_slab_2;
-    wire [15:0] row2_slab_2;
-    wire [15:0] row3_slab_2;
+    wire [15:0] last_row1_slab_2;
+    wire [15:0] last_row2_slab_2;
+    wire [15:0] last_row3_slab_2;
     
     //slab write
     wire [15:0] slab1_adr_wr;
@@ -163,7 +163,7 @@ parameter out_width_18 = pixel_width_18 * pe_parallel_pixel_18 * pe_parallel_wei
     wire shift_start;
         
     //shift regs
-    wire [pixels_in_row * 8 - 1: 0] row1_pixels_32, row2_pixels_32, row3_pixels_32;
+    wire [pixels_in_row * 8 - 1: 0] last_row1_pixels_32, last_row2_pixels_32, last_row3_pixels_32;
     wire re_fm_en, re_fm_end;
     
     //weight buf
@@ -191,8 +191,9 @@ parameter out_width_18 = pixel_width_18 * pe_parallel_pixel_18 * pe_parallel_wei
     output [out_width - 1: 0] out_row3_channel_set3; // pox res per channel
     output [out_width - 1: 0] out_row3_channel_set4; // pox res per channel
     
-    
     conv_router_v2 cv_router(
+        .mode(mode),
+        .of(of),
         .ox(ox), 
         .oy(oy), 
         .ix(ix), 
@@ -247,6 +248,76 @@ parameter out_width_18 = pixel_width_18 * pe_parallel_pixel_18 * pe_parallel_wei
         .valid_row3_adr(valid_row3_adr)
     );
     
+     //last regs
+    reg [3:0] last_west_pad, last_slab_num, last_east_pad;
+    reg [15:0] last_row1_idx, last_row2_idx, last_row3_idx;
+
+    reg [15:0] last_row_start_idx, last_row_end_idx;
+    
+    reg [15:0] last_reg_start_idx, last_reg_end_idx;
+    
+    reg state_valid_row1_adr, state_valid_row2_adr, state_valid_row3_adr;
+    
+    reg state_conv_pixels_add_end;
+    
+    reg [1:0] last_row1_buf_idx;
+    reg [1:0] last_row2_buf_idx;
+    reg [1:0] last_row3_buf_idx;
+    
+    reg [1:0] last_row1_slab_idx;
+    reg [1:0] last_row2_slab_idx;
+    reg [1:0] last_row3_slab_idx;
+    
+    always@(posedge clk) begin
+        if (reset == 1'b1) begin
+            state_conv_pixels_add_end <= 0;  
+            state_valid_row1_adr <= 0; 
+            state_valid_row2_adr <= 0;  
+            state_valid_row3_adr <= 0;  
+            last_west_pad <= 0; 
+            last_slab_num <= 0;
+            last_east_pad <= 0; 
+            last_row1_idx <= 16'hffff;
+            last_row2_idx <= 16'hffff;
+            last_row3_idx <= 16'hffff;
+            last_row_start_idx <= 16'hffff;
+            last_row_end_idx <= 16'hffff;
+            last_reg_start_idx <= 16'hffff;
+            last_reg_end_idx <= 16'hffff;
+            last_row1_buf_idx <= 0;
+            last_row2_buf_idx <= 0;
+            last_row3_buf_idx <= 0;
+    
+            last_row1_slab_idx <= 0;
+            last_row2_slab_idx <= 0;
+            last_row3_slab_idx <= 0;
+        end
+        else begin
+            state_conv_pixels_add_end <= conv_pixels_add_end;
+            state_valid_row1_adr <= valid_row1_adr;
+            state_valid_row2_adr <= valid_row2_adr;
+            state_valid_row3_adr <= valid_row3_adr;
+            last_west_pad <= west_pad; 
+            last_slab_num <= slab_num;
+            last_east_pad <= east_pad;
+            last_row1_idx <= row1_idx;
+            last_row2_idx <= row2_idx;
+            last_row3_idx <= row3_idx;
+            last_row_start_idx <= row_start_idx;
+            last_row_end_idx <= row_end_idx;
+            last_reg_start_idx <= reg_start_idx;
+            last_reg_end_idx <= reg_end_idx;
+            
+            last_row1_buf_idx <= row1_buf_idx;
+            last_row2_buf_idx <= row2_buf_idx;
+            last_row3_buf_idx <= row3_buf_idx;
+    
+            last_row1_slab_idx <= row1_slab_idx;
+            last_row2_slab_idx <= row2_slab_idx;
+            last_row3_slab_idx <= row3_slab_idx;
+        end
+    end    
+    
     Row_Regs row_regs(
         .reset(reset),
         .clk(clk),
@@ -255,30 +326,30 @@ parameter out_width_18 = pixel_width_18 * pe_parallel_pixel_18 * pe_parallel_wei
         .k(k),
         .s(s),
         
-        .west_pad(west_pad),
-        .slab_num(slab_num),
-        .east_pad(east_pad),
-        .row1_idx(row1_idx), 
-        .row2_idx(row2_idx), 
-        .row3_idx(row3_idx),
-        .row_start_idx(row_start_idx), 
-        .row_end_idx(row_end_idx),
+        .last_west_pad(last_west_pad),
+        .last_slab_num(last_slab_num),
+        .last_east_pad(last_east_pad),
+        .last_row1_idx(last_row1_idx), 
+        .last_row2_idx(last_row2_idx), 
+        .last_row3_idx(last_row3_idx),
+        .last_row_start_idx(last_row_start_idx), 
+        .last_row_end_idx(last_row_end_idx),
             
-        .reg_start_idx(reg_start_idx), 
-        .reg_end_idx(reg_end_idx),
+        .last_reg_start_idx(last_reg_start_idx), 
+        .last_reg_end_idx(last_reg_end_idx),
             
-        .row1_pixels_32(row1_pixels_32), 
-        .row2_pixels_32(row2_pixels_32), 
-        .row3_pixels_32(row3_pixels_32),
-        .row1_slab_2(row1_slab_2), 
-        .row2_slab_2(row2_slab_2), 
-        .row3_slab_2(row3_slab_2),
+        .last_row1_pixels_32(last_row1_pixels_32), 
+        .last_row2_pixels_32(last_row2_pixels_32), 
+        .last_row3_pixels_32(last_row3_pixels_32),
+        .last_row1_slab_2(last_row1_slab_2), 
+        .last_row2_slab_2(last_row2_slab_2), 
+        .last_row3_slab_2(last_row3_slab_2),
         
-        .valid_row1_adr(valid_row1_adr),
-        .valid_row2_adr(valid_row2_adr),
-        .valid_row3_adr(valid_row3_adr),
+        .state_valid_row1_adr(state_valid_row1_adr),
+        .state_valid_row2_adr(state_valid_row2_adr),
+        .state_valid_row3_adr(state_valid_row3_adr),
         
-        .conv_pixels_add_end(conv_pixels_add_end),
+        .state_conv_pixels_add_end(state_conv_pixels_add_end),
         
         .row_regs_1(row_regs_1),
         .row_regs_2(row_regs_2),
@@ -338,9 +409,17 @@ parameter out_width_18 = pixel_width_18 * pe_parallel_pixel_18 * pe_parallel_wei
         .buf2_pixels_32(buf2_pixels_32),
         .buf3_pixels_32(buf3_pixels_32),
         
+        .last_row1_buf_idx(last_row1_buf_idx),
+        .last_row2_buf_idx(last_row2_buf_idx),
+        .last_row3_buf_idx(last_row3_buf_idx),
+        
         .slab1_pixels_2(slab1_pixels_2),
         .slab2_pixels_2(slab2_pixels_2),
         .slab3_pixels_2(slab3_pixels_2),
+        
+        .last_row1_slab_idx(last_row1_slab_idx),
+        .last_row2_slab_idx(last_row2_slab_idx),
+        .last_row3_slab_idx(last_row3_slab_idx),
         
         //cycle 0 out
         .buf1_adr(buf1_adr),
@@ -356,13 +435,13 @@ parameter out_width_18 = pixel_width_18 * pe_parallel_pixel_18 * pe_parallel_wei
         .valid_mem3_adr(valid_mem3_adr),
         
         //cycle 1 out
-        .row1_pixels_32(row1_pixels_32),
-        .row2_pixels_32(row2_pixels_32),
-        .row3_pixels_32(row3_pixels_32),
+        .last_row1_pixels_32(last_row1_pixels_32),
+        .last_row2_pixels_32(last_row2_pixels_32),
+        .last_row3_pixels_32(last_row3_pixels_32),
         
-        .row1_slab_2(row1_slab_2),
-        .row2_slab_2(row2_slab_2),
-        .row3_slab_2(row3_slab_2),
+        .last_row1_slab_2(last_row1_slab_2),
+        .last_row2_slab_2(last_row2_slab_2),
+        .last_row3_slab_2(last_row3_slab_2),
         
         //cycle 1 out
         .slab1_adr_wr(slab1_adr_wr),
