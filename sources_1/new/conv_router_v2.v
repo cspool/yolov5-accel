@@ -27,8 +27,11 @@ k, s, p,
 clk, en, reset,
 nif_in_2pow,
 ix_in_2pow,
-//shift_add2_end,
-//stall,
+
+loop_sa_counter_add_end,
+
+ox_start, oy_start, of_start, pox, poy, pof, if_idx,
+
 row_slab_start_idx,
 slab_num, 
 
@@ -36,7 +39,6 @@ west_pad, east_pad,
 row1_idx, row2_idx, row3_idx, 
 row_start_idx, row_end_idx,
 reg_start_idx, reg_end_idx,
-if_idx,
 
 conv_end,
 //conv_min_pixels_add_end,
@@ -80,13 +82,13 @@ valid_row3_adr
     
 //    input shift_add2_end;
 //    input stall;
+    input loop_sa_counter_add_end;
     
     output [3:0] west_pad, slab_num, east_pad;
     output [15:0] row1_idx, row2_idx, row3_idx;
     wire [15:0] row_y1, row_y2, row_y3; 
     output [15:0] row_start_idx, row_end_idx;
     output [15:0] reg_start_idx, reg_end_idx;
-    output [15:0] if_idx;
     
     output conv_end;
 //    output conv_min_pixels_add_end, conv_pixels_add_end;
@@ -120,7 +122,7 @@ valid_row3_adr
     
     wire [15:0] row3_buf_adr_in_row;
     
-    wire [15:0] ox_start, oy_start, pox, poy;
+    output [15:0] ox_start, oy_start, of_start, pox, poy, pof, if_idx;
     
     wire [15:0] next_ox_start, next_oy_start;
     
@@ -131,6 +133,8 @@ valid_row3_adr
     wire conv_rows_add_end1, conv_rows_add_end2, conv_rows_add_end3;
     
     wire conv_tiling_add_end;
+    
+    wire loop_if_add_end;
     
     //conv tile module
 //    wire [15:0] irow_y_size1, irow_y_size2, irow_y_size3;
@@ -181,6 +185,27 @@ valid_row3_adr
     
     wire assert_base_bias_idx1, assert_base_bias_idx2, assert_base_bias_idx3;
     
+    reg ifx_stall;
+    always@(posedge clk)begin
+       if(reset ==1'b1)begin
+            ifx_stall <= 0;
+       end
+       else if(loop_if_add_end == 1'b1)begin
+            if(conv_tiling_add_end == 1'b1)begin              
+                ifx_stall <= 0;
+            end
+            else begin
+                ifx_stall <= 1;
+            end
+       end
+       else if(loop_sa_counter_add_end == 1'b1)begin
+            ifx_stall <= 0;
+       end
+       else begin
+            ifx_stall <= ifx_stall;
+       end
+    end
+
     //conv tiling module
     
     conv_tiling_v2 cv_tiling(
@@ -202,15 +227,17 @@ valid_row3_adr
         .conv_rows_add_end3(conv_rows_add_end3),
         
         .conv_tiling_add_end(conv_tiling_add_end),
+        .loop_if_add_end(loop_if_add_end),
 
         .ox_start(ox_start), 
         .oy_start(oy_start), 
         .pox(pox), 
         .poy(poy),
+        .of_start(of_start), 
+        .pof(pof), 
+        .if_idx(if_idx),
         .next_ox_start(next_ox_start), 
         .next_oy_start(next_oy_start),
-        
-        .if_idx(if_idx),
         
         .row_base_in_3s(row_base0_in_3s) //m
     );
@@ -313,6 +340,8 @@ valid_row3_adr
         .en(en),
         
         .conv_tiling_add_end(conv_tiling_add_end),
+        
+        .ifx_stall(ifx_stall),
         
 //        .shift_add2_end(shift_add2_end),
 //        .stall(stall),
@@ -449,10 +478,15 @@ valid_row3_adr
                                  ((s == 4'd1)? row1_offset_s1:
                                   (s == 4'd2)? row1_offset_s2:
                                   0));   
-                          
+    
+     //the adr is the virtual adr. when tile is small, it equals the phisical adr,
+     // when tile is bigger, need mapping logic and schedule logic.
+    // the adr need more completely logic
+    //xxxxxxxxxxxx                      
     assign row1_buf_adr = (row1_idx == 16'hffff)? 16'hffff:
                         ((row1_buf_adr_in_row << (nif_in_2pow + ix_in_2pow - pixels_in_row_in_2pow))
-                        + ((row_start_idx << nif_in_2pow) >> pixels_in_row_in_2pow));                                         
+                        + ((row_start_idx << nif_in_2pow) >> pixels_in_row_in_2pow))
+                        + (if_idx - 1);                                         
     
     assign row2_buf_idx = (row2_idx == 16'hffff)? 0 :
                           ((s == 4'd1)? row2_buf_idx_s1:
@@ -467,7 +501,8 @@ valid_row3_adr
                           
     assign row2_buf_adr = (row2_idx == 16'hffff)? 16'hffff :
                         ((row2_buf_adr_in_row << (nif_in_2pow + ix_in_2pow - pixels_in_row_in_2pow))
-                        + ((row_start_idx << nif_in_2pow) >> pixels_in_row_in_2pow));                                         
+                        + ((row_start_idx << nif_in_2pow) >> pixels_in_row_in_2pow))
+                        + (if_idx - 1);                                         
     
     assign row3_buf_idx = (row3_idx == 16'hffff)? 0 :
                           ((s == 4'd1)? row3_buf_idx_s1:
@@ -482,7 +517,8 @@ valid_row3_adr
                           
     assign row3_buf_adr = (row3_idx == 16'hffff)? 16'hffff :
                         ((row3_buf_adr_in_row << (nif_in_2pow + ix_in_2pow - pixels_in_row_in_2pow))
-                        + ((row_start_idx << nif_in_2pow) >> pixels_in_row_in_2pow));                                         
+                        + ((row_start_idx << nif_in_2pow) >> pixels_in_row_in_2pow))
+                        + (if_idx - 1);                                         
     
     
     //slab

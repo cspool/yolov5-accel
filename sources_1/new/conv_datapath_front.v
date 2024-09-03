@@ -27,8 +27,9 @@ clk, en, reset,
 nif_in_2pow,
 ix_in_2pow,
 mode,
+nif_mult_k_mult_k,
 
-channel_out_reset, channel_out_en,
+//channel_out_reset, channel_out_en,
 
 out_row1_channel_set1, // pox res per channel
 out_row1_channel_set2, // pox res per channel
@@ -79,6 +80,8 @@ parameter out_width_18 = pixel_width_18 * pe_parallel_pixel_18 * pe_parallel_wei
     //cv router wire
     input mode;
     
+    input [31:0] nif_mult_k_mult_k;
+    
     input [3:0] k, s, p;
     
     input [15:0] of, ox, oy, ix, iy, nif;
@@ -87,6 +90,8 @@ parameter out_width_18 = pixel_width_18 * pe_parallel_pixel_18 * pe_parallel_wei
     
     input [15:0] nif_in_2pow, ix_in_2pow;
     
+    wire [15:0] ox_start, oy_start, of_start, pox, poy, pof, if_idx; //tile info
+    
     wire [pixels_in_row*8-1:0] re_row1_pixels, re_row2_pixels, re_row3_pixels;
     
     wire [3:0] west_pad, slab_num, east_pad;
@@ -94,7 +99,6 @@ parameter out_width_18 = pixel_width_18 * pe_parallel_pixel_18 * pe_parallel_wei
     
     wire [15:0] row_start_idx, row_end_idx;
     wire [15:0] reg_start_idx, reg_end_idx;
-    wire [15:0] if_idx;
     
     wire conv_end;
     wire conv_pixels_add_end;
@@ -176,8 +180,16 @@ parameter out_width_18 = pixel_width_18 * pe_parallel_pixel_18 * pe_parallel_wei
     wire [row_num*8-1:0] delay_weights_1, delay_weights_2, delay_weights_3, delay_weights_4;
     
     //sa
+    reg pixels_counter_signal;
+    reg [31:0] pixels_counter;
+    wire loop_pixels_counter_add_begin, loop_pixels_counter_add_end;
+    
     reg sa_en;
-    input channel_out_reset, channel_out_en; //need logic
+    reg channel_out_reset, channel_out_en; //need logic
+    
+    reg sa_counter_signal;
+    reg [5:0] sa_counter;
+    wire loop_sa_counter_add_begin, loop_sa_counter_add_end;
     output [out_width - 1: 0] out_row1_channel_set1; // pox res per channel
     output [out_width - 1: 0] out_row1_channel_set2; // pox res per channel
     output [out_width - 1: 0] out_row1_channel_set3; // pox res per channel
@@ -208,6 +220,16 @@ parameter out_width_18 = pixel_width_18 * pe_parallel_pixel_18 * pe_parallel_wei
         .nif_in_2pow(nif_in_2pow), 
         .ix_in_2pow(ix_in_2pow),
         
+        .loop_sa_counter_add_end(loop_sa_counter_add_end),
+        
+        .ox_start(ox_start), 
+        .oy_start(oy_start), 
+        .pox(pox), 
+        .poy(poy),
+        .of_start(of_start), 
+        .pof(pof), 
+        .if_idx(if_idx),
+        
         .row_slab_start_idx(row_slab_start_idx),
         
         .west_pad(west_pad), 
@@ -223,8 +245,6 @@ parameter out_width_18 = pixel_width_18 * pe_parallel_pixel_18 * pe_parallel_wei
         
         .reg_start_idx(reg_start_idx), 
         .reg_end_idx(reg_end_idx),
-        
-        .if_idx(if_idx),
         
         .conv_end(conv_end),
         .conv_pixels_add_end(conv_pixels_add_end),
@@ -483,11 +503,11 @@ parameter out_width_18 = pixel_width_18 * pe_parallel_pixel_18 * pe_parallel_wei
       .clka(clk),    // input wire clka
       .ena(valid_slab1_adr_wr),      // input wire ena
       .wea(valid_slab1_adr_wr),      // input wire [0 : 0] wea
-      .addra(slab1_adr_wr),  // input wire [14 : 0] addra
+      .addra(slab1_adr_wr[14 : 0]),  // input wire [14 : 0] addra
       .dina(slab1_pixels_2_wr),    // input wire [15 : 0] dina
       .clkb(clk),    // input wire clkb
       .enb(valid_mem1_adr),      // input wire enb
-      .addrb(slab1_adr),  // input wire [14 : 0] addrb
+      .addrb(slab1_adr[14 : 0]),  // input wire [14 : 0] addrb
       .doutb(slab1_pixels_2)  // output wire [15 : 0] doutb
     );
     
@@ -495,11 +515,11 @@ parameter out_width_18 = pixel_width_18 * pe_parallel_pixel_18 * pe_parallel_wei
       .clka(clk),    // input wire clka
       .ena(valid_slab2_adr_wr),      // input wire ena
       .wea(valid_slab2_adr_wr),      // input wire [0 : 0] wea
-      .addra(slab2_adr_wr),  // input wire [14 : 0] addra
+      .addra(slab2_adr_wr[14 : 0]),  // input wire [14 : 0] addra
       .dina(slab2_pixels_2_wr),    // input wire [15 : 0] dina
       .clkb(clk),    // input wire clkb
       .enb(valid_mem2_adr),      // input wire enb
-      .addrb(slab2_adr),  // input wire [14 : 0] addrb
+      .addrb(slab2_adr[14 : 0]),  // input wire [14 : 0] addrb
       .doutb(slab2_pixels_2)  // output wire [15 : 0] doutb
     );
     
@@ -507,11 +527,11 @@ parameter out_width_18 = pixel_width_18 * pe_parallel_pixel_18 * pe_parallel_wei
       .clka(clk),    // input wire clka
       .ena(valid_slab3_adr_wr),      // input wire ena
       .wea(valid_slab3_adr_wr),      // input wire [0 : 0] wea
-      .addra(slab3_adr_wr),  // input wire [14 : 0] addra
+      .addra(slab3_adr_wr[14 : 0]),  // input wire [14 : 0] addra
       .dina(slab3_pixels_2_wr),    // input wire [15 : 0] dina
       .clkb(clk),    // input wire clkb
       .enb(valid_mem3_adr),      // input wire enb
-      .addrb(slab3_adr),  // input wire [14 : 0] addrb
+      .addrb(slab3_adr[14 : 0]),  // input wire [14 : 0] addrb
       .doutb(slab3_pixels_2)  // output wire [15 : 0] doutb
     );
     
@@ -736,18 +756,120 @@ parameter out_width_18 = pixel_width_18 * pe_parallel_pixel_18 * pe_parallel_wei
     
     always @(posedge clk) begin
         if (reset == 1'b1) begin
+            pixels_counter_signal <= 0;
+        end
+        else if (re_fm_en == 1'b1) begin
+            pixels_counter_signal <= 1;
+        end
+        else if (loop_pixels_counter_add_end == 1'b1) begin
+            pixels_counter_signal <= 0;
+        end
+        else begin
+            pixels_counter_signal <= pixels_counter_signal;
+        end
+    end
+    
+    always @(posedge clk) begin
+        if (reset == 1'b1) begin
+            pixels_counter <= 0;
+        end
+        else if (loop_pixels_counter_add_begin == 1'b1) begin
+            if (loop_pixels_counter_add_end == 1'b1) begin //last
+                pixels_counter <= 0;
+            end
+            else begin
+                pixels_counter <= pixels_counter + 1;
+            end 
+        end
+        else begin
+            pixels_counter <= pixels_counter;
+        end
+    end
+    
+    assign loop_pixels_counter_add_begin = (re_fm_en == 1'b1) || (pixels_counter_signal == 1'b1);
+    assign loop_pixels_counter_add_end = loop_pixels_counter_add_begin && (pixels_counter == nif_mult_k_mult_k);
+    
+    always @(posedge clk) begin
+        if (reset == 1'b1) begin
+            sa_counter_signal <= 0;
+        end
+        else if (loop_pixels_counter_add_end == 1'b1) begin
+            sa_counter_signal <= 1;
+        end
+        else if (loop_sa_counter_add_end == 1'b1) begin
+            sa_counter_signal <= 0;
+        end
+        else begin
+            sa_counter_signal <= sa_counter_signal;
+        end
+    end
+    
+    always @(posedge clk) begin
+        if (reset == 1'b1) begin
+            sa_counter <= 0;
+        end
+        else if (loop_sa_counter_add_begin == 1'b1) begin
+            if (loop_sa_counter_add_end == 1'b1) begin //last
+                sa_counter <= 0;
+            end
+            else begin
+                sa_counter <= sa_counter + 1;
+            end 
+        end
+        else begin
+            sa_counter <= sa_counter;
+        end
+    end
+    
+    assign loop_sa_counter_add_begin = (sa_counter_signal == 1'b1) || (loop_pixels_counter_add_end == 1'b1);
+    assign loop_sa_counter_add_end = loop_sa_counter_add_begin && (sa_counter == 6'd32);
+    
+    always @(posedge clk) begin
+        if (reset == 1'b1) begin
+            channel_out_en <= 0;
+        end
+        else if (sa_counter == 6'd16) begin
+            channel_out_en <= 1;
+        end
+        else if (loop_sa_counter_add_end) begin //xxx
+            channel_out_en <= 0;
+        end
+        else begin
+            channel_out_en <= channel_out_en;
+        end
+    end
+    
+    always @(posedge clk) begin
+        if (reset == 1'b1) begin
+            channel_out_reset <= 0;
+        end
+        else if (loop_pixels_counter_add_end == 1'b1) begin
+            channel_out_reset <= 1;
+        end
+        else if (channel_out_reset == 1'b1) begin
+            channel_out_reset <= 0;
+        end
+        else begin
+            channel_out_reset <= channel_out_reset;
+        end
+    end
+    
+    always @(posedge clk) begin
+        if (reset == 1'b1) begin
             sa_en <= 0;
         end
         else if (re_fm_en == 1'b1) begin
             sa_en <= 1;
         end
-        else if (channel_out_en == 1'b1) begin //maybe late but may be ok
-            sa_en <= 0;
-        end
+//        else if (sa_counter == 6'd31) begin //all end sa stop
+//            sa_en <= 0;
+//        end
         else begin
             sa_en <= sa_en;
         end
     end
+    
+    //stop and refresh after finishing a tile
     
 endmodule
 

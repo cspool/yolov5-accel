@@ -78,6 +78,8 @@ reg [row_counter_width-1 : 0] row_counter;
 wire [23:0] I_As[column_num - 1 : 0];
 wire [17:0] I_Bs[row_num - 1 : 0];
 
+wire loop_row_counter_add_begin, loop_row_counter_add_end;
+
 
 generate
     for (i = 0; i < column_num; i = i + 1) begin
@@ -119,26 +121,33 @@ endgenerate
 
 always@(posedge clk) begin
     if (channel_out_reset) begin
-        row_counter <= -1;
+        row_counter <= 0;
     
     end
-    else if (channel_out_en) begin 
-        row_counter <= (row_counter + 1);
-      
+    else if (loop_row_counter_add_begin) begin 
+        if (loop_row_counter_add_end == 1'b1) begin
+            row_counter <= 0;
+        end
+        else begin
+            row_counter <= (row_counter + 1);
+        end
     end
     else begin
         row_counter <= row_counter;
     end
 end
 
+assign loop_row_counter_add_begin = channel_out_en;
+assign loop_row_counter_add_end = loop_row_counter_add_begin && (row_counter == 6'd15);
+
 generate
     for (j = 0; j < column_num; j = j + 1) begin
-        assign row_output[j * pe_out_width +:pe_out_width] = (row_counter == {(row_counter_width){1'b1}})? 0: all_out[row_counter][j];
+        assign row_output[j * pe_out_width +:pe_out_width] = (loop_row_counter_add_begin == 1'b0)? 0: all_out[row_counter][j];
     end
 endgenerate
 
 
-assign  out = (row_counter == {(row_counter_width){1'b1}})? 0: 
+assign  out = (loop_row_counter_add_begin == 1'b0)? 0: 
                      (mode == 0)? {{(out_width - out_width_88){1'b0}},row_output_88} :
                     (mode == 1)? {{(out_width - out_width_18){1'b0}},row_output_18}:
                     0;

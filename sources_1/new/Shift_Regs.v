@@ -77,13 +77,11 @@ re_fm_end
         if (reset == 1'b1) begin
             state_shift_start <= 0;  
         end
-        else if (k > 1) begin
-            if (shift_start == 1'b1) begin
-                state_shift_start <= 1; // need shift
-            end
-            else if ((shift_counter) == k) begin // last 2 shift
-                state_shift_start <= 0; // shift end, next should be load
-            end
+        else if (shift_start == 1'b1) begin
+            state_shift_start <= 1; // need shift
+        end
+        else if ((shift_counter) == k) begin
+            state_shift_start <= 0; // shift end, next should be load
         end
         else begin
             state_shift_start <= state_shift_start;
@@ -97,7 +95,7 @@ re_fm_end
         else if (loop_shift_add_begin == 1'b1) begin
             if (loop_shift_add_end == 1'b1) begin
                 if (shift_start == 1'b1) begin
-                    shift_counter <= 1;
+                    shift_counter <= 1; // load is the 1st output
                 end
                 else begin  // all end
                     shift_counter <= 0;
@@ -159,13 +157,13 @@ re_fm_end
         if (reset == 1'b1) begin
             shift_regs_1[69*8 +: 8] <= 0;
         end
-        else if (ops[69*8 +: 8] == 2'd1) begin
+        else if (ops[69*2 +: 2] == 2'd1) begin
             shift_regs_1[69*8 +: 8] <= row_regs_1[69*8 +: 8];
         end
-        else if (ops[69*8 +: 8] == 2'd2) begin // from reg nearby(shift)
+        else if (ops[69*2 +: 2] == 2'd2) begin // from reg nearby(shift)
             shift_regs_1[69*8 +: 8] <= shift_regs_1[69*8 +: 8];
         end
-        else if (ops[69*8 +: 8] == 2'd3) begin // 0
+        else if (ops[69*2 +: 2] == 2'd3) begin // 0
             shift_regs_1[69*8 +: 8] <= 0;
         end
         else begin
@@ -200,13 +198,13 @@ re_fm_end
         if (reset == 1'b1) begin
             shift_regs_2[69*8 +: 8] <= 0;
         end
-        else if (ops[69*8 +: 8] == 2'd1) begin
+        else if (ops[69*2 +: 2] == 2'd1) begin
             shift_regs_2[69*8 +: 8] <= row_regs_2[69*8 +: 8];
         end
-        else if (ops[69*8 +: 8] == 2'd2) begin // from reg nearby(shift)
+        else if (ops[69*2 +: 2] == 2'd2) begin // from reg nearby(shift)
             shift_regs_2[69*8 +: 8] <= shift_regs_2[69*8 +: 8];
         end
-        else if (ops[69*8 +: 8] == 2'd3) begin // 0
+        else if (ops[69*2 +: 2] == 2'd3) begin // 0
             shift_regs_2[69*8 +: 8] <= 0;
         end
         else begin
@@ -241,13 +239,13 @@ re_fm_end
         if (reset == 1'b1) begin
             shift_regs_3[69*8 +: 8] <= 0;
         end
-        else if (ops[69*8 +: 8] == 2'd1) begin
+        else if (ops[69*2 +: 2] == 2'd1) begin
             shift_regs_3[69*8 +: 8] <= row_regs_3[69*8 +: 8];
         end
-        else if (ops[69*8 +: 8] == 2'd2) begin // from reg nearby(shift)
+        else if (ops[69*2 +: 2] == 2'd2) begin // from reg nearby(shift)
             shift_regs_3[69*8 +: 8] <= shift_regs_3[69*8 +: 8];
         end
-        else if (ops[69*8 +: 8] == 2'd3) begin // 0
+        else if (ops[69*2 +: 2] == 2'd3) begin // 0
             shift_regs_3[69*8 +: 8] <= 0;
         end
         else begin

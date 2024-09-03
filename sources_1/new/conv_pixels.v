@@ -30,6 +30,8 @@ next_ox_start,
 
 conv_tiling_add_end,
 
+ifx_stall,
+
 conv_pixels_add_end,
 west_pad, slab_num, east_pad,
 row_start_idx, row_end_idx,
@@ -49,6 +51,8 @@ valid_adr
    input [15:0] next_ox_start;
    
    input conv_tiling_add_end;
+   
+   input ifx_stall;
    
    output conv_pixels_add_end;
    
@@ -286,7 +290,12 @@ valid_adr
             stall_counter <= 0;
         end
         else if (loop_adr1_add_end == 1'b1) begin // the last pixels word
-            stall_counter <= (k - row_length);
+            if (conv_tiling_add_end == 1'b1) begin // all end
+                stall_counter <= 0;
+            end 
+            else begin
+                stall_counter <= (k - row_length);
+            end
         end
         else if (stall_counter > 0)begin
             stall_counter <= stall_counter - 1;
@@ -296,7 +305,7 @@ valid_adr
         end
     end 
 
-      assign stall= (stall_counter > 0)? 1 : 0;
+      assign stall= ((stall_counter > 0)? 1 : 0) || (ifx_stall == 1'b1);
 
 //    //for adr2 in range(1, row_end_fix - row_end_min_fix + 1, pixels_in_row):
 //    always@(posedge clk) begin

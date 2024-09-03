@@ -30,6 +30,8 @@ conv_rows_add_end1, conv_rows_add_end2, conv_rows_add_end3,
 
 conv_tiling_add_end,
 
+loop_if_add_end,
+
 ox_start, oy_start, of_start, pox, poy, pof,
 next_ox_start, next_oy_start,
 
@@ -60,7 +62,10 @@ row_base_in_3s
     
     output conv_tiling_add_end;
     
+    output loop_if_add_end;
+    
     output reg[15:0] row_base_in_3s;
+
     
 //reg signal_add; // add is valid a cycle before add operations
 
@@ -75,6 +80,7 @@ reg [15:0] if_start;
 
 wire [15:0] row_num = (mode == 1'b0)? row_num_in_mode0 :
                       (mode == 1'b1)? row_num_in_mode1 : 0;
+
 
 //loop if
 always@(posedge clk)begin
