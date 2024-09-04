@@ -65,7 +65,12 @@ slab1_adr,
 slab2_adr,
 slab3_adr,
 
-valid_mem1_adr, valid_mem2_adr, valid_mem3_adr,
+valid_buf1_adr,
+valid_slab1_adr,
+valid_buf2_adr, 
+valid_slab2_adr,
+valid_buf3_adr,
+valid_slab3_adr,
 
 last_row1_pixels_32,
 last_row2_pixels_32,
@@ -150,7 +155,12 @@ valid_slab1_adr_wr, valid_slab2_adr_wr, valid_slab3_adr_wr
     output [15:0] last_row3_slab_2;
     
     //cycle 0
-    output valid_mem1_adr, valid_mem2_adr, valid_mem3_adr;
+    output valid_buf1_adr;
+    output valid_slab1_adr;
+    output valid_buf2_adr;
+    output valid_slab2_adr;
+    output valid_buf3_adr;
+    output valid_slab3_adr;
     
     //slab write
     //cycle 0
@@ -233,19 +243,34 @@ valid_slab1_adr_wr, valid_slab2_adr_wr, valid_slab3_adr_wr
     //cycle 0
     //valid
     //row_i_buf_idx == row_i_slab_idx
-    assign valid_mem1_adr = (row1_buf_idx == 2'd1)? valid_row1_adr:
+    assign valid_buf1_adr = (row1_buf_idx == 2'd1)? valid_row1_adr:
                       (row2_buf_idx == 2'd1)? valid_row2_adr: 
                       (row3_buf_idx == 2'd1)? valid_row3_adr:
                       0;
     
-    assign valid_mem2_adr = (row1_buf_idx == 2'd2)? valid_row1_adr:
+    assign valid_buf2_adr = (row1_buf_idx == 2'd2)? valid_row1_adr:
                       (row2_buf_idx == 2'd2)? valid_row2_adr: 
                       (row3_buf_idx == 2'd2)? valid_row3_adr:
                       0;
                       
-    assign valid_mem3_adr = (row1_buf_idx == 2'd3)? valid_row1_adr:
+    assign valid_buf3_adr = (row1_buf_idx == 2'd3)? valid_row1_adr:
                       (row2_buf_idx == 2'd3)? valid_row2_adr: 
                       (row3_buf_idx == 2'd3)? valid_row3_adr:
+                      0;
+    
+    assign valid_slab1_adr = (row1_slab_idx == 2'd1)? valid_row1_adr:
+                      (row2_slab_idx == 2'd1)? valid_row2_adr: 
+                      (row3_slab_idx == 2'd1)? valid_row3_adr:
+                      0;
+    
+    assign valid_slab2_adr = (row1_slab_idx == 2'd2)? valid_row1_adr:
+                      (row2_slab_idx == 2'd2)? valid_row2_adr: 
+                      (row3_slab_idx == 2'd2)? valid_row3_adr:
+                      0;
+                      
+    assign valid_slab3_adr = (row1_slab_idx == 2'd3)? valid_row1_adr:
+                      (row2_slab_idx == 2'd3)? valid_row2_adr: 
+                      (row3_slab_idx == 2'd3)? valid_row3_adr:
                       0;
     
     //slab write
@@ -262,9 +287,9 @@ valid_slab1_adr_wr, valid_slab2_adr_wr, valid_slab3_adr_wr
             slab1_adr_wr <= buf1_adr;
             slab2_adr_wr <= buf2_adr;
             slab3_adr_wr <= buf3_adr;
-            valid_slab1_adr_wr <= valid_mem1_adr;
-            valid_slab2_adr_wr <= valid_mem2_adr;
-            valid_slab3_adr_wr <= valid_mem3_adr;
+            valid_slab1_adr_wr <= valid_buf1_adr;
+            valid_slab2_adr_wr <= valid_buf2_adr;
+            valid_slab3_adr_wr <= valid_buf3_adr;
         end
     end
     

@@ -45,7 +45,7 @@ weights_vector
     
     //re_pixels from re_fm_en to re_fm_end consist of nif channels of a input tile that its computing needed 
     // the adr need more completely logic
-    //xxxxxxxxxxxx
+    //and adr mapping in different mode
     always@(posedge clk) begin
         if (reset == 1'b1) begin
             adr <= 0;   //first adr

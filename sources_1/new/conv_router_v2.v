@@ -524,15 +524,15 @@ valid_row3_adr
     //slab
     assign row_slab_start_idx = (slab_num > 0)? (row_start_idx - 16'd32): 16'hffff;
     
-    assign row1_slab_idx = row1_buf_idx;
+    assign row1_slab_idx = (slab_num > 0)? row1_buf_idx : 0;
                           
     assign row1_slab_adr = (slab_num > 0)? (row1_buf_adr - nif): 16'hffff;
     
-    assign row2_slab_idx = row2_buf_idx;  
+    assign row2_slab_idx = (slab_num > 0)? row2_buf_idx : 0;  
                           
     assign row2_slab_adr = (slab_num > 0)? (row2_buf_adr - nif): 16'hffff;
     
-    assign row3_slab_idx = row3_buf_idx;
+    assign row3_slab_idx = (slab_num > 0)? row3_buf_idx : 0;
                           
     assign row3_slab_adr = (slab_num > 0)? (row3_buf_adr - nif): 16'hffff;
     
