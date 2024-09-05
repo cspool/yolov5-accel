@@ -39,9 +39,13 @@ weights_vector
     
     reg [15:0] adr;
     
+    wire [weight_row_length-1 : 0] weights_dout;
+    
     output [weight_row_length-1 : 0] weights_vector;
     
     wire weight_en;
+    
+    reg valid_weight;
     
     //re_pixels from re_fm_en to re_fm_end consist of nif channels of a input tile that its computing needed 
     // the adr need more completely logic
@@ -52,7 +56,7 @@ weights_vector
         end
         else if (re_fm_en == 1'b1) begin
             if (re_fm_end == 1'b1) begin
-                adr <= 0;  
+                adr <= 0; 
             end
             else begin
                 adr <= adr + 1;
@@ -63,14 +67,32 @@ weights_vector
         end
     end
     
+    always@(posedge clk) begin
+        if (reset == 1'b1) begin
+            valid_weight <= 0;
+        end
+        else if (re_fm_en == 1'b1) begin
+            if (re_fm_end == 1'b1) begin
+                valid_weight <= 0; 
+            end
+            else begin
+                valid_weight <= 1;
+            end
+        end
+        else begin
+            valid_weight <= valid_weight;
+        end
+    end
+    
     assign weight_en = ((re_fm_en == 1'b1) && (re_fm_end == 1'b0))? 1 : 0;
     
     weights_buffer weights_buffer (
       .clka(clk),    // input wire clka
       .ena(weight_en),      // input wire ena
       .addra(adr[10:0]),  // input wire [10 : 0] addra
-      .douta(weights_vector)  // output wire [511 : 0] douta
+      .douta(weights_dout)  // output wire [511 : 0] douta
     );
     
+    assign weights_vector = (valid_weight == 1'b1)? weights_dout : 0;
     
 endmodule

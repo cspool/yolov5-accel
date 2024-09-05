@@ -44,7 +44,7 @@ parameter pe_parallel_weight_18 = 2;
 
 parameter bias_width = 8; //8 bit bias
 parameter bias_set_width = bias_width * pe_parallel_weight_18; //16 bit
-parameter bias_4_channel_sets_width = bias_set_width * sa_row_num; //4 * 16 bit
+parameter bias_set_4_channel_width = bias_set_width * sa_row_num; //4 * 16 bit
 
     parameter bias_sets_num_in_row = sa_row_num * row_num; //64
     
@@ -58,7 +58,7 @@ parameter bias_4_channel_sets_width = bias_set_width * sa_row_num; //4 * 16 bit
     input [5:0] out_sa_row_idx; //output sa row idx [1,16]
     
     
-    output [bias_4_channel_sets_width-1 :0] bias_4_channel_sets;
+    output [bias_set_4_channel_width-1 :0] bias_4_channel_sets;
     
     reg [bias_set_width -1 : 0] bias_tile[sa_row_num-1 :0][row_num-1 :0];
     

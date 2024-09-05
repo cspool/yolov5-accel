@@ -159,7 +159,7 @@ shift_start
 
     always@(posedge clk) begin
         if (reset == 1'b1) begin
-            shift_start <= 0;  
+            shift_start <= 0;  //shift regs en signal(start signal)
         end
         else if (state_conv_pixels_add_end == 1'b1) begin
             shift_start <= 1;

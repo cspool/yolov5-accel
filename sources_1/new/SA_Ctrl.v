@@ -29,7 +29,10 @@ nif_mult_k_mult_k,
 sa_en, 
 sa_reset,
 channel_out_reset, 
-channel_out_en, //need logic
+channel_out_en,
+
+add_bias_en,
+add_bias_reset,
 
 out_sa_row_idx,
 
@@ -47,6 +50,9 @@ loop_sa_counter_add_end
     
     output reg sa_en, sa_reset;
     output reg channel_out_reset, channel_out_en; //need logic
+    
+    output add_bias_en;
+    output reg add_bias_reset;
     
     output [5:0] out_sa_row_idx; //output channel idx
     
@@ -178,5 +184,22 @@ loop_sa_counter_add_end
     end
 
     assign out_sa_row_idx = (channel_out_en == 1'b1) ? (sa_counter - 6'd16) : 0;
+    
+    assign add_bias_en = channel_out_en;
+    
+    always @(posedge clk) begin
+        if (reset == 1'b1) begin
+            add_bias_reset <= 1;
+        end
+        else if (loop_sa_counter_add_end == 1'b1) begin
+            add_bias_reset <= 1;
+        end
+        else if (add_bias_reset == 1'b1) begin
+            add_bias_reset <= 0;
+        end
+        else begin
+            add_bias_reset <= add_bias_reset;
+        end
+    end
 
 endmodule

@@ -22,7 +22,7 @@
 
 module Delay_Regs_Pixels(
 
-clk, reset, re_fm_en, re_fm_end,
+clk, reset, en,
 
 re_row_pixels,
 
@@ -32,7 +32,7 @@ delay_row_pixels
 parameter column_num = 16; 
 parameter pixels_in_row = 32;
 
-input clk, reset, re_fm_en, re_fm_end;
+input clk, reset, en;
 
 input [pixels_in_row*8-1:0] re_row_pixels;
     
@@ -54,37 +54,14 @@ output [column_num*16-1:0] delay_row_pixels;
     reg [16 -1 : 0] col_3_regs [(row_num-14) -1: 0];
     reg [16 -1 : 0] col_2_regs [(row_num-15) -1: 0];
     
-    reg state_en, state_reset;
-    
-    always @(posedge clk) begin
-        if (reset == 1'b1) begin
-            state_en <= 0;
-            state_reset <= 0;
-        end
-        else if (re_fm_en == 1'b1) begin
-            if (re_fm_end == 1'b1) begin
-                state_en <= 0;
-                state_reset <= 1;
-            end
-            else begin
-                state_en <= 1;
-                state_reset <= 0;
-            end
-        end
-        else begin
-            state_en <= state_en;
-            state_reset <= state_reset;
-        end
-    end
-    
     genvar i;
     
     //col 16
     always @(posedge clk) begin
-        if ((reset == 1'b1) || (state_reset == 1'b1)) begin
+        if (reset == 1'b1) begin
             col_16_regs[0] <= 0;
         end
-        else if (state_en == 1'b1) begin
+        else if (en == 1'b1) begin
             col_16_regs[0] <= re_row_pixels[((16-1) * 16) +: 16];
         end
         else begin
@@ -94,10 +71,10 @@ output [column_num*16-1:0] delay_row_pixels;
     generate
         for (i = 1; i < row_num-1; i = i+1) begin: col_16_row
             always @(posedge clk) begin
-                if ((reset == 1'b1) || (state_reset == 1'b1)) begin
+                if (reset == 1'b1) begin
                     col_16_regs[i] <= 0;
                 end
-                else if (state_en == 1'b1) begin
+                else if (en == 1'b1) begin
                     col_16_regs[i] <= col_16_regs[i-1];
                 end
                 else begin
@@ -113,10 +90,10 @@ output [column_num*16-1:0] delay_row_pixels;
     
     //col 15
     always @(posedge clk) begin
-        if ((reset == 1'b1) || (state_reset == 1'b1)) begin
+        if (reset == 1'b1) begin
             col_15_regs[0] <= 0;
         end
-        else if (state_en == 1'b1) begin
+        else if (en == 1'b1) begin
             col_15_regs[0] <= re_row_pixels[((15-1) * 16) +: 16];
         end
         else begin
@@ -126,10 +103,10 @@ output [column_num*16-1:0] delay_row_pixels;
     generate
         for (i = 1; i < row_num-2; i = i+1) begin: col_15_row
             always @(posedge clk) begin
-                if ((reset == 1'b1) || (state_reset == 1'b1)) begin
+                if (reset == 1'b1) begin
                     col_15_regs[i] <= 0;
                 end
-                else if (state_en == 1'b1) begin
+                else if (en == 1'b1) begin
                     col_15_regs[i] <= col_15_regs[i-1];
                 end
                 else begin
@@ -145,10 +122,10 @@ output [column_num*16-1:0] delay_row_pixels;
     
     //col 14
     always @(posedge clk) begin
-        if ((reset == 1'b1) || (state_reset == 1'b1)) begin
+        if (reset == 1'b1) begin
             col_14_regs[0] <= 0;
         end
-        else if (state_en == 1'b1) begin
+        else if (en == 1'b1) begin
             col_14_regs[0] <= re_row_pixels[((14-1) * 16) +: 16];
         end
         else begin
@@ -158,10 +135,10 @@ output [column_num*16-1:0] delay_row_pixels;
     generate
         for (i = 1; i < row_num-3; i = i+1) begin: col_14_row
             always @(posedge clk) begin
-                if ((reset == 1'b1) || (state_reset == 1'b1)) begin
+                if (reset == 1'b1) begin
                     col_14_regs[i] <= 0;
                 end
-                else if (state_en == 1'b1) begin
+                else if (en == 1'b1) begin
                     col_14_regs[i] <= col_14_regs[i-1];
                 end
                 else begin
@@ -177,10 +154,10 @@ output [column_num*16-1:0] delay_row_pixels;
     
     //col 13
     always @(posedge clk) begin
-        if ((reset == 1'b1) || (state_reset == 1'b1)) begin
+        if (reset == 1'b1) begin
             col_13_regs[0] <= 0;
         end
-        else if (state_en == 1'b1) begin
+        else if (en == 1'b1) begin
             col_13_regs[0] <= re_row_pixels[((13-1) * 16) +: 16];
         end
         else begin
@@ -190,10 +167,10 @@ output [column_num*16-1:0] delay_row_pixels;
     generate
         for (i = 1; i < row_num-4; i = i+1) begin: col_13_row
             always @(posedge clk) begin
-                if ((reset == 1'b1) || (state_reset == 1'b1)) begin
+                if (reset == 1'b1) begin
                     col_13_regs[i] <= 0;
                 end
-                else if (state_en == 1'b1) begin
+                else if (en == 1'b1) begin
                     col_13_regs[i] <= col_13_regs[i-1];
                 end
                 else begin
@@ -209,10 +186,10 @@ output [column_num*16-1:0] delay_row_pixels;
     
     //col 12
     always @(posedge clk) begin
-        if ((reset == 1'b1) || (state_reset == 1'b1)) begin
+        if (reset == 1'b1) begin
             col_12_regs[0] <= 0;
         end
-        else if (state_en == 1'b1) begin
+        else if (en == 1'b1) begin
             col_12_regs[0] <= re_row_pixels[((12-1) * 16) +: 16];
         end
         else begin
@@ -222,10 +199,10 @@ output [column_num*16-1:0] delay_row_pixels;
     generate
         for (i = 1; i < row_num-5; i = i+1) begin: col_12_row
             always @(posedge clk) begin
-                if ((reset == 1'b1) || (state_reset == 1'b1)) begin
+                if (reset == 1'b1) begin
                     col_12_regs[i] <= 0;
                 end
-                else if (state_en == 1'b1) begin
+                else if (en == 1'b1) begin
                     col_12_regs[i] <= col_12_regs[i-1];
                 end
                 else begin
@@ -241,10 +218,10 @@ output [column_num*16-1:0] delay_row_pixels;
     
     //col 11
     always @(posedge clk) begin
-        if ((reset == 1'b1) || (state_reset == 1'b1)) begin
+        if (reset == 1'b1) begin
             col_11_regs[0] <= 0;
         end
-        else if (state_en == 1'b1) begin
+        else if (en == 1'b1) begin
             col_11_regs[0] <= re_row_pixels[((11-1) * 16) +: 16];
         end
         else begin
@@ -254,10 +231,10 @@ output [column_num*16-1:0] delay_row_pixels;
     generate
         for (i = 1; i < row_num-6; i = i+1) begin: col_11_row
             always @(posedge clk) begin
-                if ((reset == 1'b1) || (state_reset == 1'b1)) begin
+                if (reset == 1'b1) begin
                     col_11_regs[i] <= 0;
                 end
-                else if (state_en == 1'b1) begin
+                else if (en == 1'b1) begin
                     col_11_regs[i] <= col_11_regs[i-1];
                 end
                 else begin
@@ -273,10 +250,10 @@ output [column_num*16-1:0] delay_row_pixels;
     
     //col 10
     always @(posedge clk) begin
-        if ((reset == 1'b1) || (state_reset == 1'b1)) begin
+        if (reset == 1'b1) begin
             col_10_regs[0] <= 0;
         end
-        else if (state_en == 1'b1) begin
+        else if (en == 1'b1) begin
             col_10_regs[0] <= re_row_pixels[((10-1) * 16) +: 16];
         end
         else begin
@@ -286,10 +263,10 @@ output [column_num*16-1:0] delay_row_pixels;
     generate
         for (i = 1; i < row_num-7; i = i+1) begin: col_10_row
             always @(posedge clk) begin
-                if ((reset == 1'b1) || (state_reset == 1'b1)) begin
+                if (reset == 1'b1) begin
                     col_10_regs[i] <= 0;
                 end
-                else if (state_en == 1'b1) begin
+                else if (en == 1'b1) begin
                     col_10_regs[i] <= col_10_regs[i-1];
                 end
                 else begin
@@ -305,10 +282,10 @@ output [column_num*16-1:0] delay_row_pixels;
     
     //col 9
     always @(posedge clk) begin
-        if ((reset == 1'b1) || (state_reset == 1'b1)) begin
+        if (reset == 1'b1) begin
             col_9_regs[0] <= 0;
         end
-        else if (state_en == 1'b1) begin
+        else if (en == 1'b1) begin
             col_9_regs[0] <= re_row_pixels[((9-1) * 16) +: 16];
         end
         else begin
@@ -318,10 +295,10 @@ output [column_num*16-1:0] delay_row_pixels;
     generate
         for (i = 1; i < row_num-8; i = i+1) begin: col_9_row
             always @(posedge clk) begin
-                if ((reset == 1'b1) || (state_reset == 1'b1)) begin
+                if (reset == 1'b1) begin
                     col_9_regs[i] <= 0;
                 end
-                else if (state_en == 1'b1) begin
+                else if (en == 1'b1) begin
                     col_9_regs[i] <= col_9_regs[i-1];
                 end
                 else begin
@@ -337,10 +314,10 @@ output [column_num*16-1:0] delay_row_pixels;
     
     //col 8
     always @(posedge clk) begin
-        if ((reset == 1'b1) || (state_reset == 1'b1)) begin
+        if (reset == 1'b1) begin
             col_8_regs[0] <= 0;
         end
-        else if (state_en == 1'b1) begin
+        else if (en == 1'b1) begin
             col_8_regs[0] <= re_row_pixels[((8-1) * 16) +: 16];
         end
         else begin
@@ -350,10 +327,10 @@ output [column_num*16-1:0] delay_row_pixels;
     generate
         for (i = 1; i < row_num-9; i = i+1) begin: col_8_row
             always @(posedge clk) begin
-                if ((reset == 1'b1) || (state_reset == 1'b1)) begin
+                if (reset == 1'b1) begin
                     col_8_regs[i] <= 0;
                 end
-                else if (state_en == 1'b1) begin
+                else if (en == 1'b1) begin
                     col_8_regs[i] <= col_8_regs[i-1];
                 end
                 else begin
@@ -369,10 +346,10 @@ output [column_num*16-1:0] delay_row_pixels;
     
     //col 7
     always @(posedge clk) begin
-        if ((reset == 1'b1) || (state_reset == 1'b1)) begin
+        if (reset == 1'b1) begin
             col_7_regs[0] <= 0;
         end
-        else if (state_en == 1'b1) begin
+        else if (en == 1'b1) begin
             col_7_regs[0] <= re_row_pixels[((7-1) * 16) +: 16];
         end
         else begin
@@ -382,10 +359,10 @@ output [column_num*16-1:0] delay_row_pixels;
     generate
         for (i = 1; i < row_num-10; i = i+1) begin: col_7_row
             always @(posedge clk) begin
-                if ((reset == 1'b1) || (state_reset == 1'b1)) begin
+                if (reset == 1'b1) begin
                     col_7_regs[i] <= 0;
                 end
-                else if (state_en == 1'b1) begin
+                else if (en == 1'b1) begin
                     col_7_regs[i] <= col_7_regs[i-1];
                 end
                 else begin
@@ -401,10 +378,10 @@ output [column_num*16-1:0] delay_row_pixels;
     
     //col 6
     always @(posedge clk) begin
-        if ((reset == 1'b1) || (state_reset == 1'b1)) begin
+        if (reset == 1'b1) begin
             col_6_regs[0] <= 0;
         end
-        else if (state_en == 1'b1) begin
+        else if (en == 1'b1) begin
             col_6_regs[0] <= re_row_pixels[((6-1) * 16) +: 16];
         end
         else begin
@@ -414,10 +391,10 @@ output [column_num*16-1:0] delay_row_pixels;
     generate
         for (i = 1; i < row_num-11; i = i+1) begin: col_6_row
             always @(posedge clk) begin
-                if ((reset == 1'b1) || (state_reset == 1'b1)) begin
+                if (reset == 1'b1) begin
                     col_6_regs[i] <= 0;
                 end
-                else if (state_en == 1'b1) begin
+                else if (en == 1'b1) begin
                     col_6_regs[i] <= col_6_regs[i-1];
                 end
                 else begin
@@ -433,10 +410,10 @@ output [column_num*16-1:0] delay_row_pixels;
     
     //col 5
     always @(posedge clk) begin
-        if ((reset == 1'b1) || (state_reset == 1'b1)) begin
+        if (reset == 1'b1) begin
             col_5_regs[0] <= 0;
         end
-        else if (state_en == 1'b1) begin
+        else if (en == 1'b1) begin
             col_5_regs[0] <= re_row_pixels[((5-1) * 16) +: 16];
         end
         else begin
@@ -446,10 +423,10 @@ output [column_num*16-1:0] delay_row_pixels;
     generate
         for (i = 1; i < row_num-12; i = i+1) begin: col_5_row
             always @(posedge clk) begin
-                if ((reset == 1'b1) || (state_reset == 1'b1)) begin
+                if (reset == 1'b1) begin
                     col_5_regs[i] <= 0;
                 end
-                else if (state_en == 1'b1) begin
+                else if (en == 1'b1) begin
                     col_5_regs[i] <= col_5_regs[i-1];
                 end
                 else begin
@@ -465,10 +442,10 @@ output [column_num*16-1:0] delay_row_pixels;
     
     //col 4
     always @(posedge clk) begin
-        if ((reset == 1'b1) || (state_reset == 1'b1)) begin
+        if (reset == 1'b1) begin
             col_4_regs[0] <= 0;
         end
-        else if (state_en == 1'b1) begin
+        else if (en == 1'b1) begin
             col_4_regs[0] <= re_row_pixels[((4-1) * 16) +: 16];
         end
         else begin
@@ -478,10 +455,10 @@ output [column_num*16-1:0] delay_row_pixels;
     generate
         for (i = 1; i < row_num-13; i = i+1) begin: col_4_row
             always @(posedge clk) begin
-                if ((reset == 1'b1) || (state_reset == 1'b1)) begin
+                if (reset == 1'b1) begin
                     col_4_regs[i] <= 0;
                 end
-                else if (state_en == 1'b1) begin
+                else if (en == 1'b1) begin
                     col_4_regs[i] <= col_4_regs[i-1];
                 end
                 else begin
@@ -497,10 +474,10 @@ output [column_num*16-1:0] delay_row_pixels;
     
     //col 3
     always @(posedge clk) begin
-        if ((reset == 1'b1) || (state_reset == 1'b1)) begin
+        if (reset == 1'b1) begin
             col_3_regs[0] <= 0;
         end
-        else if (state_en == 1'b1) begin
+        else if (en == 1'b1) begin
             col_3_regs[0] <= re_row_pixels[((3-1) * 16) +: 16];
         end
         else begin
@@ -510,10 +487,10 @@ output [column_num*16-1:0] delay_row_pixels;
     generate
         for (i = 1; i < row_num-14; i = i+1) begin: col_3_row
             always @(posedge clk) begin
-                if ((reset == 1'b1) || (state_reset == 1'b1)) begin
+                if (reset == 1'b1) begin
                     col_3_regs[i] <= 0;
                 end
-                else if (state_en == 1'b1) begin
+                else if (en == 1'b1) begin
                     col_3_regs[i] <= col_3_regs[i-1];
                 end
                 else begin
@@ -529,10 +506,10 @@ output [column_num*16-1:0] delay_row_pixels;
     
     //col 2
     always @(posedge clk) begin
-        if ((reset == 1'b1) || (state_reset == 1'b1)) begin
+        if (reset == 1'b1) begin
             col_2_regs[0] <= 0;
         end
-        else if (state_en == 1'b1) begin
+        else if (en == 1'b1) begin
             col_2_regs[0] <= re_row_pixels[((2-1) * 16) +: 16];
         end
         else begin

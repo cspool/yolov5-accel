@@ -59,14 +59,52 @@ parameter out_width_18 = pixel_width_18 * pe_parallel_pixel_18 * pe_parallel_wei
 
 parameter bias_width = 8; //8 bit bias
 parameter bias_set_width = bias_width * pe_parallel_weight_18; //32; vconv pixel out_width
-parameter bias_4_channel_sets_width = bias_set_width * sa_row_num;
+parameter bias_set_4_channel_width = bias_set_width * sa_row_num; //4 * 16 bit
 
 parameter bias_sets_num_in_row = sa_row_num * row_num; //64
 parameter bias_tile_length = bias_set_width * bias_sets_num_in_row; //64 * 16bit
 
-parameter res_width = pixel_width_18 * pe_parallel_pixel_18 * pe_parallel_weight_18 * column_num;
-parameter res_width_88 = pixel_width_88 * pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num;
-parameter res_width_18_2 = pixel_width_18 * pe_parallel_pixel_18 * 1 * column_num;
+parameter add_bias_row_width = pixel_width_18 * pe_parallel_pixel_18 * pe_parallel_weight_18 * column_num;
+parameter add_bias_row_width_88 = pixel_width_88 * pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num;
+parameter add_bias_row_width_18_2 = pixel_width_18 * pe_parallel_pixel_18 * 1 * column_num;
+
+parameter mult_A_width = 25;
+parameter mult_B_width = 18;
+parameter mult_P_width = 43;
+parameter mult_array_length = 512;
+parameter vector_A_width = mult_array_length * mult_A_width;
+parameter vector_B_width = mult_array_length * mult_B_width;
+parameter vector_P_width = mult_array_length * mult_P_width;
+
+parameter E_scale_tail_width = 16; //16 bit E_scale tail
+parameter E_scale_tail_set_width = E_scale_tail_width * pe_parallel_weight_18; //32 bit
+parameter E_scale_tail_set_4_channel_width = E_scale_tail_set_width * sa_row_num; //4 * 32 bit
+parameter E_scale_tail_sets_num_in_row = sa_row_num * row_num; //64    
+parameter E_scale_tail_tile_length = E_scale_tail_set_width * E_scale_tail_sets_num_in_row; //64 * 32bit regs to str
+ 
+parameter E_scale_rank_width = 8; //8 bit E_scale rank
+parameter E_scale_rank_set_width = E_scale_rank_width * pe_parallel_weight_18; //16 bit
+parameter E_scale_rank_set_4_channel_width = E_scale_rank_set_width * sa_row_num; //4 * 16 bit
+parameter E_scale_rank_sets_num_in_row = sa_row_num * row_num; //64   
+parameter E_scale_rank_tile_length = E_scale_rank_set_width * E_scale_rank_sets_num_in_row; //64 * 16bit regs to str 
+ 
+parameter pixel_E_scale_tail_width_88 = pixel_width_88 + E_scale_tail_width; //40 bit
+parameter pixel_E_scale_tail_width_18 = pixel_width_18 + E_scale_tail_width; //32 bit
+parameter row_E_scale_tail_width_88 = pixel_E_scale_tail_width_88 * pe_parallel_weight_88 * pe_parallel_pixel_88 * column_num; 
+//40 bit * 32 pixels * 1 channel
+parameter row_E_scale_tail_width_18_2 = pixel_E_scale_tail_width_18 * 1 * pe_parallel_pixel_18 * column_num; 
+//32 bit * 32 pixels * 1 channel
+    
+parameter add_bias_row_in_25_width = mult_A_width * pe_parallel_weight_18 * pe_parallel_pixel_18 * column_num;
+//25 bit * 32 pixels * 2 channel
+parameter E_scale_tail_row_in_18_width = mult_B_width * pe_parallel_weight_18 * pe_parallel_pixel_18 * column_num; 
+//18 bit * 32 pixels * 2 channel
+parameter row_E_scale_tail_in_43_width = mult_P_width * pe_parallel_weight_18 * pe_parallel_pixel_18 * column_num; 
+//43 bit * 32 pixels * 2 channel > 32 bit * 32 pixels * 2 channel > 40 bit * 32 pixels * 1 channel
+  
+parameter qualified_pixel_width = 8; 
+parameter qualified_row_width = (qualified_pixel_width+1) * pe_parallel_weight_18 * pe_parallel_pixel_18 * column_num; 
+//9 bit * 32 pixels * 2 channel
     
     reg [3:0] k, s, p;
     
@@ -81,6 +119,9 @@ parameter res_width_18_2 = pixel_width_18 * pe_parallel_pixel_18 * 1 * column_nu
     reg mode;
     
     reg [bias_tile_length -1 : 0] bias_tile_val;
+    
+    reg [E_scale_tail_tile_length -1 : 0] E_scale_tail_tile_val; 
+    reg [E_scale_rank_tile_length -1 : 0] E_scale_rank_tile_val; 
 
 conv_datapath cv_datapath(
     .of(of),
@@ -99,7 +140,8 @@ conv_datapath cv_datapath(
     .ix_in_2pow(ix_in_2pow),
     .nif_mult_k_mult_k(nif_mult_k_mult_k),
     
-    .mode(mode)
+    .mode(mode),
+    .bias_tile_val(bias_tile_val)
 );
 
 
@@ -116,24 +158,28 @@ end
         of = 64; ox = 64; oy = 3; ix = 256; iy = 256; // a tile computation
         ix_in_2pow = 8;
         mode = 0;
-        nif = 8; nif_in_2pow = 3; nif_mult_k_mult_k = 8;
-        bias_tile_val = {{16'h0001},{16'h0002},{16'h0003},{16'h0004},
-                         {16'h0005},{16'h0006},{16'h0007},{16'h0008},
-                         {16'h0009},{16'h00a0},{16'h00a1},{16'h00a2},
-                         {16'h00a3},{16'h00a4},{16'h00a5},{16'h00a6},//1
-                         {16'h0001},{16'h0002},{16'h0003},{16'h0004},
-                         {16'h0005},{16'h0006},{16'h0007},{16'h0008},
-                         {16'h0009},{16'h00a0},{16'h00a1},{16'h00a2},
-                         {16'h00a3},{16'h00a4},{16'h00a5},{16'h00a6},//2
-                         {16'h0001},{16'h0002},{16'h0003},{16'h0004},
-                         {16'h0005},{16'h0006},{16'h0007},{16'h0008},
-                         {16'h0009},{16'h00a0},{16'h00a1},{16'h00a2},
-                         {16'h00a3},{16'h00a4},{16'h00a5},{16'h00a6},//3
-                         {16'h0001},{16'h0002},{16'h0003},{16'h0004},
-                         {16'h0005},{16'h0006},{16'h0007},{16'h0008},
-                         {16'h0009},{16'h00a0},{16'h00a1},{16'h00a2},
-                         {16'h00a3},{16'h00a4},{16'h00a5},{16'h00a6}//4
+        nif = 1; nif_in_2pow = 0; nif_mult_k_mult_k = nif * k * k;
+        bias_tile_val = 
+                        {{16'h00a6},{16'h00a5},{16'h00a4},{16'h00a3},//1
+                         {16'h00a2},{16'h00a1},{16'h00a0},{16'h0009},
+                         {16'h0008},{16'h0007},{16'h0006},{16'h0005},
+                         {16'h0004},{16'h0003},{16'h0002},{16'h0001},
+                         {16'h00a6},{16'h00a5},{16'h00a4},{16'h00a3},//2
+                         {16'h00a2},{16'h00a1},{16'h00a0},{16'h0009},
+                         {16'h0008},{16'h0007},{16'h0006},{16'h0005},
+                         {16'h0004},{16'h0003},{16'h0002},{16'h0001},
+                         {16'h00a6},{16'h00a5},{16'h00a4},{16'h00a3},//3
+                         {16'h00a2},{16'h00a1},{16'h00a0},{16'h0009},
+                         {16'h0008},{16'h0007},{16'h0006},{16'h0005},
+                         {16'h0004},{16'h0003},{16'h0002},{16'h0001},
+                         {16'h00a6},{16'h00a5},{16'h00a4},{16'h00a3},//4
+                         {16'h00a2},{16'h00a1},{16'h00a0},{16'h0009},
+                         {16'h0008},{16'h0007},{16'h0006},{16'h0005},
+                         {16'h0004},{16'h0003},{16'h0002},{16'h0001}
                          };
+        E_scale_tail_tile_val = 0;//xx
+        E_scale_rank_tile_val = 0;//xx
+        
         
         #10;
         

@@ -26,23 +26,16 @@ mode,
 
 rowi_channel_seti, // pox res per channel
 
-bias,
+bias_set,
 
-add_bias_rowi_channel_seti // pox res per channel
+add_bias_row // pox res per channel
     );
-    parameter row_num = 16;
+parameter row_num = 16;
 parameter column_num = 16; 
-    parameter pixels_in_row = 32;
-    parameter pixels_in_row_in_2pow = 5;
-   parameter buffers_num = 3;
-   parameter pixels_in_row_minus_1 = pixels_in_row-1;
-   parameter buffers_num_minus_1 = buffers_num-1;
-   parameter shift_regs_num = 70;
-   
-   parameter weights_in_row = row_num * 4; // 8bit
-    parameter weight_row_length = weights_in_row * 8;
+parameter pixels_in_row = 32;
+parameter pixels_in_row_in_2pow = 5;
 
-    parameter headroom = 8;
+parameter headroom = 8;
 
 parameter pixel_width_88 = 16 + headroom;
 //parameter pixel_width_18 = 10 + headroom;
@@ -55,17 +48,24 @@ parameter pe_parallel_weight_18 = 2;
 
 parameter pe_out_width =  (pixel_width_18) * pe_parallel_pixel_18 *  pe_parallel_weight_18; // width of 18 is bigger than 88
 
-parameter row_counter_width = ($clog2(row_num+1));
-
 parameter out_width = pixel_width_18 * pe_parallel_pixel_18 * pe_parallel_weight_18 * column_num;
 parameter out_width_88 = pixel_width_88 * pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num;
 parameter out_width_18 = pixel_width_18 * pe_parallel_pixel_18 * pe_parallel_weight_18 * column_num;
 
-parameter bias_width = 8 * pe_parallel_weight_18; //8bit * 2; vconv pixel out_width
+parameter sa_row_num = 4; //how many rows in conv core
+parameter sa_column_num = 3; //how many columns in conv core
 
-parameter res_width = pixel_width_18 * pe_parallel_pixel_18 * pe_parallel_weight_18 * column_num;
-parameter res_width_88 = pixel_width_88 * pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num;
-parameter res_width_18_2 = pixel_width_18 * pe_parallel_pixel_18 * 1 * column_num;
+parameter bias_width = 8; //8 bit bias
+parameter bias_set_width = bias_width * pe_parallel_weight_18; //16 bit
+parameter bias_set_4_channel_width = bias_set_width * sa_row_num; //4 * 16 bit
+
+parameter bias_sets_num_in_row = sa_row_num * row_num; //64
+    
+parameter bias_tile_length = bias_set_width * bias_sets_num_in_row; //64 * 16bit
+
+parameter add_bias_row_width = pixel_width_18 * pe_parallel_pixel_18 * pe_parallel_weight_18 * column_num;
+parameter add_bias_row_width_88 = pixel_width_88 * pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num;
+parameter add_bias_row_width_18_2 = pixel_width_18 * pe_parallel_pixel_18 * 1 * column_num;
 //res_width_88 == res_width_18_one_channel
 
     input mode;
@@ -74,9 +74,9 @@ parameter res_width_18_2 = pixel_width_18 * pe_parallel_pixel_18 * 1 * column_nu
     
     input [out_width - 1: 0] rowi_channel_seti;
     
-    input [bias_width-1 :0] bias; //2 bias 16 bit, or 1 bias 24 bit
+    input [bias_set_width-1 :0] bias_set; //2 bias 16 bit, or 1 bias 24 bit
     
-    output reg [res_width - 1: 0] add_bias_rowi_channel_seti;
+    output reg [add_bias_row_width - 1: 0] add_bias_row;
     
     wire [8-1 :0] bias_88;
     wire [8-1:0] bias_18_1, bias_18_2;
@@ -84,19 +84,19 @@ parameter res_width_18_2 = pixel_width_18 * pe_parallel_pixel_18 * 1 * column_nu
     wire [out_width_88 - 1 : 0] row_88;
     wire [out_width_18 / pe_parallel_weight_18 - 1 : 0] row_18_1, row_18_2;
     
-    wire [res_width_88 - 1 : 0] res_88;
-    wire [res_width_18_2 - 1 : 0] res_18_1, res_18_2;
+    wire [add_bias_row_width_88 - 1 : 0] res_88;
+    wire [add_bias_row_width_18_2 - 1 : 0] res_18_1, res_18_2;
 
     assign row_88 = rowi_channel_seti[out_width_88 - 1 : 0];
     
     assign row_18_1 = rowi_channel_seti[out_width_18 / pe_parallel_weight_18 - 1 : 0];
     assign row_18_2 = rowi_channel_seti[out_width_18 - 1 : out_width_18 / pe_parallel_weight_18];
     
-    assign bias_88 = bias[8-1 :0];
+    assign bias_88 = bias_set[bias_width-1 :0];
     assign bias_18_1 = bias_88;
-    assign bias_18_2 = bias[bias_width-1 :8];
+    assign bias_18_2 = bias_set[bias_set_width-1 :bias_width];
     
-    assign res_18_1 = res_88[res_width_18_2 - 1 : 0];
+    assign res_18_1 = res_88[add_bias_row_width_18_2 - 1 : 0];
     
     genvar i;
     
@@ -116,15 +116,15 @@ parameter res_width_18_2 = pixel_width_18 * pe_parallel_pixel_18 * 1 * column_nu
     
     always@(posedge clk) begin
         if (reset == 1'b1) begin
-            add_bias_rowi_channel_seti <= 0;  
+            add_bias_row <= 0;  
         end
         else if (en == 1'b1) begin
-            add_bias_rowi_channel_seti <= 
-            (mode == 1'b0)? {{(res_width-res_width_88){1'b0}}, res_88}:
+            add_bias_row <= 
+            (mode == 1'b0)? {{(add_bias_row_width-add_bias_row_width_88){1'b0}}, res_88}:
             (mode == 1'b1)? {row_18_2, row_18_1}: 0; // need shift
         end
         else begin
-            add_bias_rowi_channel_seti <= add_bias_rowi_channel_seti;
+            add_bias_row <= add_bias_row;
         end
     end
     

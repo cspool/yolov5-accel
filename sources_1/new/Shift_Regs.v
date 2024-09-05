@@ -78,9 +78,9 @@ re_fm_end
             state_shift_start <= 0;  
         end
         else if (shift_start == 1'b1) begin
-            state_shift_start <= 1; // need shift
+            state_shift_start <= 1; // first valid shift val
         end
-        else if ((shift_counter) == k) begin
+        else if ((loop_shift_add_end == 1'b1) && (shift_start == 1'b0)) begin
             state_shift_start <= 0; // shift end, next should be load
         end
         else begin
