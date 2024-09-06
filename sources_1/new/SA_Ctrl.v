@@ -34,6 +34,9 @@ channel_out_en,
 add_bias_en,
 add_bias_reset,
 
+mult_en, mult_reset,
+quantify_en, quantify_reset,
+
 out_sa_row_idx,
 
 loop_sa_counter_add_end
@@ -49,10 +52,13 @@ loop_sa_counter_add_end
     wire loop_pixels_counter_add_end; //the last word of all nif pixels in tile
     
     output reg sa_en, sa_reset;
-    output reg channel_out_reset, channel_out_en; //need logic
+    output reg channel_out_reset, channel_out_en;
     
     output add_bias_en;
     output reg add_bias_reset;
+    
+    output reg quantify_en, quantify_reset;
+    output reg mult_en, mult_reset;
     
     output [5:0] out_sa_row_idx; //output channel idx
     
@@ -199,6 +205,34 @@ loop_sa_counter_add_end
         end
         else begin
             add_bias_reset <= add_bias_reset;
+        end
+    end
+    
+    always @(posedge clk) begin
+        if (reset == 1'b1) begin
+            mult_en <= 0;
+            mult_reset <= 1;
+        end
+        else if (mult_reset == 1'b1) begin
+            mult_reset <= 0;
+        end
+        else begin
+            mult_en <= add_bias_en;
+            mult_reset <= add_bias_reset;
+        end
+    end
+    
+    always @(posedge clk) begin
+        if (reset == 1'b1) begin
+            quantify_en <= 0;
+            quantify_reset <= 1;
+        end
+        else if (quantify_reset == 1'b1) begin
+            quantify_reset <= 0;
+        end
+        else begin
+            quantify_en <= mult_en;
+            quantify_reset <= mult_reset;
         end
     end
 

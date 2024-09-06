@@ -56,19 +56,19 @@ USE ieee.numeric_std.ALL;
 LIBRARY mult_gen_v12_0_14;
 USE mult_gen_v12_0_14.mult_gen_v12_0_14;
 
-ENTITY signed_dsp_25_18 IS
+ENTITY signed_mult_50_18 IS
   PORT (
     CLK : IN STD_LOGIC;
-    A : IN STD_LOGIC_VECTOR(24 DOWNTO 0);
+    A : IN STD_LOGIC_VECTOR(42 DOWNTO 0);
     B : IN STD_LOGIC_VECTOR(17 DOWNTO 0);
     CE : IN STD_LOGIC;
-    P : OUT STD_LOGIC_VECTOR(42 DOWNTO 0)
+    P : OUT STD_LOGIC_VECTOR(60 DOWNTO 0)
   );
-END signed_dsp_25_18;
+END signed_mult_50_18;
 
-ARCHITECTURE signed_dsp_25_18_arch OF signed_dsp_25_18 IS
+ARCHITECTURE signed_mult_50_18_arch OF signed_mult_50_18 IS
   ATTRIBUTE DowngradeIPIdentifiedWarnings : STRING;
-  ATTRIBUTE DowngradeIPIdentifiedWarnings OF signed_dsp_25_18_arch: ARCHITECTURE IS "yes";
+  ATTRIBUTE DowngradeIPIdentifiedWarnings OF signed_mult_50_18_arch: ARCHITECTURE IS "yes";
   COMPONENT mult_gen_v12_0_14 IS
     GENERIC (
       C_VERBOSITY : INTEGER;
@@ -94,13 +94,19 @@ ARCHITECTURE signed_dsp_25_18_arch OF signed_dsp_25_18 IS
     );
     PORT (
       CLK : IN STD_LOGIC;
-      A : IN STD_LOGIC_VECTOR(24 DOWNTO 0);
+      A : IN STD_LOGIC_VECTOR(42 DOWNTO 0);
       B : IN STD_LOGIC_VECTOR(17 DOWNTO 0);
       CE : IN STD_LOGIC;
       SCLR : IN STD_LOGIC;
-      P : OUT STD_LOGIC_VECTOR(42 DOWNTO 0)
+      P : OUT STD_LOGIC_VECTOR(60 DOWNTO 0)
     );
   END COMPONENT mult_gen_v12_0_14;
+  ATTRIBUTE X_CORE_INFO : STRING;
+  ATTRIBUTE X_CORE_INFO OF signed_mult_50_18_arch: ARCHITECTURE IS "mult_gen_v12_0_14,Vivado 2018.3";
+  ATTRIBUTE CHECK_LICENSE_TYPE : STRING;
+  ATTRIBUTE CHECK_LICENSE_TYPE OF signed_mult_50_18_arch : ARCHITECTURE IS "signed_mult_50_18,mult_gen_v12_0_14,{}";
+  ATTRIBUTE CORE_GENERATION_INFO : STRING;
+  ATTRIBUTE CORE_GENERATION_INFO OF signed_mult_50_18_arch: ARCHITECTURE IS "signed_mult_50_18,mult_gen_v12_0_14,{x_ipProduct=Vivado 2018.3,x_ipVendor=xilinx.com,x_ipLibrary=ip,x_ipName=mult_gen,x_ipVersion=12.0,x_ipCoreRevision=14,x_ipLanguage=VERILOG,x_ipSimLanguage=MIXED,C_VERBOSITY=0,C_MODEL_TYPE=0,C_OPTIMIZE_GOAL=1,C_XDEVICEFAMILY=virtex7,C_HAS_CE=1,C_HAS_SCLR=0,C_LATENCY=1,C_A_WIDTH=43,C_A_TYPE=0,C_B_WIDTH=18,C_B_TYPE=0,C_OUT_HIGH=60,C_OUT_LOW=0,C_MULT_TYPE=1,C_CE_OVERRIDES_SCLR=0,C_CCM_IMP=0,C_B_VALUE=10000001,C_HAS_ZERO_DETECT=0,C_ROUND_OUTPUT=0,C_ROUND_PT=0}";
   ATTRIBUTE X_INTERFACE_INFO : STRING;
   ATTRIBUTE X_INTERFACE_PARAMETER : STRING;
   ATTRIBUTE X_INTERFACE_PARAMETER OF P: SIGNAL IS "XIL_INTERFACENAME p_intf, LAYERED_METADATA undef";
@@ -123,11 +129,11 @@ BEGIN
       C_HAS_CE => 1,
       C_HAS_SCLR => 0,
       C_LATENCY => 1,
-      C_A_WIDTH => 25,
+      C_A_WIDTH => 43,
       C_A_TYPE => 0,
       C_B_WIDTH => 18,
       C_B_TYPE => 0,
-      C_OUT_HIGH => 42,
+      C_OUT_HIGH => 60,
       C_OUT_LOW => 0,
       C_MULT_TYPE => 1,
       C_CE_OVERRIDES_SCLR => 0,
@@ -145,4 +151,4 @@ BEGIN
       SCLR => '0',
       P => P
     );
-END signed_dsp_25_18_arch;
+END signed_mult_50_18_arch;

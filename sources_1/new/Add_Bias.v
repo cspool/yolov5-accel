@@ -121,7 +121,7 @@ parameter add_bias_row_width_18_2 = pixel_width_18 * pe_parallel_pixel_18 * 1 * 
         else if (en == 1'b1) begin
             add_bias_row <= 
             (mode == 1'b0)? {{(add_bias_row_width-add_bias_row_width_88){1'b0}}, res_88}:
-            (mode == 1'b1)? {row_18_2, row_18_1}: 0; // need shift
+            (mode == 1'b1)? {row_18_2, row_18_1}: 0;
         end
         else begin
             add_bias_row <= add_bias_row;

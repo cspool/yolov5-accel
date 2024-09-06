@@ -247,10 +247,15 @@ parameter qualified_row_width = (qualified_pixel_width+1) * pe_parallel_weight_1
     
     wire [add_bias_row_width - 1: 0] add_bias_rowi_channel_seti[sa_column_num-1 : 0][sa_row_num-1 : 0];
     
+    //quantify ctrl
+    wire mult_en, mult_reset;
+    wire quantify_en, quantify_reset;
+    
     //mult_array
-    wire [vector_A_width-1 :0] vector_A;
-    wire [vector_B_width-1 :0] vector_B;
-    wire [vector_P_width-1 :0] vector_P;
+    wire [vector_A_width-1 :0] vector_A, vector_conv_A;
+    wire [vector_B_width-1 :0] vector_B, vector_conv_B;
+    wire [vector_P_width-1 :0] vector_P, vector_conv_P;
+    
     
     //e_scale regs
     // tile e-scale, will be set at first of the tiling compute, maybe set in several cycles
@@ -267,7 +272,7 @@ parameter qualified_row_width = (qualified_pixel_width+1) * pe_parallel_weight_1
     wire [row_E_scale_tail_in_43_width-1 : 0] rowi_E_scale_tail_in_43_channel_seti[sa_column_num-1 : 0][sa_row_num-1 : 0];
     //43 bit * 32 pixels * 2 channel
     
-    wire [qualified_row_width-1 :0] qualified_rowi_channel_seti[sa_column_num-1 : 0][sa_row_num-1 : 0];
+    wire [qualified_row_width-1 :0] quantified_rowi_channel_seti[sa_column_num-1 : 0][sa_row_num-1 : 0];
     //9 bit * 32 pixels * 2 channel 
     
     conv_router_v2 cv_router(
@@ -607,7 +612,7 @@ parameter qualified_row_width = (qualified_pixel_width+1) * pe_parallel_weight_1
     
     cv_weights_handler cv_weights_handler(
         .clk(clk), 
-        .reset(reset),
+        .reset(reset), //need xxxx
         .re_fm_en(re_fm_en),
         .re_fm_end(re_fm_end),
         .weights_vector(weights_vector)
@@ -661,8 +666,10 @@ parameter qualified_row_width = (qualified_pixel_width+1) * pe_parallel_weight_1
                 E_Scale E_scale(
                     //cycle 0 in
                     .clk(clk), 
-                    .reset(add_bias_reset), //xx
-                    .en(add_bias_en), //xx should be a cycle later than add_bias_en
+                    .mult_en(mult_en), 
+                    .mult_reset(mult_reset),
+                    .quantify_en(quantify_en), 
+                    .quantify_reset(quantify_reset),
                     .mode(mode), 
                     .E_scale_tail_set(E_scale_tail_4_channel_sets[(j-1)*E_scale_tail_set_width +: E_scale_tail_set_width]),
                     .E_scale_rank_set(E_scale_rank_4_channel_sets[(j-1)*E_scale_rank_set_width +: E_scale_rank_set_width]),
@@ -677,8 +684,16 @@ parameter qualified_row_width = (qualified_pixel_width+1) * pe_parallel_weight_1
                     .row_E_scale_tail_in_43(rowi_E_scale_tail_in_43_channel_seti[i-1][j-1]),
                     
                     //cycle 1 out
-                    .qualified_row(qualified_rowi_channel_seti[i-1][j-1])
+                    .quantified_row(quantified_rowi_channel_seti[i-1][j-1])
                 );
+                
+                assign vector_conv_A[((i-1)*sa_row_num+(j-1))*add_bias_row_in_25_width +: add_bias_row_in_25_width]
+                = add_bias_rowi_in_25_channel_seti[i-1][j-1];
+                assign vector_conv_B[((i-1)*sa_row_num+(j-1))*E_scale_tail_row_in_18_width +: E_scale_tail_row_in_18_width]
+                = E_scale_tail_rowi_in_18_channel_seti[i-1][j-1];
+                assign rowi_E_scale_tail_in_43_channel_seti[i-1][j-1]
+                = vector_conv_P[((i-1)*sa_row_num+(j-1))*row_E_scale_tail_in_43_width +: row_E_scale_tail_in_43_width];
+                
             end
         end
     endgenerate
@@ -696,6 +711,10 @@ parameter qualified_row_width = (qualified_pixel_width+1) * pe_parallel_weight_1
         .channel_out_en(channel_out_en),
         .add_bias_en(add_bias_en),
         .add_bias_reset(add_bias_reset),
+        .mult_en(mult_en), 
+        .mult_reset(mult_reset),
+        .quantify_en(quantify_en), 
+        .quantify_reset(quantify_reset),
         
         .out_sa_row_idx(out_sa_row_idx),
         .loop_sa_counter_add_end(loop_sa_counter_add_end)
@@ -704,7 +723,7 @@ parameter qualified_row_width = (qualified_pixel_width+1) * pe_parallel_weight_1
     //bias regs
     Bias_Regs bias_regs(
         .clk(clk), 
-        .set(reset),
+        .set(reset), // need xxxx
         .mode(mode),
         .bias_tile_val(bias_tile_val),
         .out_sa_row_idx(out_sa_row_idx),
@@ -713,24 +732,33 @@ parameter qualified_row_width = (qualified_pixel_width+1) * pe_parallel_weight_1
     
     Mult_Array mult_array(
         .clk(clk), 
-        
+        .mult_en(mult_en),
         .vector_A(vector_A),
         .vector_B(vector_B),
         .vector_P(vector_P)
     );
     
-    E_Scale_Regs E_scale_regs (
-        .clk(clk), 
-        .set(reset),
-        .mode(mode),
+    assign vector_conv_A[vector_A_width-1 : add_bias_row_in_25_width * sa_row_num * sa_column_num] = 0;
+    assign vector_conv_B[vector_B_width-1 : E_scale_tail_row_in_18_width * sa_row_num * sa_column_num] = 0;
+    assign vector_conv_P[vector_P_width-1 : row_E_scale_tail_in_43_width * sa_row_num * sa_column_num] = 0;
+     
+    assign vector_A = vector_conv_A;
+    assign vector_B = vector_conv_B;
+    assign vector_conv_P[row_E_scale_tail_in_43_width * sa_row_num * sa_column_num-1 :0]
+    = vector_P[row_E_scale_tail_in_43_width * sa_row_num * sa_column_num-1 :0];
+    
+//    E_Scale_Regs E_scale_regs (
+//        .clk(clk), 
+//        .set(reset), //need xxxx
+//        .mode(mode),
         
-        .E_scale_tail_tile_val(E_scale_tail_tile_val),
-        .E_scale_rank_tile_val(E_scale_rank_tile_val),
-        .out_sa_row_idx(out_sa_row_idx),
+//        .E_scale_tail_tile_val(E_scale_tail_tile_val),
+//        .E_scale_rank_tile_val(E_scale_rank_tile_val),
+//        .out_sa_row_idx(out_sa_row_idx),
         
-        .E_scale_tail_4_channel_sets(E_scale_tail_4_channel_sets),
-        .E_scale_rank_4_channel_sets(E_scale_rank_4_channel_sets)
-    );
+//        .E_scale_tail_4_channel_sets(E_scale_tail_4_channel_sets),
+//        .E_scale_rank_4_channel_sets(E_scale_rank_4_channel_sets)
+//    );
     
     
 
