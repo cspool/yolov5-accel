@@ -24,7 +24,7 @@ module E_Scale(
 //cycle 0 in
 mode, 
 clk, 
-mult_en, mult_reset,
+e_tail_en, e_tail_reset,
 quantify_en, quantify_reset,
 E_scale_tail_set,
 E_scale_rank_set,
@@ -32,11 +32,11 @@ E_scale_rank_set,
 add_bias_row,
 
 //cycle 0 out
-add_bias_row_in_25,
-E_scale_tail_row_in_18,
+add_bias_row_in_mult_A_width,
+E_scale_tail_row_in_mult_B_width,
 
 //cycle 1 in
-row_E_scale_tail_in_43,
+row_E_scale_tail_in_mult_P_width,
 
 //cycle 1 out
 quantified_row
@@ -85,16 +85,19 @@ parameter row_E_scale_tail_width_88 = pixel_E_scale_tail_width_88 * pe_parallel_
 parameter row_E_scale_tail_width_18_2 = pixel_E_scale_tail_width_18 * 1 * pe_parallel_pixel_18 * column_num; 
 //32 bit * 32 pixels * 1 channel
 
-parameter mult_A_width = 25;
-parameter mult_B_width = 18;
-parameter mult_P_width = 43;
+parameter mult_A_width = 24;
+parameter mult_B_width = 16;
+parameter mult_P_width = 40;
+parameter mult_array_length = 576;
+parameter mult_dsp_array_length = 528;
+parameter mult_lut_array_length = mult_array_length - mult_dsp_array_length;
     
-parameter add_bias_row_in_25_width = mult_A_width * pe_parallel_weight_18 * pe_parallel_pixel_18 * column_num;
-//25 bit * 32 pixels * 2 channel
-parameter E_scale_tail_row_in_18_width = mult_B_width * pe_parallel_weight_18 * pe_parallel_pixel_18 * column_num; 
-//18 bit * 32 pixels * 2 channel
-parameter row_E_scale_tail_in_43_width = mult_P_width * pe_parallel_weight_18 * pe_parallel_pixel_18 * column_num; 
-//43 bit * 32 pixels * 2 channel > 32 bit * 32 pixels * 2 channel > 40 bit * 32 pixels * 1 channel
+parameter add_bias_row_in_mult_A_width_width = mult_A_width * pe_parallel_weight_18 * pe_parallel_pixel_18 * column_num;
+//24 bit * 32 pixels * 2 channel
+parameter E_scale_tail_row_in_mult_B_width_width = mult_B_width * pe_parallel_weight_18 * pe_parallel_pixel_18 * column_num; 
+//16 bit * 32 pixels * 2 channel
+parameter row_E_scale_tail_in_mult_P_width_width = mult_P_width * pe_parallel_weight_18 * pe_parallel_pixel_18 * column_num; 
+//40 bit * 32 pixels * 2 channel > 32 bit * 32 pixels * 2 channel > 40 bit * 32 pixels * 1 channel
   
 parameter quantified_pixel_width = 8; 
 parameter quantified_row_width = (quantified_pixel_width+1) * pe_parallel_weight_18 * pe_parallel_pixel_18 * column_num; 
@@ -103,7 +106,7 @@ parameter quantified_row_width = (quantified_pixel_width+1) * pe_parallel_weight
     //cycle 0
     input mode;
     
-    input clk, quantify_en, quantify_reset, mult_en, mult_reset;
+    input clk, quantify_en, quantify_reset, e_tail_en, e_tail_reset;
     
     input [add_bias_row_width - 1: 0] add_bias_row;
     //16 bit * 32 pixels * 2 channel
@@ -116,14 +119,14 @@ parameter quantified_row_width = (quantified_pixel_width+1) * pe_parallel_weight
     input [E_scale_rank_set_width-1 :0] E_scale_rank_set;
     //8 bit * 2 channel
   
-    output [add_bias_row_in_25_width-1 : 0] add_bias_row_in_25;       //pixels 
-    //25 bit * 32 pixels * 2 channel
-    output [E_scale_tail_row_in_18_width-1 : 0] E_scale_tail_row_in_18;       //E_scale_tile
-    //18 bit * 32 pixels * 2 channel
+    output [add_bias_row_in_mult_A_width_width-1 : 0] add_bias_row_in_mult_A_width;       //pixels 
+    //24 bit * 32 pixels * 2 channel
+    output [E_scale_tail_row_in_mult_B_width_width-1 : 0] E_scale_tail_row_in_mult_B_width;       //E_scale_tile
+    //16 bit * 32 pixels * 2 channel
             
     //cycle 1
-    input [row_E_scale_tail_in_43_width-1 : 0] row_E_scale_tail_in_43;
-    //43 bit * 32 pixels * 2 channel
+    input [row_E_scale_tail_in_mult_P_width_width-1 : 0] row_E_scale_tail_in_mult_P_width;
+    //40 bit * 32 pixels * 2 channel
     
  
     
@@ -157,32 +160,32 @@ parameter quantified_row_width = (quantified_pixel_width+1) * pe_parallel_weight
     
     //cycle 0
     generate
-        // add_bias_row_in_25[25 * pe_parallel_pixel_88 * column_num -1 : 0]
-        //25 bit * 32 pixels * 2 channel
+        // add_bias_row_in_24[24 * pe_parallel_pixel_88 * column_num -1 : 0]
+        //24 bit * 32 pixels * 1 channel or 16 bit * 32 pixels * 2 channel
         for (i = 0; i < pe_parallel_pixel_88 * column_num; i = i + 1) begin
-            assign add_bias_row_in_25[i*mult_A_width +: mult_A_width] =
+            assign add_bias_row_in_mult_A_width[i*mult_A_width +: mult_A_width] =
             (mode == 1'b0)? {{(mult_A_width-pixel_width_88){1'b0}},add_bias_row_88[i*pixel_width_88 +: pixel_width_88]}:
             (mode == 1'b1)? {{(mult_A_width-pixel_width_18){1'b0}},add_bias_row_18_1[i*pixel_width_18 +: pixel_width_18]}:
             0; 
         end
         
-        // add_bias_row_in_25[add_bias_row_in_25_width-1 : 25 * pe_parallel_pixel_18 * column_num]
+        // add_bias_row_in_24[add_bias_row_in_24_width-1 : 24 * pe_parallel_pixel_18 * column_num]
         for (i = 0; i < pe_parallel_pixel_18 * column_num; i = i + 1) begin
-            assign add_bias_row_in_25[(pe_parallel_pixel_18 * column_num + i) *mult_A_width +: mult_A_width] =
+            assign add_bias_row_in_mult_A_width[(pe_parallel_pixel_18 * column_num + i) *mult_A_width +: mult_A_width] =
             (mode == 1'b1) ?{{(mult_A_width-pixel_width_18){1'b0}},add_bias_row_18_2[i*pixel_width_18 +: pixel_width_18]}:
             0; 
         end
         
-        // E_scale_tail_row_in_18[18 * pe_parallel_pixel_18 * column_num -1 : 0]
-        //18 bit * 32 pixels * 2 channel
+        // E_scale_tail_row_in_16[18 * pe_parallel_pixel_18 * column_num -1 : 0]
+        //16 bit * 32 pixels * 2 channel
         for (i = 0; i < pe_parallel_pixel_88 * column_num; i = i + 1) begin
-            assign E_scale_tail_row_in_18[i*mult_B_width +: mult_B_width] =
+            assign E_scale_tail_row_in_mult_B_width[i*mult_B_width +: mult_B_width] =
             {{(mult_B_width-E_scale_tail_width){1'b0}},E_scale_tail_88}; 
         end
         
         // E_scale_tail_row_in_18[E_scale_tail_row_in_18_width-1 : 18 * pe_parallel_pixel_18 * column_num]
         for (i = 0; i < pe_parallel_pixel_18 * column_num; i = i + 1) begin
-            assign E_scale_tail_row_in_18[(pe_parallel_pixel_18 * column_num + i) *mult_B_width +: mult_B_width] =
+            assign E_scale_tail_row_in_mult_B_width[(pe_parallel_pixel_18 * column_num + i) *mult_B_width +: mult_B_width] =
             (mode == 1'b1) ?{{(mult_B_width-E_scale_tail_width){1'b0}},E_scale_tail_18_2}:
             0; 
         end
@@ -227,9 +230,9 @@ parameter quantified_row_width = (quantified_pixel_width+1) * pe_parallel_weight
                 end
                 else if (quantify_en == 1'b1) begin
                     quantified_row[i*(quantified_pixel_width+1) +: (quantified_pixel_width+1)]
-                    <= (mode == 1'b0)? ((row_E_scale_tail_in_43[i*mult_P_width +: pixel_E_scale_tail_width_88])
+                    <= (mode == 1'b0)? ((row_E_scale_tail_in_mult_P_width[i*mult_P_width +: pixel_E_scale_tail_width_88])
                      >> (last_E_scale_rank_88)):
-                    (mode == 1'b1)? ((row_E_scale_tail_in_43[i*mult_P_width +: pixel_E_scale_tail_width_18])
+                    (mode == 1'b1)? ((row_E_scale_tail_in_mult_P_width[i*mult_P_width +: pixel_E_scale_tail_width_18])
                      >> (last_E_scale_rank_18_1)):
                     0; 
                 end
@@ -249,7 +252,7 @@ parameter quantified_row_width = (quantified_pixel_width+1) * pe_parallel_weight
                 end
                 else if (quantify_en == 1'b1) begin
                     quantified_row[(pe_parallel_pixel_18 * column_num+i)*(quantified_pixel_width+1) +: (quantified_pixel_width+1)]
-                    <= (mode == 1'b1) ? ((row_E_scale_tail_in_43[(pe_parallel_pixel_18 * column_num + i)*mult_P_width +: pixel_E_scale_tail_width_18])
+                    <= (mode == 1'b1) ? ((row_E_scale_tail_in_mult_P_width[(pe_parallel_pixel_18 * column_num + i)*mult_P_width +: pixel_E_scale_tail_width_18])
                     >> (last_E_scale_rank_18_2)):
                     0;
                 end
@@ -264,10 +267,10 @@ parameter quantified_row_width = (quantified_pixel_width+1) * pe_parallel_weight
     
     //might need poblish
     always@(posedge clk) begin
-        if (mult_reset == 1'b1) begin
+        if (e_tail_reset == 1'b1) begin
             last_E_scale_rank_set <= 0;  
         end
-        else if (mult_en == 1'b1) begin
+        else if (e_tail_en == 1'b1) begin
             last_E_scale_rank_set <= E_scale_rank_set;
         end
         else begin

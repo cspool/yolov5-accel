@@ -23,6 +23,8 @@
 module SA_Ctrl(
 reset,clk,en,
 
+mode,
+
 re_fm_en,
 nif_mult_k_mult_k,
     
@@ -34,14 +36,17 @@ channel_out_en,
 add_bias_en,
 add_bias_reset,
 
-mult_en, mult_reset,
+e_tail_en, e_tail_reset,
 quantify_en, quantify_reset,
+
+mult_array_mode,
 
 out_sa_row_idx,
 
 loop_sa_counter_add_end
 
     );
+    input mode;
     input reset,clk,en;
     input re_fm_en;
     input [31:0] nif_mult_k_mult_k;
@@ -58,9 +63,11 @@ loop_sa_counter_add_end
     output reg add_bias_reset;
     
     output reg quantify_en, quantify_reset;
-    output reg mult_en, mult_reset;
+    output reg e_tail_en, e_tail_reset;
     
     output [5:0] out_sa_row_idx; //output channel idx
+    
+    output mult_array_mode;
     
     reg sa_counter_signal;
     reg [5:0] sa_counter;
@@ -191,6 +198,8 @@ loop_sa_counter_add_end
 
     assign out_sa_row_idx = (channel_out_en == 1'b1) ? (sa_counter - 6'd16) : 0;
     
+    assign mult_array_mode = (mode == 1'b1) && (e_tail_en == 1'b1);
+    
     assign add_bias_en = channel_out_en;
     
     always @(posedge clk) begin
@@ -210,15 +219,15 @@ loop_sa_counter_add_end
     
     always @(posedge clk) begin
         if (reset == 1'b1) begin
-            mult_en <= 0;
-            mult_reset <= 1;
+            e_tail_en <= 0;
+            e_tail_reset <= 1;
         end
-        else if (mult_reset == 1'b1) begin
-            mult_reset <= 0;
+        else if (e_tail_reset == 1'b1) begin
+            e_tail_reset <= 0;
         end
         else begin
-            mult_en <= add_bias_en;
-            mult_reset <= add_bias_reset;
+            e_tail_en <= add_bias_en;
+            e_tail_reset <= add_bias_reset;
         end
     end
     
@@ -231,8 +240,8 @@ loop_sa_counter_add_end
             quantify_reset <= 0;
         end
         else begin
-            quantify_en <= mult_en;
-            quantify_reset <= mult_reset;
+            quantify_en <= e_tail_en;
+            quantify_reset <= e_tail_reset;
         end
     end
 

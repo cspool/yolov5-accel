@@ -3,9 +3,9 @@
 // Company: 
 // Engineer: 
 // 
-// Create Date: 07/22/2024 06:46:55 PM
+// Create Date: 09/09/2024 06:57:16 PM
 // Design Name: 
-// Module Name: signed_mac_dsp_88_18_fin
+// Module Name: signed_mac_dsp_88_18_fin_row0
 // Project Name: 
 // Target Devices: 
 // Tool Versions: 
@@ -20,9 +20,12 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module signed_mac_dsp_88_18_fin(
+module signed_mac_dsp_88_18_fin_row0(
 clk,reset, en,
-I_A,I_B,mode,O
+I_A,I_B,mode,
+
+mult_out,
+O
 );
  
 parameter headroom = 8;
@@ -47,6 +50,8 @@ input en;
 input [23:0] I_A;
 input [17:0] I_B;
 input mode;
+
+output [41:0] mult_out;
 output reg [pe_out_width-1:0] O ;
   wire [41:0] mult_O;
 
@@ -60,6 +65,8 @@ wire [pixel_width_88 - 1 : 0] res_88_18_2;
 wire [pixel_width_18 - 1 : 0] res_18_3;//16 bit
 
 wire [pixel_width_18 - 1 : 0] res_18_4;
+
+assign mult_out = mult_O;
 
 assign adder_88_18_1 = (mode == 1'b0)?{{(pixel_width_88 - 16){mult_O[15]}}, mult_O[15:0]}:
                                         (mode == 1'b1)?{{(pixel_width_88 - 8){mult_O[7]}}, mult_O[7:0]}:
@@ -123,4 +130,6 @@ else begin
 end
 
 end
+
 endmodule
+

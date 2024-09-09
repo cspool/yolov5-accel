@@ -21,7 +21,6 @@
 
 
 module conv_datapath_tb();
-
     
 parameter sa_row_num = 4; //how many rows in conv core
 parameter sa_column_num = 3; //how many columns in conv core
@@ -49,6 +48,12 @@ parameter pe_parallel_weight_88 = 1;
 parameter pe_parallel_pixel_18 = 2; 
 parameter pe_parallel_weight_18 = 2; 
 
+parameter weights_row_in_width = 8 * row_num;
+parameter sa_row_in_width = weights_row_in_width;
+
+parameter pixels_column_in_width = 16 * column_num;
+parameter sa_column_in_width = 24 * column_num;
+
 parameter pe_out_width =  (pixel_width_18) * pe_parallel_pixel_18 *  pe_parallel_weight_18; // width of 18 is bigger than 88
 
 parameter row_counter_width = ($clog2(row_num+1));
@@ -68,13 +73,16 @@ parameter add_bias_row_width = pixel_width_18 * pe_parallel_pixel_18 * pe_parall
 parameter add_bias_row_width_88 = pixel_width_88 * pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num;
 parameter add_bias_row_width_18_2 = pixel_width_18 * pe_parallel_pixel_18 * 1 * column_num;
 
-parameter mult_A_width = 25;
-parameter mult_B_width = 18;
-parameter mult_P_width = 43;
-parameter mult_array_length = 512;
+parameter mult_A_width = 24;
+parameter mult_B_width = 16;
+parameter mult_P_width = 40;
+parameter mult_array_length = 576;
+parameter mult_dsp_array_length = 528;
+parameter mult_lut_array_length = mult_array_length - mult_dsp_array_length;
 parameter vector_A_width = mult_array_length * mult_A_width;
 parameter vector_B_width = mult_array_length * mult_B_width;
 parameter vector_P_width = mult_array_length * mult_P_width;
+parameter mult_array_length_per_sa = mult_array_length / sa_row_num / sa_column_num; //48
 
 parameter E_scale_tail_width = 16; //16 bit E_scale tail
 parameter E_scale_tail_set_width = E_scale_tail_width * pe_parallel_weight_18; //32 bit
@@ -95,12 +103,12 @@ parameter row_E_scale_tail_width_88 = pixel_E_scale_tail_width_88 * pe_parallel_
 parameter row_E_scale_tail_width_18_2 = pixel_E_scale_tail_width_18 * 1 * pe_parallel_pixel_18 * column_num; 
 //32 bit * 32 pixels * 1 channel
     
-parameter add_bias_row_in_25_width = mult_A_width * pe_parallel_weight_18 * pe_parallel_pixel_18 * column_num;
-//25 bit * 32 pixels * 2 channel
-parameter E_scale_tail_row_in_18_width = mult_B_width * pe_parallel_weight_18 * pe_parallel_pixel_18 * column_num; 
-//18 bit * 32 pixels * 2 channel
-parameter row_E_scale_tail_in_43_width = mult_P_width * pe_parallel_weight_18 * pe_parallel_pixel_18 * column_num; 
-//43 bit * 32 pixels * 2 channel > 32 bit * 32 pixels * 2 channel > 40 bit * 32 pixels * 1 channel
+parameter add_bias_row_in_mult_A_width_width = mult_A_width * pe_parallel_weight_18 * pe_parallel_pixel_18 * column_num;
+//24 bit * 32 pixels * 2 channel
+parameter E_scale_tail_row_in_mult_B_width_width = mult_B_width * pe_parallel_weight_18 * pe_parallel_pixel_18 * column_num; 
+//16 bit * 32 pixels * 2 channel
+parameter row_E_scale_tail_in_mult_P_width_width = mult_P_width * pe_parallel_weight_18 * pe_parallel_pixel_18 * column_num; 
+//40 bit * 32 pixels * 2 channel > 32 bit * 32 pixels * 2 channel > 40 bit * 32 pixels * 1 channel
   
 parameter qualified_pixel_width = 8; 
 parameter qualified_row_width = (qualified_pixel_width+1) * pe_parallel_weight_18 * pe_parallel_pixel_18 * column_num; 
@@ -141,7 +149,9 @@ conv_datapath cv_datapath(
     .nif_mult_k_mult_k(nif_mult_k_mult_k),
     
     .mode(mode),
-    .bias_tile_val(bias_tile_val)
+    .bias_tile_val(bias_tile_val),
+    .E_scale_tail_tile_val(E_scale_tail_tile_val),
+    .E_scale_rank_tile_val(E_scale_rank_tile_val)
 );
 
 

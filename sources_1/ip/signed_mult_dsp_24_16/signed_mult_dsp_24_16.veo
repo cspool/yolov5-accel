@@ -54,7 +54,7 @@
 // (in parentheses) to your own signal names.
 
 //----------- Begin Cut here for INSTANTIATION Template ---// INST_TAG
-signed_dsp_25_18 your_instance_name (
+signed_mult_dsp_24_16 your_instance_name (
   .CLK(CLK),  // input wire CLK
   .A(A),      // input wire [23 : 0] A
   .B(B),      // input wire [15 : 0] B
@@ -63,7 +63,7 @@ signed_dsp_25_18 your_instance_name (
 );
 // INST_TAG_END ------ End INSTANTIATION Template ---------
 
-// You must compile the wrapper file signed_dsp_25_18.v when simulating
-// the core, signed_dsp_25_18. When compiling the wrapper file, be sure to
+// You must compile the wrapper file signed_mult_dsp_24_16.v when simulating
+// the core, signed_mult_dsp_24_16. When compiling the wrapper file, be sure to
 // reference the Verilog simulation library.
 

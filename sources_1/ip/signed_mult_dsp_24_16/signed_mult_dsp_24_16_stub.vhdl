@@ -3,8 +3,8 @@
 -- Tool Version: Vivado v.2018.3 (win64) Build 2405991 Thu Dec  6 23:38:27 MST 2018
 -- Date        : Sat Sep  7 14:01:23 2024
 -- Host        : yang running 64-bit major release  (build 9200)
--- Command     : write_vhdl -force -mode synth_stub
---               E:/vivado_pros/yolov5_accel_2/yolov5_accel_2.srcs/sources_1/ip/signed_dsp_25_18/signed_dsp_25_18_stub.vhdl
+-- Command     : write_vhdl -force -mode synth_stub -rename_top signed_mult_dsp_24_16 -prefix
+--               signed_mult_dsp_24_16_ signed_dsp_25_18_stub.vhdl
 -- Design      : signed_dsp_25_18
 -- Purpose     : Stub declaration of top-level module interface
 -- Device      : xc7vx690tffg1761-2
@@ -12,7 +12,7 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 
-entity signed_dsp_25_18 is
+entity signed_mult_dsp_24_16 is
   Port ( 
     CLK : in STD_LOGIC;
     A : in STD_LOGIC_VECTOR ( 23 downto 0 );
@@ -21,9 +21,9 @@ entity signed_dsp_25_18 is
     P : out STD_LOGIC_VECTOR ( 39 downto 0 )
   );
 
-end signed_dsp_25_18;
+end signed_mult_dsp_24_16;
 
-architecture stub of signed_dsp_25_18 is
+architecture stub of signed_mult_dsp_24_16 is
 attribute syn_black_box : boolean;
 attribute black_box_pad_pin : string;
 attribute syn_black_box of stub : architecture is true;

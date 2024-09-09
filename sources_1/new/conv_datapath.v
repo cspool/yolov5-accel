@@ -60,6 +60,12 @@ parameter pe_parallel_weight_88 = 1;
 parameter pe_parallel_pixel_18 = 2; 
 parameter pe_parallel_weight_18 = 2; 
 
+parameter weights_row_in_width = 8 * row_num;
+parameter sa_row_in_width = weights_row_in_width;
+
+parameter pixels_column_in_width = 16 * column_num;
+parameter sa_column_in_width = 24 * column_num;
+
 parameter pe_out_width =  (pixel_width_18) * pe_parallel_pixel_18 *  pe_parallel_weight_18; // width of 18 is bigger than 88
 
 parameter row_counter_width = ($clog2(row_num+1));
@@ -79,13 +85,16 @@ parameter add_bias_row_width = pixel_width_18 * pe_parallel_pixel_18 * pe_parall
 parameter add_bias_row_width_88 = pixel_width_88 * pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num;
 parameter add_bias_row_width_18_2 = pixel_width_18 * pe_parallel_pixel_18 * 1 * column_num;
 
-parameter mult_A_width = 25;
-parameter mult_B_width = 18;
-parameter mult_P_width = 43;
-parameter mult_array_length = 512;
+parameter mult_A_width = 24;
+parameter mult_B_width = 16;
+parameter mult_P_width = 40;
+parameter mult_array_length = 576;
+parameter mult_dsp_array_length = 528;
+parameter mult_lut_array_length = mult_array_length - mult_dsp_array_length;
 parameter vector_A_width = mult_array_length * mult_A_width;
 parameter vector_B_width = mult_array_length * mult_B_width;
 parameter vector_P_width = mult_array_length * mult_P_width;
+parameter mult_array_length_per_sa = mult_array_length / sa_row_num / sa_column_num; //48
 
 parameter E_scale_tail_width = 16; //16 bit E_scale tail
 parameter E_scale_tail_set_width = E_scale_tail_width * pe_parallel_weight_18; //32 bit
@@ -106,12 +115,12 @@ parameter row_E_scale_tail_width_88 = pixel_E_scale_tail_width_88 * pe_parallel_
 parameter row_E_scale_tail_width_18_2 = pixel_E_scale_tail_width_18 * 1 * pe_parallel_pixel_18 * column_num; 
 //32 bit * 32 pixels * 1 channel
     
-parameter add_bias_row_in_25_width = mult_A_width * pe_parallel_weight_18 * pe_parallel_pixel_18 * column_num;
-//25 bit * 32 pixels * 2 channel
-parameter E_scale_tail_row_in_18_width = mult_B_width * pe_parallel_weight_18 * pe_parallel_pixel_18 * column_num; 
-//18 bit * 32 pixels * 2 channel
-parameter row_E_scale_tail_in_43_width = mult_P_width * pe_parallel_weight_18 * pe_parallel_pixel_18 * column_num; 
-//43 bit * 32 pixels * 2 channel > 32 bit * 32 pixels * 2 channel > 40 bit * 32 pixels * 1 channel
+parameter add_bias_row_in_mult_A_width_width = mult_A_width * pe_parallel_weight_18 * pe_parallel_pixel_18 * column_num;
+//24 bit * 32 pixels * 2 channel
+parameter E_scale_tail_row_in_mult_B_width_width = mult_B_width * pe_parallel_weight_18 * pe_parallel_pixel_18 * column_num; 
+//16 bit * 32 pixels * 2 channel
+parameter row_E_scale_tail_in_mult_P_width_width = mult_P_width * pe_parallel_weight_18 * pe_parallel_pixel_18 * column_num; 
+//40 bit * 32 pixels * 2 channel > 32 bit * 32 pixels * 2 channel > 40 bit * 32 pixels * 1 channel
   
 parameter qualified_pixel_width = 8; 
 parameter qualified_row_width = (qualified_pixel_width+1) * pe_parallel_weight_18 * pe_parallel_pixel_18 * column_num; 
@@ -225,18 +234,24 @@ parameter qualified_row_width = (qualified_pixel_width+1) * pe_parallel_weight_1
     
     //delay regs pixels
 //    wire [column_num*16-1:0] delay_row1_pixels, delay_row2_pixels, delay_row3_pixels;
-    wire [column_num*16-1:0] delay_rowi_pixels[sa_column_num-1 :0];
+    wire [pixels_column_in_width-1:0] delay_rowi_pixels[sa_column_num-1 :0];
     
     //delay regs weights
 //    wire [row_num*8-1:0] delay_weights_1, delay_weights_2, delay_weights_3, delay_weights_4;
-    wire [row_num*8-1:0] delay_weights_sets[sa_row_num-1 :0];
+    wire [weights_row_in_width -1:0] delay_weights_sets[sa_row_num-1 :0];
     //sa
+    
+    wire [sa_column_in_width -1:0] sa_columni_ins[sa_column_num-1 :0][sa_row_num-1 :0];
+    wire [sa_row_in_width -1:0] sa_rowi_ins[sa_column_num-1 :0][sa_row_num-1 :0];
+    
         // sa control
     wire sa_en, sa_reset;
     wire channel_out_reset, channel_out_en; //need logic
     wire add_bias_en, add_bias_reset;
     
     wire [5:0] out_sa_row_idx; //output sa row idx [1,16]
+    
+    wire mult_array_mode;
     
     wire loop_sa_counter_add_end;
     
@@ -248,14 +263,18 @@ parameter qualified_row_width = (qualified_pixel_width+1) * pe_parallel_weight_1
     wire [add_bias_row_width - 1: 0] add_bias_rowi_channel_seti[sa_column_num-1 : 0][sa_row_num-1 : 0];
     
     //quantify ctrl
-    wire mult_en, mult_reset;
+    wire e_tail_en, e_tail_reset;
     wire quantify_en, quantify_reset;
     
     //mult_array
-    wire [vector_A_width-1 :0] vector_A, vector_conv_A;
-    wire [vector_B_width-1 :0] vector_B, vector_conv_B;
-    wire [vector_P_width-1 :0] vector_P, vector_conv_P;
+    wire [vector_A_width-1 :0] vector_A, e_scale_vector_A;
+    wire [vector_B_width-1 :0] vector_B, e_scale_vector_B;
+    wire [vector_P_width-1 :0] vector_P, e_scale_vector_P;
     
+    ///mult_sa
+    wire [column_num * mult_A_width -1:0] extra_sa_vector_As[sa_column_num-1 : 0][sa_row_num-1 : 0];
+    wire [mult_B_width -1:0] extra_sa_vector_B [sa_column_num-1 : 0][sa_row_num-1 : 0];
+    wire [column_num * mult_P_width -1:0] extra_sa_vector_Ps [sa_column_num-1 : 0][sa_row_num-1 : 0];
     
     //e_scale regs
     // tile e-scale, will be set at first of the tiling compute, maybe set in several cycles
@@ -264,13 +283,13 @@ parameter qualified_row_width = (qualified_pixel_width+1) * pe_parallel_weight_1
     
     //e_scale
     //cycle 0
-    wire [add_bias_row_in_25_width-1 : 0] add_bias_rowi_in_25_channel_seti[sa_column_num-1 : 0][sa_row_num-1 : 0]; 
-    //25 bit * 32 pixels * 2 channel
-    wire [E_scale_tail_row_in_18_width-1 : 0] E_scale_tail_rowi_in_18_channel_seti[sa_column_num-1 : 0][sa_row_num-1 : 0];
-    //18 bit * 32 pixels * 2 channel    
+    wire [add_bias_row_in_mult_A_width_width-1 : 0] add_bias_rowi_in_mult_A_width_channel_seti[sa_column_num-1 : 0][sa_row_num-1 : 0]; 
+    //24 bit * 32 pixels * 2 channel
+    wire [E_scale_tail_row_in_mult_B_width_width-1 : 0] E_scale_tail_rowi_in_mult_B_width_channel_seti[sa_column_num-1 : 0][sa_row_num-1 : 0];
+    //16 bit * 32 pixels * 2 channel    
     //cycle 1
-    wire [row_E_scale_tail_in_43_width-1 : 0] rowi_E_scale_tail_in_43_channel_seti[sa_column_num-1 : 0][sa_row_num-1 : 0];
-    //43 bit * 32 pixels * 2 channel
+    wire [row_E_scale_tail_in_mult_P_width_width-1 : 0] rowi_E_scale_tail_in_mult_P_width_channel_seti[sa_column_num-1 : 0][sa_row_num-1 : 0];
+    //40 bit * 32 pixels * 2 channel
     
     wire [qualified_row_width-1 :0] quantified_rowi_channel_seti[sa_column_num-1 : 0][sa_row_num-1 : 0];
     //9 bit * 32 pixels * 2 channel 
@@ -629,6 +648,15 @@ parameter qualified_row_width = (qualified_pixel_width+1) * pe_parallel_weight_1
                 .re_row_pixels(re_rowi_pixels[i-1]),
                 .delay_row_pixels(delay_rowi_pixels[i-1])
             );
+//            assign sa_columni_ins[i-1] = (mult_array_mode == 1'b0) ? 
+//            {{(sa_column_in_width-pixels_column_in_width){1'b0}}, delay_rowi_pixels[i-1]} :
+//            extra_sa_vector_As[i-1][j-1];
+            
+            for (j = 1; j <= sa_row_num; j = j + 1) begin //output channel
+                assign sa_columni_ins[i-1][j-1] = (e_tail_en == 1'b0) ? 
+                {{(sa_column_in_width-pixels_column_in_width){1'b0}}, delay_rowi_pixels[i-1]} :
+                extra_sa_vector_As[i-1][j-1];
+            end
         end
         for (j = 1; j <= sa_row_num; j = j + 1) begin: delay_regs_row //output channel
             Delay_Regs_Weights delay_regs_weights(
@@ -638,7 +666,13 @@ parameter qualified_row_width = (qualified_pixel_width+1) * pe_parallel_weight_1
                 .weights(weights_vector[(j-1)* row_num * 8 +: (row_num * 8)]),
                 .delay_weights(delay_weights_sets[j-1])
             );    
+            for (i = 1; i <= sa_column_num; i = i + 1) begin //poy, rows
+                assign sa_rowi_ins[i-1][j-1] = (e_tail_en == 1'b0) ? 
+                delay_weights_sets[j-1] : 
+                {{(sa_row_in_width-mult_B_width){1'b0}},extra_sa_vector_B[i-1][j-1]}; 
+            end
         end
+
         for (i = 1; i <= sa_column_num; i = i + 1) begin: sa_column //poy, rows
             for (j = 1; j <= sa_row_num; j = j + 1) begin: sa_row //output channel
                 SA_fin sa(
@@ -648,8 +682,12 @@ parameter qualified_row_width = (qualified_pixel_width+1) * pe_parallel_weight_1
                     .mode(mode), 
                     .channel_out_reset(channel_out_reset),
                     .channel_out_en(channel_out_en), 
-                    .row_in(delay_weights_sets[j-1]), //weights 
-                    .column_in(delay_rowi_pixels[i-1]), //pixels
+                    .out_sa_row_idx(out_sa_row_idx),
+                    .row_in(sa_rowi_ins[i-1][j-1]), //weights or 16bit e_scale
+                    .column_in({{(sa_column_in_width-pixels_column_in_width){1'b0}},
+                    sa_columni_ins[i-1][j-1]}), //pixels or 24bit add_biases 
+                    .mult_array_mode(mult_array_mode),
+                    .row0_out(extra_sa_vector_Ps[i-1][j-1]),
                     .out(out_rowi_channel_seti[i-1][j-1])
                 );
                 
@@ -666,8 +704,8 @@ parameter qualified_row_width = (qualified_pixel_width+1) * pe_parallel_weight_1
                 E_Scale E_scale(
                     //cycle 0 in
                     .clk(clk), 
-                    .mult_en(mult_en), 
-                    .mult_reset(mult_reset),
+                    .e_tail_en(e_tail_en), 
+                    .e_tail_reset(e_tail_reset),
                     .quantify_en(quantify_en), 
                     .quantify_reset(quantify_reset),
                     .mode(mode), 
@@ -677,22 +715,43 @@ parameter qualified_row_width = (qualified_pixel_width+1) * pe_parallel_weight_1
                     .add_bias_row(add_bias_rowi_channel_seti[i-1][j-1]),
                     
                     //cycle 0 out
-                    .add_bias_row_in_25(add_bias_rowi_in_25_channel_seti[i-1][j-1]),
-                    .E_scale_tail_row_in_18(E_scale_tail_rowi_in_18_channel_seti[i-1][j-1]),
+                    .add_bias_row_in_mult_A_width(add_bias_rowi_in_mult_A_width_channel_seti[i-1][j-1]),
+                    .E_scale_tail_row_in_mult_B_width(E_scale_tail_rowi_in_mult_B_width_channel_seti[i-1][j-1]),
                     
                     //cycle 1 in
-                    .row_E_scale_tail_in_43(rowi_E_scale_tail_in_43_channel_seti[i-1][j-1]),
+                    .row_E_scale_tail_in_mult_P_width(rowi_E_scale_tail_in_mult_P_width_channel_seti[i-1][j-1]),
                     
                     //cycle 1 out
                     .quantified_row(quantified_rowi_channel_seti[i-1][j-1])
                 );
+                //1-48 -> mult_array[1,48]; 49-64 -> sa_row0; [1, 64] = add_bias_row_in_mult_A_width_width
+                assign e_scale_vector_A[((i-1)*sa_row_num+(j-1))*(mult_array_length_per_sa * mult_A_width) 
+                +: (mult_array_length_per_sa * mult_A_width)]
+                = add_bias_rowi_in_mult_A_width_channel_seti[i-1][j-1]
+                [0 +: (mult_array_length_per_sa * mult_A_width)];
                 
-                assign vector_conv_A[((i-1)*sa_row_num+(j-1))*add_bias_row_in_25_width +: add_bias_row_in_25_width]
-                = add_bias_rowi_in_25_channel_seti[i-1][j-1];
-                assign vector_conv_B[((i-1)*sa_row_num+(j-1))*E_scale_tail_row_in_18_width +: E_scale_tail_row_in_18_width]
-                = E_scale_tail_rowi_in_18_channel_seti[i-1][j-1];
-                assign rowi_E_scale_tail_in_43_channel_seti[i-1][j-1]
-                = vector_conv_P[((i-1)*sa_row_num+(j-1))*row_E_scale_tail_in_43_width +: row_E_scale_tail_in_43_width];
+                assign extra_sa_vector_As[i-1][j-1] = 
+                add_bias_rowi_in_mult_A_width_channel_seti[i-1][j-1]
+                [(mult_array_length_per_sa * mult_A_width) 
+                +: (column_num * mult_A_width)];
+                
+                assign e_scale_vector_B[((i-1)*sa_row_num+(j-1))*(mult_array_length_per_sa * mult_B_width)
+                +: (mult_array_length_per_sa * mult_B_width)]
+                = E_scale_tail_rowi_in_mult_B_width_channel_seti[i-1][j-1]
+                [0 +: (mult_array_length_per_sa * mult_B_width)];
+                
+                assign extra_sa_vector_B[i-1][j-1] = 
+                E_scale_tail_rowi_in_mult_B_width_channel_seti[i-1][j-1]
+                [(mult_array_length_per_sa * mult_B_width) +: mult_B_width];
+                
+                assign rowi_E_scale_tail_in_mult_P_width_channel_seti[i-1][j-1]
+                [0 +: (mult_array_length_per_sa * mult_P_width)]
+                = e_scale_vector_P[((i-1)*sa_row_num+(j-1))*(mult_array_length_per_sa * mult_P_width)
+                +: (mult_array_length_per_sa * mult_P_width)];
+                
+                assign rowi_E_scale_tail_in_mult_P_width_channel_seti[i-1][j-1]
+                [(mult_array_length_per_sa * mult_P_width) +: (column_num * mult_P_width)]
+                = extra_sa_vector_Ps[i-1][j-1];
                 
             end
         end
@@ -700,6 +759,7 @@ parameter qualified_row_width = (qualified_pixel_width+1) * pe_parallel_weight_1
     
     // sa control
     SA_Ctrl sa_ctrl(
+        .mode(mode),
         .clk(clk), 
         .reset(reset), 
         .en(en), 
@@ -711,10 +771,11 @@ parameter qualified_row_width = (qualified_pixel_width+1) * pe_parallel_weight_1
         .channel_out_en(channel_out_en),
         .add_bias_en(add_bias_en),
         .add_bias_reset(add_bias_reset),
-        .mult_en(mult_en), 
-        .mult_reset(mult_reset),
+        .e_tail_en(e_tail_en), 
+        .e_tail_reset(e_tail_reset),
         .quantify_en(quantify_en), 
         .quantify_reset(quantify_reset),
+        .mult_array_mode(mult_array_mode),
         
         .out_sa_row_idx(out_sa_row_idx),
         .loop_sa_counter_add_end(loop_sa_counter_add_end)
@@ -732,33 +793,29 @@ parameter qualified_row_width = (qualified_pixel_width+1) * pe_parallel_weight_1
     
     Mult_Array mult_array(
         .clk(clk), 
-        .mult_en(mult_en),
+        .en(e_tail_en),
         .vector_A(vector_A),
         .vector_B(vector_B),
         .vector_P(vector_P)
     );
+
+    assign vector_A = e_scale_vector_A;
+    assign vector_B = e_scale_vector_B;
     
-    assign vector_conv_A[vector_A_width-1 : add_bias_row_in_25_width * sa_row_num * sa_column_num] = 0;
-    assign vector_conv_B[vector_B_width-1 : E_scale_tail_row_in_18_width * sa_row_num * sa_column_num] = 0;
-    assign vector_conv_P[vector_P_width-1 : row_E_scale_tail_in_43_width * sa_row_num * sa_column_num] = 0;
-     
-    assign vector_A = vector_conv_A;
-    assign vector_B = vector_conv_B;
-    assign vector_conv_P[row_E_scale_tail_in_43_width * sa_row_num * sa_column_num-1 :0]
-    = vector_P[row_E_scale_tail_in_43_width * sa_row_num * sa_column_num-1 :0];
+    assign e_scale_vector_P = vector_P;
     
-//    E_Scale_Regs E_scale_regs (
-//        .clk(clk), 
-//        .set(reset), //need xxxx
-//        .mode(mode),
+    E_Scale_Regs E_scale_regs (
+        .clk(clk), 
+        .set(reset), //need xxxx
+        .mode(mode),
         
-//        .E_scale_tail_tile_val(E_scale_tail_tile_val),
-//        .E_scale_rank_tile_val(E_scale_rank_tile_val),
-//        .out_sa_row_idx(out_sa_row_idx),
+        .E_scale_tail_tile_val(E_scale_tail_tile_val),
+        .E_scale_rank_tile_val(E_scale_rank_tile_val),
+        .out_sa_row_idx(out_sa_row_idx),
         
-//        .E_scale_tail_4_channel_sets(E_scale_tail_4_channel_sets),
-//        .E_scale_rank_4_channel_sets(E_scale_rank_4_channel_sets)
-//    );
+        .E_scale_tail_4_channel_sets(E_scale_tail_4_channel_sets),
+        .E_scale_rank_4_channel_sets(E_scale_rank_4_channel_sets)
+    );
     
     
 

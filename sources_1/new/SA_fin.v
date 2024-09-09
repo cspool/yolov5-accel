@@ -21,7 +21,19 @@
 
 
 module SA_fin(
-clk, reset, en, mode, channel_out_reset,channel_out_en, row_in, column_in, out
+clk, reset, en,
+
+out_sa_row_idx,
+
+mode, channel_out_reset,channel_out_en, 
+
+row_in, column_in, 
+
+mult_array_mode,
+
+row0_out,
+
+out
     );
     
 parameter row_num = 16;
@@ -38,6 +50,12 @@ parameter pe_parallel_weight_88 = 1;
 parameter pe_parallel_pixel_18 = 2; 
 parameter pe_parallel_weight_18 = 2; 
 
+parameter weights_row_in_width = 8 * row_num;
+parameter sa_row_in_width = weights_row_in_width;
+
+parameter pixels_column_in_width = 16 * column_num;
+parameter sa_column_in_width = 24 * column_num;
+
 parameter pe_out_width =  (pixel_width_18) * pe_parallel_pixel_18 *  pe_parallel_weight_18; // width of 18 is bigger than 88
 
 parameter row_counter_width = ($clog2(row_num+1));
@@ -46,15 +64,30 @@ parameter out_width = pixel_width_18 * pe_parallel_pixel_18 * pe_parallel_weight
 parameter out_width_88 = pixel_width_88 * pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num;
 parameter out_width_18 = pixel_width_18 * pe_parallel_pixel_18 * pe_parallel_weight_18 * column_num;
 
+parameter mult_A_width = 24;
+parameter mult_B_width = 16;
+parameter mult_P_width = 40;
+parameter mult_array_length = 576;
+parameter mult_dsp_array_length = 528;
+parameter mult_lut_array_length = mult_array_length - mult_dsp_array_length;
+
 input clk, reset, en, mode, channel_out_reset,channel_out_en;
 
-input [8 * row_num - 1:0] row_in; //weight
-input [16 * column_num - 1:0] column_in;  //feature map
+input mult_array_mode;
+
+input [sa_row_in_width - 1:0] row_in; //weight
+input [sa_column_in_width - 1:0] column_in;  //feature map
+
+input [5:0] out_sa_row_idx; //output sa row idx [1,16]
+
+output [column_num * mult_P_width -1:0] row0_out;
 
 output [out_width - 1: 0] out; // pox res per channel
 //pe_parallel_pixel_88 = pe_parallel_pixel_18
 
 wire [pe_out_width-1 : 0] all_out [row_num - 1: 0][column_num - 1 : 0]; // all results
+
+wire [41 : 0] row0_mult_out [column_num - 1 : 0];
 
 wire [pe_out_width * column_num - 1 : 0] row_output;//row results
 wire [out_width_88 - 1 : 0] row_output_88;//row results
@@ -75,6 +108,9 @@ wire [17:0] I_Bs[row_num - 1 : 0];
 
 wire loop_row_counter_add_begin, loop_row_counter_add_end;
 
+wire [row_num-1 :0] row_en;
+
+assign row_en = {(row_num){en}} << (out_sa_row_idx);
 
 generate
     for (i = 0; i < column_num; i = i + 1) begin
@@ -94,7 +130,25 @@ generate
 endgenerate
 
 generate
-    for (i = 0; i < row_num; i = i + 1) begin: row
+    for (j = 0; j < column_num; j = j + 1) begin: row_0_column        
+            PE_fin_row0 pe_fin_row0 (
+                .clk(clk),
+                .reset(reset),
+                .mode(mode),
+                .left(left[0][j]),
+                .up(up[0][j]),
+                .en((row_en[0] & row_en[j])),
+                .bottom(bottom[0][j]),
+                .right(right[0][j]),
+                .mult_out(row0_mult_out[j]),
+                .out(all_out[0][j]) // output is based on row                
+            );
+           
+       assign up[0][j] = (mult_array_mode == 1'b1) ? column_in[j*24 +: 24] : I_As[j];
+       assign left[0][j] = (mult_array_mode == 1'b1) ? row_in[0 +: 18]:
+                           ((j == 0) ? I_Bs[0] : right[0][j - 1]);
+    end
+    for (i = 1; i < row_num; i = i + 1) begin: row
         for (j = 0; j < column_num; j = j + 1) begin: column        
             PE_fin pe_fin (
                 .clk(clk),
@@ -102,7 +156,7 @@ generate
                 .mode(mode),
                 .left(left[i][j]),
                 .up(up[i][j]),
-                .en(en),
+                .en((row_en[i] & row_en[j])),
                 .bottom(bottom[i][j]),
                 .right(right[i][j]),
                 .out(all_out[i][j]) // output is based on row                
@@ -161,7 +215,9 @@ generate
         assign row_output_18[pixel_width_18 * pe_parallel_pixel_18 * column_num + ((2 * j) * pixel_width_18)+: (2* pixel_width_18)]
         ={{all_out[row_counter][j][(0+(3*pixel_width_18)) +: (pixel_width_18)]},
         {all_out[row_counter][j][(0+(2*pixel_width_18))+: (pixel_width_18)]}};
-
+        
+        assign row0_out[j*mult_P_width +: mult_P_width] = row0_mult_out[j][mult_P_width-1 :0]; 
+        
     end
 
 endgenerate

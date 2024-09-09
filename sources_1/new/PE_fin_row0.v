@@ -3,9 +3,9 @@
 // Company: 
 // Engineer: 
 // 
-// Create Date: 07/22/2024 06:46:55 PM
+// Create Date: 09/09/2024 06:55:25 PM
 // Design Name: 
-// Module Name: PE_fin
+// Module Name: PE_fin_row0
 // Project Name: 
 // Target Devices: 
 // Tool Versions: 
@@ -20,10 +20,14 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module PE_fin(
+module PE_fin_row0(
 clk, reset, en,
 
-mode, left, up, right, bottom, out
+mode, left, up, right, bottom,
+
+mult_out,
+
+out
     );
     
 parameter headroom = 8;
@@ -48,6 +52,9 @@ input [17:0] left;
 
 output reg [23:0] bottom;
 output reg [17:0] right;
+
+output [41:0] mult_out;
+
 output [pe_out_width - 1 : 0] out;
 
 always @(posedge clk) begin
@@ -65,13 +72,15 @@ always @(posedge clk) begin
     end
 end
 
-signed_mac_dsp_88_18_fin mac(
+signed_mac_dsp_88_18_fin_row0 mac_row0(
     .clk(clk),
     .reset(reset),
     .en(en),
     .I_A(up),
     .I_B(left),
     .mode(mode),
+    .mult_out(mult_out),
     .O(out)
 );
 endmodule
+
