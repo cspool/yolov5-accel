@@ -24,7 +24,7 @@ module E_Scale(
 //cycle 0 in
 mode, 
 clk, 
-e_tail_en, e_tail_reset,
+e_tail_reset,
 quantify_en, quantify_reset,
 E_scale_tail_set,
 E_scale_rank_set,
@@ -100,24 +100,24 @@ parameter row_E_scale_tail_in_mult_P_width_width = mult_P_width * pe_parallel_we
 //40 bit * 32 pixels * 2 channel > 32 bit * 32 pixels * 2 channel > 40 bit * 32 pixels * 1 channel
   
 parameter quantified_pixel_width = 8; 
-parameter quantified_row_width = (quantified_pixel_width+1) * pe_parallel_weight_18 * pe_parallel_pixel_18 * column_num; 
+parameter quantified_row_width = (quantified_pixel_width) * pe_parallel_weight_18 * pe_parallel_pixel_18 * column_num; 
+//8 bit * 32 pixels * 2 channel
+parameter scaled_rank_row_width = (quantified_pixel_width+1) * pe_parallel_weight_18 * pe_parallel_pixel_18 * column_num; 
 //9 bit * 32 pixels * 2 channel
+
+    //cycle -1
+    input [E_scale_tail_set_width-1 :0] E_scale_tail_set;
+    //16 bit * 2 channel
+    input [E_scale_rank_set_width-1 :0] E_scale_rank_set;
+    //8 bit * 2 channel
 
     //cycle 0
     input mode;
     
-    input clk, quantify_en, quantify_reset, e_tail_en, e_tail_reset;
+    input clk, quantify_en, quantify_reset, e_tail_reset;
     
     input [add_bias_row_width - 1: 0] add_bias_row;
-    //16 bit * 32 pixels * 2 channel
-    
-    input [E_scale_tail_set_width-1 :0] E_scale_tail_set;
-    //16 bit * 2 channel
-    wire [E_scale_tail_width-1 :0] E_scale_tail_88;
-    wire [E_scale_tail_width-1 :0] E_scale_tail_18_1, E_scale_tail_18_2;
-    
-    input [E_scale_rank_set_width-1 :0] E_scale_rank_set;
-    //8 bit * 2 channel
+    //16 bit * 32 pixels * 2 channel    
   
     output [add_bias_row_in_mult_A_width_width-1 : 0] add_bias_row_in_mult_A_width;       //pixels 
     //24 bit * 32 pixels * 2 channel
@@ -128,16 +128,21 @@ parameter quantified_row_width = (quantified_pixel_width+1) * pe_parallel_weight
     input [row_E_scale_tail_in_mult_P_width_width-1 : 0] row_E_scale_tail_in_mult_P_width;
     //40 bit * 32 pixels * 2 channel
     
- 
+    wire [E_scale_tail_width-1 :0] last_E_scale_tail_88;
+    wire [E_scale_tail_width-1 :0] last_E_scale_tail_18_1, last_E_scale_tail_18_2;
     
+    reg [E_scale_tail_set_width-1 :0] last_E_scale_tail_set;
     reg [E_scale_rank_set_width-1 :0] last_E_scale_rank_set;
+    reg [E_scale_rank_set_width-1 :0] last_2_E_scale_rank_set;
     //8 bit * 2 channel
     wire [E_scale_rank_width-1 :0] last_E_scale_rank_88;
     wire [E_scale_rank_width-1 :0] last_E_scale_rank_18_1, last_E_scale_rank_18_2;
     
     output reg [quantified_row_width-1 :0] quantified_row;
+    //8 bit * 32 pixels * 2 channel 
+    
+    wire [scaled_rank_row_width-1 :0] scaled_rank_row;
     //9 bit * 32 pixels * 2 channel 
-
     
     wire [add_bias_row_width_88 - 1 : 0] add_bias_row_88;
     //24 bit * 32 pixels * 1 channel
@@ -148,9 +153,9 @@ parameter quantified_row_width = (quantified_pixel_width+1) * pe_parallel_weight
     assign add_bias_row_18_1 = add_bias_row[add_bias_row_width_18_2 - 1 : 0];
     assign add_bias_row_18_2 = add_bias_row[add_bias_row_width - 1 : add_bias_row_width_18_2];
     
-    assign E_scale_tail_88 = E_scale_tail_set[E_scale_tail_width-1 :0];
-    assign E_scale_tail_18_1 = E_scale_tail_88;
-    assign E_scale_tail_18_2 = E_scale_tail_set[E_scale_tail_set_width-1 : E_scale_tail_width];
+    assign last_E_scale_tail_88 = last_E_scale_tail_set[E_scale_tail_width-1 :0];
+    assign last_E_scale_tail_18_1 = last_E_scale_tail_88;
+    assign last_E_scale_tail_18_2 = last_E_scale_tail_set[E_scale_tail_set_width-1 : E_scale_tail_width];
     
     assign last_E_scale_rank_88 = last_E_scale_rank_set[E_scale_rank_width-1 :0];
     assign last_E_scale_rank_18_1 = last_E_scale_rank_88;
@@ -180,13 +185,13 @@ parameter quantified_row_width = (quantified_pixel_width+1) * pe_parallel_weight
         //16 bit * 32 pixels * 2 channel
         for (i = 0; i < pe_parallel_pixel_88 * column_num; i = i + 1) begin
             assign E_scale_tail_row_in_mult_B_width[i*mult_B_width +: mult_B_width] =
-            {{(mult_B_width-E_scale_tail_width){1'b0}},E_scale_tail_88}; 
+            {{(mult_B_width-E_scale_tail_width){1'b0}},last_E_scale_tail_88}; 
         end
         
         // E_scale_tail_row_in_18[E_scale_tail_row_in_18_width-1 : 18 * pe_parallel_pixel_18 * column_num]
         for (i = 0; i < pe_parallel_pixel_18 * column_num; i = i + 1) begin
             assign E_scale_tail_row_in_mult_B_width[(pe_parallel_pixel_18 * column_num + i) *mult_B_width +: mult_B_width] =
-            (mode == 1'b1) ?{{(mult_B_width-E_scale_tail_width){1'b0}},E_scale_tail_18_2}:
+            (mode == 1'b1) ?{{(mult_B_width-E_scale_tail_width){1'b0}},last_E_scale_tail_18_2}:
             0; 
         end
         
@@ -223,58 +228,80 @@ parameter quantified_row_width = (quantified_pixel_width+1) * pe_parallel_weight
 //        end
         
         for (i = 0; i < pe_parallel_pixel_18 * column_num; i = i + 1) begin
+            assign scaled_rank_row[i*(quantified_pixel_width+1) +: (quantified_pixel_width+1)]
+            = (mode == 1'b0)? ((row_E_scale_tail_in_mult_P_width[i*mult_P_width +: pixel_E_scale_tail_width_88])
+             >> (last_E_scale_rank_88)):
+            (mode == 1'b1)? ((row_E_scale_tail_in_mult_P_width[i*mult_P_width +: pixel_E_scale_tail_width_18])
+             >> (last_E_scale_rank_18_1)):
+            0; 
             always@(posedge clk) begin
                 if (quantify_reset == 1'b1) begin
-                    quantified_row[i*(quantified_pixel_width+1) +: (quantified_pixel_width+1)]
+                    quantified_row[i*(quantified_pixel_width) +: (quantified_pixel_width)]
                     <= 0;  
                 end
                 else if (quantify_en == 1'b1) begin
-                    quantified_row[i*(quantified_pixel_width+1) +: (quantified_pixel_width+1)]
-                    <= (mode == 1'b0)? ((row_E_scale_tail_in_mult_P_width[i*mult_P_width +: pixel_E_scale_tail_width_88])
-                     >> (last_E_scale_rank_88)):
-                    (mode == 1'b1)? ((row_E_scale_tail_in_mult_P_width[i*mult_P_width +: pixel_E_scale_tail_width_18])
-                     >> (last_E_scale_rank_18_1)):
-                    0; 
+                    quantified_row[i*(quantified_pixel_width) +: (quantified_pixel_width)]
+                    <= (scaled_rank_row[(i*(quantified_pixel_width+1)+quantified_pixel_width) +: 1] == 1'b0)?
+                    scaled_rank_row[i*(quantified_pixel_width+1) +: (quantified_pixel_width)] :
+                    0;
                 end
                 else begin
-                    quantified_row[i*(quantified_pixel_width+1) +: (quantified_pixel_width+1)]
-                    <= quantified_row[i*(quantified_pixel_width+1) +: (quantified_pixel_width+1)];
+                    quantified_row[i*(quantified_pixel_width) +: (quantified_pixel_width)]
+                    <= quantified_row[i*(quantified_pixel_width) +: (quantified_pixel_width)];
                 end
             end
         end
         
         // qualified_row[qualified_row_width-1 : 9 * pe_parallel_pixel_18 * column_num]
-        for (i = 0; i < pe_parallel_pixel_18 * column_num; i = i + 1) begin         
+        for (i = 0; i < pe_parallel_pixel_18 * column_num; i = i + 1) begin    
+            assign scaled_rank_row[(pe_parallel_pixel_18 * column_num+i)*(quantified_pixel_width+1) +: (quantified_pixel_width+1)]
+            = (mode == 1'b1) ? ((row_E_scale_tail_in_mult_P_width[(pe_parallel_pixel_18 * column_num + i)*mult_P_width +: pixel_E_scale_tail_width_18])
+            >> (last_E_scale_rank_18_2)):
+            0;     
             always@(posedge clk) begin
                 if (quantify_reset == 1'b1) begin
-                    quantified_row[(pe_parallel_pixel_18 * column_num+i)*(quantified_pixel_width+1) +: (quantified_pixel_width+1)]
+                    quantified_row[(pe_parallel_pixel_18 * column_num+i)*(quantified_pixel_width) +: (quantified_pixel_width)]
                     <= 0;  
                 end
                 else if (quantify_en == 1'b1) begin
-                    quantified_row[(pe_parallel_pixel_18 * column_num+i)*(quantified_pixel_width+1) +: (quantified_pixel_width+1)]
-                    <= (mode == 1'b1) ? ((row_E_scale_tail_in_mult_P_width[(pe_parallel_pixel_18 * column_num + i)*mult_P_width +: pixel_E_scale_tail_width_18])
-                    >> (last_E_scale_rank_18_2)):
+                    quantified_row[(pe_parallel_pixel_18 * column_num+i)*(quantified_pixel_width) +: (quantified_pixel_width)]
+                    <= (scaled_rank_row[(i*(quantified_pixel_width+1)+quantified_pixel_width) +: 1] == 1'b0) ?
+                    scaled_rank_row[i*(quantified_pixel_width) +: (quantified_pixel_width)]:
                     0;
                 end
                 else begin
-                    quantified_row[(pe_parallel_pixel_18 * column_num+i)*(quantified_pixel_width+1) +: (quantified_pixel_width+1)]
-                    <= quantified_row[(pe_parallel_pixel_18 * column_num+i)*(quantified_pixel_width+1) +: (quantified_pixel_width+1)];
+                    quantified_row[(pe_parallel_pixel_18 * column_num+i)*(quantified_pixel_width) +: (quantified_pixel_width)]
+                    <= quantified_row[(pe_parallel_pixel_18 * column_num+i)*(quantified_pixel_width) +: (quantified_pixel_width)];
                 end
             end
         end
         
     endgenerate
     
-    //might need poblish
+    always@(posedge clk) begin
+        if (e_tail_reset == 1'b1) begin
+            last_2_E_scale_rank_set <= 0;  
+        end
+        else begin
+            last_2_E_scale_rank_set <= E_scale_rank_set;
+        end
+    end
+    
     always@(posedge clk) begin
         if (e_tail_reset == 1'b1) begin
             last_E_scale_rank_set <= 0;  
         end
-        else if (e_tail_en == 1'b1) begin
-            last_E_scale_rank_set <= E_scale_rank_set;
+        else begin
+            last_E_scale_rank_set <= last_2_E_scale_rank_set;
+        end
+    end
+    
+    always@(posedge clk) begin
+        if (e_tail_reset == 1'b1) begin
+            last_E_scale_tail_set <= 0;  
         end
         else begin
-            last_E_scale_rank_set <= last_E_scale_rank_set;
+            last_E_scale_tail_set <= E_scale_tail_set;
         end
     end
     

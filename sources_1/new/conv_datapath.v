@@ -122,8 +122,10 @@ parameter E_scale_tail_row_in_mult_B_width_width = mult_B_width * pe_parallel_we
 parameter row_E_scale_tail_in_mult_P_width_width = mult_P_width * pe_parallel_weight_18 * pe_parallel_pixel_18 * column_num; 
 //40 bit * 32 pixels * 2 channel > 32 bit * 32 pixels * 2 channel > 40 bit * 32 pixels * 1 channel
   
-parameter qualified_pixel_width = 8; 
-parameter qualified_row_width = (qualified_pixel_width+1) * pe_parallel_weight_18 * pe_parallel_pixel_18 * column_num; 
+parameter quantified_pixel_width = 8; 
+parameter quantified_row_width = (quantified_pixel_width) * pe_parallel_weight_18 * pe_parallel_pixel_18 * column_num; 
+//8 bit * 32 pixels * 2 channel
+parameter scaled_rank_row_width = (quantified_pixel_width+1) * pe_parallel_weight_18 * pe_parallel_pixel_18 * column_num; 
 //9 bit * 32 pixels * 2 channel
     
     //cv router wire
@@ -243,7 +245,8 @@ parameter qualified_row_width = (qualified_pixel_width+1) * pe_parallel_weight_1
     
     wire [sa_column_in_width -1:0] sa_columni_ins[sa_column_num-1 :0][sa_row_num-1 :0];
     wire [sa_row_in_width -1:0] sa_rowi_ins[sa_column_num-1 :0][sa_row_num-1 :0];
-    
+    wire [column_num * mult_P_width -1:0] sa_row0_outs [sa_column_num-1 : 0][sa_row_num-1 : 0];
+     
         // sa control
     wire sa_en, sa_reset;
     wire channel_out_reset, channel_out_en; //need logic
@@ -275,6 +278,7 @@ parameter qualified_row_width = (qualified_pixel_width+1) * pe_parallel_weight_1
     wire [column_num * mult_A_width -1:0] extra_sa_vector_As[sa_column_num-1 : 0][sa_row_num-1 : 0];
     wire [mult_B_width -1:0] extra_sa_vector_B [sa_column_num-1 : 0][sa_row_num-1 : 0];
     wire [column_num * mult_P_width -1:0] extra_sa_vector_Ps [sa_column_num-1 : 0][sa_row_num-1 : 0];
+   
     
     //e_scale regs
     // tile e-scale, will be set at first of the tiling compute, maybe set in several cycles
@@ -291,8 +295,8 @@ parameter qualified_row_width = (qualified_pixel_width+1) * pe_parallel_weight_1
     wire [row_E_scale_tail_in_mult_P_width_width-1 : 0] rowi_E_scale_tail_in_mult_P_width_channel_seti[sa_column_num-1 : 0][sa_row_num-1 : 0];
     //40 bit * 32 pixels * 2 channel
     
-    wire [qualified_row_width-1 :0] quantified_rowi_channel_seti[sa_column_num-1 : 0][sa_row_num-1 : 0];
-    //9 bit * 32 pixels * 2 channel 
+    wire [quantified_row_width-1 :0] quantified_rowi_channel_seti[sa_column_num-1 : 0][sa_row_num-1 : 0];
+    //8 bit * 32 pixels * 2 channel 
     
     conv_router_v2 cv_router(
         .mode(mode),
@@ -630,6 +634,7 @@ parameter qualified_row_width = (qualified_pixel_width+1) * pe_parallel_weight_1
     );
     
     cv_weights_handler cv_weights_handler(
+        .mode(mode),
         .clk(clk), 
         .reset(reset), //need xxxx
         .re_fm_en(re_fm_en),
@@ -687,9 +692,12 @@ parameter qualified_row_width = (qualified_pixel_width+1) * pe_parallel_weight_1
                     .column_in({{(sa_column_in_width-pixels_column_in_width){1'b0}},
                     sa_columni_ins[i-1][j-1]}), //pixels or 24bit add_biases 
                     .mult_array_mode(mult_array_mode),
-                    .row0_out(extra_sa_vector_Ps[i-1][j-1]),
+                    .row0_out(sa_row0_outs[i-1][j-1]),
                     .out(out_rowi_channel_seti[i-1][j-1])
                 );
+                
+                assign extra_sa_vector_Ps[i-1][j-1]
+                = (quantify_en == 1'b1)? sa_row0_outs[i-1][j-1] : 0;
                 
                 Add_Bias bias_adder(
                     .clk(clk), 
@@ -704,7 +712,6 @@ parameter qualified_row_width = (qualified_pixel_width+1) * pe_parallel_weight_1
                 E_Scale E_scale(
                     //cycle 0 in
                     .clk(clk), 
-                    .e_tail_en(e_tail_en), 
                     .e_tail_reset(e_tail_reset),
                     .quantify_en(quantify_en), 
                     .quantify_reset(quantify_reset),
@@ -727,22 +734,22 @@ parameter qualified_row_width = (qualified_pixel_width+1) * pe_parallel_weight_1
                 //1-48 -> mult_array[1,48]; 49-64 -> sa_row0; [1, 64] = add_bias_row_in_mult_A_width_width
                 assign e_scale_vector_A[((i-1)*sa_row_num+(j-1))*(mult_array_length_per_sa * mult_A_width) 
                 +: (mult_array_length_per_sa * mult_A_width)]
-                = add_bias_rowi_in_mult_A_width_channel_seti[i-1][j-1]
-                [0 +: (mult_array_length_per_sa * mult_A_width)];
+                = (e_tail_en == 1'b1) ? add_bias_rowi_in_mult_A_width_channel_seti[i-1][j-1]
+                [0 +: (mult_array_length_per_sa * mult_A_width)] : 0;
                 
-                assign extra_sa_vector_As[i-1][j-1] = 
-                add_bias_rowi_in_mult_A_width_channel_seti[i-1][j-1]
+                assign extra_sa_vector_As[i-1][j-1] 
+                = (e_tail_en == 1'b1) ? add_bias_rowi_in_mult_A_width_channel_seti[i-1][j-1]
                 [(mult_array_length_per_sa * mult_A_width) 
-                +: (column_num * mult_A_width)];
+                +: (column_num * mult_A_width)] : 0;
                 
                 assign e_scale_vector_B[((i-1)*sa_row_num+(j-1))*(mult_array_length_per_sa * mult_B_width)
                 +: (mult_array_length_per_sa * mult_B_width)]
-                = E_scale_tail_rowi_in_mult_B_width_channel_seti[i-1][j-1]
-                [0 +: (mult_array_length_per_sa * mult_B_width)];
+                = (e_tail_en == 1'b1) ? E_scale_tail_rowi_in_mult_B_width_channel_seti[i-1][j-1]
+                [0 +: (mult_array_length_per_sa * mult_B_width)] : 0;
                 
-                assign extra_sa_vector_B[i-1][j-1] = 
-                E_scale_tail_rowi_in_mult_B_width_channel_seti[i-1][j-1]
-                [(mult_array_length_per_sa * mult_B_width) +: mult_B_width];
+                assign extra_sa_vector_B[i-1][j-1] 
+                = (e_tail_en == 1'b1) ? E_scale_tail_rowi_in_mult_B_width_channel_seti[i-1][j-1]
+                [(mult_array_length_per_sa * mult_B_width) +: mult_B_width] : 0;
                 
                 assign rowi_E_scale_tail_in_mult_P_width_channel_seti[i-1][j-1]
                 [0 +: (mult_array_length_per_sa * mult_P_width)]
@@ -802,7 +809,7 @@ parameter qualified_row_width = (qualified_pixel_width+1) * pe_parallel_weight_1
     assign vector_A = e_scale_vector_A;
     assign vector_B = e_scale_vector_B;
     
-    assign e_scale_vector_P = vector_P;
+    assign e_scale_vector_P = (quantify_en == 1'b1) ? vector_P : 0;
     
     E_Scale_Regs E_scale_regs (
         .clk(clk), 
