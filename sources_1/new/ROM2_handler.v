@@ -54,7 +54,10 @@ ROM2_S_2 rom2_s2 (
   .douta(data2)  // output wire [255 : 0] douta
 );
 
-assign data = (s == 4'd1)? data1:
-              (s == 4'd2)? data2:
-              0;                      
+//assign data = (s == 4'd1)? data1:
+//              (s == 4'd2)? data2:
+//              0;   
+              
+assign data = data1;        
+                           
 endmodule

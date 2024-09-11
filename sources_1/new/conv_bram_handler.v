@@ -106,6 +106,10 @@ valid_slab1_adr_wr, valid_slab2_adr_wr, valid_slab3_adr_wr
     input [pixels_in_row * 8 - 1: 0] buf2_pixels_32;
     input [pixels_in_row * 8 - 1: 0] buf3_pixels_32;
     
+    wire [pixels_in_row * 8 - 1: 0] buf1_data; //next cycle
+    wire [pixels_in_row * 8 - 1: 0] buf2_data;
+    wire [pixels_in_row * 8 - 1: 0] buf3_data;
+    
     input [1:0] last_row1_buf_idx;
     input [1:0] last_row2_buf_idx;
     input [1:0] last_row3_buf_idx;
@@ -123,6 +127,10 @@ valid_slab1_adr_wr, valid_slab2_adr_wr, valid_slab3_adr_wr
     input [15:0] slab1_pixels_2;
     input [15:0] slab2_pixels_2;
     input [15:0] slab3_pixels_2;
+    
+    wire [15:0] slab1_data;
+    wire [15:0] slab2_data;
+    wire [15:0] slab3_data;
     
     input [1:0] last_row1_slab_idx;
     input [1:0] last_row2_slab_idx;
@@ -172,7 +180,9 @@ valid_slab1_adr_wr, valid_slab2_adr_wr, valid_slab3_adr_wr
     output [15:0] slab2_pixels_2_wr;
     output [15:0] slab3_pixels_2_wr;
     
-    output reg valid_slab1_adr_wr, valid_slab2_adr_wr, valid_slab3_adr_wr;
+    reg valid_buf1_data, valid_buf2_data, valid_buf3_data;
+    reg valid_slab1_data, valid_slab2_data, valid_slab3_data;
+    output valid_slab1_adr_wr, valid_slab2_adr_wr, valid_slab3_adr_wr;
     
     //in buffer
     //cycle 0
@@ -191,20 +201,24 @@ valid_slab1_adr_wr, valid_slab2_adr_wr, valid_slab3_adr_wr
                       (row3_buf_idx == 2'd3)? row3_buf_adr: 
                       0;
     
-    //cycle 1               
-    assign last_row1_pixels_32 = (last_row1_buf_idx == 2'd1)? buf1_pixels_32:
-                      (last_row1_buf_idx == 2'd2)? buf2_pixels_32: 
-                      (last_row1_buf_idx == 2'd3)? buf3_pixels_32:
+    //cycle 1
+    assign buf1_data = (valid_buf1_data == 1'b1)? buf1_pixels_32 : 0;
+    assign buf2_data = (valid_buf2_data == 1'b1)? buf2_pixels_32 : 0;
+    assign buf3_data = (valid_buf3_data == 1'b1)? buf3_pixels_32 : 0;
+                   
+    assign last_row1_pixels_32 = (last_row1_buf_idx == 2'd1)? buf1_data:
+                      (last_row1_buf_idx == 2'd2)? buf2_data: 
+                      (last_row1_buf_idx == 2'd3)? buf3_data:
                       0;
                       
-    assign last_row2_pixels_32 = (last_row2_buf_idx == 2'd1)? buf1_pixels_32:
-                      (last_row2_buf_idx == 2'd2)? buf2_pixels_32: 
-                      (last_row2_buf_idx == 2'd3)? buf3_pixels_32:
+    assign last_row2_pixels_32 = (last_row2_buf_idx == 2'd1)? buf1_data:
+                      (last_row2_buf_idx == 2'd2)? buf2_data: 
+                      (last_row2_buf_idx == 2'd3)? buf3_data:
                       0;
                       
-    assign last_row3_pixels_32 = (last_row3_buf_idx == 2'd1)? buf1_pixels_32:
-                      (last_row3_buf_idx == 2'd2)? buf2_pixels_32: 
-                      (last_row3_buf_idx == 2'd3)? buf3_pixels_32:
+    assign last_row3_pixels_32 = (last_row3_buf_idx == 2'd1)? buf1_data:
+                      (last_row3_buf_idx == 2'd2)? buf2_data: 
+                      (last_row3_buf_idx == 2'd3)? buf3_data:
                       0;
                       
     //slab read
@@ -225,19 +239,23 @@ valid_slab1_adr_wr, valid_slab2_adr_wr, valid_slab3_adr_wr
                       0;
     
     //cycle 1
-    assign last_row1_slab_2 = (last_row1_slab_idx == 2'd1)? slab1_pixels_2:
-                      (last_row1_slab_idx == 2'd2)? slab2_pixels_2: 
-                      (last_row1_slab_idx == 2'd3)? slab3_pixels_2:
+    assign slab1_data = (valid_slab1_data == 1'b1)? slab1_pixels_2 : 0;
+    assign slab2_data = (valid_slab2_data == 1'b1)? slab2_pixels_2 : 0;
+    assign slab3_data = (valid_slab3_data == 1'b1)? slab3_pixels_2 : 0;
+    
+    assign last_row1_slab_2 = (last_row1_slab_idx == 2'd1)? slab1_data:
+                      (last_row1_slab_idx == 2'd2)? slab2_data: 
+                      (last_row1_slab_idx == 2'd3)? slab3_data:
                       0;
                       
-    assign last_row2_slab_2 = (last_row2_slab_idx == 2'd1)? slab1_pixels_2:
-                      (last_row2_slab_idx == 2'd2)? slab2_pixels_2: 
-                      (last_row2_slab_idx == 2'd3)? slab3_pixels_2:
+    assign last_row2_slab_2 = (last_row2_slab_idx == 2'd1)? slab1_data:
+                      (last_row2_slab_idx == 2'd2)? slab2_data: 
+                      (last_row2_slab_idx == 2'd3)? slab3_data:
                       0;
                       
-    assign last_row3_slab_2 = (last_row3_slab_idx == 2'd1)? slab1_pixels_2:
-                      (last_row3_slab_idx == 2'd2)? slab2_pixels_2: 
-                      (last_row3_slab_idx == 2'd3)? slab3_pixels_2:
+    assign last_row3_slab_2 = (last_row3_slab_idx == 2'd1)? slab1_data:
+                      (last_row3_slab_idx == 2'd2)? slab2_data: 
+                      (last_row3_slab_idx == 2'd3)? slab3_data:
                       0;
     
     //cycle 0
@@ -279,23 +297,33 @@ valid_slab1_adr_wr, valid_slab2_adr_wr, valid_slab3_adr_wr
             slab1_adr_wr <= 16'hffff;
             slab2_adr_wr <= 16'hffff;
             slab3_adr_wr <= 16'hffff;
-            valid_slab1_adr_wr <= 0;
-            valid_slab2_adr_wr <= 0;
-            valid_slab3_adr_wr <= 0;
+            valid_buf1_data <= 0;
+            valid_buf2_data <= 0;
+            valid_buf3_data <= 0;
+            valid_slab1_data <= 0;
+            valid_slab2_data <= 0;
+            valid_slab3_data <= 0;
         end
         else begin
             slab1_adr_wr <= buf1_adr;
             slab2_adr_wr <= buf2_adr;
             slab3_adr_wr <= buf3_adr;
-            valid_slab1_adr_wr <= valid_buf1_adr;
-            valid_slab2_adr_wr <= valid_buf2_adr;
-            valid_slab3_adr_wr <= valid_buf3_adr;
+            valid_buf1_data <= valid_buf1_adr;
+            valid_buf2_data <= valid_buf2_adr;
+            valid_buf3_data <= valid_buf3_adr;
+            valid_slab1_data <= valid_slab1_adr;
+            valid_slab2_data <= valid_slab2_adr;
+            valid_slab3_data <= valid_slab3_adr;
         end
     end
     
     //cycle 1
-    assign slab1_pixels_2_wr = buf1_pixels_32[15:0];
-    assign slab2_pixels_2_wr = buf2_pixels_32[15:0];
-    assign slab3_pixels_2_wr = buf3_pixels_32[15:0];
+    assign slab1_pixels_2_wr = buf1_data[15:0];
+    assign slab2_pixels_2_wr = buf2_data[15:0];
+    assign slab3_pixels_2_wr = buf3_data[15:0];
+    
+    assign valid_slab1_adr_wr = valid_buf1_data;
+    assign valid_slab2_adr_wr = valid_buf2_data;
+    assign valid_slab3_adr_wr = valid_buf3_data;
     
 endmodule

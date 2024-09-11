@@ -162,7 +162,7 @@ always@(posedge clk)begin
        end
        else begin
           tile_y_start <= tile_y_start + buffers_num; 
-          row_base_in_3s <= row_base_in_3s + 1;
+          row_base_in_3s <= row_base_in_3s + 1; //oy_start in 3
        end
    end
    else begin

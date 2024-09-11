@@ -43,7 +43,9 @@ mult_array_mode,
 
 out_sa_row_idx,
 
-loop_sa_counter_add_end
+channel_out_add_end,
+
+quantify_add_end
 
     );
     input mode;
@@ -72,8 +74,13 @@ loop_sa_counter_add_end
     reg sa_counter_signal;
     reg [5:0] sa_counter;
     wire loop_sa_counter_add_begin;
-    output loop_sa_counter_add_end; // the last output channel of sa
+    wire loop_sa_counter_add_end; // the last output channel of sa
     
+    output channel_out_add_end; // the last output channel of sa
+    
+    reg add_bias_add_end, e_tail_add_end;
+    output reg quantify_add_end;
+ 
     always @(posedge clk) begin
         if (reset == 1'b1) begin
             pixels_counter_signal <= 0;
@@ -242,6 +249,21 @@ loop_sa_counter_add_end
         else begin
             quantify_en <= e_tail_en;
             quantify_reset <= e_tail_reset;
+        end
+    end
+    
+    assign channel_out_add_end = loop_sa_counter_add_end;
+    
+    always @(posedge clk) begin
+        if (reset == 1'b1) begin
+            add_bias_add_end <= 0;
+            e_tail_add_end <= 0;
+            quantify_add_end <= 0;
+        end
+        else begin
+            add_bias_add_end <= channel_out_add_end;
+            e_tail_add_end <= add_bias_add_end;
+            quantify_add_end <= e_tail_add_end;
         end
     end
 

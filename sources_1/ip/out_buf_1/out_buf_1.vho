@@ -57,9 +57,9 @@ COMPONENT out_buf_1
     clka : IN STD_LOGIC;
     ena : IN STD_LOGIC;
     wea : IN STD_LOGIC_VECTOR(0 DOWNTO 0);
-    addra : IN STD_LOGIC_VECTOR(10 DOWNTO 0);
-    dina : IN STD_LOGIC_VECTOR(255 DOWNTO 0);
-    douta : OUT STD_LOGIC_VECTOR(255 DOWNTO 0)
+    addra : IN STD_LOGIC_VECTOR(9 DOWNTO 0);
+    dina : IN STD_LOGIC_VECTOR(511 DOWNTO 0);
+    douta : OUT STD_LOGIC_VECTOR(511 DOWNTO 0)
   );
 END COMPONENT;
 -- COMP_TAG_END ------ End COMPONENT Declaration ------------

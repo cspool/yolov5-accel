@@ -84,10 +84,12 @@ weights_vector
         end
         else if (re_fm_en == 1'b1) begin
             if (re_fm_end == 1'b1) begin
-                adr <= 0; 
+                adr <= 0; //need revise
             end
             else begin
-                adr <= adr + 1;
+                adr <= (mode == 1'b0) ? (adr + 1) :
+                       ((mode == 1'b1) && (part_select == 2'd3)) ? (adr + 1) :
+                       adr;
             end
         end
         else begin

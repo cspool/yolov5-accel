@@ -166,7 +166,7 @@ end
     // cfg 0
         clk = 0;
         reset = 1; en = 0;
-        k = 1; s = 1; p = 0; 
+        k = 3; s = 2; p = 1; 
         of = 64; ox = 64; oy = 3; ix = 256; iy = 256; // a tile computation
         ix_in_2pow = 8;
         nif = 1; nif_in_2pow = 0; nif_mult_k_mult_k = nif * k * k;
@@ -291,7 +291,7 @@ end
         #10;
         reset = 0; en = 0;
         
-        #500;
+        #1000;
         reset = 1; en = 0;   
         
         #10;
