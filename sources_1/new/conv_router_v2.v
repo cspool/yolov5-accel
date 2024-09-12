@@ -29,10 +29,15 @@ nif_in_2pow,
 ix_in_2pow,
 
 channel_out_add_end,
+quantify_add_end,
+conv_out_add_end,
+    
+nif_mult_k_mult_k,
 
+cur_pox, cur_pof, cur_poy,
+cur_ox_start, cur_of_start, cur_oy_start,
+cur_oy_start_base_in_3,
 ox_start, oy_start, of_start, pox, poy, pof, if_idx,
-
-oy_start_base_in_3,
 
 row_slab_start_idx,
 slab_num, 
@@ -45,6 +50,7 @@ reg_start_idx, reg_end_idx,
 conv_end,
 //conv_min_pixels_add_end,
 conv_pixels_add_end,
+conv_nif_add_end,
 
 row1_buf_adr,
 row1_buf_idx,
@@ -84,7 +90,13 @@ valid_row3_adr
     
 //    input shift_add2_end;
 //    input stall;
-    input channel_out_add_end;
+    input channel_out_add_end, quantify_add_end, conv_out_add_end;
+    
+    input [15:0] nif_mult_k_mult_k;
+    
+    output reg [15:0] cur_pox, cur_pof, cur_poy;
+    
+    output reg [15:0] cur_ox_start, cur_of_start, cur_oy_start, cur_oy_start_base_in_3;
     
     output [3:0] west_pad, slab_num, east_pad;
     output [15:0] row1_idx, row2_idx, row3_idx;
@@ -95,6 +107,8 @@ valid_row3_adr
     output conv_end;
 //    output conv_min_pixels_add_end, conv_pixels_add_end;
     output conv_pixels_add_end;
+    
+    output conv_nif_add_end;
     
     output [15:0] row1_buf_adr;
     output [1:0] row1_buf_idx;
@@ -125,9 +139,7 @@ valid_row3_adr
     wire [15:0] row3_buf_adr_in_row;
     
     output [15:0] ox_start, oy_start, of_start, pox, poy, pof, if_idx;
-    
-    output [15:0] oy_start_base_in_3;
-    
+
     wire [15:0] next_ox_start, next_oy_start;
     
     wire [15:0] iy_start;
@@ -140,12 +152,14 @@ valid_row3_adr
     
     wire loop_if_add_end;
     
+    assign conv_nif_add_end = loop_if_add_end;
+    
     //conv tile module
 //    wire [15:0] irow_y_size1, irow_y_size2, irow_y_size3;
     
     //address translation
     
-    wire [15:0] row_base0; // virtual base adr of row
+//    wire [15:0] row_base0; // virtual base adr of row
     
 //    wire [15:0] row_base0_in_3;
     wire [15:0] row_base0_in_3s;
@@ -188,25 +202,83 @@ valid_row3_adr
 //    wire [15:0] row3_buf_idx_s2;
     
 //    wire assert_base_bias_idx1, assert_base_bias_idx2, assert_base_bias_idx3;
+
+    wire [15:0] cur_pof_mult_cur_poy;
+    
+    assign cur_pof_mult_cur_poy = (cur_poy == 16'd1)? cur_pof: 
+                                  (cur_poy == 16'd2)? (cur_pof << 1):  
+                                  (cur_poy == 16'd3)? (cur_pof << 1) + cur_pof:   
+                                  0;           
     
     reg ifx_stall;
+    
+    wire loop_if_stall_counter_add_end;
+       //all tile have been in fifo, 
+       //and no.cycles to transfer to out buf is less than that to compute
+       //time to transfer fifo to out buf is covered by computation of next tile
+       //or
+       //all tile have been in out buf, 
+       //and no.cycles to transfer to out buf is bigger than that to compute
+       //computation of next tile is stalled by the transfer from fifo to out buf
+       //the stall time can be shorter and uniform, optimize it later
+    assign loop_if_stall_counter_add_end = 
+    (ifx_stall == 1'b1) && 
+    (((channel_out_add_end == 1'b1))
+//    (((channel_out_add_end == 1'b1) && (nif_mult_k_mult_k > cur_pof_mult_cur_poy))
+    || ((conv_out_add_end == 1'b1) && (nif_mult_k_mult_k <= cur_pof_mult_cur_poy)));
+       
+    
     always@(posedge clk)begin
        if(reset ==1'b1)begin
             ifx_stall <= 0;
        end
        else if(loop_if_add_end == 1'b1)begin
-            if(conv_tiling_add_end == 1'b1)begin              
-                ifx_stall <= 0;
-            end
-            else begin
-                ifx_stall <= 1;
-            end
+            ifx_stall <= 1;
        end
-       else if(channel_out_add_end == 1'b1)begin
+       else if(loop_if_stall_counter_add_end == 1'b1) begin
             ifx_stall <= 0;
        end
        else begin
             ifx_stall <= ifx_stall;
+       end
+    end
+    
+    always@(posedge clk)begin
+       if(reset ==1'b1)begin
+            cur_ox_start <= 0;
+            cur_oy_start <= 0;
+            cur_of_start <= 0;
+            cur_pox <= 0;
+            cur_poy <= 0;
+            cur_pof <= 0;
+            cur_oy_start_base_in_3 <= 0;
+       end
+       else if(ifx_stall == 1'b0) begin
+            cur_ox_start <= ox_start;
+            cur_oy_start <= oy_start;
+            cur_of_start <= of_start;
+            cur_pox <= pox;
+            cur_poy <= poy;
+            cur_pof <= pof;
+            cur_oy_start_base_in_3 <= row_base0_in_3s;
+       end
+       else if (loop_if_stall_counter_add_end == 1'b1) begin //the last high ifstall
+            cur_ox_start <= ox_start;
+            cur_oy_start <= oy_start;
+            cur_of_start <= of_start;
+            cur_pox <= pox;
+            cur_poy <= poy;
+            cur_pof <= pof;
+            cur_oy_start_base_in_3 <= row_base0_in_3s;
+       end
+       else begin
+            cur_ox_start <= cur_ox_start;
+            cur_oy_start <= cur_oy_start;
+            cur_of_start <= cur_of_start;
+            cur_pox <= cur_pox;
+            cur_poy <= cur_poy;
+            cur_pof <= cur_pof;
+            cur_oy_start_base_in_3 <= cur_oy_start_base_in_3;
        end
     end
 
@@ -245,8 +317,6 @@ valid_row3_adr
         
         .row_base_in_3s(row_base0_in_3s) //m
     );
-    
-    assign oy_start_base_in_3 = row_base0_in_3s;
     
     assign conv_end = conv_tiling_add_end;
     //conv rows

@@ -46,20 +46,22 @@
 -- 
 -- DO NOT MODIFY THIS FILE.
 
--- IP VLNV: xilinx.com:ip:blk_mem_gen:8.4
--- IP Revision: 2
+-- IP VLNV: xilinx.com:ip:fifo_generator:13.2
+-- IP Revision: 3
 
 -- The following code must appear in the VHDL architecture header.
 
 ------------- Begin Cut here for COMPONENT Declaration ------ COMP_TAG
-COMPONENT out_buf
+COMPONENT fifo_rowi_channel_seti
   PORT (
-    clka : IN STD_LOGIC;
-    ena : IN STD_LOGIC;
-    wea : IN STD_LOGIC_VECTOR(0 DOWNTO 0);
-    addra : IN STD_LOGIC_VECTOR(12 DOWNTO 0);
-    dina : IN STD_LOGIC_VECTOR(255 DOWNTO 0);
-    douta : OUT STD_LOGIC_VECTOR(255 DOWNTO 0)
+    clk : IN STD_LOGIC;
+    srst : IN STD_LOGIC;
+    din : IN STD_LOGIC_VECTOR(511 DOWNTO 0);
+    wr_en : IN STD_LOGIC;
+    rd_en : IN STD_LOGIC;
+    dout : OUT STD_LOGIC_VECTOR(511 DOWNTO 0);
+    full : OUT STD_LOGIC;
+    empty : OUT STD_LOGIC
   );
 END COMPONENT;
 -- COMP_TAG_END ------ End COMPONENT Declaration ------------
@@ -68,18 +70,20 @@ END COMPONENT;
 -- body. Substitute your own instance name and net names.
 
 ------------- Begin Cut here for INSTANTIATION Template ----- INST_TAG
-your_instance_name : out_buf
+your_instance_name : fifo_rowi_channel_seti
   PORT MAP (
-    clka => clka,
-    ena => ena,
-    wea => wea,
-    addra => addra,
-    dina => dina,
-    douta => douta
+    clk => clk,
+    srst => srst,
+    din => din,
+    wr_en => wr_en,
+    rd_en => rd_en,
+    dout => dout,
+    full => full,
+    empty => empty
   );
 -- INST_TAG_END ------ End INSTANTIATION Template ---------
 
--- You must compile the wrapper file out_buf.vhd when simulating
--- the core, out_buf. When compiling the wrapper file, be sure to
+-- You must compile the wrapper file fifo_rowi_channel_seti.vhd when simulating
+-- the core, fifo_rowi_channel_seti. When compiling the wrapper file, be sure to
 -- reference the VHDL simulation library.
 

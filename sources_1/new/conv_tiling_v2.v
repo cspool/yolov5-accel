@@ -87,7 +87,7 @@ always@(posedge clk)begin
    if(reset ==1'b1)begin
        if_start <= 1;
    end
-   else if(loop_if_add_begin == 1'b1)begin
+   else if((loop_if_add_begin == 1'b1))begin
        if(loop_if_add_end == 1'b1) begin //the last if_start
           if_start <= 1;
        end
@@ -110,7 +110,7 @@ always@(posedge clk)begin
     if(reset ==1'b1)begin
         tile_f_start <= 1;
     end
-    else if(loop_f_add_begin == 1'b1)begin
+    else if(loop_f_add_begin == 1'b1) begin
        if(loop_f_add_end == 1'b1) begin // the last tile_f_start
           tile_f_start <= 1;
        end

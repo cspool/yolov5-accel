@@ -1,11 +1,11 @@
 // Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
 // Tool Version: Vivado v.2018.3 (win64) Build 2405991 Thu Dec  6 23:38:27 MST 2018
-// Date        : Thu Sep 12 19:20:44 2024
+// Date        : Thu Sep 12 13:38:44 2024
 // Host        : yang running 64-bit major release  (build 9200)
 // Command     : write_verilog -force -mode synth_stub
-//               E:/vivado_pros/yolov5_accel_2/yolov5_accel_2.srcs/sources_1/ip/out_buf/out_buf_stub.v
-// Design      : out_buf
+//               e:/vivado_pros/yolov5_accel_2/yolov5_accel_2.srcs/sources_1/ip/fifo_rowi_channel_seti/fifo_rowi_channel_seti_stub.v
+// Design      : fifo_rowi_channel_seti
 // Purpose     : Stub declaration of top-level module interface
 // Device      : xc7vx690tffg1761-2
 // --------------------------------------------------------------------------------
@@ -13,13 +13,15 @@
 // This empty module with port declaration file causes synthesis tools to infer a black box for IP.
 // The synthesis directives are for Synopsys Synplify support to prevent IO buffer insertion.
 // Please paste the declaration into a Verilog source file or add the file as an additional source.
-(* x_core_info = "blk_mem_gen_v8_4_2,Vivado 2018.3" *)
-module out_buf(clka, ena, wea, addra, dina, douta)
-/* synthesis syn_black_box black_box_pad_pin="clka,ena,wea[0:0],addra[12:0],dina[255:0],douta[255:0]" */;
-  input clka;
-  input ena;
-  input [0:0]wea;
-  input [12:0]addra;
-  input [255:0]dina;
-  output [255:0]douta;
+(* x_core_info = "fifo_generator_v13_2_3,Vivado 2018.3" *)
+module fifo_rowi_channel_seti(clk, srst, din, wr_en, rd_en, dout, full, empty)
+/* synthesis syn_black_box black_box_pad_pin="clk,srst,din[511:0],wr_en,rd_en,dout[511:0],full,empty" */;
+  input clk;
+  input srst;
+  input [511:0]din;
+  input wr_en;
+  input rd_en;
+  output [511:0]dout;
+  output full;
+  output empty;
 endmodule

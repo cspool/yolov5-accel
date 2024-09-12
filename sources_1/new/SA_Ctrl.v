@@ -184,7 +184,7 @@ quantify_add_end
     always @(posedge clk) begin
         if (reset == 1'b1) begin
             sa_en <= 0;
-            sa_reset <= 1;
+            sa_reset <= 0;
         end
         else if (re_fm_en == 1'b1) begin
             sa_en <= 1;
@@ -211,7 +211,7 @@ quantify_add_end
     
     always @(posedge clk) begin
         if (reset == 1'b1) begin
-            add_bias_reset <= 1;
+            add_bias_reset <= 0;
         end
         else if (loop_sa_counter_add_end == 1'b1) begin
             add_bias_reset <= 1;
@@ -227,7 +227,7 @@ quantify_add_end
     always @(posedge clk) begin
         if (reset == 1'b1) begin
             e_tail_en <= 0;
-            e_tail_reset <= 1;
+            e_tail_reset <= 0;
         end
         else if (e_tail_reset == 1'b1) begin
             e_tail_reset <= 0;
@@ -241,7 +241,7 @@ quantify_add_end
     always @(posedge clk) begin
         if (reset == 1'b1) begin
             quantify_en <= 0;
-            quantify_reset <= 1;
+            quantify_reset <= 0;
         end
         else if (quantify_reset == 1'b1) begin
             quantify_reset <= 0;

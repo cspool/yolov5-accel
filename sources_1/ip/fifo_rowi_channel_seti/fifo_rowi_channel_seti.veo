@@ -46,25 +46,27 @@
 // 
 // DO NOT MODIFY THIS FILE.
 
-// IP VLNV: xilinx.com:ip:blk_mem_gen:8.4
-// IP Revision: 2
+// IP VLNV: xilinx.com:ip:fifo_generator:13.2
+// IP Revision: 3
 
 // The following must be inserted into your Verilog file for this
 // core to be instantiated. Change the instance name and port connections
 // (in parentheses) to your own signal names.
 
 //----------- Begin Cut here for INSTANTIATION Template ---// INST_TAG
-out_buf your_instance_name (
-  .clka(clka),    // input wire clka
-  .ena(ena),      // input wire ena
-  .wea(wea),      // input wire [0 : 0] wea
-  .addra(addra),  // input wire [12 : 0] addra
-  .dina(dina),    // input wire [255 : 0] dina
-  .douta(douta)  // output wire [255 : 0] douta
+fifo_rowi_channel_seti your_instance_name (
+  .clk(clk),      // input wire clk
+  .srst(srst),    // input wire srst
+  .din(din),      // input wire [511 : 0] din
+  .wr_en(wr_en),  // input wire wr_en
+  .rd_en(rd_en),  // input wire rd_en
+  .dout(dout),    // output wire [511 : 0] dout
+  .full(full),    // output wire full
+  .empty(empty)  // output wire empty
 );
 // INST_TAG_END ------ End INSTANTIATION Template ---------
 
-// You must compile the wrapper file out_buf.v when simulating
-// the core, out_buf. When compiling the wrapper file, be sure to
+// You must compile the wrapper file fifo_rowi_channel_seti.v when simulating
+// the core, fifo_rowi_channel_seti. When compiling the wrapper file, be sure to
 // reference the Verilog simulation library.
 
