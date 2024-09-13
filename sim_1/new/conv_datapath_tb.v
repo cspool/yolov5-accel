@@ -122,7 +122,7 @@ parameter scaled_rank_row_width = (quantified_pixel_width+1) * pe_parallel_weigh
     
     reg clk, en, reset; // reset is valid a cycle before en being valid
     
-    reg [15:0] nif_in_2pow, ix_in_2pow;
+    reg [15:0] nif_in_2pow, ix_in_2pow, of_in_2pow, ox_in_2pow;
     
     reg [31:0] nif_mult_k_mult_k;
     
@@ -148,6 +148,8 @@ conv_datapath cv_datapath(
     .reset(reset),
     .nif_in_2pow(nif_in_2pow),
     .ix_in_2pow(ix_in_2pow),
+    .of_in_2pow(of_in_2pow), 
+    .ox_in_2pow(ox_in_2pow),
     .nif_mult_k_mult_k(nif_mult_k_mult_k),
     
     .mode(mode),
@@ -167,7 +169,9 @@ end
         clk = 0;
         reset = 1; en = 0;
         k = 3; s = 2; p = 1; 
-        of = 64; ox = 64; oy = 3; ix = 256; iy = 256; // a tile computation
+        of = 64; ox = 64; oy = 3;
+        of_in_2pow = 6; ox_in_2pow = 6;
+        ix = 256; iy = 256; // a tile computation
         ix_in_2pow = 8;
         nif = 1; nif_in_2pow = 0; nif_mult_k_mult_k = nif * k * k;
         
@@ -291,8 +295,8 @@ end
         #10;
         reset = 0; en = 0;
         
-        #1000;
-        reset = 1; en = 0;   
+//        #3000;
+//        reset = 1; en = 0;   
         
         #10;
         reset = 0; en = 0;           

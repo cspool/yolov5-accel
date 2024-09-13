@@ -266,5 +266,8 @@ quantify_add_end
             quantify_add_end <= e_tail_add_end;
         end
     end
+    
+    //conv fifo ctrl
+    //mode 1 is ok, mode 0 need optimized
 
 endmodule

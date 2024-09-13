@@ -36,7 +36,6 @@ nif_mult_k_mult_k,
 
 cur_pox, cur_pof, cur_poy,
 cur_ox_start, cur_of_start, cur_oy_start,
-cur_oy_start_base_in_3,
 ox_start, oy_start, of_start, pox, poy, pof, if_idx,
 
 row_slab_start_idx,
@@ -96,7 +95,7 @@ valid_row3_adr
     
     output reg [15:0] cur_pox, cur_pof, cur_poy;
     
-    output reg [15:0] cur_ox_start, cur_of_start, cur_oy_start, cur_oy_start_base_in_3;
+    output reg [15:0] cur_ox_start, cur_of_start, cur_oy_start;
     
     output [3:0] west_pad, slab_num, east_pad;
     output [15:0] row1_idx, row2_idx, row3_idx;
@@ -223,8 +222,8 @@ valid_row3_adr
        //the stall time can be shorter and uniform, optimize it later
     assign loop_if_stall_counter_add_end = 
     (ifx_stall == 1'b1) && 
-    (((channel_out_add_end == 1'b1))
-//    (((channel_out_add_end == 1'b1) && (nif_mult_k_mult_k > cur_pof_mult_cur_poy))
+//    (((channel_out_add_end == 1'b1))
+    (((channel_out_add_end == 1'b1) && (nif_mult_k_mult_k > cur_pof_mult_cur_poy))
     || ((conv_out_add_end == 1'b1) && (nif_mult_k_mult_k <= cur_pof_mult_cur_poy)));
        
     
@@ -251,7 +250,6 @@ valid_row3_adr
             cur_pox <= 0;
             cur_poy <= 0;
             cur_pof <= 0;
-            cur_oy_start_base_in_3 <= 0;
        end
        else if(ifx_stall == 1'b0) begin
             cur_ox_start <= ox_start;
@@ -260,7 +258,6 @@ valid_row3_adr
             cur_pox <= pox;
             cur_poy <= poy;
             cur_pof <= pof;
-            cur_oy_start_base_in_3 <= row_base0_in_3s;
        end
        else if (loop_if_stall_counter_add_end == 1'b1) begin //the last high ifstall
             cur_ox_start <= ox_start;
@@ -269,7 +266,6 @@ valid_row3_adr
             cur_pox <= pox;
             cur_poy <= poy;
             cur_pof <= pof;
-            cur_oy_start_base_in_3 <= row_base0_in_3s;
        end
        else begin
             cur_ox_start <= cur_ox_start;
@@ -278,7 +274,6 @@ valid_row3_adr
             cur_pox <= cur_pox;
             cur_poy <= cur_poy;
             cur_pof <= cur_pof;
-            cur_oy_start_base_in_3 <= cur_oy_start_base_in_3;
        end
     end
 

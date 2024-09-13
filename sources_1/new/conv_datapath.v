@@ -26,6 +26,7 @@ k, s, p,
 clk, en, reset,
 nif_in_2pow,
 ix_in_2pow,
+of_in_2pow, ox_in_2pow,
 mode,
 nif_mult_k_mult_k,
 
@@ -127,6 +128,8 @@ parameter quantified_row_width = (quantified_pixel_width) * pe_parallel_weight_1
 //8 bit * 32 pixels * 2 channel
 parameter scaled_rank_row_width = (quantified_pixel_width+1) * pe_parallel_weight_18 * pe_parallel_pixel_18 * column_num; 
 //9 bit * 32 pixels * 2 channel
+parameter out_data_width = quantified_pixel_width * pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num;
+
     
     //cv router wire
     input mode;
@@ -141,12 +144,14 @@ parameter scaled_rank_row_width = (quantified_pixel_width+1) * pe_parallel_weigh
     
     input [15:0] nif_in_2pow, ix_in_2pow;
     
+    input [15:0] of_in_2pow, ox_in_2pow;
+    
     input [bias_tile_length -1 : 0] bias_tile_val; //will come from args buffer that has not existed
         
     input [E_scale_tail_tile_length -1 : 0] E_scale_tail_tile_val; 
     input [E_scale_rank_tile_length -1 : 0] E_scale_rank_tile_val; 
     
-    wire [15:0] cur_pox, cur_poy, cur_pof, cur_ox_start, cur_oy_start, cur_of_start, cur_oy_start_base_in_3;
+    wire [15:0] cur_pox, cur_poy, cur_pof, cur_ox_start, cur_oy_start, cur_of_start;
     wire [15:0] ox_start, oy_start, of_start, pox, poy, pof, if_idx; //tile info
     
     wire [3:0] west_pad, slab_num, east_pad;
@@ -281,8 +286,7 @@ parameter scaled_rank_row_width = (quantified_pixel_width+1) * pe_parallel_weigh
     wire [column_num * mult_A_width -1:0] extra_sa_vector_As[sa_column_num-1 : 0][sa_row_num-1 : 0];
     wire [mult_B_width -1:0] extra_sa_vector_B [sa_column_num-1 : 0][sa_row_num-1 : 0];
     wire [column_num * mult_P_width -1:0] extra_sa_vector_Ps [sa_column_num-1 : 0][sa_row_num-1 : 0];
-   
-    
+
     //e_scale regs
     // tile e-scale, will be set at first of the tiling compute, maybe set in several cycles
     wire [E_scale_tail_set_4_channel_width-1 :0] E_scale_tail_4_channel_sets;
@@ -306,9 +310,22 @@ parameter scaled_rank_row_width = (quantified_pixel_width+1) * pe_parallel_weigh
     wire [quantified_row_width-1 :0] fifo_rowi_channel_seti_dout[sa_column_num-1 : 0][sa_row_num-1 : 0];
     wire fifo_rowi_channel_seti_full[sa_column_num-1 : 0][sa_row_num-1 : 0];
     wire fifo_rowi_channel_seti_empty[sa_column_num-1 : 0][sa_row_num-1 : 0];
+    wire [8 : 0] data_counts[sa_column_num-1 : 0][sa_row_num-1 : 0];
 
-    //conv out ctrl
+    //conv out ctrl 
+    //cycle 1 in
+    wire [quantified_row_width-1 : 0] fifo_data;
+    
+    //cycle 0 out
+    wire [sa_row_num * sa_column_num-1:0] fifo_rds;
+    
+    //cycle 1 out
+//    output reg [15:0] rowi_out_buf_adr;
+    wire [3:0] fifo_column_no, fifo_row_no;
+    wire valid_rowi_out_buf_adr;                    
+    wire [15:0] out_y_idx, out_x_idx, out_f_idx;                   
     wire conv_out_add_end;
+    wire [out_data_width-1 : 0] out_data;
     
     conv_router_v2 cv_router(
         .mode(mode),
@@ -339,7 +356,6 @@ parameter scaled_rank_row_width = (quantified_pixel_width+1) * pe_parallel_weigh
         .cur_ox_start(cur_ox_start), 
         .cur_of_start(cur_of_start), 
         .cur_oy_start(cur_oy_start),
-        .cur_oy_start_base_in_3(cur_oy_start_base_in_3),
         .ox_start(ox_start), 
         .oy_start(oy_start), 
         .pox(pox), 
@@ -792,9 +808,13 @@ parameter scaled_rank_row_width = (quantified_pixel_width+1) * pe_parallel_weigh
                   .rd_en(fifo_rowi_channel_seti_rd_en[i-1][j-1]),  // input wire rd_en
                   .dout(fifo_rowi_channel_seti_dout[i-1][j-1]),    // output wire [511 : 0] dout
                   .full(fifo_rowi_channel_seti_full[i-1][j-1]),    // output wire full
-                  .empty(fifo_rowi_channel_seti_empty[i-1][j-1])  // output wire empty
+                  .empty(fifo_rowi_channel_seti_empty[i-1][j-1]),  // output wire empty
+                  .data_count(data_counts[i-1][j-1])
                 );
                 
+                assign fifo_rowi_channel_seti_rd_en[i-1][j-1] 
+                = fifo_rds[(((i-1) << 2) + j-1)];
+
             end
         end
     endgenerate
@@ -860,6 +880,40 @@ parameter scaled_rank_row_width = (quantified_pixel_width+1) * pe_parallel_weigh
         .E_scale_rank_4_channel_sets(E_scale_rank_4_channel_sets)
     );
     
+    conv_out_handler cv_out_handler(
+        //cycle 0 in
+        .mode(mode),
+        .clk(clk), 
+        .reset(reset), 
+        .en(en), 
+        .cur_ox_start(cur_ox_start), 
+        .cur_oy_start(cur_oy_start), 
+        .cur_of_start(cur_of_start), 
+        .cur_pox(cur_pox), 
+        .cur_poy(cur_poy), 
+        .cur_pof(cur_pof),
+        .channel_out_en(channel_out_en), 
+        .quantify_en(quantify_en), 
+        .quantify_add_end(quantify_add_end),
+        .of_in_2pow(of_in_2pow), 
+        .ox_in_2pow(ox_in_2pow),
+        
+        //cycle 0 out
+        .fifo_rds(fifo_rds),
+        //cycle 1 in
+        .fifo_data(fifo_data),
+        //cycle 1 out
+        //rowi_out_buf_adr,
+        .fifo_column_no(fifo_column_no), 
+        .fifo_row_no(fifo_row_no),
+        .valid_rowi_out_buf_adr(valid_rowi_out_buf_adr),
+        .out_y_idx(out_y_idx), 
+        .out_x_idx(out_x_idx), 
+        .out_f_idx(out_f_idx),
+        .out_data(out_data),
+        .conv_out_add_end(conv_out_add_end)
+    );
     
+    assign fifo_data = fifo_rowi_channel_seti_dout[fifo_column_no][fifo_row_no];
 
 endmodule

@@ -55,14 +55,15 @@
 
 //----------- Begin Cut here for INSTANTIATION Template ---// INST_TAG
 fifo_rowi_channel_seti your_instance_name (
-  .clk(clk),      // input wire clk
-  .srst(srst),    // input wire srst
-  .din(din),      // input wire [511 : 0] din
-  .wr_en(wr_en),  // input wire wr_en
-  .rd_en(rd_en),  // input wire rd_en
-  .dout(dout),    // output wire [511 : 0] dout
-  .full(full),    // output wire full
-  .empty(empty)  // output wire empty
+  .clk(clk),                // input wire clk
+  .srst(srst),              // input wire srst
+  .din(din),                // input wire [511 : 0] din
+  .wr_en(wr_en),            // input wire wr_en
+  .rd_en(rd_en),            // input wire rd_en
+  .dout(dout),              // output wire [511 : 0] dout
+  .full(full),              // output wire full
+  .empty(empty),            // output wire empty
+  .data_count(data_count)  // output wire [8 : 0] data_count
 );
 // INST_TAG_END ------ End INSTANTIATION Template ---------
 
