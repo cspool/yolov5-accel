@@ -237,7 +237,7 @@ parameter scaled_rank_row_width = (quantified_pixel_width+1) * pe_parallel_weigh
             0; 
             
             assign quantified_row[i*(quantified_pixel_width) +: (quantified_pixel_width)]
-            = (scaled_rank_row[(i*(quantified_pixel_width+1)+quantified_pixel_width) +: 1] == 1'b0)?
+            = (scaled_rank_row[(i*(quantified_pixel_width+1)+quantified_pixel_width)] == 1'b0)?
             scaled_rank_row[i*(quantified_pixel_width+1) +: (quantified_pixel_width)] :
             0;
             
@@ -268,8 +268,8 @@ parameter scaled_rank_row_width = (quantified_pixel_width+1) * pe_parallel_weigh
             
             assign quantified_row[(pe_parallel_pixel_18 * column_num+i)*(quantified_pixel_width) +: (quantified_pixel_width)]
             = (scaled_rank_row[
-            ((pe_parallel_pixel_18 * column_num + i)*(quantified_pixel_width+1)+quantified_pixel_width) +: 1] == 1'b0) ?
-            scaled_rank_row[(pe_parallel_pixel_18 * column_num + i)*(quantified_pixel_width) +: (quantified_pixel_width)]:
+            ((pe_parallel_pixel_18 * column_num + i)*(quantified_pixel_width+1)+quantified_pixel_width)] == 1'b0) ?
+            scaled_rank_row[(pe_parallel_pixel_18 * column_num + i)*(quantified_pixel_width+1) +: (quantified_pixel_width)]:
             0;
              
 //            always@(posedge clk) begin

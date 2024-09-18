@@ -78,7 +78,8 @@ quantify_add_end
     
     output channel_out_add_end; // the last output channel of sa
     
-    reg add_bias_add_end, e_tail_add_end;
+    wire add_bias_add_end;
+    reg e_tail_add_end;
     output reg quantify_add_end;
  
     always @(posedge clk) begin
@@ -158,7 +159,7 @@ quantify_add_end
         else if (sa_counter == 6'd16) begin
             channel_out_en <= 1;
         end
-        else if (loop_sa_counter_add_end) begin //xxx
+        else if (loop_sa_counter_add_end == 1'b1) begin //xxx
             channel_out_en <= 0;
         end
         else begin
@@ -253,15 +254,14 @@ quantify_add_end
     end
     
     assign channel_out_add_end = loop_sa_counter_add_end;
+    assign add_bias_add_end = channel_out_add_end;
     
     always @(posedge clk) begin
         if (reset == 1'b1) begin
-            add_bias_add_end <= 0;
             e_tail_add_end <= 0;
             quantify_add_end <= 0;
         end
         else begin
-            add_bias_add_end <= channel_out_add_end;
             e_tail_add_end <= add_bias_add_end;
             quantify_add_end <= e_tail_add_end;
         end

@@ -128,7 +128,8 @@ conv_out_add_end
         end
     end 
     
-    assign row_fifo_rd_en = (mode == 1'b0)? 1'b1: //0,1,...,15
+    assign row_fifo_rd_en = (loop_channel_counter_add_begin == 1'b0) ? 1'b0:
+                         (mode == 1'b0)? 1'b1: //0,1,...,15
                          (mode == 1'b1)? channel_counter[0]:
                          0;
     
@@ -185,7 +186,7 @@ conv_out_add_end
            channel_counter <= 1;
        end
        else if((loop_channel_counter_add_begin == 1'b1))begin
-           if(loop_channel_counter_add_end == 1'b1) begin //the last row_no
+           if(loop_channel_counter_add_end == 1'b1) begin
               channel_counter <= 1;
            end
            else begin
