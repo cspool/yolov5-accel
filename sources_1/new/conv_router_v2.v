@@ -24,7 +24,7 @@ module conv_router_v2(
 mode,
 of, ox, oy, ix, iy, nif,
 k, s, p,
-clk, en, reset,
+clk, en, reset, //en means initial finish
 nif_in_2pow,
 ix_in_2pow,
 
@@ -85,7 +85,7 @@ valid_row3_adr
     
     input clk, en, reset; // reset is valid a cycle before en being valid
     
-    input [15:0] nif_in_2pow, ix_in_2pow;
+    input [3:0] nif_in_2pow, ix_in_2pow;
     
 //    input shift_add2_end;
 //    input stall;
@@ -201,13 +201,14 @@ valid_row3_adr
 //    wire [15:0] row3_buf_idx_s2;
     
 //    wire assert_base_bias_idx1, assert_base_bias_idx2, assert_base_bias_idx3;
-
-    wire [15:0] cur_pof_mult_cur_poy;
     
-    assign cur_pof_mult_cur_poy = (cur_poy == 16'd1)? cur_pof: 
-                                  (cur_poy == 16'd2)? (cur_pof << 1):  
-                                  (cur_poy == 16'd3)? (cur_pof << 1) + cur_pof:   
-                                  0;           
+    //stall ctrl
+//    wire [15:0] cur_pof_mult_cur_poy;
+    
+//    assign cur_pof_mult_cur_poy = (cur_poy == 16'd1)? cur_pof: 
+//                                  (cur_poy == 16'd2)? (cur_pof << 1):  
+//                                  (cur_poy == 16'd3)? (cur_pof << 1) + cur_pof:   
+//                                  0;           
     
     reg ifx_stall;
     
@@ -222,9 +223,10 @@ valid_row3_adr
        //the stall time can be shorter and uniform, optimize it later
     assign loop_if_stall_counter_add_end = 
     (ifx_stall == 1'b1) && 
+    (conv_out_add_end == 1'b1);
 //    (((channel_out_add_end == 1'b1))
-    (((channel_out_add_end == 1'b1) && (nif_mult_k_mult_k > cur_pof_mult_cur_poy))
-    || ((conv_out_add_end == 1'b1) && (nif_mult_k_mult_k <= cur_pof_mult_cur_poy)));
+//    (((channel_out_add_end == 1'b1) && (nif_mult_k_mult_k > cur_pof_mult_cur_poy))
+//    || ((conv_out_add_end == 1'b1) && (nif_mult_k_mult_k <= cur_pof_mult_cur_poy)));
        
     
     always@(posedge clk)begin

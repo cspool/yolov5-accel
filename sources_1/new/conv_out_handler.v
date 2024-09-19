@@ -23,7 +23,7 @@
 module conv_out_handler(
 //cycle 0 in
 mode,
-clk, en, reset,
+clk, reset,
 cur_ox_start, cur_oy_start, cur_of_start, cur_pox, cur_poy, cur_pof,
 channel_out_en, quantify_en, quantify_add_end,
 of_in_2pow, ox_in_2pow,
@@ -64,13 +64,13 @@ conv_out_add_end
     //cycle 0 in
     input mode;
     
-    input clk, en, reset;
+    input clk, reset;
     
     input [15:0] cur_ox_start, cur_oy_start, cur_of_start, cur_pox, cur_poy, cur_pof;
     
     input channel_out_en, quantify_en, quantify_add_end;
     
-    input [15:0] of_in_2pow, ox_in_2pow;
+    input [3:0] of_in_2pow, ox_in_2pow;
     
     //cycle 1 in
     input [quantified_row_width-1 : 0] fifo_data;

@@ -23,7 +23,7 @@
 module Shift_Regs(
 reset,
 clk,
-en,
+//en,
 
 k,s,
 
@@ -44,7 +44,7 @@ re_fm_end
     parameter shift_regs_num = 70;
     parameter pixels_in_row = 32;
     
-    input reset,clk,en;
+    input reset,clk;
     
     input [3:0] k, s;
     

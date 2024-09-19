@@ -21,18 +21,8 @@
 
 
 module conv_datapath(
-of, ox, oy, ix, iy, nif,
-k, s, p,
-clk, en, reset,
-nif_in_2pow,
-ix_in_2pow,
-of_in_2pow, ox_in_2pow,
-mode,
-nif_mult_k_mult_k,
+clk, start, reset
 
-bias_tile_val, // will be removed at end
-E_scale_tail_tile_val,
-E_scale_rank_tile_val
     );
     
 parameter sa_row_num = 4; //how many rows in conv core
@@ -130,27 +120,9 @@ parameter scaled_rank_row_width = (quantified_pixel_width+1) * pe_parallel_weigh
 //9 bit * 32 pixels * 2 channel
 parameter out_data_width = quantified_pixel_width * pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num;
 
-    
-    //cv router wire
-    input mode;
-    
-    input [31:0] nif_mult_k_mult_k;
-    
-    input [3:0] k, s, p;
-    
-    input [15:0] of, ox, oy, ix, iy, nif;
-    
-    input clk, en, reset;
-    
-    input [15:0] nif_in_2pow, ix_in_2pow;
-    
-    input [15:0] of_in_2pow, ox_in_2pow;
-    
-    input [bias_tile_length -1 : 0] bias_tile_val; //will come from args buffer that has not existed
+    input clk, start, reset;
         
-    input [E_scale_tail_tile_length -1 : 0] E_scale_tail_tile_val; 
-    input [E_scale_rank_tile_length -1 : 0] E_scale_rank_tile_val; 
-    
+    //cv router wire
     wire [15:0] cur_pox, cur_poy, cur_pof, cur_ox_start, cur_oy_start, cur_of_start;
     wire [15:0] ox_start, oy_start, of_start, pox, poy, pof, if_idx; //tile info
     
@@ -327,6 +299,96 @@ parameter out_data_width = quantified_pixel_width * pe_parallel_pixel_88 * pe_pa
     wire conv_out_add_end;
     wire [out_data_width-1 : 0] out_data;
     
+    //instr rom
+    wire [9 : 0] instr_adr;
+    
+    //top_controller
+    wire [15:0] instr;
+    
+    wire conv_fin, pool_fin , concate_fin, shortcut_fin, upsample_fin;
+    
+    wire instr_rd;
+    
+    wire [3:0] state;
+    
+    wire conv_start;
+    
+    //conv initial
+    wire conv_inital_fin;
+    
+    wire mode;
+    
+    wire [31:0] nif_mult_k_mult_k;
+    
+    wire [3:0] k, s, p;
+    
+    wire [15:0] of, ox, oy, ix, iy, nif;
+    
+    wire [3:0] nif_in_2pow, ix_in_2pow;
+    
+    wire [3:0] of_in_2pow, ox_in_2pow;
+    
+    wire [bias_tile_length -1 : 0] bias_tile_val; //will come from args buffer that has not existed
+        
+    wire [E_scale_tail_tile_length -1 : 0] E_scale_tail_tile_val; 
+    wire [E_scale_rank_tile_length -1 : 0] E_scale_rank_tile_val; 
+    
+    wire conv_compute_reset, conv_compute_en;
+    
+    Top_Controller top_controller (
+        .clk(clk), 
+        .reset(reset), 
+        .start(start),  
+        .instr(instr), 
+        .conv_fin(conv_fin), 
+        .pool_fin(pool_fin), 
+        .concate_fin(concate_fin), 
+        .shortcut_fin(shortcut_fin), 
+        .upsample_fin(upsample_fin),
+            
+        .instr_rd(instr_rd),
+        .instr_adr(instr_adr),   
+        .state(state),
+        .conv_start(conv_start)
+    );
+    
+    conv_initial_ctrl cv_initial_ctrl(
+        .clk(clk), 
+        .reset(reset), 
+        .start(conv_start), 
+        
+        .conv_inital_fin(conv_inital_fin),
+        .of(of),
+        .ox(ox), 
+        .oy(oy), 
+        .ix(ix), 
+        .iy(iy), 
+        .nif(nif),
+        .k(k), 
+        .s(s), 
+        .p(p),
+        .nif_in_2pow(nif_in_2pow),
+        .ix_in_2pow(ix_in_2pow),
+        .of_in_2pow(of_in_2pow), 
+        .ox_in_2pow(ox_in_2pow),
+        .nif_mult_k_mult_k(nif_mult_k_mult_k),
+        
+        .mode(mode),
+        .bias_tile_val(bias_tile_val),
+        .E_scale_tail_tile_val(E_scale_tail_tile_val),
+        .E_scale_rank_tile_val(E_scale_rank_tile_val),
+        
+        .conv_compute_reset(conv_compute_reset),
+        .conv_compute_en(conv_compute_en)
+    );
+    
+    instr_rom instr_rom (
+      .clka(clk),    // input wire clka
+      .ena(instr_rd),      // input wire ena
+      .addra(instr_adr),  // input wire [9 : 0] addra
+      .douta(instr)  // output wire [15 : 0] douta
+    );
+    
     conv_router_v2 cv_router(
         .mode(mode),
         .of(of),
@@ -339,8 +401,8 @@ parameter out_data_width = quantified_pixel_width * pe_parallel_pixel_88 * pe_pa
         .s(s), 
         .p(p),
         .clk(clk), 
-        .en(en), 
-        .reset(reset),
+        .en(conv_compute_en), 
+        .reset((reset | conv_compute_reset)),
         .nif_in_2pow(nif_in_2pow), 
         .ix_in_2pow(ix_in_2pow),
         
@@ -476,7 +538,7 @@ parameter out_data_width = quantified_pixel_width * pe_parallel_pixel_88 * pe_pa
     Row_Regs row_regs(
         .reset(reset),
         .clk(clk),
-        .en(en),
+//        .en(conv_inital_fin),
         
         .k(k),
         .s(s),
@@ -516,7 +578,7 @@ parameter out_data_width = quantified_pixel_width * pe_parallel_pixel_88 * pe_pa
     Shift_Regs shift_regs(
         .reset(reset),
         .clk(clk),
-        .en(en),
+//        .en(conv_inital_fin),
         
         .k(k),
         .s(s),
@@ -538,7 +600,7 @@ parameter out_data_width = quantified_pixel_width * pe_parallel_pixel_88 * pe_pa
     conv_bram_handler cv_bram_handler(
         .reset(reset),
         .clk(clk),
-        .en(en),
+//        .en(en),
                 
         //cycle 0 in
         .valid_row1_adr(valid_row1_adr),
@@ -824,7 +886,7 @@ parameter out_data_width = quantified_pixel_width * pe_parallel_pixel_88 * pe_pa
         .mode(mode),
         .clk(clk), 
         .reset(reset), 
-        .en(en), 
+//        .en(en), 
         .re_fm_en(re_fm_en),
         .nif_mult_k_mult_k(nif_mult_k_mult_k),
         .sa_en(sa_en), 
@@ -885,7 +947,7 @@ parameter out_data_width = quantified_pixel_width * pe_parallel_pixel_88 * pe_pa
         .mode(mode),
         .clk(clk), 
         .reset(reset), 
-        .en(en), 
+//        .en(en), 
         .cur_ox_start(cur_ox_start), 
         .cur_oy_start(cur_oy_start), 
         .cur_of_start(cur_of_start), 
@@ -915,5 +977,11 @@ parameter out_data_width = quantified_pixel_width * pe_parallel_pixel_88 * pe_pa
     );
     
     assign fifo_data = fifo_rowi_channel_seti_dout[fifo_column_no][fifo_row_no];
+    
+    assign conv_fin = conv_out_add_end; //xxx
+    assign pool_fin = 1'b0; 
+    assign concate_fin = 1'b0;
+    assign shortcut_fin = 1'b0; 
+    assign upsample_fin = 1'b0;
 
 endmodule

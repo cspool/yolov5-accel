@@ -21,7 +21,7 @@
 
 
 module SA_Ctrl(
-reset,clk,en,
+reset,clk,
 
 mode,
 
@@ -49,7 +49,7 @@ quantify_add_end
 
     );
     input mode;
-    input reset,clk,en;
+    input reset,clk;
     input re_fm_en;
     input [31:0] nif_mult_k_mult_k;
     

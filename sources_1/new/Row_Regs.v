@@ -23,7 +23,7 @@
 module Row_Regs(
 reset,
 clk,
-en,
+//en,
 
 k,s,
 
@@ -62,7 +62,7 @@ shift_start
     parameter shift_regs_num = 70;
     parameter pixels_in_row = 32;
     
-    input reset,clk,en;
+    input reset,clk;
     
     input [3:0] k, s;
     
