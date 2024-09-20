@@ -1,10 +1,10 @@
 -- Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2018.3 (win64) Build 2405991 Thu Dec  6 23:38:27 MST 2018
--- Date        : Thu Sep 19 17:07:28 2024
+-- Date        : Fri Sep 20 17:33:43 2024
 -- Host        : yang running 64-bit major release  (build 9200)
 -- Command     : write_vhdl -force -mode funcsim
---               e:/vivado_pros/yolov5_accel_2/yolov5_accel_2.srcs/sources_1/ip/instr_rom/instr_rom_sim_netlist.vhdl
+--               E:/vivado_pros/yolov5_accel_2/yolov5_accel_2.srcs/sources_1/ip/instr_rom/instr_rom_sim_netlist.vhdl
 -- Design      : instr_rom
 -- Purpose     : This VHDL netlist is a functional simulation representation of the design and should not be modified or
 --               synthesized. This netlist cannot be used for SDF annotated simulation.
@@ -45,7 +45,7 @@ begin
       INITP_05 => X"0000000000000000000000000000000000000000000000000000000000000000",
       INITP_06 => X"0000000000000000000000000000000000000000000000000000000000000000",
       INITP_07 => X"0000000000000000000000000000000000000000000000000000000000000000",
-      INIT_00 => X"0000000000000000000000000000000000000000000000000000000011110001",
+      INIT_00 => X"00000000000000000000000000000000000000000000000000000000000F0001",
       INIT_01 => X"0000000000000000000000000000000000000000000000000000000000000000",
       INIT_02 => X"0000000000000000000000000000000000000000000000000000000000000000",
       INIT_03 => X"0000000000000000000000000000000000000000000000000000000000000000",

@@ -113,7 +113,7 @@ conv_out_add_end
             fifo_column_no <= 0;
             fifo_row_no <= 0;
         end
-        else begin
+        else if (loop_channel_counter_add_begin == 1'b1) begin
             valid_rowi_out_buf_adr <= loop_channel_counter_add_begin;
 //            rowi_out_buf_adr <=
 //            (((cur_oy_start - 1 + oy_counter - 1) << (of_in_2pow + ox_in_2pow - pixels_in_row_in_2pow))

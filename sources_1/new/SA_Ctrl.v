@@ -169,7 +169,7 @@ quantify_add_end
     
     always @(posedge clk) begin
         if (reset == 1'b1) begin
-            channel_out_reset <= 1;
+            channel_out_reset <= 0;
         end
         else if (loop_pixels_counter_add_end == 1'b1) begin
             channel_out_reset <= 1;

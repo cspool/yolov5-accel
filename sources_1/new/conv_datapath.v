@@ -486,7 +486,7 @@ parameter out_data_width = quantified_pixel_width * pe_parallel_pixel_88 * pe_pa
     reg [1:0] last_row3_slab_idx;
     
     always@(posedge clk) begin
-        if (reset == 1'b1) begin
+        if ((reset == 1'b1) || (conv_compute_reset == 1'b1)) begin
             state_conv_pixels_add_end <= 0;  
             state_valid_row1_adr <= 0; 
             state_valid_row2_adr <= 0;  
@@ -509,7 +509,7 @@ parameter out_data_width = quantified_pixel_width * pe_parallel_pixel_88 * pe_pa
             last_row2_slab_idx <= 0;
             last_row3_slab_idx <= 0;
         end
-        else begin
+        else if (state == 4'b0001) begin //conv op
             state_conv_pixels_add_end <= conv_pixels_add_end;
             state_valid_row1_adr <= valid_row1_adr;
             state_valid_row2_adr <= valid_row2_adr;
@@ -536,7 +536,7 @@ parameter out_data_width = quantified_pixel_width * pe_parallel_pixel_88 * pe_pa
     end    
     
     Row_Regs row_regs(
-        .reset(reset),
+        .reset((reset | conv_compute_reset)),
         .clk(clk),
 //        .en(conv_inital_fin),
         
@@ -576,7 +576,7 @@ parameter out_data_width = quantified_pixel_width * pe_parallel_pixel_88 * pe_pa
     );
     
     Shift_Regs shift_regs(
-        .reset(reset),
+        .reset((reset | conv_compute_reset)),
         .clk(clk),
 //        .en(conv_inital_fin),
         
@@ -598,7 +598,7 @@ parameter out_data_width = quantified_pixel_width * pe_parallel_pixel_88 * pe_pa
     
         
     conv_bram_handler cv_bram_handler(
-        .reset(reset),
+        .reset((reset | conv_compute_reset)),
         .clk(clk),
 //        .en(en),
                 
@@ -738,7 +738,7 @@ parameter out_data_width = quantified_pixel_width * pe_parallel_pixel_88 * pe_pa
     cv_weights_handler cv_weights_handler(
         .mode(mode),
         .clk(clk), 
-        .reset(reset), //need xxxx
+        .reset((reset | conv_compute_reset)), //need xxxx
         .re_fm_en(re_fm_en),
         .re_fm_end(re_fm_end),
         .weights_vector(weights_vector)
@@ -750,7 +750,7 @@ parameter out_data_width = quantified_pixel_width * pe_parallel_pixel_88 * pe_pa
         for (i = 1; i <= sa_column_num; i = i + 1) begin: delay_regs_column //poy, rows
             Delay_Regs_Pixels delay_regs_pixels(
                 .clk(clk), 
-                .reset((sa_reset | reset)), 
+                .reset((sa_reset | reset | conv_compute_reset)), 
                 .en(sa_en), 
                 .re_row_pixels(re_rowi_pixels[i-1]),
                 .delay_row_pixels(delay_rowi_pixels[i-1])
@@ -768,7 +768,7 @@ parameter out_data_width = quantified_pixel_width * pe_parallel_pixel_88 * pe_pa
         for (j = 1; j <= sa_row_num; j = j + 1) begin: delay_regs_row //output channel
             Delay_Regs_Weights delay_regs_weights(
                 .clk(clk), 
-                .reset((sa_reset | reset)), 
+                .reset((sa_reset | reset | conv_compute_reset)), 
                 .en(sa_en), 
                 .weights(weights_vector[(j-1)* row_num * 8 +: (row_num * 8)]),
                 .delay_weights(delay_weights_sets[j-1])
@@ -784,10 +784,10 @@ parameter out_data_width = quantified_pixel_width * pe_parallel_pixel_88 * pe_pa
             for (j = 1; j <= sa_row_num; j = j + 1) begin: sa_row //output channel
                 SA_fin sa(
                     .clk(clk), 
-                    .reset((sa_reset | reset)), 
+                    .reset((sa_reset | reset | conv_compute_reset)), 
                     .en(sa_en), 
                     .mode(mode), 
-                    .channel_out_reset(channel_out_reset),
+                    .channel_out_reset((channel_out_reset | reset | conv_compute_reset)),
                     .channel_out_en(channel_out_en), 
                     .out_sa_row_idx(out_sa_row_idx),
                     .row_in(sa_rowi_ins[i-1][j-1]), //weights or 16bit e_scale
@@ -803,7 +803,7 @@ parameter out_data_width = quantified_pixel_width * pe_parallel_pixel_88 * pe_pa
                 
                 Add_Bias bias_adder(
                     .clk(clk), 
-                    .reset((add_bias_reset | reset)), 
+                    .reset((add_bias_reset | reset | conv_compute_reset)), 
                     .en(add_bias_en), 
                     .mode(mode), 
                     .rowi_channel_seti(out_rowi_channel_seti[i-1][j-1]), // pox res per channel
@@ -814,9 +814,9 @@ parameter out_data_width = quantified_pixel_width * pe_parallel_pixel_88 * pe_pa
                 E_Scale E_scale(
                     //cycle 0 in
                     .clk(clk), 
-                    .e_tail_reset((e_tail_reset | reset)),
+                    .e_tail_reset((e_tail_reset | reset | conv_compute_reset)),
                     .quantify_en(quantify_en), 
-                    .quantify_reset((quantify_reset | reset)),
+                    .quantify_reset((quantify_reset | reset | conv_compute_reset)),
                     .mode(mode), 
                     .E_scale_tail_set(E_scale_tail_4_channel_sets[(j-1)*E_scale_tail_set_width +: E_scale_tail_set_width]),
                     .E_scale_rank_set(E_scale_rank_4_channel_sets[(j-1)*E_scale_rank_set_width +: E_scale_rank_set_width]),
@@ -864,7 +864,7 @@ parameter out_data_width = quantified_pixel_width * pe_parallel_pixel_88 * pe_pa
                 
                 fifo_rowi_channel_seti fifo_rowi_channel_seti (
                   .clk(clk),      // input wire clk
-                  .srst(reset),    // input wire srst
+                  .srst((reset | conv_compute_reset)),    // input wire srst
                   .din(quantified_rowi_channel_seti[i-1][j-1]),      // input wire [511 : 0] din
                   .wr_en(quantify_en),  // input wire wr_en
                   .rd_en(fifo_rowi_channel_seti_rd_en[i-1][j-1]),  // input wire rd_en
@@ -885,7 +885,7 @@ parameter out_data_width = quantified_pixel_width * pe_parallel_pixel_88 * pe_pa
     SA_Ctrl sa_ctrl(
         .mode(mode),
         .clk(clk), 
-        .reset(reset), 
+        .reset((reset | conv_compute_reset)), //next tile need clr
 //        .en(en), 
         .re_fm_en(re_fm_en),
         .nif_mult_k_mult_k(nif_mult_k_mult_k),
@@ -909,7 +909,7 @@ parameter out_data_width = quantified_pixel_width * pe_parallel_pixel_88 * pe_pa
     //bias regs
     Bias_Regs bias_regs(
         .clk(clk), 
-        .set(reset), // need xxxx
+        .set((reset | conv_compute_reset)), // next tile need clr
         .mode(mode),
         .bias_tile_val(bias_tile_val),
         .out_sa_row_idx(out_sa_row_idx),
@@ -931,7 +931,7 @@ parameter out_data_width = quantified_pixel_width * pe_parallel_pixel_88 * pe_pa
     
     E_Scale_Regs E_scale_regs (
         .clk(clk), 
-        .set(reset), //need xxxx
+        .set((reset | conv_compute_reset)), // next tile need clr
         .mode(mode),
         
         .E_scale_tail_tile_val(E_scale_tail_tile_val),
@@ -946,7 +946,7 @@ parameter out_data_width = quantified_pixel_width * pe_parallel_pixel_88 * pe_pa
         //cycle 0 in
         .mode(mode),
         .clk(clk), 
-        .reset(reset), 
+        .reset((reset | conv_compute_reset)), // next tile need clr
 //        .en(en), 
         .cur_ox_start(cur_ox_start), 
         .cur_oy_start(cur_oy_start), 

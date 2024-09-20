@@ -48,7 +48,7 @@ conv_start
     
     output reg [3:0] state;
     
-    output conv_start;
+    output reg conv_start;
     
     always@(posedge clk) begin
         if (reset == 1'b1) begin
@@ -143,7 +143,21 @@ conv_start
     || (shortcut_fin == 1'b1)
     || (upsample_fin == 1'b1)) == 1'b1) ? 1'b1 : 1'b0;
     
-    assign conv_start = (((state == 4'b1111) && (instr[3:0] == 4'b0001)) == 1'b1) ? 1'b1 : 1'b0;
+//    assign conv_start = (((state == 4'b1111) && (instr[3:0] == 4'b0001)) == 1'b1) ? 1'b1 : 1'b0;
     
+    always @(posedge clk) begin
+        if (reset == 1'b1) begin
+            conv_start <= 0;
+        end
+        else if (((state == 4'b1111) && (instr[3:0] == 4'b0001)) == 1'b1) begin
+            conv_start <= 1;
+        end
+        else if (conv_start == 1'b1) begin //xxx
+            conv_start <= 0;
+        end
+        else begin
+            conv_start <= conv_start;
+        end
+    end
     
 endmodule
