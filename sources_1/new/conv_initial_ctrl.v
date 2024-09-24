@@ -229,9 +229,9 @@ parameter scaled_rank_row_width = (quantified_pixel_width+1) * pe_parallel_weigh
             ix <= 256; 
             iy <= 256; // a tile computation
             ix_in_2pow <= 8;
-            nif <= 2; 
-            nif_in_2pow <= 1; 
-            nif_mult_k_mult_k <= 18; //nif*k*k
+            nif <= 1; 
+            nif_in_2pow <= 0; 
+            nif_mult_k_mult_k <= 9; //nif*k*k
             
             //mode 0
             mode <= 0; 

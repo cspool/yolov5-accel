@@ -41,7 +41,7 @@ module Mult_Array(
     
     input [vector_A_width-1 :0] vector_A;
     input [vector_B_width-1 :0] vector_B;
-    input [vector_P_width-1 :0] vector_P;
+    output [vector_P_width-1 :0] vector_P;
     
     genvar i;
     

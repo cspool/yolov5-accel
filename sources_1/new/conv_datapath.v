@@ -389,7 +389,7 @@ parameter out_data_width = quantified_pixel_width * pe_parallel_pixel_88 * pe_pa
       .douta(instr)  // output wire [15 : 0] douta
     );
     
-    conv_router_v2 cv_router(
+    conv_router_flat cv_router( //conv_router_v2
         .mode(mode),
         .of(of),
         .ox(ox), 
@@ -791,8 +791,7 @@ parameter out_data_width = quantified_pixel_width * pe_parallel_pixel_88 * pe_pa
                     .channel_out_en(channel_out_en), 
                     .out_sa_row_idx(out_sa_row_idx),
                     .row_in(sa_rowi_ins[i-1][j-1]), //weights or 16bit e_scale
-                    .column_in({{(sa_column_in_width-pixels_column_in_width){1'b0}},
-                    sa_columni_ins[i-1][j-1]}), //pixels or 24bit add_biases 
+                    .column_in(sa_columni_ins[i-1][j-1]), //pixels or 24bit add_biases 
                     .mult_array_mode(mult_array_mode),
                     .row0_out(sa_row0_outs[i-1][j-1]),
                     .out(out_rowi_channel_seti[i-1][j-1])

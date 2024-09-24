@@ -318,9 +318,9 @@ valid_slab1_adr_wr, valid_slab2_adr_wr, valid_slab3_adr_wr
     end
     
     //cycle 1
-    assign slab1_pixels_2_wr = buf1_data[15:0];
-    assign slab2_pixels_2_wr = buf2_data[15:0];
-    assign slab3_pixels_2_wr = buf3_data[15:0];
+    assign slab1_pixels_2_wr = buf1_data[pixels_in_row * 8 -1 -: 16];
+    assign slab2_pixels_2_wr = buf2_data[pixels_in_row * 8 -1 -: 16];
+    assign slab3_pixels_2_wr = buf3_data[pixels_in_row * 8 -1 -: 16];
     
     assign valid_slab1_adr_wr = valid_buf1_data;
     assign valid_slab2_adr_wr = valid_buf2_data;

@@ -53,7 +53,7 @@ conv_rows_add_end
     
     output conv_rows_add_end;
     
-    wire [15:0] iy_start;
+//    wire [15:0] iy_start;
     
 //    wire[15:0] s_mult_buffers_num;
     
