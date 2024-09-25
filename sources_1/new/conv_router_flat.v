@@ -70,8 +70,11 @@ valid_row2_adr,
 valid_row3_adr
     );
    parameter pixels_in_row = 32;
-   parameter pixels_in_row_mult_2_minus_1 = 63;
-   parameter pixels_in_row_mult_2_minus_2 = 62;
+   parameter pixels_in_row_mult_2 = pixels_in_row * 2;
+   parameter pixels_in_row_mult_2_minus_1 = pixels_in_row_mult_2 - 1;
+   parameter pixels_in_row_mult_2_minus_2 = pixels_in_row_mult_2 - 2;
+   parameter pixels_in_row_mult_2_minus_3 = pixels_in_row_mult_2 - 3;
+   parameter pixels_in_row_mult_2_minus_4 = pixels_in_row_mult_2 - 4;
    parameter pixels_in_row_in_2pow = 5;
    parameter buffers_num = 3;
    parameter pixels_in_row_minus_1 = pixels_in_row-1;
@@ -240,6 +243,8 @@ valid_row3_adr
    wire [15:0] p_plus_ix;
    
    wire[15:0] ix_minus_1;
+   
+   wire [15:0] ix_mask = (16'hffff) >> (16 - ix_in_2pow);
    
    wire [15:0] pox_minus_1; 
    wire [15:0] pox_minus_2;
@@ -579,9 +584,9 @@ valid_row3_adr
    assign pox_minus_2 = (tile_x_start + pixels_in_row_minus_1 > ox)? (ox - tile_x_start - 1):
                  pixels_in_row_minus_2;
    assign pox_minus_3 = (tile_x_start + pixels_in_row_minus_1 > ox)? (ox - tile_x_start - 2):
-                 pixels_in_row_minus_3;
-                 
-   assign pox_mult_2 = (pox << 1);
+                 pixels_in_row_minus_3;              
+   assign pox_mult_2 = (tile_x_start + pixels_in_row_minus_1 > ox)? ((ox - tile_x_start + 1) << 1):
+                 pixels_in_row_mult_2;
    
    // ix_start = (ox_start - 1) * s + 1;
    assign ix_start = (s == 4'd1)? tile_x_start:
@@ -593,9 +598,14 @@ valid_row3_adr
 //   assign next_ix_start = (s == 4'd1)? next_ox_start:
 //                     (s == 4'd2)? (next_ox_start << 1) - 1:
 //                     0;
-   assign next_ix_start = (s == 4'd1)? (((reset ==1'b1) || (loop_x_add_end == 1'b1))? 1 : tile_x_start + pixels_in_row):
-                     (s == 4'd2)? (((reset ==1'b1) || (loop_x_add_end == 1'b1))? 1 : (tile_x_start << 1) + pixels_in_row_mult_2_minus_1):
-                     0;
+   assign next_ix_start = 
+   (s == 4'd1)? (
+        ((reset ==1'b1) || (loop_x_add_end == 1'b1))? 1 : tile_x_start + pixels_in_row
+   ):
+   (s == 4'd2)? (
+        ((reset ==1'b1) || (loop_x_add_end == 1'b1))? 1 : (tile_x_start << 1) + pixels_in_row_mult_2_minus_1
+   ):
+   0;
    
    // ix_end = ix_start + (pox-1) * s + k-1; 
    //assign ix_start = (s == 4'd1)? tile_x_start:
@@ -609,17 +619,50 @@ valid_row3_adr
 //                   (s == 4'd2)? ix_end_s_1 + pox_minus_1:
 //                   0;
    
-   assign ix_end = (s == 4'd1)? (tile_x_start + k + pox_minus_2):
-                   (s == 4'd2)? (tile_x_start + k + pox_mult_2 - 3):
-                   0;
+//   assign ix_end = (s == 4'd1)? (tile_x_start + k + pox_minus_2):
+//                   (s == 4'd2)? ((tile_x_start << 1) + k + pox_mult_2 -4):
+//                   0;
+                   
+   //   assign ix_end = (s == 4'd1)? (tile_x_start + k + pox_minus_2):
+//                   (s == 4'd2)? ((tile_x_start << 1) + k + pox_mult_2 -4):
+//                   0;
+//   assign pox_minus_2 = (tile_x_start + pixels_in_row_minus_1 > ox)? (ox - tile_x_start - 1):
+//                 pixels_in_row_minus_2;
+//   assign pox_mult_2 = (tile_x_start + pixels_in_row_minus_1 > ox)? ((ox - tile_x_start + 1) << 1):
+//                 pixels_in_row_mult_2;
+   
+   assign ix_end = 
+   (s == 4'd1)? (
+         (tile_x_start + pixels_in_row_minus_1 > ox)? ( 
+                (k + ox - 1)
+         ):
+         (
+                (tile_x_start + k + pixels_in_row_minus_2)
+         )
+   ):
+   (s == 4'd2)? (
+         (tile_x_start + pixels_in_row_minus_1 > ox)? ( 
+                (k + (ox << 1) -2)     
+         ):
+         (
+                ((tile_x_start << 1) + k + pixels_in_row_mult_2 -4)                            
+         )  
+   ):
+   0;                
 
 //   assign ix_start = (s == 4'd1)? tile_x_start:
 //                     (s == 4'd2)? (tile_x_start << 1) - 1:
 //                     0; 
 //   assign left_pad = (ix_start <= {{12'b0}, p})? ({{12'b0}, p} - ix_start + 1):0;
-   assign left_pad = (ix_start <= {{12'b0}, p})?
-   ((s == 4'd1)? ({{12'b0}, p} - tile_x_start + 1):
-   (s == 4'd2)? ({{12'b0}, p} - (tile_x_start << 1) + 2):0):0;
+//   assign left_pad = 
+//   (s == 4'd1)? (
+//        (tile_x_start <= {{12'b0}, p})? ({{12'b0}, p} - tile_x_start + 1) :0
+//   ):
+//   (s == 4'd2)? (
+//        (((tile_x_start << 1) - 1) <= {{12'b0}, p})? ({{12'b0}, p} - (tile_x_start << 1) + 2) :0
+//   ):
+//   0;
+   assign left_pad = (tile_x_start == 1)? {{12'b0}, p} :0;
    
    //next left_pad
 //   assign next_ix_start = (s == 4'd1)? (((reset ==1'b1) || (loop_x_add_end == 1'b1))? 1 : tile_x_start + pixels_in_row):
@@ -627,39 +670,435 @@ valid_row3_adr
 //                     0;
 //   assign next_left_pad = (next_ix_start <= {{12'b0}, p})? ({{12'b0}, p} - next_ix_start + 1):0;
    
-   assign next_left_pad = 
-   (next_ix_start <= {{12'b0}, p})?
-   ((s == 4'd1)? (((reset ==1'b1) || (loop_x_add_end == 1'b1))? {{12'b0}, p} : ({{12'b0}, p} - tile_x_start - pixels_in_row_minus_1)):
-   (s == 4'd2)? (((reset ==1'b1) || (loop_x_add_end == 1'b1))? {{12'b0}, p} : ({{12'b0}, p} - (tile_x_start << 1) - pixels_in_row_mult_2_minus_2))  :0) :0;
+//   assign next_left_pad = 
+//   (
+//       (s == 4'd1)? (
+//           ((reset ==1'b1) || (loop_x_add_end == 1'b1))? (
+//                (1 <= {{12'b0}, p})? {{12'b0}, p} :0 
+//           ):
+//           (
+//                ((tile_x_start + pixels_in_row) <= {{12'b0}, p})? ({{12'b0}, p} - tile_x_start - pixels_in_row_minus_1):0
+//           )
+//       ):
+//       (s == 4'd2)? (
+//           ((reset ==1'b1) || (loop_x_add_end == 1'b1))? (
+//                (1 <= {{12'b0}, p})? ({{12'b0}, p}) :0 
+//           ):
+//           (
+//                ((tile_x_start << 1) + pixels_in_row_mult_2_minus_1 <= {{12'b0}, p})? ({{12'b0}, p} - (tile_x_start << 1) - pixels_in_row_mult_2_minus_2): 0
+//           )
+//       ):
+//       0
+//   );
+   
+   assign next_left_pad = ((reset ==1'b1) || (loop_x_add_end == 1'b1))? {{12'b0}, p}:0;
    
    assign p_plus_ix = {{12'b0}, p} + ix;
    
-   assign right_pad = (ix_end > p_plus_ix)? (ix_end - p_plus_ix): 0;
+//   assign ix_end = (s == 4'd1)? (tile_x_start + k + pox_minus_2):
+//                   (s == 4'd2)? ((tile_x_start << 1) + k + pox_mult_2 -4):
+//                   0;
+//   assign right_pad = (ix_end > p_plus_ix)? (ix_end - p_plus_ix): 0;
+//   assign pox_minus_2 = (tile_x_start + pixels_in_row_minus_1 > ox)? (ox - tile_x_start - 1):
+//                 pixels_in_row_minus_2;
+//   assign pox_mult_2 = (tile_x_start + pixels_in_row_minus_1 > ox)? ((ox - tile_x_start + 1) << 1):
+//                 pixels_in_row_mult_2;
+//   assign right_pad = (ix_end > p_plus_ix)? (ix_end - p_plus_ix): 0;
    
-   assign overlap = (ix_start <= p_plus_1)? 0: {{12'b0}, p};
+   assign right_pad = 
+   (s == 4'd1)? (
+         (tile_x_start + pixels_in_row_minus_1 > ox)? (   
+                ((k + ox - 1) > ({{12'b0}, p} + ix))? (k + ox - 1 - {{12'b0}, p} - ix): 0
+         ):
+         (
+                ((tile_x_start + k + pixels_in_row_minus_2) > ({{12'b0}, p} + ix))? (tile_x_start + k + pixels_in_row_minus_2 - {{12'b0}, p} - ix): 0
+         )
+   ):
+   (s == 4'd2)? (
+         (tile_x_start + pixels_in_row_minus_1 > ox)? ( 
+//ix_end = (k + (ox << 1) -2)
+                ((k + (ox << 1) -2) > ({{12'b0}, p} + ix))? ((k + (ox << 1) -2) - {{12'b0}, p} - ix): 0
+         ):
+         (
+//ix_end = ((tile_x_start << 1) + k + pixels_in_row_mult_2 -4)                        
+                (((tile_x_start << 1) + k + pixels_in_row_mult_2_minus_4) > ({{12'b0}, p} + ix))? (((tile_x_start << 1) + k + pixels_in_row_mult_2_minus_4) - {{12'b0}, p} - ix): 0
+         )  
+   ):
+   0;
+   
+   //assign ix_start = (s == 4'd1)? tile_x_start:
+//                     (s == 4'd2)? (tile_x_start << 1) - 1:
+//                     0;
+
+//    assign overlap = (ix_start <= p_plus_1)? 0: {{12'b0}, p};
+    // or assign overlap = (ix_start == 1)? 0: {{12'b0}, p};
+//   assign overlap = 
+//   (s == 4'd1)? (
+//        (tile_x_start <= p_plus_1)? 0: {{12'b0}, p}
+//   ):
+//   (s == 4'd2)? (
+//        (((tile_x_start << 1) - 1) <= p_plus_1)? 0: {{12'b0}, p}
+//   ):
+//   0;
+   assign overlap = (tile_x_start == 1)? 0: {{12'b0}, p};
    
    //next overlap
-   assign next_overlap = (next_ix_start <= p_plus_1)? 0: {{12'b0}, p};
+//   assign next_overlap = (next_ix_start <= p_plus_1)? 0: {{12'b0}, p};
+   // or assign next_overlap = (next_ix_start == 1)? 0: {{12'b0}, p};
+   //   assign next_ix_start = (s == 4'd1)? (((reset ==1'b1) || (loop_x_add_end == 1'b1))? 1 : tile_x_start + pixels_in_row):
+//                     (s == 4'd2)? (((reset ==1'b1) || (loop_x_add_end == 1'b1))? 1 : (tile_x_start << 1) + pixels_in_row_mult_2_minus_1):
+//                     0;
+//   assign next_overlap = 
+//   (s == 4'd1)? (
+//        ((reset ==1'b1) || (loop_x_add_end == 1'b1))? (
+//            (1 == 1)? 0: {{12'b0}, p}
+//        ): 
+//        (
+//            ((tile_x_start + pixels_in_row) == 1)? 0: {{12'b0}, p}
+            
+//        )
+//   ):
+//   (s == 4'd2)? (
+//        ((reset ==1'b1) || (loop_x_add_end == 1'b1))? (
+//            (1 == 1)? 0: {{12'b0}, p}
+//        ): 
+//        (
+//            (((tile_x_start << 1) + pixels_in_row_mult_2_minus_1) == 1)? 0: {{12'b0}, p}
+//        )
+//   ):
+//   0;
+    assign next_overlap = 
+    ((reset ==1'b1) || (loop_x_add_end == 1'b1))? 0: {{12'b0}, p};
    
-   assign row_start_fix = ix_start + left_pad - p_plus_1 + overlap;
+//   assign row_start_fix = ix_start + left_pad - p_plus_1 + overlap;
+//assign overlap = 
+//   (s == 4'd1)? (
+//        (tile_x_start <= p_plus_1)? 0: {{12'b0}, p}
+//   ):
+//   (s == 4'd2)? (
+//        (((tile_x_start << 1) - 1) <= p_plus_1)? 0: {{12'b0}, p}
+//   ):
+//   0;
+// or assign overlap = (tile_x_start == 1)? 0: {{12'b0}, p};
+// or assign overlap = 
+//   (s == 4'd1)? (
+//        (tile_x_start <= {{12'b0}, p})? 0: {{12'b0}, p}
+//   ):
+//   (s == 4'd2)? (
+//        (((tile_x_start << 1) - 1) <= {{12'b0}, p})? 0: {{12'b0}, p}
+//   ):
+//   0;
+
+//assign left_pad = 
+//   (s == 4'd1)? (
+//        (tile_x_start <= {{12'b0}, p})? ({{12'b0}, p} - tile_x_start + 1) :0
+//   ):
+//   (s == 4'd2)? (
+//        (((tile_x_start << 1) - 1) <= {{12'b0}, p})? ({{12'b0}, p} - (tile_x_start << 1) + 2) :0
+//   ):
+//   0;
+//   assign ix_start = (s == 4'd1)? tile_x_start:
+//                     (s == 4'd2)? (tile_x_start << 1) - 1:
+//                     0;
+//   assign row_start_fix = 
+//   //ix_start + left_pad - p_plus_1 + overlap;
+//   (s == 4'd1)? (
+//        (tile_x_start <= {{12'b0}, p})? (
+//            tile_x_start + ({{12'b0}, p} - tile_x_start + 1) + 0 - p_plus_1
+//        ): 
+//        (
+//            tile_x_start + 0 + {{12'b0}, p} - p_plus_1
+//        )
+//   ):
+//   (s == 4'd2)? (
+//        (((tile_x_start << 1) - 1) <= {{12'b0}, p})? (
+//            (tile_x_start << 1) - 1 + ({{12'b0}, p} - (tile_x_start << 1) + 2) + 0 - p_plus_1
+//        ): 
+//        (
+//            (tile_x_start << 1) - 1 + 0 + {{12'b0}, p} - p_plus_1
+//        )
+//   ):
+//   0;
+//   assign row_start_fix = 
+//   (s == 4'd1)? (
+//        (tile_x_start <= {{12'b0}, p})? (
+//            0
+//        ): 
+//        (
+//            tile_x_start - 1
+//        )
+//   ):
+//   (s == 4'd2)? (
+//        (((tile_x_start << 1) - 1) <= {{12'b0}, p})? (
+//             0
+//        ): 
+//        (
+//            (tile_x_start << 1) - 2
+//        )
+//   ):
+//   0;
    
-   assign row_end = ix_end - right_pad - p_plus_1;
+//    assign row_start_fix = ix_start + left_pad - p_plus_1 + overlap;
+   // assign overlap = (tile_x_start == 1)? 0: {{12'b0}, p};
+   // assign left_pad = (tile_x_start == 1)? {{12'b0}, p} :0;
+   //assign ix_start = (s == 4'd1)? tile_x_start:
+//                     (s == 4'd2)? (tile_x_start << 1) - 1:
+//                     0;
+   assign row_start_fix = 
+   (s == 4'd1)? tile_x_start - 1:
+   (s == 4'd2)? (tile_x_start << 1) - 2:
+   0;
+    
+    
+
+//   assign row_end = ix_end - right_pad - p_plus_1;
+//   assign right_pad = (ix_end > p_plus_ix)? (ix_end - p_plus_ix): 0;
+//   assign ix_end = 
+//   (s == 4'd1)? (
+//         (tile_x_start + pixels_in_row_minus_1 > ox)? ( 
+//                (k + ox - 1)
+//         ):
+//         (
+//                (tile_x_start + k + pixels_in_row_minus_2)
+//         )
+//   ):
+//   (s == 4'd2)? (
+//         (tile_x_start + pixels_in_row_minus_1 > ox)? ( 
+//                (k + (ox << 1) -2)     
+//         ):
+//         (
+//                ((tile_x_start << 1) + k + pixels_in_row_mult_2 -4)                            
+//         )  
+//   ):
+//   0;   
+//   assign row_end =
+//   (ix_end > p_plus_ix)? (
+//        ix - 1
+//   ): 
+//   ix_end - p_plus_1;
+   
+   assign row_end =
+   (s == 4'd1)? (
+         (tile_x_start + pixels_in_row_minus_1 > ox)? ( 
+                ((k + ox - 1) > p_plus_ix)? (
+                    ix - 1
+                ): 
+                (k + ox - 1) - p_plus_1
+         ):
+         (
+                ((tile_x_start + k + pixels_in_row_minus_2) > p_plus_ix)? (
+                    ix - 1
+                ): 
+                (tile_x_start + k + pixels_in_row_minus_2) - p_plus_1
+         )
+   ):
+   (s == 4'd2)? (
+         (tile_x_start + pixels_in_row_minus_1 > ox)? ( 
+                ((k + (ox << 1) -2) > p_plus_ix)? (
+                ix - 1
+                ): 
+                (k + (ox << 1) -2) - p_plus_1  
+         ):
+         (
+                (((tile_x_start << 1) + k + pixels_in_row_mult_2 -4) > p_plus_ix)? (
+                ix - 1
+                ): 
+                ((tile_x_start << 1) + k + pixels_in_row_mult_2 -4) - p_plus_1                           
+         )  
+   ):
+   0;  
    
    assign ix_minus_1 = ix - 1;
                    
-   assign row_end_low = (row_end+1) & 16'h001f;
-   assign row_end_high = (row_end+1) & 16'hffe0;
+//   assign row_end_low = (row_end+1) & 16'h001f;
+    
+   assign row_end_low =
+   (s == 4'd1)? (
+         (tile_x_start + pixels_in_row_minus_1 > ox)? ( 
+                ((k + ox - 1) > p_plus_ix)? (
+                    ix & 16'h001f
+                ): 
+                ((k + ox) - p_plus_1) & 16'h001f
+         ):
+         (
+                ((tile_x_start + k + pixels_in_row_minus_2) > p_plus_ix)? (
+                    ix & 16'h001f
+                ): 
+                ((tile_x_start + k + pixels_in_row_minus_1) - p_plus_1) & 16'h001f
+         )
+   ):
+   (s == 4'd2)? (
+         (tile_x_start + pixels_in_row_minus_1 > ox)? ( 
+                ((k + (ox << 1) -2) > p_plus_ix)? (
+                ix & 16'h001f
+                ): 
+                ((k + (ox << 1) -1) - p_plus_1) & 16'h001f
+         ):
+         (
+                (((tile_x_start << 1) + k + pixels_in_row_mult_2 -4) > p_plus_ix)? (
+                ix & 16'h001f
+                ): 
+                (((tile_x_start << 1) + k + pixels_in_row_mult_2 -3) - p_plus_1) & 16'h001f                           
+         )  
+   ):
+   0;  
    
-   assign row_end_fix0 = (row_end_low == 16'h0)? (row_end - 16'h0001):
-                        (row_end_high + 16'h001f);
+//   assign row_end_high = (row_end+1) & 16'hffe0;
+    assign row_end_high =
+   (s == 4'd1)? (
+         (tile_x_start + pixels_in_row_minus_1 > ox)? ( 
+                ((k + ox - 1) > p_plus_ix)? (
+                    ix & 16'hffe0
+                ): 
+                ((k + ox) - p_plus_1) & 16'hffe0
+         ):
+         (
+                ((tile_x_start + k + pixels_in_row_minus_2) > p_plus_ix)? (
+                    ix & 16'hffe0
+                ): 
+                ((tile_x_start + k + pixels_in_row_minus_1) - p_plus_1) & 16'hffe0
+         )
+   ):
+   (s == 4'd2)? (
+         (tile_x_start + pixels_in_row_minus_1 > ox)? ( 
+                ((k + (ox << 1) -2) > p_plus_ix)? (
+                ix & 16'hffe0
+                ): 
+                ((k + (ox << 1) -1) - p_plus_1) & 16'hffe0
+         ):
+         (
+                (((tile_x_start << 1) + k + pixels_in_row_mult_2 -4) > p_plus_ix)? (
+                ix & 16'hffe0
+                ): 
+                (((tile_x_start << 1) + k + pixels_in_row_mult_2 -3) - p_plus_1) & 16'hffe0                           
+         )  
+   ):
+   0;
+   
+//   assign row_end_fix0 = (row_end_low == 16'h0)? 
+                        //(row_end - 16'h0001):
+//                        (row_end_high + 16'h001f);
                         
-   assign row_end_fix = (row_end_fix0 > ix_minus_1)? ix_minus_1:
-                             row_end_fix0;
-  
-   assign reg_from_initial = left_pad + {{12'b0}, overlap} + 1;
+   assign row_end_fix0 =
+   (s == 4'd1)? (
+         (tile_x_start + pixels_in_row_minus_1 > ox)? ( 
+                ((k + ox - 1) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? 
+                    (ix - 1 - 16'h0001):
+                    ((ix & 16'hffe0) + 16'h001f)
+                ): 
+                
+                    ((((k + ox) - p_plus_1) & 16'h001f) == 16'h0)? 
+                    ((k + ox - 1) - p_plus_1 - 16'h0001):
+                    ((((k + ox) - p_plus_1) & 16'hffe0) + 16'h001f)
+         ):
+         (
+                ((tile_x_start + k + pixels_in_row_minus_2) > p_plus_ix)? (
+                    
+                    ((ix & 16'h001f) == 16'h0)? 
+                    (ix - 1 - 16'h0001):
+                    ((ix & 16'hffe0) + 16'h001f)
+                ): 
+                
+                    ((((tile_x_start + k + pixels_in_row_minus_1) - p_plus_1) & 16'h001f) == 16'h0)? 
+                    ((tile_x_start + k + pixels_in_row_minus_2) - p_plus_1 - 16'h0001):
+                    ((((tile_x_start + k + pixels_in_row_minus_1) - p_plus_1) & 16'hffe0) + 16'h001f)
+         )
+   ):
+   (s == 4'd2)? (
+         (tile_x_start + pixels_in_row_minus_1 > ox)? ( 
+                ((k + (ox << 1) -2) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? 
+                    (ix - 1 - 16'h0001):
+                    ((ix & 16'hffe0) + 16'h001f)
+                ): 
+                
+                    ((((k + (ox << 1) -1) - p_plus_1) & 16'h001f) == 16'h0)? 
+                    ((k + (ox << 1) -2) - p_plus_1 - 16'h0001):
+                    ((((k + (ox << 1) -1) - p_plus_1) & 16'hffe0) + 16'h001f)
+         ):
+         (
+                (((tile_x_start << 1) + k + pixels_in_row_mult_2 -4) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? 
+                    (ix - 1 - 16'h0001):
+                    ((ix & 16'hffe0) + 16'h001f)
+                ): 
+                    
+                    (((((tile_x_start << 1) + k + pixels_in_row_mult_2 -3) - p_plus_1) & 16'h001f) == 16'h0)? 
+                    (((tile_x_start << 1) + k + pixels_in_row_mult_2 -4) - p_plus_1 - 16'h0001):
+                    (((((tile_x_start << 1) + k + pixels_in_row_mult_2 -3) - p_plus_1) & 16'hffe0) + 16'h001f)                         
+         )  
+   ):
+   0;  
+                        
+                        
+//   assign row_end_fix = (row_end_fix0 > ix_minus_1)? ix_minus_1:
+//                             row_end_fix0;
+   
+//   assign row_end_fix = row_end_fix0 & ix_mask;                          
+                
+assign row_end_fix =
+   (s == 4'd1)? (
+         (tile_x_start + pixels_in_row_minus_1 > ox)? ( 
+                ((k + ox - 1) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? 
+                    (ix - 1 - 16'h0001) & ix_mask:
+                    ((ix & 16'hffe0) + 16'h001f) & ix_mask
+                ): 
+                
+                    ((((k + ox) - p_plus_1) & 16'h001f) == 16'h0)? 
+                    ((k + ox - 1) - p_plus_1 - 16'h0001) & ix_mask:
+                    ((((k + ox) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask
+         ):
+         (
+                ((tile_x_start + k + pixels_in_row_minus_2) > p_plus_ix)? (
+                    
+                    ((ix & 16'h001f) == 16'h0)? 
+                    (ix - 1 - 16'h0001) & ix_mask:
+                    ((ix & 16'hffe0) + 16'h001f) & ix_mask
+                ): 
+                
+                    ((((tile_x_start + k + pixels_in_row_minus_1) - p_plus_1) & 16'h001f) == 16'h0)? 
+                    ((tile_x_start + k + pixels_in_row_minus_2) - p_plus_1 - 16'h0001) & ix_mask:
+                    ((((tile_x_start + k + pixels_in_row_minus_1) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask
+         )
+   ):
+   (s == 4'd2)? (
+         (tile_x_start + pixels_in_row_minus_1 > ox)? ( 
+                ((k + (ox << 1) -2) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? 
+                    (ix - 1 - 16'h0001) & ix_mask:
+                    ((ix & 16'hffe0) + 16'h001f) & ix_mask
+                ): 
+                
+                    ((((k + (ox << 1) -1) - p_plus_1) & 16'h001f) == 16'h0)? 
+                    ((k + (ox << 1) -2) - p_plus_1 - 16'h0001) & ix_mask:
+                    ((((k + (ox << 1) -1) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask
+         ):
+         (
+                (((tile_x_start << 1) + k + pixels_in_row_mult_2 -4) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? 
+                    (ix - 1 - 16'h0001) & ix_mask:
+                    ((ix & 16'hffe0) + 16'h001f) & ix_mask
+                ): 
+                    
+                    (((((tile_x_start << 1) + k + pixels_in_row_mult_2 -3) - p_plus_1) & 16'h001f) == 16'h0)? 
+                    (((tile_x_start << 1) + k + pixels_in_row_mult_2 -4) - p_plus_1 - 16'h0001) & ix_mask:
+                    (((((tile_x_start << 1) + k + pixels_in_row_mult_2 -3) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask                         
+         )  
+   ):
+   0;            
+                             
+//   assign overlap = (tile_x_start == 1)? 0: {{12'b0}, p};                          
+    //assign left_pad = (tile_x_start == 1)? {{12'b0}, p} :0;
+//   assign reg_from_initial = left_pad + {{12'b0}, overlap} + 1;
+   assign reg_from_initial = p_plus_1;
    
    //next reg_from_initial
-   assign next_reg_from_initial = next_left_pad + {{12'b0}, next_overlap} + 1;                          
+//assign next_overlap = ((reset ==1'b1) || (loop_x_add_end == 1'b1))? 0: {{12'b0}, p};
+//assign next_left_pad = ((reset ==1'b1) || (loop_x_add_end == 1'b1))? {{12'b0}, p}:0;
+//   assign next_reg_from_initial = next_left_pad + {{12'b0}, next_overlap} + 1;    
+   assign next_reg_from_initial = p_plus_1;                       
    
    assign valid_adr = loop_adr1_add_begin;
    
@@ -682,12 +1121,14 @@ valid_row3_adr
     always@(posedge clk) begin
         if (reset == 1'b1) begin
             adr1 <= 0;    
-            reg_from <= next_reg_from_initial;
+//            reg_from <= next_reg_from_initial;
+            reg_from <= p_plus_1;
         end
         else if (loop_adr1_add_begin == 1'b1) begin
             if (loop_adr1_add_end == 1'b1) begin// the last adr1 or adr2
-                adr1 <= 0;    
-                reg_from <= next_reg_from_initial;
+                adr1 <= 0;   
+//            reg_from <= next_reg_from_initial; 
+                reg_from <= p_plus_1;
             end
             else begin
                 adr1 <= adr1 + pixels_in_row;
@@ -754,20 +1195,55 @@ valid_row3_adr
 
     assign stall_in_row = ((stall_in_row_counter > 0)? 1 : 0) || (ifx_stall == 1'b1);
                            
-    assign row_start_idx = adr1 + row_start_fix;                       
+//    assign row_start_fix = 
+//   (s == 4'd1)? tile_x_start - 1:
+//   (s == 4'd2)? (tile_x_start << 1) - 2:
+//   0;
                            
-    assign row_end_idx = row_start_idx + pixels_in_row - 1;
+//    assign row_start_idx = adr1 + row_start_fix;    
+    assign row_start_idx =    
+    (s == 4'd1)? adr1 + tile_x_start - 1:
+    (s == 4'd2)? adr1 + (tile_x_start << 1) - 2:
+    0;                   
+                           
+//    assign row_end_idx = row_start_idx + pixels_in_row - 1;
+    assign row_end_idx =
+    (s == 4'd1)? adr1 + tile_x_start + pixels_in_row_minus_2:
+    (s == 4'd2)? adr1 + (tile_x_start << 1) + pixels_in_row_minus_3:
+    0;
     
-    assign west_pad = (row_start_idx == row_start_fix)? left_pad: 0;
+//    assign west_pad = (row_start_idx == row_start_fix)? left_pad: 0;
+    assign west_pad = (adr1 == 0)? left_pad: 0;
     
-    assign slab_num = (row_start_idx == row_start_fix)? overlap: 0;
+//    assign slab_num = (row_start_idx == row_start_fix)? overlap: 0;
+    assign slab_num = (adr1 == 0)? overlap: 0;
     
     assign east_pad = (loop_adr1_add_end == 1'b1) ? right_pad:0;
                            
     assign reg_start_idx = reg_from;
 
-    assign reg_end_idx = reg_to + east_pad;
-    
+//    assign reg_to = (row_start_idx + pixels_in_row_minus_1 > row_end)?
+//                    (reg_from + row_end - row_start_idx):
+//                    (reg_from + pixels_in_row_minus_1);       
+//    assign reg_end_idx = reg_to + east_pad;
+    assign reg_end_idx =
+    (row_start_idx + pixels_in_row_minus_1 > row_end)? (
+        (loop_adr1_add_end == 1'b1) ? (
+            reg_from + row_end - row_start_idx + right_pad
+        ):
+        (
+            reg_from + row_end - row_start_idx 
+        )
+    ):
+    (
+        (loop_adr1_add_end == 1'b1) ? (
+            reg_from + pixels_in_row_minus_1 + right_pad
+        ):
+        (
+            reg_from + pixels_in_row_minus_1 
+        )
+    );
+
     assign conv_pixels_add_end = (loop_adr1_add_end == 1'b1);
     
     assign valid_row1_adr = (poy < 1)? 0 : valid_adr;
@@ -776,25 +1252,51 @@ valid_row3_adr
     
     //address translation
     
-    assign row1_bias0 = idx1_in_k + 1 - {{12'b0},p};
-    assign row2_bias0 = idx2_in_k + 1 + {{12'b0},s} - {{12'b0},p};
-    assign row3_bias0 = idx3_in_k + 1 + {{11'b0}, s, {1'b0}} - {{12'b0},p};
-    
+//    assign row1_bias0 = idx1_in_k + 1 - {{12'b0},p};
+//    assign row2_bias0 = idx2_in_k + 1 + {{12'b0},s} - {{12'b0},p};
+//    assign row3_bias0 = idx3_in_k + 1 + {{11'b0}, s, {1'b0}} - {{12'b0},p};
+    assign row1_bias0 = ky1 + 1 - {{12'b0},p};
+    assign row2_bias0 = ky2 + 1 + {{12'b0},s} - {{12'b0},p};
+    assign row3_bias0 = ky3 + 1 + {{11'b0}, s, {1'b0}} - {{12'b0},p};
     
     assign row1_base_in_3s = ((row1_bias0[15] == 1'b1) || (row1_bias0 == 0))? (row_base_in_3s - 1) : row_base_in_3s;
     assign row2_base_in_3s = ((row2_bias0[15] == 1'b1) || (row2_bias0 == 0))? (row_base_in_3s - 1) : row_base_in_3s;
     assign row3_base_in_3s = ((row3_bias0[15] == 1'b1) || (row3_bias0 == 0))? (row_base_in_3s - 1) : row_base_in_3s;
+
+//    assign row1_base_in_3 = (s == 4'd1)? row1_base_in_3s:
+//                          (s == 4'd2)? (row1_base_in_3s << 1):
+//                          0;                    
+//    assign row2_base_in_3 = (s == 4'd1)? row2_base_in_3s:
+//                          (s == 4'd2)? (row2_base_in_3s << 1):
+//                          0;                    
+//    assign row3_base_in_3 = (s == 4'd1)? row3_base_in_3s:
+//                          (s == 4'd2)? (row3_base_in_3s << 1):
+//                          0;            
     
-    
-    assign row1_base_in_3 = (s == 4'd1)? row1_base_in_3s:
-                          (s == 4'd2)? (row1_base_in_3s << 1):
-                          0;                    
-    assign row2_base_in_3 = (s == 4'd1)? row2_base_in_3s:
-                          (s == 4'd2)? (row2_base_in_3s << 1):
-                          0;                    
-    assign row3_base_in_3 = (s == 4'd1)? row3_base_in_3s:
-                          (s == 4'd2)? (row3_base_in_3s << 1):
-                          0;            
+    assign row1_base_in_3 = 
+    (s == 4'd1)? (
+        ((row1_bias0[15] == 1'b1) || (row1_bias0 == 0))? (row_base_in_3s - 1) : row_base_in_3s
+    ):
+    (s == 4'd2)? (
+        ((row1_bias0[15] == 1'b1) || (row1_bias0 == 0))? ((row_base_in_3s - 1) << 1) : (row_base_in_3s << 1)
+    ):
+    0;                    
+    assign row2_base_in_3 =
+    (s == 4'd1)? (
+        ((row2_bias0[15] == 1'b1) || (row2_bias0 == 0))? (row_base_in_3s - 1) : row_base_in_3s
+    ):
+    (s == 4'd2)? (
+        ((row2_bias0[15] == 1'b1) || (row2_bias0 == 0))? ((row_base_in_3s - 1) << 1) : (row_base_in_3s << 1)
+    ):
+    0;                    
+    assign row3_base_in_3 = 
+    (s == 4'd1)? (
+        ((row3_bias0[15] == 1'b1) || (row3_bias0 == 0))? (row_base_in_3s - 1) : row_base_in_3s
+    ):
+    (s == 4'd2)? (
+        ((row3_bias0[15] == 1'b1) || (row3_bias0 == 0))? ((row_base_in_3s - 1) << 1) : (row_base_in_3s << 1)
+    ):
+    0;  
 
     assign s_mult_3 = (s << 1) + s;
     
@@ -815,36 +1317,168 @@ valid_row3_adr
     assign leq6_3 = (row3_bias <= 6)? 1 : 0;
     assign leq9_3 = (row3_bias <= 9)? 1 : 0;
     
-    assign row1_buf_idx_s1 = (leq6_1 == 1'b1)? 
-                             ((leq3_1 == 1'b1)? row1_bias: (row1_bias - 3)) :
-                             ((leq9_1 == 1'b1)? (row1_bias - 6): (row1_bias - 9));
+//    assign row1_buf_idx_s1 = (leq6_1 == 1'b1)? 
+//                             ((leq3_1 == 1'b1)? row1_bias: (row1_bias - 3)) :
+//                             ((leq9_1 == 1'b1)? (row1_bias - 6): (row1_bias - 9));
     
-    assign row1_offset_s1 = (leq6_1 == 1'b1)? 
-                            ((leq3_1 == 1'b1)? 0: 1) :
-                            ((leq9_1 == 1'b1)? 2: 3);
+//    assign row1_offset_s1 = (leq6_1 == 1'b1)? 
+//                            ((leq3_1 == 1'b1)? 0: 1) :
+//                            ((leq9_1 == 1'b1)? 2: 3);
                           
-    assign row2_buf_idx_s1 = (leq6_2 == 1'b1)? 
-                             ((leq3_2 == 1'b1)? row2_bias: (row2_bias - 3)) :
-                             ((leq9_2 == 1'b1)? (row2_bias - 6): (row2_bias - 9));
+//    assign row2_buf_idx_s1 = (leq6_2 == 1'b1)? 
+//                             ((leq3_2 == 1'b1)? row2_bias: (row2_bias - 3)) :
+//                             ((leq9_2 == 1'b1)? (row2_bias - 6): (row2_bias - 9));
     
-    assign row2_offset_s1 = (leq6_2 == 1'b1)? 
-                            ((leq3_2 == 1'b1)? 0: 1) :
-                            ((leq9_2 == 1'b1)? 2: 3);
+//    assign row2_offset_s1 = (leq6_2 == 1'b1)? 
+//                            ((leq3_2 == 1'b1)? 0: 1) :
+//                            ((leq9_2 == 1'b1)? 2: 3);
                           
-    assign row3_buf_idx_s1 = (leq6_3 == 1'b1)? 
-                             ((leq3_3 == 1'b1)? row3_bias: (row3_bias - 3)) :
-                             ((leq9_3 == 1'b1)? (row3_bias - 6): (row3_bias - 9));
+//    assign row3_buf_idx_s1 = (leq6_3 == 1'b1)? 
+//                             ((leq3_3 == 1'b1)? row3_bias: (row3_bias - 3)) :
+//                             ((leq9_3 == 1'b1)? (row3_bias - 6): (row3_bias - 9));
     
-    assign row3_offset_s1 = (leq6_3 == 1'b1)? 
-                            ((leq3_3 == 1'b1)? 0: 1) :
-                            ((leq9_3 == 1'b1)? 2: 3);
- 
+//    assign row3_offset_s1 = (leq6_3 == 1'b1)? 
+//                            ((leq3_3 == 1'b1)? 0: 1) :
+//                            ((leq9_3 == 1'b1)? 2: 3);
+    
+//    assign row1_bias = ((row1_bias0[15] == 1'b1) || (row1_bias0 == 0))? (row1_bias0 + {12'b0, {s_mult_3}}) : row1_bias0;
+//    assign row2_bias = ((row2_bias0[15] == 1'b1) || (row2_bias0 == 0))? (row2_bias0 + {12'b0, {s_mult_3}}) : row2_bias0;
+//    assign row3_bias = ((row3_bias0[15] == 1'b1) || (row3_bias0 == 0))? (row3_bias0 + {12'b0, {s_mult_3}}) : row3_bias0;
+    
+    assign row1_buf_idx_s1 =
+    ((row1_bias0[15] == 1'b1) || (row1_bias0 == 0))? (
+        ((row1_bias0 + {12'b0, {s_mult_3}}) <= 6)? 
+        (((row1_bias0 + {12'b0, {s_mult_3}}) <= 3)? (row1_bias0 + {12'b0, {s_mult_3}}): ((row1_bias0 + {12'b0, {s_mult_3}}) - 3)) :
+        (((row1_bias0 + {12'b0, {s_mult_3}}) <= 9)? ((row1_bias0 + {12'b0, {s_mult_3}}) - 6): ((row1_bias0 + {12'b0, {s_mult_3}}) - 9))
+    ): 
+    (
+        (row1_bias0 <= 6)? 
+        ((row1_bias0 <= 3)? row1_bias0: (row1_bias0 - 3)) :
+        ((row1_bias0 <= 9)? (row1_bias0 - 6): (row1_bias0 - 9))
+    );
+    
+    assign row1_offset_s1 = 
+    ((row1_bias0[15] == 1'b1) || (row1_bias0 == 0))? (
+        ((row1_bias0 + {12'b0, {s_mult_3}}) <= 6)? 
+        (((row1_bias0 + {12'b0, {s_mult_3}}) <= 3)? 0: 1) :
+        (((row1_bias0 + {12'b0, {s_mult_3}}) <= 9)? 2: 3)
+    ): 
+    (
+        (row1_bias0 <= 6)? 
+        ((row1_bias0 <= 3)? 0: 1) :
+        ((row1_bias0 <= 9)? 2: 3)
+    );
+                    
+    assign row2_buf_idx_s1 =
+    ((row2_bias0[15] == 1'b1) || (row2_bias0 == 0))? (
+        ((row2_bias0 + {12'b0, {s_mult_3}}) <= 6)? 
+        (((row2_bias0 + {12'b0, {s_mult_3}}) <= 3)? (row2_bias0 + {12'b0, {s_mult_3}}): ((row2_bias0 + {12'b0, {s_mult_3}}) - 3)) :
+        (((row2_bias0 + {12'b0, {s_mult_3}}) <= 9)? ((row2_bias0 + {12'b0, {s_mult_3}}) - 6): ((row2_bias0 + {12'b0, {s_mult_3}}) - 9))
+    ): 
+    ( 
+        (row2_bias0 <= 6)? 
+        ((row2_bias0 <= 3)? row2_bias0: (row2_bias0 - 3)) :
+        ((row2_bias0 <= 9)? (row2_bias0 - 6): (row2_bias0 - 9))
+    ); 
+    
+    assign row2_offset_s1 =
+    ((row2_bias0[15] == 1'b1) || (row2_bias0 == 0))? (
+        ((row2_bias0 + {12'b0, {s_mult_3}}) <= 6)? 
+        (((row2_bias0 + {12'b0, {s_mult_3}}) <= 3)? 0: 1) :
+        (((row2_bias0 + {12'b0, {s_mult_3}}) <= 9)? 2: 3)
+    ): 
+    (
+        (row2_bias0 <= 6)? 
+        ((row2_bias0 <= 3)? 0: 1) :
+        ((row2_bias0 <= 9)? 2: 3)
+    );     
+                     
+    assign row3_buf_idx_s1 = 
+    ((row3_bias0[15] == 1'b1) || (row3_bias0 == 0))? (
+        ((row3_bias0 + {12'b0, {s_mult_3}}) <= 6)? 
+        (((row3_bias0 + {12'b0, {s_mult_3}}) <= 3)? (row3_bias0 + {12'b0, {s_mult_3}}): ((row3_bias0 + {12'b0, {s_mult_3}}) - 3)) :
+        (((row3_bias0 + {12'b0, {s_mult_3}}) <= 9)? ((row3_bias0 + {12'b0, {s_mult_3}}) - 6): ((row3_bias0 + {12'b0, {s_mult_3}}) - 9))
+    ): 
+    (
+        (row3_bias0 <= 6)? 
+        ((row3_bias0 <= 3)? row3_bias0: (row3_bias0 - 3)) :
+        ((row3_bias0 <= 9)? (row3_bias0 - 6): (row3_bias0 - 9))
+    );
+    assign row3_offset_s1 = 
+    ((row3_bias0[15] == 1'b1) || (row3_bias0 == 0))? (
+        ((row3_bias0 + {12'b0, {s_mult_3}}) <= 6)? 
+        (((row3_bias0 + {12'b0, {s_mult_3}}) <= 3)? 0: 1) :
+        (((row3_bias0 + {12'b0, {s_mult_3}}) <= 9)? 2: 3)
+    ): 
+    (
+        (row3_bias0 <= 6)? 
+        ((row3_bias0 <= 3)? 0: 1) :
+        ((row3_bias0 <= 9)? 2: 3)
+    );
                                                         
-    assign row1_buf_idx = (row1_idx == 16'hffff)? 0 :
-                          (row1_buf_idx_s1);                      
-                          
-    assign row1_buf_adr_in_row = (row1_idx == 16'hffff)? 16'hffff:
-                                 (row1_base_in_3 + row1_offset_s1);   
+    assign row1_buf_idx = 
+    (row1_idx == 16'hffff)? 0 :
+    (                     
+        ((row1_bias0[15] == 1'b1) || (row1_bias0 == 0))? (
+            ((row1_bias0 + {12'b0, {s_mult_3}}) <= 6)? 
+            (((row1_bias0 + {12'b0, {s_mult_3}}) <= 3)? (row1_bias0 + {12'b0, {s_mult_3}}): ((row1_bias0 + {12'b0, {s_mult_3}}) - 3)) :
+            (((row1_bias0 + {12'b0, {s_mult_3}}) <= 9)? ((row1_bias0 + {12'b0, {s_mult_3}}) - 6): ((row1_bias0 + {12'b0, {s_mult_3}}) - 9))
+        ): 
+        (
+            (row1_bias0 <= 6)? 
+            ((row1_bias0 <= 3)? row1_bias0: (row1_bias0 - 3)) :
+            ((row1_bias0 <= 9)? (row1_bias0 - 6): (row1_bias0 - 9))
+        )
+    );    
+         
+//    assign row1_offset_s1 = 
+//    ((row1_bias0[15] == 1'b1) || (row1_bias0 == 0))? (
+//        ((row1_bias0 + {12'b0, {s_mult_3}}) <= 6)? 
+//        (((row1_bias0 + {12'b0, {s_mult_3}}) <= 3)? 0: 1) :
+//        (((row1_bias0 + {12'b0, {s_mult_3}}) <= 9)? 2: 3)
+//    ): 
+//    (
+//        (row1_bias0 <= 6)? 
+//        ((row1_bias0 <= 3)? 0: 1) :
+//        ((row1_bias0 <= 9)? 2: 3)
+//    );  
+//    assign row1_base_in_3 = 
+//    (s == 4'd1)? (
+//        ((row1_bias0[15] == 1'b1) || (row1_bias0 == 0))? (row_base_in_3s - 1) : row_base_in_3s
+//    ):
+//    (s == 4'd2)? (
+//        ((row1_bias0[15] == 1'b1) || (row1_bias0 == 0))? ((row_base_in_3s - 1) << 1) : (row_base_in_3s << 1)
+//    ):
+//    0;        
+    assign row1_buf_adr_in_row = 
+    (row1_idx == 16'hffff)? 16'hffff:
+    ( 
+        (s == 4'd1)? (
+            ((row1_bias0[15] == 1'b1) || (row1_bias0 == 0))? (
+                ((row1_bias0 + {12'b0, {s_mult_3}}) <= 6)? 
+                (((row1_bias0 + {12'b0, {s_mult_3}}) <= 3)? (row_base_in_3s - 1): (row_base_in_3s - 1) + 1) :
+                (((row1_bias0 + {12'b0, {s_mult_3}}) <= 9)? (row_base_in_3s - 1) + 2: (row_base_in_3s - 1) + 3)
+            ): 
+            (
+                (row1_bias0 <= 6)? 
+                ((row1_bias0 <= 3)? row_base_in_3s: row_base_in_3s + 1) :
+                ((row1_bias0 <= 9)? row_base_in_3s + 2: row_base_in_3s + 3)
+            )
+        ):
+        (s == 4'd2)? (
+            ((row1_bias0[15] == 1'b1) || (row1_bias0 == 0))? (
+                ((row1_bias0 + {12'b0, {s_mult_3}}) <= 6)? 
+                (((row1_bias0 + {12'b0, {s_mult_3}}) <= 3)? ((row_base_in_3s - 1) << 1): ((row_base_in_3s - 1) << 1) + 1) :
+                (((row1_bias0 + {12'b0, {s_mult_3}}) <= 9)? ((row_base_in_3s - 1) << 1) + 2: ((row_base_in_3s - 1) << 1) + 3)
+            ): 
+            (
+                (row1_bias0 <= 6)? 
+                ((row1_bias0 <= 3)? (row_base_in_3s << 1): (row_base_in_3s << 1) + 1) :
+                ((row1_bias0 <= 9)? (row_base_in_3s << 1) + 2: (row_base_in_3s << 1) + 3)
+            )
+        ):
+        0   
+    );   
     
      //the adr is the virtual adr. when tile is small, it equals the phisical adr,
      // when tile is bigger, need mapping logic and schedule logic.
@@ -856,11 +1490,56 @@ valid_row3_adr
                         + (if_idx - 1);                                         
     
     
-    assign row2_buf_idx = (row2_idx == 16'hffff)? 0 :
-                          (row2_buf_idx_s1);
+    
+//    assign row2_buf_idx = (row2_idx == 16'hffff)? 0 :
+//                          (row2_buf_idx_s1);
+    assign row2_buf_idx = 
+    (row2_idx == 16'hffff)? 0 :
+    (                     
+        ((row2_bias0[15] == 1'b1) || (row2_bias0 == 0))? (
+            ((row2_bias0 + {12'b0, {s_mult_3}}) <= 6)? 
+            (((row2_bias0 + {12'b0, {s_mult_3}}) <= 3)? (row2_bias0 + {12'b0, {s_mult_3}}): ((row2_bias0 + {12'b0, {s_mult_3}}) - 3)) :
+            (((row2_bias0 + {12'b0, {s_mult_3}}) <= 9)? ((row2_bias0 + {12'b0, {s_mult_3}}) - 6): ((row2_bias0 + {12'b0, {s_mult_3}}) - 9))
+        ): 
+        (
+            (row2_bias0 <= 6)? 
+            ((row2_bias0 <= 3)? row2_bias0: (row2_bias0 - 3)) :
+            ((row2_bias0 <= 9)? (row2_bias0 - 6): (row2_bias0 - 9))
+        )
+    );
                           
-    assign row2_buf_adr_in_row = (row2_idx == 16'hffff)? 16'hffff:
-                                 (row2_base_in_3 + row2_offset_s1);  
+//    assign row2_buf_adr_in_row = (row2_idx == 16'hffff)? 16'hffff:
+//                                 (row2_base_in_3 + row2_offset_s1);  
+    
+    assign row2_buf_adr_in_row = 
+    (row2_idx == 16'hffff)? 16'hffff:
+    ( 
+        (s == 4'd1)? (
+            ((row2_bias0[15] == 1'b1) || (row2_bias0 == 0))? (
+                ((row2_bias0 + {12'b0, {s_mult_3}}) <= 6)? 
+                (((row2_bias0 + {12'b0, {s_mult_3}}) <= 3)? (row_base_in_3s - 1): (row_base_in_3s - 1) + 1) :
+                (((row2_bias0 + {12'b0, {s_mult_3}}) <= 9)? (row_base_in_3s - 1) + 2: (row_base_in_3s - 1) + 3)
+            ): 
+            (
+                (row2_bias0 <= 6)? 
+                ((row2_bias0 <= 3)? row_base_in_3s: row_base_in_3s + 1) :
+                ((row2_bias0 <= 9)? row_base_in_3s + 2: row_base_in_3s + 3)
+            )
+        ):
+        (s == 4'd2)? (
+            ((row2_bias0[15] == 1'b1) || (row2_bias0 == 0))? (
+                ((row2_bias0 + {12'b0, {s_mult_3}}) <= 6)? 
+                (((row2_bias0 + {12'b0, {s_mult_3}}) <= 3)? ((row_base_in_3s - 1) << 1): ((row_base_in_3s - 1) << 1) + 1) :
+                (((row2_bias0 + {12'b0, {s_mult_3}}) <= 9)? ((row_base_in_3s - 1) << 1) + 2: ((row_base_in_3s - 1) << 1) + 3)
+            ): 
+            (
+                (row2_bias0 <= 6)? 
+                ((row2_bias0 <= 3)? (row_base_in_3s << 1): (row_base_in_3s << 1) + 1) :
+                ((row2_bias0 <= 9)? (row_base_in_3s << 1) + 2: (row_base_in_3s << 1) + 3)
+            )
+        ):
+        0   
+    );  
                           
     assign row2_buf_adr = (row2_idx == 16'hffff)? 16'hffff :
                         ((row2_buf_adr_in_row << (nif_in_2pow + ix_in_2pow - pixels_in_row_in_2pow))
@@ -868,11 +1547,55 @@ valid_row3_adr
                         + (if_idx - 1);                                         
     
                           
-    assign row3_buf_idx = (row3_idx == 16'hffff)? 0 :
-                          (row3_buf_idx_s1);
+//    assign row3_buf_idx = (row3_idx == 16'hffff)? 0 :
+//                          (row3_buf_idx_s1);
                           
-    assign row3_buf_adr_in_row = (row3_idx == 16'hffff)? 16'hffff:
-                                 (row3_base_in_3 + row3_offset_s1);   
+    assign row3_buf_idx = 
+    (row3_idx == 16'hffff)? 0 :
+    (                     
+        ((row3_bias0[15] == 1'b1) || (row3_bias0 == 0))? (
+            ((row3_bias0 + {12'b0, {s_mult_3}}) <= 6)? 
+            (((row3_bias0 + {12'b0, {s_mult_3}}) <= 3)? (row3_bias0 + {12'b0, {s_mult_3}}): ((row3_bias0 + {12'b0, {s_mult_3}}) - 3)) :
+            (((row3_bias0 + {12'b0, {s_mult_3}}) <= 9)? ((row3_bias0 + {12'b0, {s_mult_3}}) - 6): ((row3_bias0 + {12'b0, {s_mult_3}}) - 9))
+        ): 
+        (
+            (row3_bias0 <= 6)? 
+            ((row3_bias0 <= 3)? row3_bias0: (row3_bias0 - 3)) :
+            ((row3_bias0 <= 9)? (row3_bias0 - 6): (row3_bias0 - 9))
+        )
+    );                      
+                          
+//    assign row3_buf_adr_in_row = (row3_idx == 16'hffff)? 16'hffff:
+//                                 (row3_base_in_3 + row3_offset_s1);   
+    assign row3_buf_adr_in_row = 
+    (row3_idx == 16'hffff)? 16'hffff:
+    ( 
+        (s == 4'd1)? (
+            ((row3_bias0[15] == 1'b1) || (row3_bias0 == 0))? (
+                ((row3_bias0 + {12'b0, {s_mult_3}}) <= 6)? 
+                (((row3_bias0 + {12'b0, {s_mult_3}}) <= 3)? (row_base_in_3s - 1): (row_base_in_3s - 1) + 1) :
+                (((row3_bias0 + {12'b0, {s_mult_3}}) <= 9)? (row_base_in_3s - 1) + 2: (row_base_in_3s - 1) + 3)
+            ): 
+            (
+                (row3_bias0 <= 6)? 
+                ((row3_bias0 <= 3)? row_base_in_3s: row_base_in_3s + 1) :
+                ((row3_bias0 <= 9)? row_base_in_3s + 2: row_base_in_3s + 3)
+            )
+        ):
+        (s == 4'd2)? (
+            ((row3_bias0[15] == 1'b1) || (row3_bias0 == 0))? (
+                ((row3_bias0 + {12'b0, {s_mult_3}}) <= 6)? 
+                (((row3_bias0 + {12'b0, {s_mult_3}}) <= 3)? ((row_base_in_3s - 1) << 1): ((row_base_in_3s - 1) << 1) + 1) :
+                (((row3_bias0 + {12'b0, {s_mult_3}}) <= 9)? ((row_base_in_3s - 1) << 1) + 2: ((row_base_in_3s - 1) << 1) + 3)
+            ): 
+            (
+                (row3_bias0 <= 6)? 
+                ((row3_bias0 <= 3)? (row_base_in_3s << 1): (row_base_in_3s << 1) + 1) :
+                ((row3_bias0 <= 9)? (row_base_in_3s << 1) + 2: (row_base_in_3s << 1) + 3)
+            )
+        ):
+        0   
+    );  
                                                         
     assign row3_buf_adr = (row3_idx == 16'hffff)? 16'hffff :
                         ((row3_buf_adr_in_row << (nif_in_2pow + ix_in_2pow - pixels_in_row_in_2pow))
