@@ -21,12 +21,12 @@
 
 
 module conv_router_flat(
-mode,
-of, ox, oy, ix, iy, nif,
-k, s, p,
+mode_init,
+of_init, ox_init, oy_init, ix_init, iy_init, nif_init,
+k_init, s_init, p_init,
 clk, en, reset, //en means initial finish
-nif_in_2pow,
-ix_in_2pow,
+nif_in_2pow_init,
+ix_in_2pow_init,
 
 channel_out_add_end,
 quantify_add_end,
@@ -86,15 +86,23 @@ valid_row3_adr
    parameter row_num_in_mode1 = 128; // 64 in 8 bit, 128 in 1 bit
     
     // conv tiling module
-    input mode;
+    input mode_init;
     
-    input [3:0] k, s, p;
+    input [3:0] k_init, s_init, p_init;
     
-    input [15:0] of, ox, oy, ix, iy, nif;
+    input [15:0] of_init, ox_init, oy_init, ix_init, iy_init, nif_init;
     
     input clk, en, reset; // reset is valid a cycle before en being valid
     
-    input [3:0] nif_in_2pow, ix_in_2pow;
+    input [3:0] nif_in_2pow_init, ix_in_2pow_init;
+    
+    reg mode;
+    
+    reg [3:0] k, s, p;
+    
+    reg [15:0] of, ox, oy, ix, iy, nif;
+    
+    reg [3:0] nif_in_2pow, ix_in_2pow;
     
 //    input shift_add2_end;
 //    input stall;
@@ -267,6 +275,43 @@ valid_row3_adr
    wire stall_in_row;
    
    reg[3:0] row_length, stall_in_row_counter;
+   
+   always@(posedge clk) begin
+        if (reset == 1'b1) begin //set
+            mode <= mode_init;
+            k <= k_init; 
+            s <= s_init; 
+            p <= p_init;
+    
+            of <= of_init; 
+            ox <= ox_init;
+            oy <= oy_init; 
+            ix <= ix_init; 
+            iy <= iy_init;
+            nif <= nif_init;
+    
+            nif_in_2pow <= nif_in_2pow_init;
+            ix_in_2pow <= ix_in_2pow_init;
+        end
+        else begin
+            mode <= mode;
+            k <= k; 
+            s <= s; 
+            p <= p;
+    
+            of <= of; 
+            ox <= ox;
+            oy <= oy; 
+            ix <= ix; 
+            iy <= iy;
+            nif <= nif;
+    
+            nif_in_2pow <= nif_in_2pow;
+            ix_in_2pow <= ix_in_2pow;
+            
+        end
+   end
+   
     
     //stall signal
     reg ifx_stall;
@@ -364,7 +409,8 @@ valid_row3_adr
     
     assign loop_if_add_begin = (conv_rows_add_end1 == 1'b1);
     
-    assign loop_if_add_end = loop_if_add_begin && (if_start + 1) > nif;
+//    assign loop_if_add_end = loop_if_add_begin && ((if_start + 1) > nif);
+    assign loop_if_add_end = (conv_rows_add_end1 == 1'b1) && ((if_start + 1) > nif);
     
     assign conv_nif_add_end = loop_if_add_end;
     
@@ -386,9 +432,13 @@ valid_row3_adr
        end
     end
     
-    assign loop_f_add_begin = (loop_if_add_end == 1'b1);
-    
-    assign loop_f_add_end = loop_f_add_begin && (tile_f_start + row_num) > of;
+    //assign loop_if_add_end = (conv_rows_add_end1 == 1'b1) && (if_start + 1) > nif;
+//    assign loop_f_add_begin = (loop_if_add_end == 1'b1);
+//assign conv_rows_add_end1 = ((signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix))) && ((ky1 + 1) == (k));
+    assign loop_f_add_begin = ((signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix))) && ((ky1 + 1) == (k)) && ((if_start + 1) > nif);
+        
+//    assign loop_f_add_end = loop_f_add_begin && ((tile_f_start + row_num) > of);
+    assign loop_f_add_end = ((signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix))) && ((ky1 + 1) == (k)) && ((if_start + 1) > nif) && ((tile_f_start + row_num) > of);
     
     //loop ox
     always@(posedge clk)begin 
@@ -408,9 +458,13 @@ valid_row3_adr
        end
     end
     
-    assign loop_x_add_begin = (loop_f_add_end == 1'b1);
+    //assign loop_f_add_end = ((signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix))) && ((ky1 + 1) == (k)) && ((if_start + 1) > nif) && ((tile_f_start + row_num) > of);
+//    assign loop_x_add_begin = (loop_f_add_end == 1'b1);
     
-    assign loop_x_add_end = loop_x_add_begin && (tile_x_start + pixels_in_row) > ox;
+//    assign loop_x_add_end = loop_x_add_begin && ((tile_x_start + pixels_in_row) > ox);
+    assign loop_x_add_begin = ((signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix))) && ((ky1 + 1) == (k)) && ((if_start + 1) > nif) && ((tile_f_start + row_num) > of);
+    
+    assign loop_x_add_end = (((signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix))) && ((ky1 + 1) == (k)) && ((if_start + 1) > nif) && ((tile_f_start + row_num) > of)) && ((tile_x_start + pixels_in_row) > ox);
     
     //loop oy
     always@(posedge clk)begin
@@ -434,16 +488,24 @@ valid_row3_adr
        end
     end
     
-    assign loop_y_add_begin = (loop_x_add_end==1'b1);
+    //    assign loop_x_add_end = (((signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix))) && ((ky1 + 1) == (k)) && ((if_start + 1) > nif) && ((tile_f_start + row_num) > of)) && ((tile_x_start + pixels_in_row) > ox);
+//    assign loop_y_add_begin = (loop_x_add_end==1'b1);
     
-    assign loop_y_add_end = loop_y_add_begin && (tile_y_start + buffers_num) > oy;
+//    assign loop_y_add_end = loop_y_add_begin && ((tile_y_start + buffers_num) > oy);
+    assign loop_y_add_begin = (((signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix))) && ((ky1 + 1) == (k)) && ((if_start + 1) > nif) && ((tile_f_start + row_num) > of)) && ((tile_x_start + pixels_in_row) > ox);
+    
+    assign loop_y_add_end = ((((signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix))) && ((ky1 + 1) == (k)) && ((if_start + 1) > nif) && ((tile_f_start + row_num) > of)) && ((tile_x_start + pixels_in_row) > ox)) && ((tile_y_start + buffers_num) > oy);
     
     //next ox_st, oy_st, pox, poy
-    assign next_ox_start = ((reset ==1'b1) || (loop_x_add_end == 1'b1))? 1 : tile_x_start + pixels_in_row;
+    //assign loop_x_add_end = (((signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix))) && ((ky1 + 1) == (k)) && ((if_start + 1) > nif) && ((tile_f_start + row_num) > of)) && ((tile_x_start + pixels_in_row) > ox);
+//    assign next_ox_start = ((reset ==1'b1) || (loop_x_add_end == 1'b1))? 1 : tile_x_start + pixels_in_row;
+    assign next_ox_start = ((reset ==1'b1) || ((((signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix))) && ((ky1 + 1) == (k)) && ((if_start + 1) > nif) && ((tile_f_start + row_num) > of)) && ((tile_x_start + pixels_in_row) > ox)))? 1 : tile_x_start + pixels_in_row;
     
     assign ox_start = tile_x_start;
     
-    assign next_oy_start = ((reset ==1'b1) || (loop_y_add_end == 1'b1))? 1 : tile_y_start + buffers_num;
+    //assign loop_y_add_end = ((((signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix))) && ((ky1 + 1) == (k)) && ((if_start + 1) > nif) && ((tile_f_start + row_num) > of)) && ((tile_x_start + pixels_in_row) > ox)) && ((tile_y_start + buffers_num) > oy);
+//    assign next_oy_start = ((reset ==1'b1) || (loop_y_add_end == 1'b1))? 1 : tile_y_start + buffers_num;
+    assign next_oy_start = ((reset ==1'b1) || (((((signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix))) && ((ky1 + 1) == (k)) && ((if_start + 1) > nif) && ((tile_f_start + row_num) > of)) && ((tile_x_start + pixels_in_row) > ox)) && ((tile_y_start + buffers_num) > oy)))? 1 : tile_y_start + buffers_num;
     
     assign oy_start = tile_y_start;
     
@@ -503,14 +565,18 @@ valid_row3_adr
         end
     end  
     
-    assign loop_ky1_add_begin = (conv_pixels_add_end == 1'b1);
-    assign loop_ky1_add_end = loop_ky1_add_begin && ((ky1 + 1) == (k));
-
+    //assign conv_pixels_add_end = (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix));
+//    assign loop_ky1_add_begin = (conv_pixels_add_end == 1'b1);
+//    assign loop_ky1_add_end = loop_ky1_add_begin && ((ky1 + 1) == (k));
+    assign loop_ky1_add_begin = (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix));
+    assign loop_ky1_add_end = ((signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix))) && ((ky1 + 1) == (k));
+    
     assign ky1_plus_irow_y1 = ky1 + iy_start_1;                         
   
     assign row_y1 = ((ky1_plus_irow_y1 < p_plus_1) || (ky1_plus_irow_y1 > p_plus_iy))? 16'hffff: (ky1_plus_irow_y1 - {{12'b0},p});
 
-    assign conv_rows_add_end1 = loop_ky1_add_end;
+//    assign conv_rows_add_end1 = loop_ky1_add_end;
+    assign conv_rows_add_end1 = ((signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix))) && ((ky1 + 1) == (k));
     
     assign idx1_in_k = ky1;
     
@@ -533,15 +599,18 @@ valid_row3_adr
             ky2 <= ky2;
         end
     end  
+    //assign conv_pixels_add_end = (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix));
+//    assign loop_ky2_add_begin = (conv_pixels_add_end == 1'b1);
+//    assign loop_ky2_add_end = loop_ky2_add_begin && ((ky2 + 1) == (k));
+    assign loop_ky2_add_begin = (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix));
+    assign loop_ky2_add_end = ((signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix))) && ((ky2 + 1) == (k));
     
-    assign loop_ky2_add_begin = (conv_pixels_add_end == 1'b1);
-    assign loop_ky2_add_end = loop_ky2_add_begin && ((ky2 + 1) == (k));
-
     assign ky2_plus_irow_y2 = ky2 + iy_start_2;                         
   
     assign row_y2 = ((ky2_plus_irow_y2 < p_plus_1) || (ky2_plus_irow_y2 > p_plus_iy))? 16'hffff: (ky2_plus_irow_y2 - {{12'b0},p});
 
-    assign conv_rows_add_end2 = loop_ky2_add_end;
+//    assign conv_rows_add_end2 = loop_ky2_add_end;
+    assign conv_rows_add_end2 = ((signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix))) && ((ky2 + 1) == (k));
     
     assign idx2_in_k = ky2;
     
@@ -565,14 +634,18 @@ valid_row3_adr
         end
     end  
     
-    assign loop_ky3_add_begin = (conv_pixels_add_end == 1'b1);
-    assign loop_ky3_add_end = loop_ky3_add_begin && ((ky3 + 1) == (k));
-
+    //assign conv_pixels_add_end = (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix));
+//    assign loop_ky3_add_begin = (conv_pixels_add_end == 1'b1);
+//    assign loop_ky3_add_end = loop_ky3_add_begin && ((ky3 + 1) == (k));
+    assign loop_ky3_add_begin = (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix));
+    assign loop_ky3_add_end = ((signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix))) && ((ky3 + 1) == (k));
+    
     assign ky3_plus_irow_y3 = ky3 + iy_start_3;                         
   
     assign row_y3 = ((ky3_plus_irow_y3 < p_plus_1) || (ky3_plus_irow_y3 > p_plus_iy))? 16'hffff: (ky3_plus_irow_y3 - {{12'b0},p});
 
-    assign conv_rows_add_end3 = loop_ky3_add_end;
+//    assign conv_rows_add_end3 = loop_ky3_add_end;
+    assign conv_rows_add_end3 = ((signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix))) && ((ky3 + 1) == (k));
     
     assign idx3_in_k = ky3;
 
@@ -598,12 +671,21 @@ valid_row3_adr
 //   assign next_ix_start = (s == 4'd1)? next_ox_start:
 //                     (s == 4'd2)? (next_ox_start << 1) - 1:
 //                     0;
+   //assign loop_x_add_end = (((signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix))) && ((ky1 + 1) == (k)) && ((if_start + 1) > nif) && ((tile_f_start + row_num) > of)) && ((tile_x_start + pixels_in_row) > ox);
+//   assign next_ix_start = 
+//   (s == 4'd1)? (
+//        ((reset ==1'b1) || (loop_x_add_end == 1'b1))? 1 : tile_x_start + pixels_in_row
+//   ):
+//   (s == 4'd2)? (
+//        ((reset ==1'b1) || (loop_x_add_end == 1'b1))? 1 : (tile_x_start << 1) + pixels_in_row_mult_2_minus_1
+//   ):
+//   0;
    assign next_ix_start = 
    (s == 4'd1)? (
-        ((reset ==1'b1) || (loop_x_add_end == 1'b1))? 1 : tile_x_start + pixels_in_row
+        ((reset ==1'b1) || ((((signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix))) && ((ky1 + 1) == (k)) && ((if_start + 1) > nif) && ((tile_f_start + row_num) > of)) && ((tile_x_start + pixels_in_row) > ox)))? 1 : tile_x_start + pixels_in_row
    ):
    (s == 4'd2)? (
-        ((reset ==1'b1) || (loop_x_add_end == 1'b1))? 1 : (tile_x_start << 1) + pixels_in_row_mult_2_minus_1
+        ((reset ==1'b1) || ((((signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix))) && ((ky1 + 1) == (k)) && ((if_start + 1) > nif) && ((tile_f_start + row_num) > of)) && ((tile_x_start + pixels_in_row) > ox)))? 1 : (tile_x_start << 1) + pixels_in_row_mult_2_minus_1
    ):
    0;
    
@@ -690,8 +772,9 @@ valid_row3_adr
 //       ):
 //       0
 //   );
-   
-   assign next_left_pad = ((reset ==1'b1) || (loop_x_add_end == 1'b1))? {{12'b0}, p}:0;
+   //assign loop_x_add_end = (((signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix))) && ((ky1 + 1) == (k)) && ((if_start + 1) > nif) && ((tile_f_start + row_num) > of)) && ((tile_x_start + pixels_in_row) > ox);
+//   assign next_left_pad = ((reset ==1'b1) || (loop_x_add_end == 1'b1))? {{12'b0}, p}:0;
+   assign next_left_pad = ((reset ==1'b1) || ((((signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix))) && ((ky1 + 1) == (k)) && ((if_start + 1) > nif) && ((tile_f_start + row_num) > of)) && ((tile_x_start + pixels_in_row) > ox)))? {{12'b0}, p}:0;
    
    assign p_plus_ix = {{12'b0}, p} + ix;
    
@@ -767,9 +850,12 @@ valid_row3_adr
 //        )
 //   ):
 //   0;
+    //assign loop_x_add_end = (((signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix))) && ((ky1 + 1) == (k)) && ((if_start + 1) > nif) && ((tile_f_start + row_num) > of)) && ((tile_x_start + pixels_in_row) > ox);
+//    assign next_overlap = 
+//    ((reset ==1'b1) || (loop_x_add_end == 1'b1))? 0: {{12'b0}, p};
     assign next_overlap = 
-    ((reset ==1'b1) || (loop_x_add_end == 1'b1))? 0: {{12'b0}, p};
-   
+    ((reset ==1'b1) || ((((signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix))) && ((ky1 + 1) == (k)) && ((if_start + 1) > nif) && ((tile_f_start + row_num) > of)) && ((tile_x_start + pixels_in_row) > ox)))? 0: {{12'b0}, p};
+    
 //   assign row_start_fix = ix_start + left_pad - p_plus_1 + overlap;
 //assign overlap = 
 //   (s == 4'd1)? (
@@ -1110,7 +1196,10 @@ assign row_end_fix =
         else if (en == 1'b1) begin
             signal_adr1_add <= 1;
         end
-        else if (conv_tiling_add_end == 1'b1) begin // all end
+//        else if (conv_tiling_add_end == 1'b1) begin // all end
+        //assign conv_tiling_add_end = loop_y_add_end; 
+        //assign loop_y_add_end = ((((signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix))) && ((ky1 + 1) == (k)) && ((if_start + 1) > nif) && ((tile_f_start + row_num) > of)) && ((tile_x_start + pixels_in_row) > ox)) && ((tile_y_start + buffers_num) > oy);
+        else if (((((signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix))) && ((ky1 + 1) == (k)) && ((if_start + 1) > nif) && ((tile_f_start + row_num) > of)) && ((tile_x_start + pixels_in_row) > ox)) && ((tile_y_start + buffers_num) > oy)) begin // all end
             signal_adr1_add <= 0;
         end
         else begin
@@ -1143,7 +1232,8 @@ assign row_end_fix =
     
     assign loop_adr1_add_begin = (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0);
   
-    assign loop_adr1_add_end = loop_adr1_add_begin && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix));
+//    assign loop_adr1_add_end = loop_adr1_add_begin && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix));
+    assign loop_adr1_add_end = (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix));
                     
     assign reg_to = (row_start_idx + pixels_in_row_minus_1 > row_end)?
                     (reg_from + row_end - row_start_idx):
@@ -1170,6 +1260,7 @@ assign row_end_fix =
         end
     end  
     
+    //assign loop_adr1_add_end = (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix));
     always@(posedge clk) begin
         if (reset == 1'b1) begin
             stall_in_row_counter <= 0;
@@ -1177,8 +1268,12 @@ assign row_end_fix =
         else if (en == 1'b1) begin //first cycle no need stall
             stall_in_row_counter <= 0;
         end
-        else if (loop_adr1_add_end == 1'b1) begin // the last pixels word
-            if (conv_tiling_add_end == 1'b1) begin // all end
+//        else if (loop_adr1_add_end == 1'b1) begin // the last pixels word
+        else if ((signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix))) begin // the last pixels word
+//            if (conv_tiling_add_end == 1'b1) begin // all end
+        //assign conv_tiling_add_end = loop_y_add_end; 
+        //assign loop_y_add_end = ((((signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix))) && ((ky1 + 1) == (k)) && ((if_start + 1) > nif) && ((tile_f_start + row_num) > of)) && ((tile_x_start + pixels_in_row) > ox)) && ((tile_y_start + buffers_num) > oy);
+            if (((((signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix))) && ((ky1 + 1) == (k)) && ((if_start + 1) > nif) && ((tile_f_start + row_num) > of)) && ((tile_x_start + pixels_in_row) > ox)) && ((tile_y_start + buffers_num) > oy)) begin // all end
                 stall_in_row_counter <= 0;
             end 
             else begin
@@ -1243,8 +1338,10 @@ assign row_end_fix =
             reg_from + pixels_in_row_minus_1 
         )
     );
-
-    assign conv_pixels_add_end = (loop_adr1_add_end == 1'b1);
+    
+    //assign loop_adr1_add_end = (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix));
+//    assign conv_pixels_add_end = (loop_adr1_add_end == 1'b1);
+    assign conv_pixels_add_end = (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix));
     
     assign valid_row1_adr = (poy < 1)? 0 : valid_adr;
     assign valid_row2_adr = (poy < 2)? 0 : valid_adr;

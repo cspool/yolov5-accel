@@ -390,21 +390,21 @@ parameter out_data_width = quantified_pixel_width * pe_parallel_pixel_88 * pe_pa
     );
     
     conv_router_flat cv_router( //conv_router_v2
-        .mode(mode),
-        .of(of),
-        .ox(ox), 
-        .oy(oy), 
-        .ix(ix), 
-        .iy(iy),
-        .nif(nif),
-        .k(k), 
-        .s(s), 
-        .p(p),
+        .mode_init(mode),
+        .of_init(of),
+        .ox_init(ox), 
+        .oy_init(oy), 
+        .ix_init(ix), 
+        .iy_init(iy),
+        .nif_init(nif),
+        .k_init(k), 
+        .s_init(s), 
+        .p_init(p),
         .clk(clk), 
         .en(conv_compute_en), 
         .reset((reset | conv_compute_reset)),
-        .nif_in_2pow(nif_in_2pow), 
-        .ix_in_2pow(ix_in_2pow),
+        .nif_in_2pow_init(nif_in_2pow), 
+        .ix_in_2pow_init(ix_in_2pow),
         
         .channel_out_add_end(channel_out_add_end), //the last sa output channel
         .quantify_add_end(quantify_add_end),
