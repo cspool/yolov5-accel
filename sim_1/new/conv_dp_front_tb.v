@@ -139,6 +139,10 @@ end
         #10;
         channel_out_reset = 0; channel_out_en = 1;
         
+        #160;
+        
+        channel_out_reset = 1; channel_out_en = 0;
+        
       
         
     end
