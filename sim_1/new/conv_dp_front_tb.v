@@ -58,13 +58,15 @@ parameter out_width_18 = pixel_width_18 * pe_parallel_pixel_18 * pe_parallel_wei
     
     reg [3:0] k, s, p;
     
-    reg [15:0] ox, oy, ix, iy, nif;
+    reg [15:0] of, ox, oy, ix, iy, nif;
     
     reg clk, en, reset; // reset is valid a cycle before en being valid
     
     reg [15:0] nif_in_2pow, ix_in_2pow;
     
-    reg mode, channel_out_reset, channel_out_en;
+    reg [31:0] nif_mult_k_mult_k;
+    
+    reg mode;
     
     wire [out_width - 1: 0] out_row1_channel_set1; // pox res per channel
     wire [out_width - 1: 0] out_row1_channel_set2; // pox res per channel
@@ -80,6 +82,7 @@ parameter out_width_18 = pixel_width_18 * pe_parallel_pixel_18 * pe_parallel_wei
     wire [out_width - 1: 0] out_row3_channel_set4; // pox res per channel
 
 conv_datapath_front cv_datapath_front(
+    .of(of),
     .ox(ox), 
     .oy(oy), 
     .ix(ix), 
@@ -93,11 +96,9 @@ conv_datapath_front cv_datapath_front(
     .reset(reset),
     .nif_in_2pow(nif_in_2pow),
     .ix_in_2pow(ix_in_2pow),
+    .nif_mult_k_mult_k(nif_mult_k_mult_k),
     
     .mode(mode),
-
-    .channel_out_reset(channel_out_reset), 
-    .channel_out_en(channel_out_en),
     
     .out_row1_channel_set1(out_row1_channel_set1), // pox res per channel
     .out_row1_channel_set2(out_row1_channel_set2), // pox res per channel
@@ -123,27 +124,30 @@ end
     // cfg 0
         clk = 0;
         reset = 1; en = 0;
-        k = 1; s = 1; p = 0; ox = 32; oy = 3; ix = 256; iy = 256; nif = 1;
-        nif_in_2pow = 0; ix_in_2pow = 8;
+        k = 1; s = 1; p = 0; 
+        of = 64; ox = 64; oy = 3; ix = 256; iy = 256; // a tile computation
+        ix_in_2pow = 8;
         mode = 0;
-        channel_out_reset = 1;channel_out_en = 0;
+        nif = 8; nif_in_2pow = 3; nif_mult_k_mult_k = 8;
         
         
         #10;
         
-        reset = 0; en = 1;
+        reset = 0; en = 1; //the start signal
+        
+        #10;
+        reset = 0; en = 0;
         
         #500;
         reset = 0; en = 0;
         
-        #10;
-        channel_out_reset = 0; channel_out_en = 1;
-        
+       
         #160;
         
-        channel_out_reset = 1; channel_out_en = 0;
+//        channel_out_reset = 1; channel_out_en = 0;
         
       
+
         
     end
 

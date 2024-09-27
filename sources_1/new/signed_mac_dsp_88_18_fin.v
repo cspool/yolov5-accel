@@ -20,7 +20,10 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module signed_mac_dsp_88_18_fin(clk,reset, en, I_A,I_B,mode,O);
+module signed_mac_dsp_88_18_fin(
+clk,reset, en,
+I_A,I_B,mode,O
+);
  
 parameter headroom = 8;
 
@@ -40,6 +43,7 @@ parameter pixel_width = pixel_width_88;
 input clk;
 input reset;
 input en;
+
 input [23:0] I_A;
 input [17:0] I_B;
 input mode;

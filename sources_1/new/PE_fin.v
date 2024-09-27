@@ -21,7 +21,9 @@
 
 
 module PE_fin(
-clk, reset, en, mode, left, up, right, bottom, out
+clk, reset, en,
+
+mode, left, up, right, bottom, out
     );
     
 parameter headroom = 8;

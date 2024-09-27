@@ -1457,11 +1457,19 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>GENtimestamp</spirit:name>
+<<<<<<< HEAD
             <spirit:value>Sat Aug 31 15:28:33 UTC 2024</spirit:value>
           </spirit:parameter>
           <spirit:parameter>
             <spirit:name>outputProductCRC</spirit:name>
             <spirit:value>9:019a2dc0</spirit:value>
+=======
+            <spirit:value>Mon Sep 02 08:22:04 UTC 2024</spirit:value>
+          </spirit:parameter>
+          <spirit:parameter>
+            <spirit:name>outputProductCRC</spirit:name>
+            <spirit:value>9:695346c9</spirit:value>
+>>>>>>> 1d7cf087deaecb45773d44c50fadf969073352c2
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -1477,11 +1485,19 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>GENtimestamp</spirit:name>
+<<<<<<< HEAD
             <spirit:value>Sat Aug 31 15:28:33 UTC 2024</spirit:value>
           </spirit:parameter>
           <spirit:parameter>
             <spirit:name>outputProductCRC</spirit:name>
             <spirit:value>9:019a2dc0</spirit:value>
+=======
+            <spirit:value>Mon Sep 02 08:22:04 UTC 2024</spirit:value>
+          </spirit:parameter>
+          <spirit:parameter>
+            <spirit:name>outputProductCRC</spirit:name>
+            <spirit:value>9:695346c9</spirit:value>
+>>>>>>> 1d7cf087deaecb45773d44c50fadf969073352c2
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -1497,11 +1513,19 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>GENtimestamp</spirit:name>
+<<<<<<< HEAD
             <spirit:value>Sat Aug 31 15:28:33 UTC 2024</spirit:value>
           </spirit:parameter>
           <spirit:parameter>
             <spirit:name>outputProductCRC</spirit:name>
             <spirit:value>9:019a2dc0</spirit:value>
+=======
+            <spirit:value>Mon Sep 02 08:22:04 UTC 2024</spirit:value>
+          </spirit:parameter>
+          <spirit:parameter>
+            <spirit:name>outputProductCRC</spirit:name>
+            <spirit:value>9:695346c9</spirit:value>
+>>>>>>> 1d7cf087deaecb45773d44c50fadf969073352c2
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -1516,11 +1540,19 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>GENtimestamp</spirit:name>
+<<<<<<< HEAD
             <spirit:value>Sat Aug 31 15:28:33 UTC 2024</spirit:value>
           </spirit:parameter>
           <spirit:parameter>
             <spirit:name>outputProductCRC</spirit:name>
             <spirit:value>9:726fb8da</spirit:value>
+=======
+            <spirit:value>Mon Sep 02 08:22:04 UTC 2024</spirit:value>
+          </spirit:parameter>
+          <spirit:parameter>
+            <spirit:name>outputProductCRC</spirit:name>
+            <spirit:value>9:269ae87e</spirit:value>
+>>>>>>> 1d7cf087deaecb45773d44c50fadf969073352c2
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -1536,11 +1568,19 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>GENtimestamp</spirit:name>
+<<<<<<< HEAD
             <spirit:value>Sat Aug 31 15:28:33 UTC 2024</spirit:value>
           </spirit:parameter>
           <spirit:parameter>
             <spirit:name>outputProductCRC</spirit:name>
             <spirit:value>9:726fb8da</spirit:value>
+=======
+            <spirit:value>Mon Sep 02 08:22:04 UTC 2024</spirit:value>
+          </spirit:parameter>
+          <spirit:parameter>
+            <spirit:name>outputProductCRC</spirit:name>
+            <spirit:value>9:269ae87e</spirit:value>
+>>>>>>> 1d7cf087deaecb45773d44c50fadf969073352c2
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -1554,11 +1594,19 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>GENtimestamp</spirit:name>
+<<<<<<< HEAD
             <spirit:value>Sat Aug 31 15:28:33 UTC 2024</spirit:value>
           </spirit:parameter>
           <spirit:parameter>
             <spirit:name>outputProductCRC</spirit:name>
             <spirit:value>9:019a2dc0</spirit:value>
+=======
+            <spirit:value>Mon Sep 02 08:22:05 UTC 2024</spirit:value>
+          </spirit:parameter>
+          <spirit:parameter>
+            <spirit:name>outputProductCRC</spirit:name>
+            <spirit:value>9:695346c9</spirit:value>
+>>>>>>> 1d7cf087deaecb45773d44c50fadf969073352c2
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -1572,11 +1620,19 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>GENtimestamp</spirit:name>
+<<<<<<< HEAD
             <spirit:value>Sat Aug 31 15:28:33 UTC 2024</spirit:value>
           </spirit:parameter>
           <spirit:parameter>
             <spirit:name>outputProductCRC</spirit:name>
             <spirit:value>9:019a2dc0</spirit:value>
+=======
+            <spirit:value>Mon Sep 02 08:22:05 UTC 2024</spirit:value>
+          </spirit:parameter>
+          <spirit:parameter>
+            <spirit:name>outputProductCRC</spirit:name>
+            <spirit:value>9:695346c9</spirit:value>
+>>>>>>> 1d7cf087deaecb45773d44c50fadf969073352c2
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -1590,11 +1646,19 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>GENtimestamp</spirit:name>
+<<<<<<< HEAD
             <spirit:value>Sat Aug 31 15:29:32 UTC 2024</spirit:value>
           </spirit:parameter>
           <spirit:parameter>
             <spirit:name>outputProductCRC</spirit:name>
             <spirit:value>9:019a2dc0</spirit:value>
+=======
+            <spirit:value>Mon Sep 02 08:23:54 UTC 2024</spirit:value>
+          </spirit:parameter>
+          <spirit:parameter>
+            <spirit:name>outputProductCRC</spirit:name>
+            <spirit:value>9:695346c9</spirit:value>
+>>>>>>> 1d7cf087deaecb45773d44c50fadf969073352c2
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -4132,7 +4196,11 @@
     </spirit:parameter>
     <spirit:parameter>
       <spirit:name>Coe_File</spirit:name>
+<<<<<<< HEAD
       <spirit:value spirit:resolve="user" spirit:id="PARAM_VALUE.Coe_File" spirit:order="39">C:/Users/asus/Desktop/rom-data/110/weight_s1.txt</spirit:value>
+=======
+      <spirit:value spirit:resolve="user" spirit:id="PARAM_VALUE.Coe_File" spirit:order="39">C:/Users/19630/Desktop/rom-data/311/weight_s1.txt</spirit:value>
+>>>>>>> 1d7cf087deaecb45773d44c50fadf969073352c2
       <spirit:vendorExtensions>
         <xilinx:parameterInfo>
           <xilinx:enablement>

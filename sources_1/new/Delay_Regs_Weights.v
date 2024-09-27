@@ -21,7 +21,7 @@
 
 
 module Delay_Regs_Weights(
-clk, reset, re_fm_en, re_fm_end,
+clk, reset, en,
 
 weights,
 
@@ -31,7 +31,7 @@ delay_weights
 parameter column_num = 16; 
 parameter pixels_in_row = 32;
 
-input clk, reset, re_fm_en, re_fm_end;
+input clk, reset, en;
 
 input [row_num*8-1:0] weights;
     
@@ -53,37 +53,16 @@ output [row_num*8-1:0] delay_weights;
     reg [8 -1 : 0] row_3_regs [(column_num-14) -1: 0];
     reg [8 -1 : 0] row_2_regs [(column_num-15) -1: 0];
     
-    reg state_en, state_reset;
-    
-    always @(posedge clk) begin
-        if (reset == 1'b1) begin
-            state_en <= 0;
-            state_reset <= 0;
-        end
-        else if (re_fm_en == 1'b1) begin
-            if (re_fm_end == 1'b1) begin
-                state_en <= 0;
-                state_reset <= 1;
-            end
-            else begin
-                state_en <= 1;
-                state_reset <= 0;
-            end
-        end
-        else begin
-            state_en <= state_en;
-            state_reset <= state_reset;
-        end
-    end
+   
     
     genvar i;
     
     //row 16
     always @(posedge clk) begin
-        if ((reset == 1'b1) || (state_reset == 1'b1)) begin
+        if (reset == 1'b1) begin
             row_16_regs[0] <= 0;
         end
-        else if (state_en == 1'b1) begin
+        else if(en == 1'b1)  begin
             row_16_regs[0] <= weights[((16-1) * 8) +: 8];
         end
         else begin
@@ -93,10 +72,10 @@ output [row_num*8-1:0] delay_weights;
     generate
         for (i = 1; i < column_num-1; i = i+1) begin: row_16_column
             always @(posedge clk) begin
-                if ((reset == 1'b1) || (state_reset == 1'b1)) begin
+                if (reset == 1'b1) begin
                     row_16_regs[i] <= 0;
                 end
-                else if (state_en == 1'b1) begin
+                else if(en == 1'b1)  begin
                     row_16_regs[i] <= row_16_regs[i-1];
                 end
                 else begin
@@ -112,10 +91,10 @@ output [row_num*8-1:0] delay_weights;
     
     //row 15
     always @(posedge clk) begin
-        if ((reset == 1'b1) || (state_reset == 1'b1)) begin
+        if (reset == 1'b1)begin
             row_15_regs[0] <= 0;
         end
-        else if (state_en == 1'b1) begin
+        else if(en == 1'b1)  begin
             row_15_regs[0] <= weights[((15-1) * 8) +: 8];
         end
         else begin
@@ -125,10 +104,10 @@ output [row_num*8-1:0] delay_weights;
     generate
         for (i = 1; i < column_num-2; i = i+1) begin: row_15_column
             always @(posedge clk) begin
-                if ((reset == 1'b1) || (state_reset == 1'b1)) begin
+                if(reset == 1'b1) begin
                     row_15_regs[i] <= 0;
                 end
-                else if (state_en == 1'b1) begin
+                else if(en == 1'b1)  begin
                     row_15_regs[i] <= row_15_regs[i-1];
                 end
                 else begin
@@ -144,10 +123,10 @@ output [row_num*8-1:0] delay_weights;
     
     //row 14
     always @(posedge clk) begin
-        if ((reset == 1'b1) || (state_reset == 1'b1)) begin
+        if(reset == 1'b1) begin
             row_14_regs[0] <= 0;
         end
-        else if (state_en == 1'b1) begin
+        else if(en == 1'b1)  begin
             row_14_regs[0] <= weights[((14-1) * 8) +: 8];
         end
         else begin
@@ -158,10 +137,10 @@ output [row_num*8-1:0] delay_weights;
     generate
         for (i = 1; i < column_num-3; i = i+1) begin: row_14_column
             always @(posedge clk) begin
-                if ((reset == 1'b1) || (state_reset == 1'b1)) begin
+                if (reset == 1'b1)begin
                     row_14_regs[i] <= 0;
                 end
-                else if (state_en == 1'b1) begin
+                else if (en == 1'b1)  begin
                     row_14_regs[i] <= row_14_regs[i-1];
                 end
                 else begin
@@ -178,10 +157,10 @@ output [row_num*8-1:0] delay_weights;
     
     //row 13
     always @(posedge clk) begin
-        if ((reset == 1'b1) || (state_reset == 1'b1)) begin
+        if (reset == 1'b1) begin
             row_13_regs[0] <= 0;
         end
-        else if (state_en == 1'b1) begin
+        else if(en == 1'b1)  begin
             row_13_regs[0] <= weights[((13-1) * 8) +: 8];
         end
         else begin
@@ -192,10 +171,10 @@ output [row_num*8-1:0] delay_weights;
     generate
         for (i = 1; i < column_num-4; i = i+1) begin: row_13_column
             always @(posedge clk) begin
-                if ((reset == 1'b1) || (state_reset == 1'b1)) begin
+                if (reset == 1'b1) begin
                     row_13_regs[i] <= 0;
                 end
-                else if (state_en == 1'b1) begin
+                else if(en == 1'b1)  begin
                     row_13_regs[i] <= row_13_regs[i-1];
                 end
                 else begin
@@ -211,10 +190,10 @@ output [row_num*8-1:0] delay_weights;
     
     //row 12
     always @(posedge clk) begin
-        if ((reset == 1'b1) || (state_reset == 1'b1)) begin
+        if (reset == 1'b1)begin
             row_12_regs[0] <= 0;
         end
-        else if (state_en == 1'b1) begin
+        else if(en == 1'b1)  begin
             row_12_regs[0] <= weights[((12-1) * 8) +: 8];
         end
         else begin
@@ -225,10 +204,10 @@ output [row_num*8-1:0] delay_weights;
     generate
         for (i = 1; i < column_num-5; i = i+1) begin: row_12_column
             always @(posedge clk) begin
-                if ((reset == 1'b1) || (state_reset == 1'b1)) begin
+                if (reset == 1'b1) begin
                     row_12_regs[i] <= 0;
                 end
-                else if (state_en == 1'b1) begin
+                else if (en == 1'b1)  begin
                     row_12_regs[i] <= row_12_regs[i-1];
                 end
                 else begin
@@ -244,10 +223,10 @@ output [row_num*8-1:0] delay_weights;
     
     //row 11
     always @(posedge clk) begin
-        if ((reset == 1'b1) || (state_reset == 1'b1)) begin
+        if (reset == 1'b1)begin
             row_11_regs[0] <= 0;
         end
-        else if (state_en == 1'b1) begin
+        else if (en == 1'b1) begin
             row_11_regs[0] <= weights[((11-1) * 8) +: 8];
         end
         else begin
@@ -258,10 +237,10 @@ output [row_num*8-1:0] delay_weights;
     generate
         for (i = 1; i < column_num-6; i = i+1) begin: row_11_column
             always @(posedge clk) begin
-                if ((reset == 1'b1) || (state_reset == 1'b1)) begin
+                if (reset == 1'b1) begin
                     row_11_regs[i] <= 0;
                 end
-                else if (state_en == 1'b1) begin
+                else if(en == 1'b1)  begin
                     row_11_regs[i] <= row_11_regs[i-1];
                 end
                 else begin
@@ -277,10 +256,10 @@ output [row_num*8-1:0] delay_weights;
     
     //row 10
     always @(posedge clk) begin
-        if ((reset == 1'b1) || (state_reset == 1'b1)) begin
+        if (reset == 1'b1)begin
             row_10_regs[0] <= 0;
         end
-        else if (state_en == 1'b1) begin
+        else if (en == 1'b1)  begin
             row_10_regs[0] <= weights[((10-1) * 8) +: 8];
         end
         else begin
@@ -291,10 +270,10 @@ output [row_num*8-1:0] delay_weights;
     generate
         for (i = 1; i < column_num-7; i = i+1) begin: row_10_column
             always @(posedge clk) begin
-                if ((reset == 1'b1) || (state_reset == 1'b1)) begin
+                if(reset == 1'b1)begin
                     row_10_regs[i] <= 0;
                 end
-                else if (state_en == 1'b1) begin
+                else if (en == 1'b1)  begin
                     row_10_regs[i] <= row_10_regs[i-1];
                 end
                 else begin
@@ -310,10 +289,10 @@ output [row_num*8-1:0] delay_weights;
     
     //row 9
     always @(posedge clk) begin
-        if ((reset == 1'b1) || (state_reset == 1'b1)) begin
+        if (reset == 1'b1)begin
             row_9_regs[0] <= 0;
         end
-        else if (state_en == 1'b1) begin
+        else if (en == 1'b1) begin
             row_9_regs[0] <= weights[((9-1) * 8) +: 8];
         end
         else begin
@@ -324,10 +303,10 @@ output [row_num*8-1:0] delay_weights;
     generate
         for (i = 1; i < column_num-8; i = i+1) begin: row_9_column
             always @(posedge clk) begin
-                if ((reset == 1'b1) || (state_reset == 1'b1)) begin
+                if (reset == 1'b1) begin
                     row_9_regs[i] <= 0;
                 end
-                else if (state_en == 1'b1) begin
+                else if(en == 1'b1)  begin
                     row_9_regs[i] <= row_9_regs[i-1];
                 end
                 else begin
@@ -343,10 +322,10 @@ output [row_num*8-1:0] delay_weights;
     
     //row 8
     always @(posedge clk) begin
-        if ((reset == 1'b1) || (state_reset == 1'b1)) begin
+        if (reset == 1'b1)begin
             row_8_regs[0] <= 0;
         end
-        else if (state_en == 1'b1) begin
+        else if(en == 1'b1)  begin
             row_8_regs[0] <= weights[((8-1) * 8) +: 8];
         end
         else begin
@@ -357,10 +336,10 @@ output [row_num*8-1:0] delay_weights;
     generate
         for (i = 1; i < column_num-9; i = i+1) begin: row_8_column
             always @(posedge clk) begin
-                if ((reset == 1'b1) || (state_reset == 1'b1)) begin
+                if (reset == 1'b1)begin
                     row_8_regs[i] <= 0;
                 end
-                else if (state_en == 1'b1) begin
+                else if(en == 1'b1)  begin
                     row_8_regs[i] <= row_8_regs[i-1];
                 end
                 else begin
@@ -376,10 +355,10 @@ output [row_num*8-1:0] delay_weights;
     
     //row 7
     always @(posedge clk) begin
-        if ((reset == 1'b1) || (state_reset == 1'b1)) begin
+        if(reset == 1'b1) begin
             row_7_regs[0] <= 0;
         end
-        else if (state_en == 1'b1) begin
+        else if (en == 1'b1) begin
             row_7_regs[0] <= weights[((7-1) * 8) +: 8];
         end
         else begin
@@ -390,10 +369,10 @@ output [row_num*8-1:0] delay_weights;
     generate
         for (i = 1; i < column_num-10; i = i+1) begin: row_7_column
             always @(posedge clk) begin
-                if ((reset == 1'b1) || (state_reset == 1'b1)) begin
+                if(reset == 1'b1) begin
                     row_7_regs[i] <= 0;
                 end
-                else if (state_en == 1'b1) begin
+                else if(en == 1'b1)  begin
                     row_7_regs[i] <= row_7_regs[i-1];
                 end
                 else begin
@@ -409,10 +388,10 @@ output [row_num*8-1:0] delay_weights;
     
     //row 6
     always @(posedge clk) begin
-        if ((reset == 1'b1) || (state_reset == 1'b1)) begin
+        if (reset == 1'b1)begin
             row_6_regs[0] <= 0;
         end
-        else if (state_en == 1'b1) begin
+        else if (en == 1'b1) begin
             row_6_regs[0] <= weights[((6-1) * 8) +: 8];
         end
         else begin
@@ -423,10 +402,10 @@ output [row_num*8-1:0] delay_weights;
     generate
         for (i = 1; i < column_num-11; i = i+1) begin: row_6_column
             always @(posedge clk) begin
-                if ((reset == 1'b1) || (state_reset == 1'b1)) begin
+                if (reset == 1'b1) begin
                     row_6_regs[i] <= 0;
                 end
-                else if (state_en == 1'b1) begin
+                else if(en == 1'b1) begin
                     row_6_regs[i] <= row_6_regs[i-1];
                 end
                 else begin
@@ -442,10 +421,10 @@ output [row_num*8-1:0] delay_weights;
     
     //row 5
     always @(posedge clk) begin
-        if ((reset == 1'b1) || (state_reset == 1'b1)) begin
+        if (reset == 1'b1) begin
             row_5_regs[0] <= 0;
         end
-        else if (state_en == 1'b1) begin
+        else if(en == 1'b1)  begin
             row_5_regs[0] <= weights[((5-1) * 8) +: 8];
         end
         else begin
@@ -456,10 +435,10 @@ output [row_num*8-1:0] delay_weights;
     generate
         for (i = 1; i < column_num-12; i = i+1) begin: row_5_column
             always @(posedge clk) begin
-                if ((reset == 1'b1) || (state_reset == 1'b1)) begin
+                if (reset == 1'b1)begin
                     row_5_regs[i] <= 0;
                 end
-                else if (state_en == 1'b1) begin
+                else if(en == 1'b1) begin
                     row_5_regs[i] <= row_5_regs[i-1];
                 end
                 else begin
@@ -475,10 +454,10 @@ output [row_num*8-1:0] delay_weights;
     
     //row 4
     always @(posedge clk) begin
-        if ((reset == 1'b1) || (state_reset == 1'b1)) begin
+        if (reset == 1'b1) begin
             row_4_regs[0] <= 0;
         end
-        else if (state_en == 1'b1) begin
+        else if (en == 1'b1)  begin
             row_4_regs[0] <= weights[((4-1) * 8) +: 8];
         end
         else begin
@@ -489,10 +468,10 @@ output [row_num*8-1:0] delay_weights;
     generate
         for (i = 1; i < column_num-13; i = i+1) begin: row_4_column
             always @(posedge clk) begin
-                if ((reset == 1'b1) || (state_reset == 1'b1)) begin
+                if (reset == 1'b1)begin
                     row_4_regs[i] <= 0;
                 end
-                else if (state_en == 1'b1) begin
+                else if(en == 1'b1)  begin
                     row_4_regs[i] <= row_4_regs[i-1];
                 end
                 else begin
@@ -508,10 +487,10 @@ output [row_num*8-1:0] delay_weights;
     
     //row 3
     always @(posedge clk) begin
-        if ((reset == 1'b1) || (state_reset == 1'b1)) begin
+        if (reset == 1'b1)begin
             row_3_regs[0] <= 0;
         end
-        else if (state_en == 1'b1) begin
+        else if(en == 1'b1)  begin
             row_3_regs[0] <= weights[((3-1) * 8) +: 8];
         end
         else begin
@@ -522,10 +501,10 @@ output [row_num*8-1:0] delay_weights;
     generate
         for (i = 1; i < column_num-14; i = i+1) begin: row_3_column
             always @(posedge clk) begin
-                if ((reset == 1'b1) || (state_reset == 1'b1)) begin
+                if (reset == 1'b1)begin
                     row_3_regs[i] <= 0;
                 end
-                else if (state_en == 1'b1) begin
+                else if(en == 1'b1) begin
                     row_3_regs[i] <= row_3_regs[i-1];
                 end
                 else begin
@@ -541,10 +520,10 @@ output [row_num*8-1:0] delay_weights;
     
     //row 2
     always @(posedge clk) begin
-        if ((reset == 1'b1) || (state_reset == 1'b1)) begin
+        if (reset == 1'b1)begin
             row_2_regs[0] <= 0;
         end
-        else if (state_en == 1'b1) begin
+        else if (en == 1'b1) begin
             row_2_regs[0] <= weights[((2-1) * 8) +: 8];
         end
         else begin
