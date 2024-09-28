@@ -274,6 +274,8 @@ valid_row3_adr
    
    wire stall_in_row;
    
+   wire last_pixel_and_tile_end, last_pixel_not_tile_end;
+   
    reg[3:0] row_length, stall_in_row_counter;
    
    always@(posedge clk) begin
@@ -407,13 +409,361 @@ valid_row3_adr
     end
     
     
-    assign loop_if_add_begin = (conv_rows_add_end1 == 1'b1);
+//    assign loop_if_add_begin = (conv_rows_add_end1 == 1'b1);
+    assign loop_if_add_begin = 
+    (s == 4'd1)? (
+         (tile_x_start + pixels_in_row_minus_1 > ox)? ( 
+                ((k + ox - 1) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky1 + 1) == (k))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky1 + 1) == (k))
+                    )
+                ): 
+                
+                    ((((k + ox) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((k + ox - 1) - p_plus_1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky1 + 1) == (k))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((k + ox) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky1 + 1) == (k))
+                    )
+         ):
+         (
+                ((tile_x_start + k + pixels_in_row_minus_2) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky1 + 1) == (k))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1))) 
+                        && ((ky1 + 1) == (k))
+                    )
+                ): 
+                
+                    ((((tile_x_start + k + pixels_in_row_minus_1) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((tile_x_start + k + pixels_in_row_minus_2) - p_plus_1 - 16'h0001) & ix_mask) - (tile_x_start - 1))) 
+                        && ((ky1 + 1) == (k))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((tile_x_start + k + pixels_in_row_minus_1) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1))) 
+                        && ((ky1 + 1) == (k))
+                    )
+         )
+   ):
+   (s == 4'd2)? (
+         (tile_x_start + pixels_in_row_minus_1 > ox)? ( 
+                ((k + (ox << 1) -2) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))  
+                        && ((ky1 + 1) == (k))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky1 + 1) == (k))
+                    )
+                ): 
+                
+                    ((((k + (ox << 1) -1) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((k + (ox << 1) -2) - p_plus_1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky1 + 1) == (k))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((k + (ox << 1) -1) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky1 + 1) == (k))
+                    )
+         ):
+         (
+                (((tile_x_start << 1) + k + pixels_in_row_mult_2 -4) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky1 + 1) == (k)) 
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky1 + 1) == (k))
+                    )
+                ): 
+                    
+                    (((((tile_x_start << 1) + k + pixels_in_row_mult_2 -3) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((((tile_x_start << 1) + k + pixels_in_row_mult_2 -4) - p_plus_1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2))) 
+                        && ((ky1 + 1) == (k))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((((((tile_x_start << 1) + k + pixels_in_row_mult_2 -3) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))                                                    
+                        && ((ky1 + 1) == (k))
+                    )
+         )  
+   ):
+   0; 
     
 //    assign loop_if_add_end = loop_if_add_begin && ((if_start + 1) > nif);
-    assign loop_if_add_end = (conv_rows_add_end1 == 1'b1) && ((if_start + 1) > nif);
-    
-    assign conv_nif_add_end = loop_if_add_end;
-    
+    assign loop_if_add_end = 
+    (s == 4'd1)? (
+         (tile_x_start + pixels_in_row_minus_1 > ox)? ( 
+                ((k + ox - 1) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                    )
+                ): 
+                
+                    ((((k + ox) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((k + ox - 1) - p_plus_1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((k + ox) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                    )
+         ):
+         (
+                ((tile_x_start + k + pixels_in_row_minus_2) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1))) 
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                    )
+                ): 
+                
+                    ((((tile_x_start + k + pixels_in_row_minus_1) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((tile_x_start + k + pixels_in_row_minus_2) - p_plus_1 - 16'h0001) & ix_mask) - (tile_x_start - 1))) 
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((tile_x_start + k + pixels_in_row_minus_1) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1))) 
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                    )
+         )
+   ):
+   (s == 4'd2)? (
+         (tile_x_start + pixels_in_row_minus_1 > ox)? ( 
+                ((k + (ox << 1) -2) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))  
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                    )
+                ): 
+                
+                    ((((k + (ox << 1) -1) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((k + (ox << 1) -2) - p_plus_1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((k + (ox << 1) -1) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                    )
+         ):
+         (
+                (((tile_x_start << 1) + k + pixels_in_row_mult_2 -4) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky1 + 1) == (k)) 
+                        && ((if_start + 1) > nif)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                    )
+                ): 
+                    
+                    (((((tile_x_start << 1) + k + pixels_in_row_mult_2 -3) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((((tile_x_start << 1) + k + pixels_in_row_mult_2 -4) - p_plus_1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2))) 
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((((((tile_x_start << 1) + k + pixels_in_row_mult_2 -3) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))                                                    
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                    )
+         )  
+   ):
+   0; 
+   
+    assign conv_nif_add_end = 
+    (s == 4'd1)? (
+         (tile_x_start + pixels_in_row_minus_1 > ox)? ( 
+                ((k + ox - 1) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                    )
+                ): 
+                
+                    ((((k + ox) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((k + ox - 1) - p_plus_1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((k + ox) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                    )
+         ):
+         (
+                ((tile_x_start + k + pixels_in_row_minus_2) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1))) 
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                    )
+                ): 
+                
+                    ((((tile_x_start + k + pixels_in_row_minus_1) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((tile_x_start + k + pixels_in_row_minus_2) - p_plus_1 - 16'h0001) & ix_mask) - (tile_x_start - 1))) 
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((tile_x_start + k + pixels_in_row_minus_1) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1))) 
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                    )
+         )
+   ):
+   (s == 4'd2)? (
+         (tile_x_start + pixels_in_row_minus_1 > ox)? ( 
+                ((k + (ox << 1) -2) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))  
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                    )
+                ): 
+                
+                    ((((k + (ox << 1) -1) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((k + (ox << 1) -2) - p_plus_1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((k + (ox << 1) -1) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                    )
+         ):
+         (
+                (((tile_x_start << 1) + k + pixels_in_row_mult_2 -4) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky1 + 1) == (k)) 
+                        && ((if_start + 1) > nif)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                    )
+                ): 
+                    
+                    (((((tile_x_start << 1) + k + pixels_in_row_mult_2 -3) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((((tile_x_start << 1) + k + pixels_in_row_mult_2 -4) - p_plus_1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2))) 
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((((((tile_x_start << 1) + k + pixels_in_row_mult_2 -3) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))                                                    
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                    )
+         )  
+   ):
+   0; 
+   
     //loop of
     always@(posedge clk)begin 
         if(reset ==1'b1)begin
@@ -432,14 +782,272 @@ valid_row3_adr
        end
     end
     
-    //assign loop_if_add_end = (conv_rows_add_end1 == 1'b1) && (if_start + 1) > nif;
+    
 //    assign loop_f_add_begin = (loop_if_add_end == 1'b1);
 //assign conv_rows_add_end1 = ((signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix))) && ((ky1 + 1) == (k));
-    assign loop_f_add_begin = ((signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix))) && ((ky1 + 1) == (k)) && ((if_start + 1) > nif);
-        
+    assign loop_f_add_begin = 
+    (s == 4'd1)? (
+         (tile_x_start + pixels_in_row_minus_1 > ox)? ( 
+                ((k + ox - 1) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                    )
+                ): 
+                
+                    ((((k + ox) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((k + ox - 1) - p_plus_1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((k + ox) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                    )
+         ):
+         (
+                ((tile_x_start + k + pixels_in_row_minus_2) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1))) 
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                    )
+                ): 
+                
+                    ((((tile_x_start + k + pixels_in_row_minus_1) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((tile_x_start + k + pixels_in_row_minus_2) - p_plus_1 - 16'h0001) & ix_mask) - (tile_x_start - 1))) 
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((tile_x_start + k + pixels_in_row_minus_1) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1))) 
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                    )
+         )
+   ):
+   (s == 4'd2)? (
+         (tile_x_start + pixels_in_row_minus_1 > ox)? ( 
+                ((k + (ox << 1) -2) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))  
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                    )
+                ): 
+                
+                    ((((k + (ox << 1) -1) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((k + (ox << 1) -2) - p_plus_1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((k + (ox << 1) -1) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                    )
+         ):
+         (
+                (((tile_x_start << 1) + k + pixels_in_row_mult_2 -4) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky1 + 1) == (k)) 
+                        && ((if_start + 1) > nif)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                    )
+                ): 
+                    
+                    (((((tile_x_start << 1) + k + pixels_in_row_mult_2 -3) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((((tile_x_start << 1) + k + pixels_in_row_mult_2 -4) - p_plus_1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2))) 
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((((((tile_x_start << 1) + k + pixels_in_row_mult_2 -3) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))                                                    
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                    )
+         )  
+   ):
+   0; 
+       
 //    assign loop_f_add_end = loop_f_add_begin && ((tile_f_start + row_num) > of);
-    assign loop_f_add_end = ((signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix))) && ((ky1 + 1) == (k)) && ((if_start + 1) > nif) && ((tile_f_start + row_num) > of);
-    
+    assign loop_f_add_end =  
+    (s == 4'd1)? (
+         (tile_x_start + pixels_in_row_minus_1 > ox)? ( 
+                ((k + ox - 1) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                    )
+                ): 
+                
+                    ((((k + ox) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((k + ox - 1) - p_plus_1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((k + ox) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                    )
+         ):
+         (
+                ((tile_x_start + k + pixels_in_row_minus_2) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1))) 
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                    )
+                ): 
+                
+                    ((((tile_x_start + k + pixels_in_row_minus_1) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((tile_x_start + k + pixels_in_row_minus_2) - p_plus_1 - 16'h0001) & ix_mask) - (tile_x_start - 1))) 
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((tile_x_start + k + pixels_in_row_minus_1) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1))) 
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                    )
+         )
+   ):
+   (s == 4'd2)? (
+         (tile_x_start + pixels_in_row_minus_1 > ox)? ( 
+                ((k + (ox << 1) -2) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))  
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                    )
+                ): 
+                
+                    ((((k + (ox << 1) -1) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((k + (ox << 1) -2) - p_plus_1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((k + (ox << 1) -1) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                    )
+         ):
+         (
+                (((tile_x_start << 1) + k + pixels_in_row_mult_2 -4) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky1 + 1) == (k)) 
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                    )
+                ): 
+                    
+                    (((((tile_x_start << 1) + k + pixels_in_row_mult_2 -3) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((((tile_x_start << 1) + k + pixels_in_row_mult_2 -4) - p_plus_1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2))) 
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((((((tile_x_start << 1) + k + pixels_in_row_mult_2 -3) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))                                                    
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                    )
+         )  
+   ):
+   0; 
+   
     //loop ox
     always@(posedge clk)begin 
         if(reset ==1'b1)begin
@@ -458,14 +1066,304 @@ valid_row3_adr
        end
     end
     
-    //assign loop_f_add_end = ((signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix))) && ((ky1 + 1) == (k)) && ((if_start + 1) > nif) && ((tile_f_start + row_num) > of);
+   
 //    assign loop_x_add_begin = (loop_f_add_end == 1'b1);
     
 //    assign loop_x_add_end = loop_x_add_begin && ((tile_x_start + pixels_in_row) > ox);
-    assign loop_x_add_begin = ((signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix))) && ((ky1 + 1) == (k)) && ((if_start + 1) > nif) && ((tile_f_start + row_num) > of);
-    
-    assign loop_x_add_end = (((signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix))) && ((ky1 + 1) == (k)) && ((if_start + 1) > nif) && ((tile_f_start + row_num) > of)) && ((tile_x_start + pixels_in_row) > ox);
-    
+    assign loop_x_add_begin = 
+    (s == 4'd1)? (
+         (tile_x_start + pixels_in_row_minus_1 > ox)? ( 
+                ((k + ox - 1) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                    )
+                ): 
+                
+                    ((((k + ox) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((k + ox - 1) - p_plus_1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((k + ox) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                    )
+         ):
+         (
+                ((tile_x_start + k + pixels_in_row_minus_2) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1))) 
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                    )
+                ): 
+                
+                    ((((tile_x_start + k + pixels_in_row_minus_1) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((tile_x_start + k + pixels_in_row_minus_2) - p_plus_1 - 16'h0001) & ix_mask) - (tile_x_start - 1))) 
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((tile_x_start + k + pixels_in_row_minus_1) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1))) 
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                    )
+         )
+   ):
+   (s == 4'd2)? (
+         (tile_x_start + pixels_in_row_minus_1 > ox)? ( 
+                ((k + (ox << 1) -2) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))  
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                    )
+                ): 
+                
+                    ((((k + (ox << 1) -1) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((k + (ox << 1) -2) - p_plus_1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((k + (ox << 1) -1) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                    )
+         ):
+         (
+                (((tile_x_start << 1) + k + pixels_in_row_mult_2 -4) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky1 + 1) == (k)) 
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                    )
+                ): 
+                    
+                    (((((tile_x_start << 1) + k + pixels_in_row_mult_2 -3) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((((tile_x_start << 1) + k + pixels_in_row_mult_2 -4) - p_plus_1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2))) 
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((((((tile_x_start << 1) + k + pixels_in_row_mult_2 -3) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))                                                    
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                    )
+         )  
+   ):
+   0; 
+   
+    assign loop_x_add_end =  
+    (s == 4'd1)? (
+         (tile_x_start + pixels_in_row_minus_1 > ox)? ( 
+                ((k + ox - 1) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                    )
+                ): 
+                
+                    ((((k + ox) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((k + ox - 1) - p_plus_1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((k + ox) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                    )
+         ):
+         (
+                ((tile_x_start + k + pixels_in_row_minus_2) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1))) 
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                    )
+                ): 
+                
+                    ((((tile_x_start + k + pixels_in_row_minus_1) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((tile_x_start + k + pixels_in_row_minus_2) - p_plus_1 - 16'h0001) & ix_mask) - (tile_x_start - 1))) 
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((tile_x_start + k + pixels_in_row_minus_1) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1))) 
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                    )
+         )
+   ):
+   (s == 4'd2)? (
+         (tile_x_start + pixels_in_row_minus_1 > ox)? ( 
+                ((k + (ox << 1) -2) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))  
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                    )
+                ): 
+                
+                    ((((k + (ox << 1) -1) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((k + (ox << 1) -2) - p_plus_1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((k + (ox << 1) -1) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                    )
+         ):
+         (
+                (((tile_x_start << 1) + k + pixels_in_row_mult_2 -4) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky1 + 1) == (k)) 
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                    )
+                ): 
+                    
+                    (((((tile_x_start << 1) + k + pixels_in_row_mult_2 -3) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((((tile_x_start << 1) + k + pixels_in_row_mult_2 -4) - p_plus_1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2))) 
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((((((tile_x_start << 1) + k + pixels_in_row_mult_2 -3) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))                                                    
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                    )
+         )  
+   ):
+   0; 
+   
     //loop oy
     always@(posedge clk)begin
        if(reset ==1'b1)begin
@@ -488,19 +1386,338 @@ valid_row3_adr
        end
     end
     
-    //    assign loop_x_add_end = (((signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix))) && ((ky1 + 1) == (k)) && ((if_start + 1) > nif) && ((tile_f_start + row_num) > of)) && ((tile_x_start + pixels_in_row) > ox);
-//    assign loop_y_add_begin = (loop_x_add_end==1'b1);
+    //    assign loop_y_add_begin = (loop_x_add_end==1'b1);
     
 //    assign loop_y_add_end = loop_y_add_begin && ((tile_y_start + buffers_num) > oy);
-    assign loop_y_add_begin = (((signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix))) && ((ky1 + 1) == (k)) && ((if_start + 1) > nif) && ((tile_f_start + row_num) > of)) && ((tile_x_start + pixels_in_row) > ox);
-    
-    assign loop_y_add_end = ((((signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix))) && ((ky1 + 1) == (k)) && ((if_start + 1) > nif) && ((tile_f_start + row_num) > of)) && ((tile_x_start + pixels_in_row) > ox)) && ((tile_y_start + buffers_num) > oy);
-    
+    assign loop_y_add_begin = 
+    (s == 4'd1)? (
+         (tile_x_start + pixels_in_row_minus_1 > ox)? ( 
+                ((k + ox - 1) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                    )
+                ): 
+                
+                    ((((k + ox) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((k + ox - 1) - p_plus_1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((k + ox) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                    )
+         ):
+         (
+                ((tile_x_start + k + pixels_in_row_minus_2) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1))) 
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                    )
+                ): 
+                
+                    ((((tile_x_start + k + pixels_in_row_minus_1) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((tile_x_start + k + pixels_in_row_minus_2) - p_plus_1 - 16'h0001) & ix_mask) - (tile_x_start - 1))) 
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((tile_x_start + k + pixels_in_row_minus_1) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1))) 
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                    )
+         )
+   ):
+   (s == 4'd2)? (
+         (tile_x_start + pixels_in_row_minus_1 > ox)? ( 
+                ((k + (ox << 1) -2) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))  
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                    )
+                ): 
+                
+                    ((((k + (ox << 1) -1) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((k + (ox << 1) -2) - p_plus_1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((k + (ox << 1) -1) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                    )
+         ):
+         (
+                (((tile_x_start << 1) + k + pixels_in_row_mult_2 -4) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky1 + 1) == (k)) 
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                    )
+                ): 
+                    
+                    (((((tile_x_start << 1) + k + pixels_in_row_mult_2 -3) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((((tile_x_start << 1) + k + pixels_in_row_mult_2 -4) - p_plus_1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2))) 
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((((((tile_x_start << 1) + k + pixels_in_row_mult_2 -3) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))                                                    
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                    )
+         )  
+   ):
+   0; 
+    assign loop_y_add_end =   
+    (s == 4'd1)? (
+         (tile_x_start + pixels_in_row_minus_1 > ox)? ( 
+                ((k + ox - 1) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                        && ((tile_y_start + buffers_num) > oy)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                        && ((tile_y_start + buffers_num) > oy)
+                    )
+                ): 
+                
+                    ((((k + ox) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((k + ox - 1) - p_plus_1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                        && ((tile_y_start + buffers_num) > oy)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((k + ox) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                        && ((tile_y_start + buffers_num) > oy)
+                    )
+         ):
+         (
+                ((tile_x_start + k + pixels_in_row_minus_2) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                        && ((tile_y_start + buffers_num) > oy)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1))) 
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                        && ((tile_y_start + buffers_num) > oy)
+                    )
+                ): 
+                
+                    ((((tile_x_start + k + pixels_in_row_minus_1) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((tile_x_start + k + pixels_in_row_minus_2) - p_plus_1 - 16'h0001) & ix_mask) - (tile_x_start - 1))) 
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                        && ((tile_y_start + buffers_num) > oy)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((tile_x_start + k + pixels_in_row_minus_1) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1))) 
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                        && ((tile_y_start + buffers_num) > oy)
+                    )
+         )
+   ):
+   (s == 4'd2)? (
+         (tile_x_start + pixels_in_row_minus_1 > ox)? ( 
+                ((k + (ox << 1) -2) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))  
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                        && ((tile_y_start + buffers_num) > oy)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                        && ((tile_y_start + buffers_num) > oy)
+                    )
+                ): 
+                
+                    ((((k + (ox << 1) -1) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((k + (ox << 1) -2) - p_plus_1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                        && ((tile_y_start + buffers_num) > oy)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((k + (ox << 1) -1) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                        && ((tile_y_start + buffers_num) > oy)
+                    )
+         ):
+         (
+                (((tile_x_start << 1) + k + pixels_in_row_mult_2 -4) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky1 + 1) == (k)) 
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                        && ((tile_y_start + buffers_num) > oy)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                        && ((tile_y_start + buffers_num) > oy)
+                    )
+                ): 
+                    
+                    (((((tile_x_start << 1) + k + pixels_in_row_mult_2 -3) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((((tile_x_start << 1) + k + pixels_in_row_mult_2 -4) - p_plus_1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2))) 
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                        && ((tile_y_start + buffers_num) > oy)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((((((tile_x_start << 1) + k + pixels_in_row_mult_2 -3) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))                                                    
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                        && ((tile_y_start + buffers_num) > oy)
+                    )
+         )  
+   ):
+   0; 
+   
     //next ox_st, oy_st, pox, poy
-    //assign loop_x_add_end = (((signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix))) && ((ky1 + 1) == (k)) && ((if_start + 1) > nif) && ((tile_f_start + row_num) > of)) && ((tile_x_start + pixels_in_row) > ox);
-//    assign next_ox_start = ((reset ==1'b1) || (loop_x_add_end == 1'b1))? 1 : tile_x_start + pixels_in_row;
-    assign next_ox_start = ((reset ==1'b1) || ((((signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix))) && ((ky1 + 1) == (k)) && ((if_start + 1) > nif) && ((tile_f_start + row_num) > of)) && ((tile_x_start + pixels_in_row) > ox)))? 1 : tile_x_start + pixels_in_row;
     
+    assign next_ox_start = ((reset ==1'b1) || (loop_x_add_end == 1'b1))? 1 : tile_x_start + pixels_in_row;
+   
     assign ox_start = tile_x_start;
     
     //assign loop_y_add_end = ((((signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix))) && ((ky1 + 1) == (k)) && ((if_start + 1) > nif) && ((tile_f_start + row_num) > of)) && ((tile_x_start + pixels_in_row) > ox)) && ((tile_y_start + buffers_num) > oy);
@@ -568,16 +1785,317 @@ valid_row3_adr
     //assign conv_pixels_add_end = (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix));
 //    assign loop_ky1_add_begin = (conv_pixels_add_end == 1'b1);
 //    assign loop_ky1_add_end = loop_ky1_add_begin && ((ky1 + 1) == (k));
-    assign loop_ky1_add_begin = (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix));
-    assign loop_ky1_add_end = ((signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix))) && ((ky1 + 1) == (k));
-    
+    assign loop_ky1_add_begin =  
+    (s == 4'd1)? (
+         (tile_x_start + pixels_in_row_minus_1 > ox)? ( 
+                ((k + ox - 1) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1)))
+                    )
+                ): 
+                
+                    ((((k + ox) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((k + ox - 1) - p_plus_1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((k + ox) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1)))
+                    )
+         ):
+         (
+                ((tile_x_start + k + pixels_in_row_minus_2) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1))) 
+                    )
+                ): 
+                
+                    ((((tile_x_start + k + pixels_in_row_minus_1) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((tile_x_start + k + pixels_in_row_minus_2) - p_plus_1 - 16'h0001) & ix_mask) - (tile_x_start - 1))) 
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((tile_x_start + k + pixels_in_row_minus_1) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1))) 
+                    )
+         )
+   ):
+   (s == 4'd2)? (
+         (tile_x_start + pixels_in_row_minus_1 > ox)? ( 
+                ((k + (ox << 1) -2) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))  
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                    )
+                ): 
+                
+                    ((((k + (ox << 1) -1) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((k + (ox << 1) -2) - p_plus_1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((k + (ox << 1) -1) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                    )
+         ):
+         (
+                (((tile_x_start << 1) + k + pixels_in_row_mult_2 -4) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        
+                        
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                    )
+                ): 
+                    
+                    (((((tile_x_start << 1) + k + pixels_in_row_mult_2 -3) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((((tile_x_start << 1) + k + pixels_in_row_mult_2 -4) - p_plus_1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2))) 
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((((((tile_x_start << 1) + k + pixels_in_row_mult_2 -3) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))                                                    
+                    )
+         )  
+   ):
+   0; 
+    assign loop_ky1_add_end = 
+    (s == 4'd1)? (
+         (tile_x_start + pixels_in_row_minus_1 > ox)? ( 
+                ((k + ox - 1) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky1 + 1) == (k))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky1 + 1) == (k))
+                    )
+                ): 
+                
+                    ((((k + ox) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((k + ox - 1) - p_plus_1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky1 + 1) == (k))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((k + ox) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky1 + 1) == (k))
+                    )
+         ):
+         (
+                ((tile_x_start + k + pixels_in_row_minus_2) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky1 + 1) == (k))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1))) 
+                        && ((ky1 + 1) == (k))
+                    )
+                ): 
+                
+                    ((((tile_x_start + k + pixels_in_row_minus_1) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((tile_x_start + k + pixels_in_row_minus_2) - p_plus_1 - 16'h0001) & ix_mask) - (tile_x_start - 1))) 
+                        && ((ky1 + 1) == (k))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((tile_x_start + k + pixels_in_row_minus_1) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1))) 
+                        && ((ky1 + 1) == (k))
+                    )
+         )
+   ):
+   (s == 4'd2)? (
+         (tile_x_start + pixels_in_row_minus_1 > ox)? ( 
+                ((k + (ox << 1) -2) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))  
+                        && ((ky1 + 1) == (k))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky1 + 1) == (k))
+                    )
+                ): 
+                
+                    ((((k + (ox << 1) -1) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((k + (ox << 1) -2) - p_plus_1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky1 + 1) == (k))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((k + (ox << 1) -1) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky1 + 1) == (k))
+                    )
+         ):
+         (
+                (((tile_x_start << 1) + k + pixels_in_row_mult_2 -4) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky1 + 1) == (k)) 
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky1 + 1) == (k))
+                    )
+                ): 
+                    
+                    (((((tile_x_start << 1) + k + pixels_in_row_mult_2 -3) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((((tile_x_start << 1) + k + pixels_in_row_mult_2 -4) - p_plus_1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2))) 
+                        && ((ky1 + 1) == (k))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((((((tile_x_start << 1) + k + pixels_in_row_mult_2 -3) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))                                                    
+                        && ((ky1 + 1) == (k))
+                    )
+         )  
+   ):
+   0; 
+   
     assign ky1_plus_irow_y1 = ky1 + iy_start_1;                         
   
     assign row_y1 = ((ky1_plus_irow_y1 < p_plus_1) || (ky1_plus_irow_y1 > p_plus_iy))? 16'hffff: (ky1_plus_irow_y1 - {{12'b0},p});
 
 //    assign conv_rows_add_end1 = loop_ky1_add_end;
-    assign conv_rows_add_end1 = ((signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix))) && ((ky1 + 1) == (k));
-    
+    assign conv_rows_add_end1 = 
+    (s == 4'd1)? (
+         (tile_x_start + pixels_in_row_minus_1 > ox)? ( 
+                ((k + ox - 1) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky1 + 1) == (k))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky1 + 1) == (k))
+                    )
+                ): 
+                
+                    ((((k + ox) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((k + ox - 1) - p_plus_1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky1 + 1) == (k))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((k + ox) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky1 + 1) == (k))
+                    )
+         ):
+         (
+                ((tile_x_start + k + pixels_in_row_minus_2) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky1 + 1) == (k))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1))) 
+                        && ((ky1 + 1) == (k))
+                    )
+                ): 
+                
+                    ((((tile_x_start + k + pixels_in_row_minus_1) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((tile_x_start + k + pixels_in_row_minus_2) - p_plus_1 - 16'h0001) & ix_mask) - (tile_x_start - 1))) 
+                        && ((ky1 + 1) == (k))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((tile_x_start + k + pixels_in_row_minus_1) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1))) 
+                        && ((ky1 + 1) == (k))
+                    )
+         )
+   ):
+   (s == 4'd2)? (
+         (tile_x_start + pixels_in_row_minus_1 > ox)? ( 
+                ((k + (ox << 1) -2) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))  
+                        && ((ky1 + 1) == (k))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky1 + 1) == (k))
+                    )
+                ): 
+                
+                    ((((k + (ox << 1) -1) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((k + (ox << 1) -2) - p_plus_1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky1 + 1) == (k))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((k + (ox << 1) -1) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky1 + 1) == (k))
+                    )
+         ):
+         (
+                (((tile_x_start << 1) + k + pixels_in_row_mult_2 -4) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky1 + 1) == (k)) 
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky1 + 1) == (k))
+                    )
+                ): 
+                    
+                    (((((tile_x_start << 1) + k + pixels_in_row_mult_2 -3) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((((tile_x_start << 1) + k + pixels_in_row_mult_2 -4) - p_plus_1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2))) 
+                        && ((ky1 + 1) == (k))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((((((tile_x_start << 1) + k + pixels_in_row_mult_2 -3) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))                                                    
+                        && ((ky1 + 1) == (k))
+                    )
+         )  
+   ):
+   0; 
+   
     assign idx1_in_k = ky1;
     
     //conv row 2
@@ -602,16 +2120,317 @@ valid_row3_adr
     //assign conv_pixels_add_end = (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix));
 //    assign loop_ky2_add_begin = (conv_pixels_add_end == 1'b1);
 //    assign loop_ky2_add_end = loop_ky2_add_begin && ((ky2 + 1) == (k));
-    assign loop_ky2_add_begin = (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix));
-    assign loop_ky2_add_end = ((signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix))) && ((ky2 + 1) == (k));
-    
+    assign loop_ky2_add_begin =  
+    (s == 4'd1)? (
+         (tile_x_start + pixels_in_row_minus_1 > ox)? ( 
+                ((k + ox - 1) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1)))
+                    )
+                ): 
+                
+                    ((((k + ox) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((k + ox - 1) - p_plus_1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((k + ox) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1)))
+                    )
+         ):
+         (
+                ((tile_x_start + k + pixels_in_row_minus_2) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1))) 
+                    )
+                ): 
+                
+                    ((((tile_x_start + k + pixels_in_row_minus_1) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((tile_x_start + k + pixels_in_row_minus_2) - p_plus_1 - 16'h0001) & ix_mask) - (tile_x_start - 1))) 
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((tile_x_start + k + pixels_in_row_minus_1) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1))) 
+                    )
+         )
+   ):
+   (s == 4'd2)? (
+         (tile_x_start + pixels_in_row_minus_1 > ox)? ( 
+                ((k + (ox << 1) -2) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))  
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                    )
+                ): 
+                
+                    ((((k + (ox << 1) -1) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((k + (ox << 1) -2) - p_plus_1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((k + (ox << 1) -1) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                    )
+         ):
+         (
+                (((tile_x_start << 1) + k + pixels_in_row_mult_2 -4) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        
+                        
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                    )
+                ): 
+                    
+                    (((((tile_x_start << 1) + k + pixels_in_row_mult_2 -3) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((((tile_x_start << 1) + k + pixels_in_row_mult_2 -4) - p_plus_1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2))) 
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((((((tile_x_start << 1) + k + pixels_in_row_mult_2 -3) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))                                                    
+                    )
+         )  
+   ):
+   0; 
+    assign loop_ky2_add_end =  
+    (s == 4'd1)? (
+         (tile_x_start + pixels_in_row_minus_1 > ox)? ( 
+                ((k + ox - 1) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky2 + 1) == (k))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky2 + 1) == (k))
+                    )
+                ): 
+                
+                    ((((k + ox) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((k + ox - 1) - p_plus_1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky2 + 1) == (k))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((k + ox) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky2 + 1) == (k))
+                    )
+         ):
+         (
+                ((tile_x_start + k + pixels_in_row_minus_2) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky2 + 1) == (k))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1))) 
+                        && ((ky2 + 1) == (k))
+                    )
+                ): 
+                
+                    ((((tile_x_start + k + pixels_in_row_minus_1) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((tile_x_start + k + pixels_in_row_minus_2) - p_plus_1 - 16'h0001) & ix_mask) - (tile_x_start - 1))) 
+                        && ((ky2 + 1) == (k))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((tile_x_start + k + pixels_in_row_minus_1) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1))) 
+                        && ((ky2 + 1) == (k))
+                    )
+         )
+   ):
+   (s == 4'd2)? (
+         (tile_x_start + pixels_in_row_minus_1 > ox)? ( 
+                ((k + (ox << 1) -2) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))  
+                        && ((ky2 + 1) == (k))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky2 + 1) == (k))
+                    )
+                ): 
+                
+                    ((((k + (ox << 1) -1) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((k + (ox << 1) -2) - p_plus_1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky2 + 1) == (k))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((k + (ox << 1) -1) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky2 + 1) == (k))
+                    )
+         ):
+         (
+                (((tile_x_start << 1) + k + pixels_in_row_mult_2 -4) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky2 + 1) == (k))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky2 + 1) == (k))
+                    )
+                ): 
+                    
+                    (((((tile_x_start << 1) + k + pixels_in_row_mult_2 -3) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((((tile_x_start << 1) + k + pixels_in_row_mult_2 -4) - p_plus_1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2))) 
+                        && ((ky2 + 1) == (k))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((((((tile_x_start << 1) + k + pixels_in_row_mult_2 -3) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))                                                    
+                        && ((ky2 + 1) == (k))
+                    )
+         )  
+   ):
+   0; 
+   
     assign ky2_plus_irow_y2 = ky2 + iy_start_2;                         
   
     assign row_y2 = ((ky2_plus_irow_y2 < p_plus_1) || (ky2_plus_irow_y2 > p_plus_iy))? 16'hffff: (ky2_plus_irow_y2 - {{12'b0},p});
 
 //    assign conv_rows_add_end2 = loop_ky2_add_end;
-    assign conv_rows_add_end2 = ((signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix))) && ((ky2 + 1) == (k));
-    
+    assign conv_rows_add_end2 = 
+    (s == 4'd1)? (
+         (tile_x_start + pixels_in_row_minus_1 > ox)? ( 
+                ((k + ox - 1) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky2 + 1) == (k))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky2 + 1) == (k))
+                    )
+                ): 
+                
+                    ((((k + ox) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((k + ox - 1) - p_plus_1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky2 + 1) == (k))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((k + ox) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky2 + 1) == (k))
+                    )
+         ):
+         (
+                ((tile_x_start + k + pixels_in_row_minus_2) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky2 + 1) == (k))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1))) 
+                        && ((ky2 + 1) == (k))
+                    )
+                ): 
+                
+                    ((((tile_x_start + k + pixels_in_row_minus_1) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((tile_x_start + k + pixels_in_row_minus_2) - p_plus_1 - 16'h0001) & ix_mask) - (tile_x_start - 1))) 
+                        && ((ky2 + 1) == (k))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((tile_x_start + k + pixels_in_row_minus_1) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1))) 
+                        && ((ky2 + 1) == (k))
+                    )
+         )
+   ):
+   (s == 4'd2)? (
+         (tile_x_start + pixels_in_row_minus_1 > ox)? ( 
+                ((k + (ox << 1) -2) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))  
+                        && ((ky2 + 1) == (k))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky2 + 1) == (k))
+                    )
+                ): 
+                
+                    ((((k + (ox << 1) -1) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((k + (ox << 1) -2) - p_plus_1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky2 + 1) == (k))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((k + (ox << 1) -1) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky2 + 1) == (k))
+                    )
+         ):
+         (
+                (((tile_x_start << 1) + k + pixels_in_row_mult_2 -4) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky2 + 1) == (k))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky2 + 1) == (k))
+                    )
+                ): 
+                    
+                    (((((tile_x_start << 1) + k + pixels_in_row_mult_2 -3) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((((tile_x_start << 1) + k + pixels_in_row_mult_2 -4) - p_plus_1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2))) 
+                        && ((ky2 + 1) == (k))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((((((tile_x_start << 1) + k + pixels_in_row_mult_2 -3) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))                                                    
+                        && ((ky2 + 1) == (k))
+                    )
+         )  
+   ):
+   0; 
+   
     assign idx2_in_k = ky2;
     
     //conv row 3
@@ -637,16 +2456,317 @@ valid_row3_adr
     //assign conv_pixels_add_end = (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix));
 //    assign loop_ky3_add_begin = (conv_pixels_add_end == 1'b1);
 //    assign loop_ky3_add_end = loop_ky3_add_begin && ((ky3 + 1) == (k));
-    assign loop_ky3_add_begin = (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix));
-    assign loop_ky3_add_end = ((signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix))) && ((ky3 + 1) == (k));
-    
+    assign loop_ky3_add_begin =  
+    (s == 4'd1)? (
+         (tile_x_start + pixels_in_row_minus_1 > ox)? ( 
+                ((k + ox - 1) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1)))
+                    )
+                ): 
+                
+                    ((((k + ox) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((k + ox - 1) - p_plus_1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((k + ox) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1)))
+                    )
+         ):
+         (
+                ((tile_x_start + k + pixels_in_row_minus_2) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1))) 
+                    )
+                ): 
+                
+                    ((((tile_x_start + k + pixels_in_row_minus_1) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((tile_x_start + k + pixels_in_row_minus_2) - p_plus_1 - 16'h0001) & ix_mask) - (tile_x_start - 1))) 
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((tile_x_start + k + pixels_in_row_minus_1) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1))) 
+                    )
+         )
+   ):
+   (s == 4'd2)? (
+         (tile_x_start + pixels_in_row_minus_1 > ox)? ( 
+                ((k + (ox << 1) -2) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))  
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                    )
+                ): 
+                
+                    ((((k + (ox << 1) -1) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((k + (ox << 1) -2) - p_plus_1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((k + (ox << 1) -1) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                    )
+         ):
+         (
+                (((tile_x_start << 1) + k + pixels_in_row_mult_2 -4) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        
+                        
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                    )
+                ): 
+                    
+                    (((((tile_x_start << 1) + k + pixels_in_row_mult_2 -3) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((((tile_x_start << 1) + k + pixels_in_row_mult_2 -4) - p_plus_1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2))) 
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((((((tile_x_start << 1) + k + pixels_in_row_mult_2 -3) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))                                                    
+                    )
+         )  
+   ):
+   0; 
+    assign loop_ky3_add_end =   
+    (s == 4'd1)? (
+         (tile_x_start + pixels_in_row_minus_1 > ox)? ( 
+                ((k + ox - 1) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky3 + 1) == (k))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky3 + 1) == (k))
+                    )
+                ): 
+                
+                    ((((k + ox) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((k + ox - 1) - p_plus_1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky3 + 1) == (k))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((k + ox) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky3 + 1) == (k))
+                    )
+         ):
+         (
+                ((tile_x_start + k + pixels_in_row_minus_2) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky3 + 1) == (k))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1))) 
+                        && ((ky3 + 1) == (k))
+                    )
+                ): 
+                
+                    ((((tile_x_start + k + pixels_in_row_minus_1) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((tile_x_start + k + pixels_in_row_minus_2) - p_plus_1 - 16'h0001) & ix_mask) - (tile_x_start - 1))) 
+                        && ((ky3 + 1) == (k))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((tile_x_start + k + pixels_in_row_minus_1) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1))) 
+                        && ((ky3 + 1) == (k))
+                    )
+         )
+   ):
+   (s == 4'd2)? (
+         (tile_x_start + pixels_in_row_minus_1 > ox)? ( 
+                ((k + (ox << 1) -2) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))  
+                        && ((ky3 + 1) == (k))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky3 + 1) == (k))
+                    )
+                ): 
+                
+                    ((((k + (ox << 1) -1) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((k + (ox << 1) -2) - p_plus_1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky3 + 1) == (k))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((k + (ox << 1) -1) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky3 + 1) == (k))
+                    )
+         ):
+         (
+                (((tile_x_start << 1) + k + pixels_in_row_mult_2 -4) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky3 + 1) == (k)) 
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky3 + 1) == (k))
+                    )
+                ): 
+                    
+                    (((((tile_x_start << 1) + k + pixels_in_row_mult_2 -3) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((((tile_x_start << 1) + k + pixels_in_row_mult_2 -4) - p_plus_1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2))) 
+                        && ((ky3 + 1) == (k))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((((((tile_x_start << 1) + k + pixels_in_row_mult_2 -3) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))                                                    
+                        && ((ky3 + 1) == (k))
+                    )
+         )  
+   ):
+   0; 
+   
     assign ky3_plus_irow_y3 = ky3 + iy_start_3;                         
   
     assign row_y3 = ((ky3_plus_irow_y3 < p_plus_1) || (ky3_plus_irow_y3 > p_plus_iy))? 16'hffff: (ky3_plus_irow_y3 - {{12'b0},p});
 
 //    assign conv_rows_add_end3 = loop_ky3_add_end;
-    assign conv_rows_add_end3 = ((signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix))) && ((ky3 + 1) == (k));
-    
+    assign conv_rows_add_end3 = 
+    (s == 4'd1)? (
+         (tile_x_start + pixels_in_row_minus_1 > ox)? ( 
+                ((k + ox - 1) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky3 + 1) == (k))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky3 + 1) == (k))
+                    )
+                ): 
+                
+                    ((((k + ox) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((k + ox - 1) - p_plus_1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky3 + 1) == (k))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((k + ox) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky3 + 1) == (k))
+                    )
+         ):
+         (
+                ((tile_x_start + k + pixels_in_row_minus_2) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky3 + 1) == (k))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1))) 
+                        && ((ky3 + 1) == (k))
+                    )
+                ): 
+                
+                    ((((tile_x_start + k + pixels_in_row_minus_1) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((tile_x_start + k + pixels_in_row_minus_2) - p_plus_1 - 16'h0001) & ix_mask) - (tile_x_start - 1))) 
+                        && ((ky3 + 1) == (k))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((tile_x_start + k + pixels_in_row_minus_1) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1))) 
+                        && ((ky3 + 1) == (k))
+                    )
+         )
+   ):
+   (s == 4'd2)? (
+         (tile_x_start + pixels_in_row_minus_1 > ox)? ( 
+                ((k + (ox << 1) -2) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))  
+                        && ((ky3 + 1) == (k))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky3 + 1) == (k))
+                    )
+                ): 
+                
+                    ((((k + (ox << 1) -1) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((k + (ox << 1) -2) - p_plus_1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky3 + 1) == (k))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((k + (ox << 1) -1) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky3 + 1) == (k))
+                    )
+         ):
+         (
+                (((tile_x_start << 1) + k + pixels_in_row_mult_2 -4) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky3 + 1) == (k)) 
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky3 + 1) == (k))
+                    )
+                ): 
+                    
+                    (((((tile_x_start << 1) + k + pixels_in_row_mult_2 -3) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((((tile_x_start << 1) + k + pixels_in_row_mult_2 -4) - p_plus_1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2))) 
+                        && ((ky3 + 1) == (k))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((((((tile_x_start << 1) + k + pixels_in_row_mult_2 -3) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))                                                    
+                        && ((ky3 + 1) == (k))
+                    )
+         )  
+   ):
+   0; 
+   
     assign idx3_in_k = ky3;
 
     //conv pixels
@@ -668,9 +2788,9 @@ valid_row3_adr
                      
    //next ix_start
    //next_ox_start = ((reset ==1'b1) || (loop_x_add_end == 1'b1))? 1 : tile_x_start + pixels_in_row;
-//   assign next_ix_start = (s == 4'd1)? next_ox_start:
-//                     (s == 4'd2)? (next_ox_start << 1) - 1:
-//                     0;
+   assign next_ix_start = (s == 4'd1)? next_ox_start:
+                     (s == 4'd2)? (next_ox_start << 1) - 1:
+                     0;
    //assign loop_x_add_end = (((signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix))) && ((ky1 + 1) == (k)) && ((if_start + 1) > nif) && ((tile_f_start + row_num) > of)) && ((tile_x_start + pixels_in_row) > ox);
 //   assign next_ix_start = 
 //   (s == 4'd1)? (
@@ -680,14 +2800,6 @@ valid_row3_adr
 //        ((reset ==1'b1) || (loop_x_add_end == 1'b1))? 1 : (tile_x_start << 1) + pixels_in_row_mult_2_minus_1
 //   ):
 //   0;
-   assign next_ix_start = 
-   (s == 4'd1)? (
-        ((reset ==1'b1) || ((((signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix))) && ((ky1 + 1) == (k)) && ((if_start + 1) > nif) && ((tile_f_start + row_num) > of)) && ((tile_x_start + pixels_in_row) > ox)))? 1 : tile_x_start + pixels_in_row
-   ):
-   (s == 4'd2)? (
-        ((reset ==1'b1) || ((((signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix))) && ((ky1 + 1) == (k)) && ((if_start + 1) > nif) && ((tile_f_start + row_num) > of)) && ((tile_x_start + pixels_in_row) > ox)))? 1 : (tile_x_start << 1) + pixels_in_row_mult_2_minus_1
-   ):
-   0;
    
    // ix_end = ix_start + (pox-1) * s + k-1; 
    //assign ix_start = (s == 4'd1)? tile_x_start:
@@ -772,9 +2884,8 @@ valid_row3_adr
 //       ):
 //       0
 //   );
-   //assign loop_x_add_end = (((signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix))) && ((ky1 + 1) == (k)) && ((if_start + 1) > nif) && ((tile_f_start + row_num) > of)) && ((tile_x_start + pixels_in_row) > ox);
-//   assign next_left_pad = ((reset ==1'b1) || (loop_x_add_end == 1'b1))? {{12'b0}, p}:0;
-   assign next_left_pad = ((reset ==1'b1) || ((((signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix))) && ((ky1 + 1) == (k)) && ((if_start + 1) > nif) && ((tile_f_start + row_num) > of)) && ((tile_x_start + pixels_in_row) > ox)))? {{12'b0}, p}:0;
+   
+   assign next_left_pad = ((reset ==1'b1) || (loop_x_add_end == 1'b1))? {{12'b0}, p}:0;
    
    assign p_plus_ix = {{12'b0}, p} + ix;
    
@@ -1178,13 +3289,13 @@ assign row_end_fix =
 //   assign overlap = (tile_x_start == 1)? 0: {{12'b0}, p};                          
     //assign left_pad = (tile_x_start == 1)? {{12'b0}, p} :0;
 //   assign reg_from_initial = left_pad + {{12'b0}, overlap} + 1;
-   assign reg_from_initial = p_plus_1;
+   assign reg_from_initial = (reset == 1'b1)? {{{12'b0}, p_init} + 1} :p_plus_1;
    
    //next reg_from_initial
 //assign next_overlap = ((reset ==1'b1) || (loop_x_add_end == 1'b1))? 0: {{12'b0}, p};
 //assign next_left_pad = ((reset ==1'b1) || (loop_x_add_end == 1'b1))? {{12'b0}, p}:0;
 //   assign next_reg_from_initial = next_left_pad + {{12'b0}, next_overlap} + 1;    
-   assign next_reg_from_initial = p_plus_1;                       
+   assign next_reg_from_initial = (reset == 1'b1)? {{{12'b0}, p_init} + 1} :p_plus_1;                       
    
    assign valid_adr = loop_adr1_add_begin;
    
@@ -1199,7 +3310,7 @@ assign row_end_fix =
 //        else if (conv_tiling_add_end == 1'b1) begin // all end
         //assign conv_tiling_add_end = loop_y_add_end; 
         //assign loop_y_add_end = ((((signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix))) && ((ky1 + 1) == (k)) && ((if_start + 1) > nif) && ((tile_f_start + row_num) > of)) && ((tile_x_start + pixels_in_row) > ox)) && ((tile_y_start + buffers_num) > oy);
-        else if (((((signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix))) && ((ky1 + 1) == (k)) && ((if_start + 1) > nif) && ((tile_f_start + row_num) > of)) && ((tile_x_start + pixels_in_row) > ox)) && ((tile_y_start + buffers_num) > oy)) begin // all end
+        else if (loop_y_add_end == 1'b1) begin // all end
             signal_adr1_add <= 0;
         end
         else begin
@@ -1234,8 +3345,100 @@ assign row_end_fix =
     assign loop_adr1_add_begin = (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0);
   
 //    assign loop_adr1_add_end = loop_adr1_add_begin && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix));
-    assign loop_adr1_add_end = (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix));
+    
+    assign loop_adr1_add_end = 
+    (s == 4'd1)? (
+         (tile_x_start + pixels_in_row_minus_1 > ox)? ( 
+                ((k + ox - 1) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1)))
+                    )
+                ): 
+                
+                    ((((k + ox) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((k + ox - 1) - p_plus_1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((k + ox) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1)))
+                    )
+         ):
+         (
+                ((tile_x_start + k + pixels_in_row_minus_2) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1))) 
+                    )
+                ): 
+                
+                    ((((tile_x_start + k + pixels_in_row_minus_1) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((tile_x_start + k + pixels_in_row_minus_2) - p_plus_1 - 16'h0001) & ix_mask) - (tile_x_start - 1))) 
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((tile_x_start + k + pixels_in_row_minus_1) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1))) 
+                    )
+         )
+   ):
+   (s == 4'd2)? (
+         (tile_x_start + pixels_in_row_minus_1 > ox)? ( 
+                ((k + (ox << 1) -2) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))  
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                    )
+                ): 
+                
+                    ((((k + (ox << 1) -1) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((k + (ox << 1) -2) - p_plus_1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((k + (ox << 1) -1) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                    )
+         ):
+         (
+                (((tile_x_start << 1) + k + pixels_in_row_mult_2 -4) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        
+                        
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                    )
+                ): 
                     
+                    (((((tile_x_start << 1) + k + pixels_in_row_mult_2 -3) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((((tile_x_start << 1) + k + pixels_in_row_mult_2 -4) - p_plus_1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2))) 
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((((((tile_x_start << 1) + k + pixels_in_row_mult_2 -3) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))                                                    
+                    )
+         )  
+   ):
+   0; 
+                   
     assign reg_to = (row_start_idx + pixels_in_row_minus_1 > row_end)?
                     (reg_from + row_end - row_start_idx):
                     (reg_from + pixels_in_row_minus_1);       
@@ -1270,16 +3473,18 @@ assign row_end_fix =
             stall_in_row_counter <= 0;
         end
 //        else if (loop_adr1_add_end == 1'b1) begin // the last pixels word
-        else if ((signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix))) begin // the last pixels word
 //            if (conv_tiling_add_end == 1'b1) begin // all end
-        //assign conv_tiling_add_end = loop_y_add_end; 
-        //assign loop_y_add_end = ((((signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix))) && ((ky1 + 1) == (k)) && ((if_start + 1) > nif) && ((tile_f_start + row_num) > of)) && ((tile_x_start + pixels_in_row) > ox)) && ((tile_y_start + buffers_num) > oy);
-            if (((((signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix))) && ((ky1 + 1) == (k)) && ((if_start + 1) > nif) && ((tile_f_start + row_num) > of)) && ((tile_x_start + pixels_in_row) > ox)) && ((tile_y_start + buffers_num) > oy)) begin // all end
-                stall_in_row_counter <= 0;
-            end 
-            else begin
-                stall_in_row_counter <= (k - row_length);
-            end
+//                stall_in_row_counter <= 0;
+//            end 
+//            else begin
+//                stall_in_row_counter <= (k - row_length);
+//            end
+//        end
+        else if (last_pixel_and_tile_end == 1'b1) begin // the last pixels word all end
+            stall_in_row_counter <= 0;
+        end
+        else if (last_pixel_not_tile_end == 1'b1)begin
+            stall_in_row_counter <= (k - row_length);
         end
         else if (stall_in_row_counter > 0)begin
             stall_in_row_counter <= stall_in_row_counter - 1;
@@ -1288,7 +3493,383 @@ assign row_end_fix =
             stall_in_row_counter <= stall_in_row_counter;
         end
     end 
-
+    
+//    assign last_pixel_and_tile_end = (loop_adr1_add_end == 1'b1) && (loop_y_add_end == 1'b1);
+    assign last_pixel_and_tile_end = 
+    (s == 4'd1)? (
+         (tile_x_start + pixels_in_row_minus_1 > ox)? ( 
+                ((k + ox - 1) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                        && ((tile_y_start + buffers_num) > oy)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                        && ((tile_y_start + buffers_num) > oy)
+                    )
+                ): 
+                
+                    ((((k + ox) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((k + ox - 1) - p_plus_1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                        && ((tile_y_start + buffers_num) > oy)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((k + ox) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                        && ((tile_y_start + buffers_num) > oy)
+                    )
+         ):
+         (
+                ((tile_x_start + k + pixels_in_row_minus_2) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                        && ((tile_y_start + buffers_num) > oy)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1))) 
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                        && ((tile_y_start + buffers_num) > oy)
+                    )
+                ): 
+                
+                    ((((tile_x_start + k + pixels_in_row_minus_1) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((tile_x_start + k + pixels_in_row_minus_2) - p_plus_1 - 16'h0001) & ix_mask) - (tile_x_start - 1))) 
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                        && ((tile_y_start + buffers_num) > oy)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((tile_x_start + k + pixels_in_row_minus_1) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1))) 
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                        && ((tile_y_start + buffers_num) > oy)
+                    )
+         )
+   ):
+   (s == 4'd2)? (
+         (tile_x_start + pixels_in_row_minus_1 > ox)? ( 
+                ((k + (ox << 1) -2) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))  
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                        && ((tile_y_start + buffers_num) > oy)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                        && ((tile_y_start + buffers_num) > oy)
+                    )
+                ): 
+                
+                    ((((k + (ox << 1) -1) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((k + (ox << 1) -2) - p_plus_1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                        && ((tile_y_start + buffers_num) > oy)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((k + (ox << 1) -1) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                        && ((tile_y_start + buffers_num) > oy)
+                    )
+         ):
+         (
+                (((tile_x_start << 1) + k + pixels_in_row_mult_2 -4) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky1 + 1) == (k)) 
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                        && ((tile_y_start + buffers_num) > oy)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                        && ((tile_y_start + buffers_num) > oy)
+                    )
+                ): 
+                    
+                    (((((tile_x_start << 1) + k + pixels_in_row_mult_2 -3) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((((tile_x_start << 1) + k + pixels_in_row_mult_2 -4) - p_plus_1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2))) 
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                        && ((tile_y_start + buffers_num) > oy)
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((((((tile_x_start << 1) + k + pixels_in_row_mult_2 -3) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))                                                    
+                        && ((ky1 + 1) == (k))
+                        && ((if_start + 1) > nif)
+                        && ((tile_f_start + row_num) > of)
+                        && ((tile_x_start + pixels_in_row) > ox)
+                        && ((tile_y_start + buffers_num) > oy)
+                    )
+         )  
+   ):
+   0; 
+   
+//    assign last_pixel_not_tile_end = (loop_adr1_add_end == 1'b1) && (loop_y_add_end == 1'b0);
+    assign last_pixel_not_tile_end = 
+    (s == 4'd1)? (
+         (tile_x_start + pixels_in_row_minus_1 > ox)? ( 
+                ((k + ox - 1) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                        && (
+                            ((ky1 + 1) != (k))
+                            || ((if_start + 1) <= nif)
+                            || ((tile_f_start + row_num) <= of)
+                            || ((tile_x_start + pixels_in_row) <= ox)
+                            || ((tile_y_start + buffers_num) <= oy)
+                        )
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1)))
+                        && (
+                            ((ky1 + 1) != (k))
+                            || ((if_start + 1) <= nif)
+                            || ((tile_f_start + row_num) <= of)
+                            || ((tile_x_start + pixels_in_row) <= ox)
+                            || ((tile_y_start + buffers_num) <= oy)
+                        )
+                    )
+                ): 
+                
+                    ((((k + ox) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((k + ox - 1) - p_plus_1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                        && (
+                            ((ky1 + 1) != (k))
+                            || ((if_start + 1) <= nif)
+                            || ((tile_f_start + row_num) <= of)
+                            || ((tile_x_start + pixels_in_row) <= ox)
+                            || ((tile_y_start + buffers_num) <= oy)
+                        )
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((k + ox) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1)))
+                        && (
+                            ((ky1 + 1) != (k))
+                            || ((if_start + 1) <= nif)
+                            || ((tile_f_start + row_num) <= of)
+                            || ((tile_x_start + pixels_in_row) <= ox)
+                            || ((tile_y_start + buffers_num) <= oy)
+                        )
+                    )
+         ):
+         (
+                ((tile_x_start + k + pixels_in_row_minus_2) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                        && (
+                            ((ky1 + 1) != (k))
+                            || ((if_start + 1) <= nif)
+                            || ((tile_f_start + row_num) <= of)
+                            || ((tile_x_start + pixels_in_row) <= ox)
+                            || ((tile_y_start + buffers_num) <= oy)
+                        )
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1))) 
+                        && (
+                            ((ky1 + 1) != (k))
+                            || ((if_start + 1) <= nif)
+                            || ((tile_f_start + row_num) <= of)
+                            || ((tile_x_start + pixels_in_row) <= ox)
+                            || ((tile_y_start + buffers_num) <= oy)
+                        )
+                    )
+                ): 
+                
+                    ((((tile_x_start + k + pixels_in_row_minus_1) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((tile_x_start + k + pixels_in_row_minus_2) - p_plus_1 - 16'h0001) & ix_mask) - (tile_x_start - 1))) 
+                        && (
+                            ((ky1 + 1) != (k))
+                            || ((if_start + 1) <= nif)
+                            || ((tile_f_start + row_num) <= of)
+                            || ((tile_x_start + pixels_in_row) <= ox)
+                            || ((tile_y_start + buffers_num) <= oy)
+                        )
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((tile_x_start + k + pixels_in_row_minus_1) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1))) 
+                        && (
+                            ((ky1 + 1) != (k))
+                            || ((if_start + 1) <= nif)
+                            || ((tile_f_start + row_num) <= of)
+                            || ((tile_x_start + pixels_in_row) <= ox)
+                            || ((tile_y_start + buffers_num) <= oy)
+                        )
+                    )
+         )
+   ):
+   (s == 4'd2)? (
+         (tile_x_start + pixels_in_row_minus_1 > ox)? ( 
+                ((k + (ox << 1) -2) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))  
+                        && (
+                            ((ky1 + 1) != (k))
+                            || ((if_start + 1) <= nif)
+                            || ((tile_f_start + row_num) <= of)
+                            || ((tile_x_start + pixels_in_row) <= ox)
+                            || ((tile_y_start + buffers_num) <= oy)
+                        )
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && (
+                            ((ky1 + 1) != (k))
+                            || ((if_start + 1) <= nif)
+                            || ((tile_f_start + row_num) <= of)
+                            || ((tile_x_start + pixels_in_row) <= ox)
+                            || ((tile_y_start + buffers_num) <= oy)
+                        )
+                    )
+                ): 
+                
+                    ((((k + (ox << 1) -1) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((k + (ox << 1) -2) - p_plus_1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && (
+                            ((ky1 + 1) != (k))
+                            || ((if_start + 1) <= nif)
+                            || ((tile_f_start + row_num) <= of)
+                            || ((tile_x_start + pixels_in_row) <= ox)
+                            || ((tile_y_start + buffers_num) <= oy)
+                        )
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((k + (ox << 1) -1) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && (
+                            ((ky1 + 1) != (k))
+                            || ((if_start + 1) <= nif)
+                            || ((tile_f_start + row_num) <= of)
+                            || ((tile_x_start + pixels_in_row) <= ox)
+                            || ((tile_y_start + buffers_num) <= oy)
+                        )
+                    )
+         ):
+         (
+                (((tile_x_start << 1) + k + pixels_in_row_mult_2 -4) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && (
+                            ((ky1 + 1) != (k))
+                            || ((if_start + 1) <= nif)
+                            || ((tile_f_start + row_num) <= of)
+                            || ((tile_x_start + pixels_in_row) <= ox)
+                            || ((tile_y_start + buffers_num) <= oy)
+                        )
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        && (
+                            ((ky1 + 1) != (k))
+                            || ((if_start + 1) <= nif)
+                            || ((tile_f_start + row_num) <= of)
+                            || ((tile_x_start + pixels_in_row) <= ox)
+                            || ((tile_y_start + buffers_num) <= oy)
+                        )
+                    )
+                ): 
+                    
+                    (((((tile_x_start << 1) + k + pixels_in_row_mult_2 -3) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((((tile_x_start << 1) + k + pixels_in_row_mult_2 -4) - p_plus_1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2))) 
+                        && (
+                            ((ky1 + 1) != (k))
+                            || ((if_start + 1) <= nif)
+                            || ((tile_f_start + row_num) <= of)
+                            || ((tile_x_start + pixels_in_row) <= ox)
+                            || ((tile_y_start + buffers_num) <= oy)
+                        )
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((((((tile_x_start << 1) + k + pixels_in_row_mult_2 -3) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))                                                    
+                        && (
+                            ((ky1 + 1) != (k))
+                            || ((if_start + 1) <= nif)
+                            || ((tile_f_start + row_num) <= of)
+                            || ((tile_x_start + pixels_in_row) <= ox)
+                            || ((tile_y_start + buffers_num) <= oy)
+                        )
+                    )
+         )  
+   ):
+   0; 
+   
     assign stall_in_row = ((stall_in_row_counter > 0)? 1 : 0) || (ifx_stall == 1'b1);
                            
 //    assign row_start_fix = 
@@ -1342,7 +3923,98 @@ assign row_end_fix =
     
     //assign loop_adr1_add_end = (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix));
 //    assign conv_pixels_add_end = (loop_adr1_add_end == 1'b1);
-    assign conv_pixels_add_end = (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix));
+    assign conv_pixels_add_end = 
+    (s == 4'd1)? (
+         (tile_x_start + pixels_in_row_minus_1 > ox)? ( 
+                ((k + ox - 1) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1)))
+                    )
+                ): 
+                
+                    ((((k + ox) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((k + ox - 1) - p_plus_1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((k + ox) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1)))
+                    )
+         ):
+         (
+                ((tile_x_start + k + pixels_in_row_minus_2) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - (tile_x_start - 1)))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1))) 
+                    )
+                ): 
+                
+                    ((((tile_x_start + k + pixels_in_row_minus_1) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((tile_x_start + k + pixels_in_row_minus_2) - p_plus_1 - 16'h0001) & ix_mask) - (tile_x_start - 1))) 
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((tile_x_start + k + pixels_in_row_minus_1) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - (tile_x_start - 1))) 
+                    )
+         )
+   ):
+   (s == 4'd2)? (
+         (tile_x_start + pixels_in_row_minus_1 > ox)? ( 
+                ((k + (ox << 1) -2) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))  
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                    )
+                ): 
+                
+                    ((((k + (ox << 1) -1) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((k + (ox << 1) -2) - p_plus_1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((((k + (ox << 1) -1) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                    )
+         ):
+         (
+                (((tile_x_start << 1) + k + pixels_in_row_mult_2 -4) > p_plus_ix)? (
+                    ((ix & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((ix - 1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2)))
+                        
+                        
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > ((((ix & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))
+                    )
+                ): 
+                    
+                    (((((tile_x_start << 1) + k + pixels_in_row_mult_2 -3) - p_plus_1) & 16'h001f) == 16'h0)? (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((((tile_x_start << 1) + k + pixels_in_row_mult_2 -4) - p_plus_1 - 16'h0001) & ix_mask) - ((tile_x_start << 1) - 2))) 
+                    ):
+                    (
+                        (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) 
+                        && ((adr1 + pixels_in_row) > (((((((tile_x_start << 1) + k + pixels_in_row_mult_2 -3) - p_plus_1) & 16'hffe0) + 16'h001f) & ix_mask) - ((tile_x_start << 1) - 2)))                                                    
+                    )
+         )  
+   ):
+   0; 
     
     assign valid_row1_adr = (poy < 1)? 0 : valid_adr;
     assign valid_row2_adr = (poy < 2)? 0 : valid_adr;
