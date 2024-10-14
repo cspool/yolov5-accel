@@ -1,17 +1,10 @@
 // Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
 // Tool Version: Vivado v.2018.3 (win64) Build 2405991 Thu Dec  6 23:38:27 MST 2018
-<<<<<<< HEAD
-// Date        : Sat Aug 31 23:29:32 2024
-// Host        : zack running 64-bit major release  (build 9200)
-// Command     : write_verilog -force -mode synth_stub
-//               D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sources_1/ip/weights_buffer/weights_buffer_stub.v
-=======
-// Date        : Mon Sep  2 16:23:54 2024
+// Date        : Wed Oct  9 18:03:34 2024
 // Host        : yang running 64-bit major release  (build 9200)
 // Command     : write_verilog -force -mode synth_stub
-//               E:/vivado_pros/yolov5_accel_2/yolov5_accel_2.srcs/sources_1/ip/weights_buffer/weights_buffer_stub.v
->>>>>>> 1d7cf087deaecb45773d44c50fadf969073352c2
+//               e:/vivado_pros/yolov5_accel_2/yolov5_accel_2.srcs/sources_1/ip/weights_buffer_2/weights_buffer_stub.v
 // Design      : weights_buffer
 // Purpose     : Stub declaration of top-level module interface
 // Device      : xc7vx690tffg1761-2

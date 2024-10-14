@@ -1,10 +1,10 @@
 -- Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2018.3 (win64) Build 2405991 Thu Dec  6 23:38:27 MST 2018
--- Date        : Fri Sep 27 23:41:17 2024
--- Host        : LAPTOP-BAHL21S1 running 64-bit major release  (build 9200)
--- Command     : write_vhdl -force -mode funcsim
---               D:/yolov5s_accel/yolov5s_accel.srcs/sources_1/ip/ROM3_S_1/ROM3_S_1_sim_netlist.vhdl
+-- Date        : Fri Sep 20 16:02:44 2024
+-- Host        : yang running 64-bit major release  (build 9200)
+-- Command     : write_vhdl -force -mode funcsim -rename_top ROM3_S_1 -prefix
+--               ROM3_S_1_ ROM3_S_1_sim_netlist.vhdl
 -- Design      : ROM3_S_1
 -- Purpose     : This VHDL netlist is a functional simulation representation of the design and should not be modified or
 --               synthesized. This netlist cannot be used for SDF annotated simulation.
@@ -20,8 +20,6 @@ entity ROM3_S_1_bindec is
     addra : in STD_LOGIC_VECTOR ( 0 to 0 );
     ena : in STD_LOGIC
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of ROM3_S_1_bindec : entity is "bindec";
 end ROM3_S_1_bindec;
 
 architecture STRUCTURE of ROM3_S_1_bindec is
@@ -168,8 +166,6 @@ entity ROM3_S_1_blk_mem_gen_mux is
     \douta[255]\ : in STD_LOGIC_VECTOR ( 0 to 0 );
     \douta[255]_0\ : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of ROM3_S_1_blk_mem_gen_mux : entity is "blk_mem_gen_mux";
 end ROM3_S_1_blk_mem_gen_mux;
 
 architecture STRUCTURE of ROM3_S_1_blk_mem_gen_mux is
@@ -2982,8 +2978,6 @@ entity ROM3_S_1_blk_mem_gen_prim_wrapper_init is
     ena : in STD_LOGIC;
     addra : in STD_LOGIC_VECTOR ( 12 downto 0 )
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of ROM3_S_1_blk_mem_gen_prim_wrapper_init : entity is "blk_mem_gen_prim_wrapper_init";
 end ROM3_S_1_blk_mem_gen_prim_wrapper_init;
 
 architecture STRUCTURE of ROM3_S_1_blk_mem_gen_prim_wrapper_init is
@@ -17059,8 +17053,6 @@ entity ROM3_S_1_blk_mem_gen_prim_width is
     ena : in STD_LOGIC;
     addra : in STD_LOGIC_VECTOR ( 12 downto 0 )
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of ROM3_S_1_blk_mem_gen_prim_width : entity is "blk_mem_gen_prim_width";
 end ROM3_S_1_blk_mem_gen_prim_width;
 
 architecture STRUCTURE of ROM3_S_1_blk_mem_gen_prim_width is
@@ -18596,8 +18588,6 @@ entity ROM3_S_1_blk_mem_gen_generic_cstr is
     ena : in STD_LOGIC;
     addra : in STD_LOGIC_VECTOR ( 12 downto 0 )
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of ROM3_S_1_blk_mem_gen_generic_cstr : entity is "blk_mem_gen_generic_cstr";
 end ROM3_S_1_blk_mem_gen_generic_cstr;
 
 architecture STRUCTURE of ROM3_S_1_blk_mem_gen_generic_cstr is
@@ -20483,8 +20473,6 @@ entity ROM3_S_1_blk_mem_gen_top is
     ena : in STD_LOGIC;
     addra : in STD_LOGIC_VECTOR ( 12 downto 0 )
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of ROM3_S_1_blk_mem_gen_top : entity is "blk_mem_gen_top";
 end ROM3_S_1_blk_mem_gen_top;
 
 architecture STRUCTURE of ROM3_S_1_blk_mem_gen_top is
@@ -20508,8 +20496,6 @@ entity ROM3_S_1_blk_mem_gen_v8_4_2_synth is
     ena : in STD_LOGIC;
     addra : in STD_LOGIC_VECTOR ( 12 downto 0 )
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of ROM3_S_1_blk_mem_gen_v8_4_2_synth : entity is "blk_mem_gen_v8_4_2_synth";
 end ROM3_S_1_blk_mem_gen_v8_4_2_synth;
 
 architecture STRUCTURE of ROM3_S_1_blk_mem_gen_v8_4_2_synth is
@@ -20742,8 +20728,6 @@ entity ROM3_S_1_blk_mem_gen_v8_4_2 is
   attribute C_WRITE_WIDTH_B of ROM3_S_1_blk_mem_gen_v8_4_2 : entity is 256;
   attribute C_XDEVICEFAMILY : string;
   attribute C_XDEVICEFAMILY of ROM3_S_1_blk_mem_gen_v8_4_2 : entity is "virtex7";
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of ROM3_S_1_blk_mem_gen_v8_4_2 : entity is "blk_mem_gen_v8_4_2";
   attribute downgradeipidentifiedwarnings : string;
   attribute downgradeipidentifiedwarnings of ROM3_S_1_blk_mem_gen_v8_4_2 : entity is "yes";
 end ROM3_S_1_blk_mem_gen_v8_4_2;
