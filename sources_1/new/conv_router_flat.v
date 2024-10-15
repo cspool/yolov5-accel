@@ -53,10 +53,15 @@ conv_nif_add_end,
 
 row1_buf_adr,
 row1_buf_idx,
+row1_buf_word_select,
+
 row2_buf_adr,
 row2_buf_idx,
+row2_buf_word_select,
+
 row3_buf_adr,
 row3_buf_idx,
+row3_buf_word_select,
 
 row1_slab_adr,
 row1_slab_idx,
@@ -84,6 +89,8 @@ valid_row3_adr
    
    parameter row_num_in_mode0 = 64; // 64 in 8 bit, 128 in 1 bit
    parameter row_num_in_mode1 = 128; // 64 in 8 bit, 128 in 1 bit
+   
+   parameter ifs_in_row_2pow = 1;
     
     // conv tiling module
     input mode_init;
@@ -128,12 +135,15 @@ valid_row3_adr
     
     output [15:0] row1_buf_adr;
     output [1:0] row1_buf_idx;
+    output row1_buf_word_select;
     
     output [15:0] row2_buf_adr;
     output [1:0] row2_buf_idx;
+    output row2_buf_word_select;
     
     output [15:0] row3_buf_adr;
     output [1:0] row3_buf_idx;
+    output row3_buf_word_select;
     
     output [15:0] row_slab_start_idx;
     
@@ -4255,11 +4265,11 @@ assign row_end_fix =
     // the adr need more completely logic
     //xxxxxxxxxxxx                      
     assign row1_buf_adr = (row1_idx == 16'hffff)? 16'hffff:
-                        ((row1_buf_adr_in_row << (nif_in_2pow + ix_in_2pow - pixels_in_row_in_2pow))
-                        + ((row_start_idx << nif_in_2pow) >> pixels_in_row_in_2pow))
-                        + (if_idx - 1);                                         
+                        ((row1_buf_adr_in_row << ((nif_in_2pow - ifs_in_row_2pow) + ix_in_2pow - pixels_in_row_in_2pow))
+                        + ((row_start_idx << (nif_in_2pow - ifs_in_row_2pow)) >> pixels_in_row_in_2pow))
+                        + ((if_idx - 1) >> ifs_in_row_2pow);                                                                                 
     
-    
+    assign row1_buf_word_select = (if_idx - 1) & 16'h0001;
     
 //    assign row2_buf_idx = (row2_idx == 16'hffff)? 0 :
 //                          (row2_buf_idx_s1);
@@ -4312,9 +4322,11 @@ assign row_end_fix =
     );  
                           
     assign row2_buf_adr = (row2_idx == 16'hffff)? 16'hffff :
-                        ((row2_buf_adr_in_row << (nif_in_2pow + ix_in_2pow - pixels_in_row_in_2pow))
-                        + ((row_start_idx << nif_in_2pow) >> pixels_in_row_in_2pow))
-                        + (if_idx - 1);                                         
+                        ((row2_buf_adr_in_row << ((nif_in_2pow - ifs_in_row_2pow) + ix_in_2pow - pixels_in_row_in_2pow))
+                        + ((row_start_idx << (nif_in_2pow - ifs_in_row_2pow)) >> pixels_in_row_in_2pow))
+                        + ((if_idx - 1) >> ifs_in_row_2pow);                                        
+    
+    assign row2_buf_word_select = (if_idx - 1) & 16'h0001;
     
                           
 //    assign row3_buf_idx = (row3_idx == 16'hffff)? 0 :
@@ -4368,10 +4380,11 @@ assign row_end_fix =
     );  
                                                         
     assign row3_buf_adr = (row3_idx == 16'hffff)? 16'hffff :
-                        ((row3_buf_adr_in_row << (nif_in_2pow + ix_in_2pow - pixels_in_row_in_2pow))
-                        + ((row_start_idx << nif_in_2pow) >> pixels_in_row_in_2pow))
-                        + (if_idx - 1);                                         
+                        ((row3_buf_adr_in_row << ((nif_in_2pow - ifs_in_row_2pow) + ix_in_2pow - pixels_in_row_in_2pow))
+                        + ((row_start_idx << (nif_in_2pow - ifs_in_row_2pow)) >> pixels_in_row_in_2pow))
+                        + ((if_idx - 1) >> ifs_in_row_2pow);                                         
     
+    assign row3_buf_word_select = (if_idx - 1) & 16'h0001;
     
     //slab
     assign row_slab_start_idx = (slab_num > 0)? (row_start_idx - 16'd32): 16'hffff;

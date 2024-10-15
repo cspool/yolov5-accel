@@ -35,11 +35,16 @@ module load_tiling_tb(
     
     reg [15:0] ix_init, iy_init, nif_init;
     
-    reg clk, en, reset; // reset is valid a cycle before en being valid
+    reg clk, load_ddr_start, reset;
+    
+    reg load_ddr_continue;
     
     reg [3:0] nif_in_2pow_init, ix_in_2pow_init, buf_depth_2pow_init;
 
     reg [15:0] word_lenth_mult_word_num_mult_spare_num, word_num_mult_spare_num;
+    
+    reg [15:0] load_tile_buf_word_num; // 3s * word_num * spare_num * nif / 2;
+    reg valid_load_data;
     
     load_tiling ld_tiling (
         .ix_init(ix_init),
@@ -49,14 +54,17 @@ module load_tiling_tb(
         .s_init(s_init), 
         .p_init(p_init),
         .clk(clk), 
-        .en(en), 
+        .load_ddr_start(load_ddr_start), 
         .reset(reset),
+        .load_ddr_continue(load_ddr_continue),
         .nif_in_2pow_init(nif_in_2pow_init),
         .ix_in_2pow_init(ix_in_2pow_init),
         .buf_depth_2pow_init(buf_depth_2pow_init),
         
         .word_lenth_mult_word_num_mult_spare_num(word_lenth_mult_word_num_mult_spare_num), 
-        .word_num_mult_spare_num(word_num_mult_spare_num)
+        .word_num_mult_spare_num(word_num_mult_spare_num),
+        .load_tile_buf_word_num(load_tile_buf_word_num),
+        .valid_load_data(valid_load_data)
         
     );
     
@@ -68,22 +76,42 @@ module load_tiling_tb(
     initial begin
         clk = 0;
         k_init = 1; s_init = 1; p_init = 0;
-        ix_init = 32; iy_init = 32; nif_init = 32;
-        nif_in_2pow_init = 5; 
-        ix_in_2pow_init = 5; 
+        ix_init = 8; iy_init = 8; nif_init = 8;
+        nif_in_2pow_init = 3; 
+        ix_in_2pow_init = 3; 
         buf_depth_2pow_init = 10; //1024
         word_lenth_mult_word_num_mult_spare_num = pixels_in_row * 1;
         word_num_mult_spare_num = 1;
+        load_tile_buf_word_num = 3 * s_init * word_num_mult_spare_num * nif_init / 2; //12
+        valid_load_data = 0;
+        load_ddr_continue = 0;
         
-        en = 0; //load_en
+        load_ddr_start = 0; //load_en
         reset = 1;
         
-        
         #10;
-        en = 1; //load_en
+        load_ddr_start = 1; //load_en
         reset = 0;
         
+        #100;
+        valid_load_data = 1;
+        
+        #50;
+        valid_load_data = 0;
+        
         #10;
+        valid_load_data = 1;
+        
+        #70;
+        valid_load_data = 0;
+        
+        #800;
+        
+        load_ddr_continue = 1;
+        
+        #10;
+        
+        load_ddr_continue = 0;
         
         
     end

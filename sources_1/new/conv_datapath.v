@@ -138,12 +138,15 @@ parameter out_data_width = quantified_pixel_width * pe_parallel_pixel_88 * pe_pa
     
     wire [15:0] row1_buf_adr;
     wire [1:0] row1_buf_idx;
+    wire row1_buf_word_select;
     
     wire [15:0] row2_buf_adr;
     wire [1:0] row2_buf_idx;
+    wire row2_buf_word_select;
     
     wire [15:0] row3_buf_adr;
     wire [1:0] row3_buf_idx;
+    wire row3_buf_word_select;
     
     wire [15:0] row_slab_start_idx;
     
@@ -448,10 +451,13 @@ parameter out_data_width = quantified_pixel_width * pe_parallel_pixel_88 * pe_pa
         
         .row1_buf_adr(row1_buf_adr),
         .row1_buf_idx(row1_buf_idx),
+        .row1_buf_word_select(row1_buf_word_select),
         .row2_buf_adr(row2_buf_adr),
         .row2_buf_idx(row2_buf_idx),
+        .row2_buf_word_select(row2_buf_word_select),
         .row3_buf_adr(row3_buf_adr),
         .row3_buf_idx(row3_buf_idx),
+        .row3_buf_word_select(row3_buf_word_select),
     
         .row1_slab_adr(row1_slab_adr),
         .row1_slab_idx(row1_slab_idx),
