@@ -30,6 +30,10 @@ row2_buf_idx,
 row3_buf_adr,
 row3_buf_idx,
 
+row1_buf_word_select,
+row2_buf_word_select,
+row3_buf_word_select,
+
 last_row1_buf_idx,
 last_row2_buf_idx,
 last_row3_buf_idx,
@@ -60,6 +64,10 @@ valid_row3_adr,
 buf1_adr,
 buf2_adr,
 buf3_adr,
+
+buf1_word_select,
+buf2_word_select,
+buf3_word_select,
 
 slab1_adr,
 slab2_adr,
@@ -100,6 +108,10 @@ valid_slab1_adr_wr, valid_slab2_adr_wr, valid_slab3_adr_wr
     input [1:0] row2_buf_idx;
     input [15:0] row3_buf_adr;
     input [1:0] row3_buf_idx;
+    
+    input row1_buf_word_select;
+    input row2_buf_word_select;
+    input row3_buf_word_select;
     
     //cycle 1
     input [pixels_in_row * 8 - 1: 0] buf1_pixels_32; //next cycle
@@ -145,6 +157,10 @@ valid_slab1_adr_wr, valid_slab2_adr_wr, valid_slab3_adr_wr
     output [15:0] buf1_adr;
     output [15:0] buf2_adr;
     output [15:0] buf3_adr;
+    
+    output buf1_word_select;
+    output buf2_word_select;
+    output buf3_word_select;
     
     //cycle 1
     output [pixels_in_row * 8 - 1: 0] last_row1_pixels_32;
@@ -200,6 +216,21 @@ valid_slab1_adr_wr, valid_slab2_adr_wr, valid_slab3_adr_wr
                       (row2_buf_idx == 2'd3)? row2_buf_adr: 
                       (row3_buf_idx == 2'd3)? row3_buf_adr: 
                       0;
+                      
+    assign buf1_word_select = (row1_buf_idx == 2'd1)? row1_buf_word_select:
+                      (row2_buf_idx == 2'd1)? row2_buf_word_select: 
+                      (row3_buf_idx == 2'd1)? row3_buf_word_select: 
+                      0;
+                      
+    assign buf2_word_select = (row1_buf_idx == 2'd2)? row1_buf_word_select:
+                      (row2_buf_idx == 2'd2)? row2_buf_word_select: 
+                      (row3_buf_idx == 2'd2)? row3_buf_word_select: 
+                      0;
+                      
+    assign buf3_word_select = (row1_buf_idx == 2'd3)? row1_buf_word_select:
+                      (row2_buf_idx == 2'd3)? row2_buf_word_select: 
+                      (row3_buf_idx == 2'd3)? row3_buf_word_select: 
+                      0;                   
     
     //cycle 1
     assign buf1_data = (valid_buf1_data == 1'b1)? buf1_pixels_32 : 0;

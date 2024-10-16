@@ -3,9 +3,9 @@
 // Company: 
 // Engineer: 
 // 
-// Create Date: 09/19/2024 07:33:45 PM
+// Create Date: 10/16/2024 08:22:00 PM
 // Design Name: 
-// Module Name: conv_initial_ctrl
+// Module Name: conv_initial_controller
 // Project Name: 
 // Target Devices: 
 // Tool Versions: 
@@ -20,7 +20,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module conv_initial_ctrl(
+module conv_initial_controller(
 clk, reset, start,
 
 conv_inital_fin,
@@ -43,7 +43,9 @@ E_scale_rank_tile_val,
 
 conv_compute_reset,
 
-conv_compute_en
+conv_load_reset,
+
+conv_load_start
     );
     
 parameter sa_row_num = 4; //how many rows in conv core
@@ -161,8 +163,8 @@ parameter scaled_rank_row_width = (quantified_pixel_width+1) * pe_parallel_weigh
     
     output reg [E_scale_rank_tile_length -1 : 0] E_scale_rank_tile_val; 
     
-    output conv_compute_reset;
-    output reg conv_compute_en;
+    output conv_compute_reset, conv_load_reset;
+    output reg conv_load_start;
     
     always@(posedge clk) begin //xxxxx
        if(reset == 1'b1)begin
@@ -181,18 +183,20 @@ parameter scaled_rank_row_width = (quantified_pixel_width+1) * pe_parallel_weigh
     
     assign conv_compute_reset = conv_inital_fin;
     
+    assign conv_load_reset = conv_inital_fin;
+    
     always@(posedge clk) begin //xxxxx
        if(reset == 1'b1)begin
-           conv_compute_en <= 1'b0;
+           conv_load_start <= 1'b0;
        end
        else if(conv_inital_fin == 1'b1)begin
-           conv_compute_en <= 1'b1;
+           conv_load_start <= 1'b1;
        end
-       else if(conv_compute_en == 1'b1)begin
-           conv_compute_en <= 1'b0;
+       else if(conv_load_start == 1'b1)begin
+           conv_load_start <= 1'b0;
        end
        else begin
-           conv_compute_en <= conv_compute_en;
+           conv_load_start <= conv_load_start;
        end
     end
     

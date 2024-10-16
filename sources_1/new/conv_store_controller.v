@@ -3,9 +3,9 @@
 // Company: 
 // Engineer: 
 // 
-// Create Date: 09/11/2024 04:35:37 PM
+// Create Date: 10/16/2024 04:51:13 PM
 // Design Name: 
-// Module Name: conv_out_handler
+// Module Name: conv_store_controller
 // Project Name: 
 // Target Devices: 
 // Tool Versions: 
@@ -20,12 +20,12 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module conv_out_handler(
+module conv_store_controller(
 //cycle 0 in
 mode,
 clk, reset,
 cur_ox_start, cur_oy_start, cur_of_start, cur_pox, cur_poy, cur_pof,
-quantify_add_end,
+conv_store_start,
 of_in_2pow, ox_in_2pow,
 
 //cycle 0 out
@@ -40,7 +40,7 @@ fifo_column_no, fifo_row_no,
 valid_rowi_out_buf_adr,
 out_y_idx, out_x_idx, out_f_idx,
 out_data,
-conv_out_tile_add_end
+conv_out_add_end
     );
     
     parameter pixels_in_row = 32;
@@ -68,7 +68,7 @@ conv_out_tile_add_end
     
     input [15:0] cur_ox_start, cur_oy_start, cur_of_start, cur_pox, cur_poy, cur_pof;
     
-    input quantify_add_end;
+    input conv_store_start;
     
     input [3:0] of_in_2pow, ox_in_2pow;
     
@@ -83,7 +83,7 @@ conv_out_tile_add_end
     output reg [3:0] fifo_column_no, fifo_row_no;
     output reg valid_rowi_out_buf_adr;                    
     output reg [15:0] out_y_idx, out_x_idx, out_f_idx;                   
-    output reg conv_out_tile_add_end;
+    output reg conv_out_add_end;
 
     output [out_data_width-1 : 0] out_data;
     
@@ -109,7 +109,7 @@ conv_out_tile_add_end
             out_y_idx <= 0;
             out_x_idx <= 0;
             out_f_idx <= 0;   
-            conv_out_tile_add_end <= 0;
+            conv_out_add_end <= 0;
             fifo_column_no <= 0;
             fifo_row_no <= 0;
         end
@@ -122,7 +122,7 @@ conv_out_tile_add_end
             out_y_idx <= cur_oy_start - 1 + oy_counter;
             out_x_idx <= cur_ox_start;
             out_f_idx <= cur_of_start - 1 + (of_counter - 1) + channel_counter;             
-            conv_out_tile_add_end <= loop_oy_counter_add_end;
+            conv_out_add_end <= loop_oy_counter_add_end;
             fifo_column_no <= oy_counter - 1; //0,1,2
             fifo_row_no <= (of_counter -1)>> log_channel_num; //0,1,2,3
         end
@@ -169,7 +169,7 @@ conv_out_tile_add_end
         if (reset == 1'b1) begin
             signal_add <= 0;
         end
-        else if (quantify_add_end == 1'b1) begin
+        else if (conv_store_start == 1'b1) begin
             signal_add <= 1;
         end
         else if (loop_oy_counter_add_end == 1'b1) begin // conv out end

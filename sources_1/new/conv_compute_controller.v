@@ -3,9 +3,9 @@
 // Company: 
 // Engineer: 
 // 
-// Create Date: 09/24/2024 04:12:55 PM
+// Create Date: 10/16/2024 04:51:13 PM
 // Design Name: 
-// Module Name: conv_router_flat
+// Module Name: conv_compute_controller
 // Project Name: 
 // Target Devices: 
 // Tool Versions: 
@@ -20,7 +20,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module conv_router_flat(
+module conv_compute_controller(
 mode_init,
 of_init, ox_init, oy_init, ix_init, iy_init, nif_init,
 k_init, s_init, p_init,

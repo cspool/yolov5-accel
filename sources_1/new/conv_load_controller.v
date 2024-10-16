@@ -3,9 +3,9 @@
 // Company: 
 // Engineer: 
 // 
-// Create Date: 10/14/2024 09:41:55 AM
+// Create Date: 10/16/2024 04:51:13 PM
 // Design Name: 
-// Module Name: load_tiling
+// Module Name: conv_load_controller
 // Project Name: 
 // Target Devices: 
 // Tool Versions: 
@@ -20,18 +20,37 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module load_tiling(
+module conv_load_controller(
 ix_init, iy_init, nif_init,
 k_init, s_init, p_init,
 clk, load_ddr_start, reset,
 load_ddr_continue,
 nif_in_2pow_init,
 ix_in_2pow_init,
-buf_depth_2pow_init,
+buf_depth_in_row_2pow_init,
 
 word_lenth_mult_word_num_mult_spare_num, word_num_mult_spare_num,
-valid_load_data
+valid_load_data,
 
+//ddr info
+load_row_idx_ddr,
+load_row_start_idx_ddr, 
+load_row_end_idx_ddr,
+load_if_start_idx_ddr, 
+load_if_end_idx_ddr,
+
+//buf info
+load_buf_idx,
+load_row_idx_in_3_buf, 
+load_row_idx_buf,
+load_row_start_idx_buf, 
+load_row_end_idx_buf,
+load_if_start_idx_buf, 
+load_if_end_idx_buf,
+    
+load_tile_fin,
+    
+load_tile0_fin
     );
     
     parameter sa_row_num = 4; //how many rows in conv core
@@ -51,13 +70,13 @@ valid_load_data
     
     input load_ddr_continue; //str_fin
     
-    input [3:0] nif_in_2pow_init, ix_in_2pow_init, buf_depth_2pow_init;
+    input [3:0] nif_in_2pow_init, ix_in_2pow_init, buf_depth_in_row_2pow_init;
     
     reg [3:0] k, s, p;
     
     reg [15:0] ix, iy, nif;
     
-    reg [3:0] nif_in_2pow, ix_in_2pow, buf_depth_2pow;
+    reg [3:0] nif_in_2pow, ix_in_2pow, buf_depth_in_row_2pow;
 
     
     input [15:0] word_lenth_mult_word_num_mult_spare_num, word_num_mult_spare_num;
@@ -91,9 +110,9 @@ valid_load_data
     reg [15:0] tiy_ddr;
     wire loop_load_tiy_ddr_add_begin, loop_load_tiy_ddr_add_end;
     
-    wire [15:0] load_row_idx_ddr; 
-    wire [15:0] load_row_start_idx_ddr, load_row_end_idx_ddr;
-    wire [15:0] load_if_start_idx_ddr, load_if_end_idx_ddr;
+    output [15:0] load_row_idx_ddr; 
+    output [15:0] load_row_start_idx_ddr, load_row_end_idx_ddr;
+    output [15:0] load_if_start_idx_ddr, load_if_end_idx_ddr;
     
     //load stall
     reg load_tile_ddr_stall;
@@ -123,12 +142,14 @@ valid_load_data
     reg [15:0] tiy_buf;
     wire loop_load_tiy_buf_add_begin, loop_load_tiy_buf_add_end;
     
-    wire [15:0] load_buf_idx;
-    wire [15:0] load_row_idx_in_3_buf, load_row_idx_buf;
-    wire [15:0] load_row_start_idx_buf, load_row_end_idx_buf;
-    wire [15:0] load_if_start_idx_buf, load_if_end_idx_buf;
+    output [15:0] load_buf_idx;
+    output [15:0] load_row_idx_in_3_buf, load_row_idx_buf;
+    output [15:0] load_row_start_idx_buf, load_row_end_idx_buf;
+    output [15:0] load_if_start_idx_buf, load_if_end_idx_buf;
     
-    wire load_tile_fin;
+    output load_tile_fin;
+    
+    output load_tile0_fin;
    
     
     always@(posedge clk) begin
@@ -158,7 +179,7 @@ valid_load_data
     
             nif_in_2pow <= nif_in_2pow_init;
             ix_in_2pow <= ix_in_2pow_init;
-            buf_depth_2pow <= buf_depth_2pow_init;
+            buf_depth_in_row_2pow <= buf_depth_in_row_2pow_init;
         end
         else begin
             k <= k; 
@@ -171,7 +192,7 @@ valid_load_data
     
             nif_in_2pow <= nif_in_2pow;
             ix_in_2pow <= ix_in_2pow;
-            buf_depth_2pow <= buf_depth_2pow;
+            buf_depth_in_row_2pow <= buf_depth_in_row_2pow;
             
         end
    end
@@ -519,4 +540,7 @@ valid_load_data
     //load ddr word counter
     assign load_tile_fin = (loop_load_siy_buf_add_end == 1'b1);
     
+    assign load_tile0_fin = (loop_load_siy_buf_add_end == 1'b1) && (tiy_buf == 16'd1) && (tix_buf == 16'd1);
+    
 endmodule
+

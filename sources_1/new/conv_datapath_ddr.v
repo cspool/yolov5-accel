@@ -3,9 +3,9 @@
 // Company: 
 // Engineer: 
 // 
-// Create Date: 2024/08/20 22:07:07
+// Create Date: 10/16/2024 08:20:29 PM
 // Design Name: 
-// Module Name: conv_datapath
+// Module Name: conv_datapath_ddr
 // Project Name: 
 // Target Devices: 
 // Tool Versions: 
@@ -20,7 +20,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module conv_datapath(
+module conv_datapath_ddr(
 clk, start, reset
 
     );
@@ -323,8 +323,8 @@ parameter ddr_load_ratio = 2;
 //    output reg [15:0] rowi_out_buf_adr;
     wire [3:0] fifo_column_no, fifo_row_no;
     wire valid_rowi_out_buf_adr;                    
-    wire [15:0] out_y_idx, out_x_idx, out_f_idx;  
-    wire conv_out_tile_add_end;                 
+    wire [15:0] out_y_idx, out_x_idx, out_f_idx;                   
+    wire conv_out_add_end;
     wire [out_data_width-1 : 0] out_data;
     
     //instr rom
@@ -416,8 +416,48 @@ parameter ddr_load_ratio = 2;
       .addra(instr_adr),  // input wire [9 : 0] addra
       .douta(instr)  // output wire [15 : 0] douta
     );
-
-    conv_router_flat cv_router_flat( //conv_router_v2 // conv_router_flat
+    
+    conv_load_controller cv_load_controller(
+        .ix_init(ix), 
+        .iy_init(iy), 
+        .nif_init(nif),
+        .k_init(k), 
+        .s_init(s), 
+        .p_init(p),
+        .clk(clk), 
+        .load_ddr_start(load_ddr_start), 
+        .reset(reset),
+        .load_ddr_continue(load_ddr_continue),
+        .nif_in_2pow_init(nif_in_2pow),
+        .ix_in_2pow_init(ix_in_2pow),
+        .buf_depth_in_row_2pow_init(buf_depth_in_row_2pow),
+        
+        .word_lenth_mult_word_num_mult_spare_num(word_lenth_mult_word_num_mult_spare_num), 
+        .word_num_mult_spare_num(word_num_mult_spare_num),
+        .valid_load_data(valid_load_data),
+        
+        //ddr info
+        .load_row_idx_ddr(load_row_idx_ddr),
+        .load_row_start_idx_ddr(load_row_start_idx_ddr), 
+        .load_row_end_idx_ddr(load_row_end_idx_ddr),
+        .load_if_start_idx_ddr(load_if_start_idx_ddr), 
+        .load_if_end_idx_ddr(load_if_end_idx_ddr),
+        
+        //buf info
+        .load_buf_idx(load_buf_idx),
+        .load_row_idx_in_3_buf(load_row_idx_in_3_buf), 
+        .load_row_idx_buf(load_row_idx_buf),
+        .load_row_start_idx_buf(load_row_start_idx_buf), 
+        .load_row_end_idx_buf(load_row_end_idx_buf),
+        .load_if_start_idx_buf(load_if_start_idx_buf), 
+        .load_if_end_idx_buf(load_if_end_idx_buf),
+            
+        .load_tile_fin(load_tile_fin),
+            
+        .load_tile0_fin(load_tile0_fin)
+    );
+    
+    conv_compute_controller cv_compute_controller( //conv_router_v2 // conv_router_flat
         .mode_init(mode),
         .of_init(of),
         .ox_init(ox), 
@@ -436,7 +476,7 @@ parameter ddr_load_ratio = 2;
         
         .channel_out_add_end(channel_out_add_end), //the last sa output channel
         .quantify_add_end(quantify_add_end),
-        .conv_out_tile_add_end(conv_out_tile_add_end),
+        .conv_out_add_end(conv_out_add_end),
     
         .nif_mult_k_mult_k(nif_mult_k_mult_k), 
 
@@ -1054,7 +1094,7 @@ parameter ddr_load_ratio = 2;
         .E_scale_rank_4_channel_sets(E_scale_rank_4_channel_sets)
     );
     
-    conv_out_handler cv_out_handler ( // conv_out_handler
+    conv_store_controller cv_store_controller ( // conv_out_handler
         //cycle 0 in
         .mode(mode),
         .clk(clk), 
@@ -1066,7 +1106,7 @@ parameter ddr_load_ratio = 2;
         .cur_pox(cur_pox), 
         .cur_poy(cur_poy), 
         .cur_pof(cur_pof), 
-        .quantify_add_end(quantify_add_end),
+        .conv_store_start(quantify_add_end),
         .of_in_2pow(of_in_2pow), 
         .ox_in_2pow(ox_in_2pow),
         
@@ -1083,15 +1123,12 @@ parameter ddr_load_ratio = 2;
         .out_x_idx(out_x_idx), 
         .out_f_idx(out_f_idx),
         .out_data(out_data),
-        .conv_out_tile_add_end(conv_out_tile_add_end)
+        .conv_out_add_end(conv_out_add_end)
     );
     
     assign fifo_data = fifo_rowi_channel_seti_dout[fifo_column_no][fifo_row_no];
     
-    assign conv_fin = conv_out_tile_add_end 
-                    && (cur_oy_start + cur_poy - 1 == oy)
-                    && (cur_ox_start + cur_pox - 1 == ox)
-                    && (cur_of_start + cur_pof - 1 == of); //xxx
+    assign conv_fin = conv_out_add_end; //xxx
     assign pool_fin = 1'b0; 
     assign concate_fin = 1'b0;
     assign shortcut_fin = 1'b0; 

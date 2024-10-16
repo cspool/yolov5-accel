@@ -43,7 +43,6 @@ module load_tiling_tb(
 
     reg [15:0] word_lenth_mult_word_num_mult_spare_num, word_num_mult_spare_num;
     
-    reg [15:0] load_tile_buf_word_num; // 3s * word_num * spare_num * nif / 2;
     reg valid_load_data;
     
     load_tiling ld_tiling (
@@ -63,7 +62,6 @@ module load_tiling_tb(
         
         .word_lenth_mult_word_num_mult_spare_num(word_lenth_mult_word_num_mult_spare_num), 
         .word_num_mult_spare_num(word_num_mult_spare_num),
-        .load_tile_buf_word_num(load_tile_buf_word_num),
         .valid_load_data(valid_load_data)
         
     );
@@ -82,7 +80,6 @@ module load_tiling_tb(
         buf_depth_2pow_init = 10; //1024
         word_lenth_mult_word_num_mult_spare_num = pixels_in_row * 1;
         word_num_mult_spare_num = 1;
-        load_tile_buf_word_num = 3 * s_init * word_num_mult_spare_num * nif_init / 2; //12
         valid_load_data = 0;
         load_ddr_continue = 0;
         
