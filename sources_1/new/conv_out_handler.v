@@ -103,7 +103,7 @@ conv_out_tile_add_end
     wire [out_data_width-1 : 0] out_data_mode0, out_data_mode1;
     
     always@(posedge clk) begin
-        if (reset == 1'b1) begin
+        if ((reset == 1'b1) || (conv_out_tile_add_end == 1'b1)) begin
             valid_rowi_out_buf_adr <= 0;
 //            rowi_out_buf_adr <= 0;
             out_y_idx <= 0;

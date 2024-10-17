@@ -41,11 +41,13 @@ E_scale_tail_tile_val,
     
 E_scale_rank_tile_val,
 
-conv_compute_reset,
+conv_compute_tile_reset,
 
-conv_load_reset,
+conv_load_tile_reset,
 
-conv_load_start
+conv_store_tile_reset,
+
+conv_load_tile_start
     );
     
 parameter sa_row_num = 4; //how many rows in conv core
@@ -162,9 +164,8 @@ parameter scaled_rank_row_width = (quantified_pixel_width+1) * pe_parallel_weigh
     output reg [E_scale_tail_tile_length -1 : 0] E_scale_tail_tile_val; 
     
     output reg [E_scale_rank_tile_length -1 : 0] E_scale_rank_tile_val; 
-    
-    output conv_compute_reset, conv_load_reset;
-    output reg conv_load_start;
+
+    output reg conv_load_tile_start;
     
     always@(posedge clk) begin //xxxxx
        if(reset == 1'b1)begin
@@ -181,22 +182,18 @@ parameter scaled_rank_row_width = (quantified_pixel_width+1) * pe_parallel_weigh
        end
     end
     
-    assign conv_compute_reset = conv_inital_fin;
-    
-    assign conv_load_reset = conv_inital_fin;
-    
     always@(posedge clk) begin //xxxxx
        if(reset == 1'b1)begin
-           conv_load_start <= 1'b0;
+           conv_load_tile_start <= 1'b0;
        end
        else if(conv_inital_fin == 1'b1)begin
-           conv_load_start <= 1'b1;
+           conv_load_tile_start <= 1'b1;
        end
-       else if(conv_load_start == 1'b1)begin
-           conv_load_start <= 1'b0;
+       else if(conv_load_tile_start == 1'b1)begin
+           conv_load_tile_start <= 1'b0;
        end
        else begin
-           conv_load_start <= conv_load_start;
+           conv_load_tile_start <= conv_load_tile_start;
        end
     end
     

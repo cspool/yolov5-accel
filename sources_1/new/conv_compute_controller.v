@@ -24,13 +24,13 @@ module conv_compute_controller(
 mode_init,
 of_init, ox_init, oy_init, ix_init, iy_init, nif_init,
 k_init, s_init, p_init,
-clk, en, reset, //en means initial finish
+clk, conv_compute_tile_start, reset,
 nif_in_2pow_init,
 ix_in_2pow_init,
 
-channel_out_add_end,
-quantify_add_end,
-conv_out_tile_add_end,
+//channel_out_add_end,
+//quantify_add_end,
+conv_store_tile_fin,
     
 nif_mult_k_mult_k,
 
@@ -99,7 +99,7 @@ valid_row3_adr
     
     input [15:0] of_init, ox_init, oy_init, ix_init, iy_init, nif_init;
     
-    input clk, en, reset; // reset is valid a cycle before en being valid
+    input clk, conv_compute_tile_start, reset;
     
     input [3:0] nif_in_2pow_init, ix_in_2pow_init;
     
@@ -113,7 +113,9 @@ valid_row3_adr
     
 //    input shift_add2_end;
 //    input stall;
-    input channel_out_add_end, quantify_add_end, conv_out_tile_add_end;
+//    input channel_out_add_end;
+//    input quantify_add_end;
+    input conv_store_tile_fin;
     
     input [15:0] nif_mult_k_mult_k;
     
@@ -339,7 +341,7 @@ valid_row3_adr
        //the stall time can be shorter and uniform, optimize it later
     assign loop_if_stall_counter_add_end = 
     (ifx_stall == 1'b1) && 
-    (conv_out_tile_add_end == 1'b1);
+    (conv_store_tile_fin == 1'b1);
 //    (((channel_out_add_end == 1'b1))
 //    (((channel_out_add_end == 1'b1) && (nif_mult_k_mult_k > cur_pof_mult_cur_poy))
 //    || ((conv_out_add_end == 1'b1) && (nif_mult_k_mult_k <= cur_pof_mult_cur_poy)));
@@ -3314,7 +3316,7 @@ assign row_end_fix =
         if (reset == 1'b1) begin
             signal_adr1_add <= 0;
         end
-        else if (en == 1'b1) begin
+        else if (conv_compute_tile_start == 1'b1) begin
             signal_adr1_add <= 1;
         end
 //        else if (conv_tiling_add_end == 1'b1) begin // all end
@@ -3458,7 +3460,7 @@ assign row_end_fix =
         if (reset == 1'b1) begin
             row_length <= 0;
         end
-        else if (en == 1'b1) begin
+        else if (conv_compute_tile_start == 1'b1) begin
             row_length <= 1;
         end
         else if (loop_adr1_add_begin == 1'b1) begin
@@ -3479,7 +3481,7 @@ assign row_end_fix =
         if (reset == 1'b1) begin
             stall_in_row_counter <= 0;
         end
-        else if (en == 1'b1) begin //first cycle no need stall
+        else if (conv_compute_tile_start == 1'b1) begin //first cycle no need stall
             stall_in_row_counter <= 0;
         end
 //        else if (loop_adr1_add_end == 1'b1) begin // the last pixels word

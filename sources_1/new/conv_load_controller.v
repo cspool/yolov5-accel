@@ -50,7 +50,8 @@ load_if_end_idx_buf,
     
 load_tile_fin,
     
-load_tile0_fin
+load_tile0_fin,
+load_tileN_fin
     );
     
     parameter sa_row_num = 4; //how many rows in conv core
@@ -149,14 +150,14 @@ load_tile0_fin
     
     output load_tile_fin;
     
-    output load_tile0_fin;
+    output load_tile0_fin, load_tileN_fin;
    
     
     always@(posedge clk) begin
         if (reset == 1'b1) begin
             load_tile_ddr_stall <= 0;
         end
-        else if (loop_load_siy_ddr_add_end == 1'b1) begin
+        else if (load_tileN_fin == 1'b1) begin
             load_tile_ddr_stall <= 1;
         end
         else if (load_ddr_continue == 1'b1) begin
@@ -541,6 +542,8 @@ load_tile0_fin
     assign load_tile_fin = (loop_load_siy_buf_add_end == 1'b1);
     
     assign load_tile0_fin = (loop_load_siy_buf_add_end == 1'b1) && (tiy_buf == 16'd1) && (tix_buf == 16'd1);
+    
+    assign load_tileN_fin = (loop_load_siy_buf_add_end == 1'b1) && (tiy_buf > 16'd1) && (tix_buf > 16'd1);
     
 endmodule
 

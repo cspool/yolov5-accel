@@ -324,7 +324,7 @@ parameter ddr_load_ratio = 2;
     wire [3:0] fifo_column_no, fifo_row_no;
     wire valid_rowi_out_buf_adr;                    
     wire [15:0] out_y_idx, out_x_idx, out_f_idx;                   
-    wire conv_out_add_end;
+    wire conv_out_tile_add_end;
     wire [out_data_width-1 : 0] out_data;
     
     //instr rom
@@ -380,7 +380,7 @@ parameter ddr_load_ratio = 2;
         .conv_start(conv_start)
     );
     
-    conv_initial_ctrl cv_initial_ctrl(
+    conv_initial_controller cv_initial_controller(
         .clk(clk), 
         .reset(reset), 
         .start(conv_start), 
@@ -405,9 +405,8 @@ parameter ddr_load_ratio = 2;
         .bias_tile_val(bias_tile_val),
         .E_scale_tail_tile_val(E_scale_tail_tile_val),
         .E_scale_rank_tile_val(E_scale_rank_tile_val),
-        
-        .conv_compute_reset(conv_compute_reset),
-        .conv_compute_en(conv_compute_en)
+
+        .conv_load_tile_start(conv_load_tile_start)
     );
     
     instr_rom instr_rom (
@@ -426,7 +425,7 @@ parameter ddr_load_ratio = 2;
         .p_init(p),
         .clk(clk), 
         .load_ddr_start(load_ddr_start), 
-        .reset(reset),
+        .reset(reset | conv_load_tile_reset),
         .load_ddr_continue(load_ddr_continue),
         .nif_in_2pow_init(nif_in_2pow),
         .ix_in_2pow_init(ix_in_2pow),
@@ -454,8 +453,11 @@ parameter ddr_load_ratio = 2;
             
         .load_tile_fin(load_tile_fin),
             
-        .load_tile0_fin(load_tile0_fin)
+        .load_tile0_fin(load_tile0_fin),
+        .load_tileN_fin(load_tileN_fin)
     );
+    
+    assign load_ddr_continue = conv_store_tile_fin;
     
     conv_compute_controller cv_compute_controller( //conv_router_v2 // conv_router_flat
         .mode_init(mode),
@@ -469,14 +471,14 @@ parameter ddr_load_ratio = 2;
         .s_init(s), 
         .p_init(p),
         .clk(clk), 
-        .en(conv_compute_en), 
-        .reset((reset | conv_compute_reset)),
+        .conv_compute_tile_start(conv_compute_tile_start), 
+        .reset((reset | conv_inital_fin)),
         .nif_in_2pow_init(nif_in_2pow), 
         .ix_in_2pow_init(ix_in_2pow),
         
-        .channel_out_add_end(channel_out_add_end), //the last sa output channel
-        .quantify_add_end(quantify_add_end),
-        .conv_out_add_end(conv_out_add_end),
+//        .channel_out_add_end(channel_out_add_end), //the last sa output channel
+//        .quantify_add_end(quantify_add_end),
+        .conv_store_tile_fin(conv_store_tile_fin),
     
         .nif_mult_k_mult_k(nif_mult_k_mult_k), 
 
@@ -535,6 +537,8 @@ parameter ddr_load_ratio = 2;
         .valid_row2_adr(valid_row2_adr),
         .valid_row3_adr(valid_row3_adr)
     );
+    
+    assign conv_compute_tile_start = load_tile0_fin;
     
      //last regs
     reg [3:0] last_west_pad, last_slab_num, last_east_pad;
@@ -891,7 +895,7 @@ parameter ddr_load_ratio = 2;
     cv_weights_handler cv_weights_handler(
         .mode(mode),
         .clk(clk), 
-        .reset((reset | conv_compute_reset)), //need xxxx
+        .reset((reset | conv_load_tile_reset)), //need xxxx
         .re_fm_en(re_fm_en),
         .re_fm_end(re_fm_end),
         .weights_vector(weights_vector)
@@ -903,7 +907,7 @@ parameter ddr_load_ratio = 2;
         for (i = 1; i <= sa_column_num; i = i + 1) begin: delay_regs_column //poy, rows
             Delay_Regs_Pixels delay_regs_pixels(
                 .clk(clk), 
-                .reset((sa_reset | reset | conv_compute_reset)), 
+                .reset((sa_reset | reset | conv_inital_fin)), 
                 .en(sa_en), 
                 .re_row_pixels(re_rowi_pixels[i-1]),
                 .delay_row_pixels(delay_rowi_pixels[i-1])
@@ -921,7 +925,7 @@ parameter ddr_load_ratio = 2;
         for (j = 1; j <= sa_row_num; j = j + 1) begin: delay_regs_row //output channel
             Delay_Regs_Weights delay_regs_weights(
                 .clk(clk), 
-                .reset((sa_reset | reset | conv_compute_reset)), 
+                .reset((sa_reset | reset | conv_inital_fin)), 
                 .en(sa_en), 
                 .weights(weights_vector[(j-1)* row_num * 8 +: (row_num * 8)]),
                 .delay_weights(delay_weights_sets[j-1])
@@ -937,10 +941,10 @@ parameter ddr_load_ratio = 2;
             for (j = 1; j <= sa_row_num; j = j + 1) begin: sa_row //output channel
                 SA_fin sa(
                     .clk(clk), 
-                    .reset((sa_reset | reset | conv_compute_reset)), 
+                    .reset((sa_reset | reset | conv_inital_fin)), 
                     .en(sa_en), 
                     .mode(mode), 
-                    .channel_out_reset((channel_out_reset | reset | conv_compute_reset)),
+                    .channel_out_reset((channel_out_reset | reset | conv_inital_fin)),
                     .channel_out_en(channel_out_en), 
                     .out_sa_row_idx(out_sa_row_idx),
                     .row_in(sa_rowi_ins[i-1][j-1]), //weights or 16bit e_scale
@@ -955,7 +959,7 @@ parameter ddr_load_ratio = 2;
                 
                 Add_Bias bias_adder(
                     .clk(clk), 
-                    .reset((add_bias_reset | reset | conv_compute_reset)), 
+                    .reset((add_bias_reset | reset | conv_inital_fin)), 
                     .en(add_bias_en), 
                     .mode(mode), 
                     .rowi_channel_seti(out_rowi_channel_seti[i-1][j-1]), // pox res per channel
@@ -966,9 +970,9 @@ parameter ddr_load_ratio = 2;
                 E_Scale E_scale(
                     //cycle 0 in
                     .clk(clk), 
-                    .e_tail_reset((e_tail_reset | reset | conv_compute_reset)),
+                    .e_tail_reset((e_tail_reset | reset | conv_inital_fin)),
                     .quantify_en(quantify_en), 
-                    .quantify_reset((quantify_reset | reset | conv_compute_reset)),
+                    .quantify_reset((quantify_reset | reset | conv_inital_fin)),
                     .mode(mode), 
                     .E_scale_tail_set(E_scale_tail_4_channel_sets[(j-1)*E_scale_tail_set_width +: E_scale_tail_set_width]),
                     .E_scale_rank_set(E_scale_rank_4_channel_sets[(j-1)*E_scale_rank_set_width +: E_scale_rank_set_width]),
@@ -1016,7 +1020,7 @@ parameter ddr_load_ratio = 2;
                 
                 fifo_rowi_channel_seti fifo_rowi_channel_seti (
                   .clk(clk),      // input wire clk
-                  .srst((reset | conv_compute_reset)),    // input wire srst
+                  .srst((reset | conv_inital_fin)),    // input wire srst
                   .din(quantified_rowi_channel_seti[i-1][j-1]),      // input wire [511 : 0] din
                   .wr_en(quantify_en),  // input wire wr_en
                   .rd_en(fifo_rowi_channel_seti_rd_en[i-1][j-1]),  // input wire rd_en
@@ -1037,7 +1041,7 @@ parameter ddr_load_ratio = 2;
     SA_Ctrl sa_ctrl(
         .mode(mode),
         .clk(clk), 
-        .reset((reset | conv_compute_reset)), //next tile need clr
+        .reset((reset | conv_inital_fin)), //next tile need clr
 //        .en(en), 
         .re_fm_en(re_fm_en),
         .nif_mult_k_mult_k(nif_mult_k_mult_k),
@@ -1058,10 +1062,12 @@ parameter ddr_load_ratio = 2;
         .quantify_add_end(quantify_add_end)
     );
     
+    assign conv_compute_tile_fin = quantify_add_end;
+    
     //bias regs
     Bias_Regs bias_regs(
         .clk(clk), 
-        .set((reset | conv_compute_reset)), // next tile need clr
+        .set(conv_inital_fin), // next tile need clr
         .mode(mode),
         .bias_tile_val(bias_tile_val),
         .out_sa_row_idx(out_sa_row_idx),
@@ -1083,7 +1089,7 @@ parameter ddr_load_ratio = 2;
     
     E_Scale_Regs E_scale_regs (
         .clk(clk), 
-        .set((reset | conv_compute_reset)), // next tile need clr
+        .set(conv_inital_fin), // next tile need clr
         .mode(mode),
         
         .E_scale_tail_tile_val(E_scale_tail_tile_val),
@@ -1093,12 +1099,13 @@ parameter ddr_load_ratio = 2;
         .E_scale_tail_4_channel_sets(E_scale_tail_4_channel_sets),
         .E_scale_rank_4_channel_sets(E_scale_rank_4_channel_sets)
     );
+
     
     conv_store_controller cv_store_controller ( // conv_out_handler
         //cycle 0 in
         .mode(mode),
         .clk(clk), 
-        .reset((reset | conv_compute_reset)), // next tile need clr
+        .reset((reset | conv_inital_fin)),
 //        .en(en), 
         .cur_ox_start(cur_ox_start), 
         .cur_oy_start(cur_oy_start), 
@@ -1106,7 +1113,7 @@ parameter ddr_load_ratio = 2;
         .cur_pox(cur_pox), 
         .cur_poy(cur_poy), 
         .cur_pof(cur_pof), 
-        .conv_store_start(quantify_add_end),
+        .conv_store_tile_start(conv_store_tile_start),
         .of_in_2pow(of_in_2pow), 
         .ox_in_2pow(ox_in_2pow),
         
@@ -1123,12 +1130,18 @@ parameter ddr_load_ratio = 2;
         .out_x_idx(out_x_idx), 
         .out_f_idx(out_f_idx),
         .out_data(out_data),
-        .conv_out_add_end(conv_out_add_end)
+        .conv_out_tile_add_end(conv_out_tile_add_end)
     );
+    
+    assign conv_store_tile_fin = conv_out_tile_add_end;
+    assign conv_store_tile_start = (conv_compute_tile_fin == 1'b1) && (load_tileN_fin == 1'b1);
     
     assign fifo_data = fifo_rowi_channel_seti_dout[fifo_column_no][fifo_row_no];
     
-    assign conv_fin = conv_out_add_end; //xxx
+    assign conv_fin = conv_out_tile_add_end 
+                    && (cur_oy_start + cur_poy - 1 == oy)
+                    && (cur_ox_start + cur_pox - 1 == ox)
+                    && (cur_of_start + cur_pof - 1 == of); //xxx
     assign pool_fin = 1'b0; 
     assign concate_fin = 1'b0;
     assign shortcut_fin = 1'b0; 
