@@ -39,6 +39,8 @@ load_row_end_idx_ddr,
 load_if_start_idx_ddr, 
 load_if_end_idx_ddr,
 
+load_ddr_adr,
+
 //buf info
 load_buf_idx,
 load_row_idx_in_3_buf, 
@@ -47,6 +49,8 @@ load_row_start_idx_buf,
 load_row_end_idx_buf,
 load_if_start_idx_buf, 
 load_if_end_idx_buf,
+
+load_buf_adr,
     
 load_tile_fin,
     
@@ -62,6 +66,8 @@ load_tileN_fin
     parameter buffers_num = sa_column_num;
     
     parameter ddr_load_ratio = 2;
+    
+    parameter ifs_in_row_2pow = 1;
     
     input [3:0] k_init, s_init, p_init;
     
@@ -79,7 +85,6 @@ load_tileN_fin
     
     reg [3:0] nif_in_2pow, ix_in_2pow, buf_depth_in_row_2pow;
 
-    
     input [15:0] word_lenth_mult_word_num_mult_spare_num, word_num_mult_spare_num;
 
     input valid_load_data;
@@ -115,6 +120,8 @@ load_tileN_fin
     output [15:0] load_row_start_idx_ddr, load_row_end_idx_ddr;
     output [15:0] load_if_start_idx_ddr, load_if_end_idx_ddr;
     
+    output [15:0] load_ddr_adr;
+    
     //load stall
     reg load_tile_ddr_stall;
     
@@ -127,7 +134,7 @@ load_tileN_fin
     wire loop_load_sparex_buf_add_begin, loop_load_sparex_buf_add_end;
     
     //loop bufy
-    reg [15:0] bufy_buf;
+    reg [1:0] bufy_buf;
     wire loop_load_bufy_buf_add_begin, loop_load_bufy_buf_add_end;
     
     //loop siy
@@ -143,10 +150,12 @@ load_tileN_fin
     reg [15:0] tiy_buf;
     wire loop_load_tiy_buf_add_begin, loop_load_tiy_buf_add_end;
     
-    output [15:0] load_buf_idx;
+    output [1:0] load_buf_idx;
     output [15:0] load_row_idx_in_3_buf, load_row_idx_buf;
     output [15:0] load_row_start_idx_buf, load_row_end_idx_buf;
     output [15:0] load_if_start_idx_buf, load_if_end_idx_buf;
+    
+    output [15:0] load_buf_adr;
     
     output load_tile_fin;
     
@@ -358,19 +367,25 @@ load_tileN_fin
     assign loop_load_tiy_ddr_add_end = loop_load_tiy_ddr_add_begin 
     && (((tiy_ddr + s + (s << 1) - 1) >= iy) || (load_row_idx_ddr == iy)); 
     
-    assign load_row_idx_ddr = tiy_ddr + (siy_ddr << 1) + siy_ddr - 3 + bufy_ddr - 1;
+    //load ddr adr
+    //0,1,2,3...
+    assign load_row_idx_ddr = tiy_ddr - 1 + (siy_ddr << 1) + siy_ddr - 3 + bufy_ddr - 1;
     
-    assign load_row_start_idx_ddr = tix_ddr + (sparex_ddr << pixels_in_row_in_2pow) - pixels_in_row;
+    assign load_row_start_idx_ddr = tix_ddr - 1 + (sparex_ddr << pixels_in_row_in_2pow) - pixels_in_row;
     
     assign load_row_end_idx_ddr = (load_row_start_idx_ddr + word_lenth_mult_word_num_mult_spare_num - 1) >= ix ?
-                              ix :
+                              ix - 1:
                               (load_row_start_idx_ddr + word_lenth_mult_word_num_mult_spare_num - 1);
     
     assign load_if_start_idx_ddr = tif_ddr;
     
-    assign load_if_end_idx_ddr = (tif_ddr + ddr_load_ratio - 1) > nif ?
-                             nif :
-                             (tif_ddr + ddr_load_ratio - 1);
+    assign load_if_end_idx_ddr = (load_if_start_idx_ddr + ddr_load_ratio - 1) > nif ?
+                             nif:
+                             (load_if_start_idx_ddr + ddr_load_ratio - 1);
+    
+    assign load_ddr_adr =  ((load_row_idx_ddr << ((nif_in_2pow - ifs_in_row_2pow) + ix_in_2pow - pixels_in_row_in_2pow))
+                        + ((load_row_start_idx_ddr << (nif_in_2pow - ifs_in_row_2pow)) >> pixels_in_row_in_2pow))
+                        + ((load_if_start_idx_ddr - 1) >> ifs_in_row_2pow);
     
     //load to buf
     //loop tif_buf
@@ -518,18 +533,21 @@ load_tileN_fin
     assign loop_load_tiy_buf_add_end = loop_load_tiy_buf_add_begin 
     && (((tiy_buf + s + (s << 1) - 1) >= iy) || (load_row_idx_buf == iy)); 
     
-    assign load_row_idx_in_3_buf = (s == 4'd1)? (1 + row_counter_3s_buf + siy_buf - 1):
-                            (s == 4'd2)? (1 + (row_counter_3s_buf << 1) + siy_buf - 1):
+    
+    // load_buf_adr
+    //0,1,2,3,...
+    assign load_row_idx_in_3_buf = (s == 4'd1)? (1 - 1 + row_counter_3s_buf + siy_buf - 1):
+                            (s == 4'd2)? (1 - 1 + (row_counter_3s_buf << 1) + siy_buf - 1):
                             0;
                             
     assign load_buf_idx = bufy_buf;                        
     
-    assign load_row_idx_buf = tiy_buf + (siy_buf << 1) + siy_buf - 3 + bufy_buf - 1;
+    assign load_row_idx_buf = tiy_buf - 1 + (siy_buf << 1) + siy_buf - 3 + bufy_buf - 1;
     
-    assign load_row_start_idx_buf = tix_buf + (sparex_buf << pixels_in_row_in_2pow) - pixels_in_row;
+    assign load_row_start_idx_buf = tix_buf - 1 + (sparex_buf << pixels_in_row_in_2pow) - pixels_in_row;
     
     assign load_row_end_idx_buf = (load_row_start_idx_buf + word_lenth_mult_word_num_mult_spare_num - 1) >= ix ?
-                              ix :
+                              ix - 1:
                               (load_row_start_idx_buf + word_lenth_mult_word_num_mult_spare_num - 1);
     
     assign load_if_start_idx_buf = tif_buf;
@@ -537,6 +555,10 @@ load_tileN_fin
     assign load_if_end_idx_buf = (tif_buf + ddr_load_ratio - 1) > nif ?
                              nif :
                              (tif_buf + ddr_load_ratio - 1);
+    
+    assign load_buf_adr =  ((load_row_idx_in_3_buf << ((nif_in_2pow - ifs_in_row_2pow) + ix_in_2pow - pixels_in_row_in_2pow))
+                        + ((load_row_start_idx_buf << (nif_in_2pow - ifs_in_row_2pow)) >> pixels_in_row_in_2pow))
+                        + ((load_if_start_idx_buf - 1) >> ifs_in_row_2pow);
                              
     //load ddr word counter
     assign load_tile_fin = (loop_load_siy_buf_add_end == 1'b1);

@@ -124,10 +124,77 @@ parameter ddr_load_ratio = 2;
 
     input clk, start, reset;
     
-    //conv load ctrl
+    //instr rom
+    wire [9 : 0] instr_adr;
     
+    //top_controller
+    wire [15:0] instr;
+    
+    wire conv_fin, pool_fin , concate_fin, shortcut_fin, upsample_fin;
+    
+    wire instr_rd;
+    
+    wire [3:0] state;
+    
+    wire conv_start;
+    
+    //conv initial
+    wire conv_inital_fin;
+    
+    wire mode;
+    
+    wire [31:0] nif_mult_k_mult_k;
+    
+    wire [3:0] k, s, p;
+    
+    wire [15:0] of, ox, oy, ix, iy, nif;
+    
+    wire [3:0] nif_in_2pow, ix_in_2pow;
+    
+    wire [3:0] of_in_2pow, ox_in_2pow; 
+    
+    wire [15:0] buf_depth_in_row_2pow;
+    
+    wire [bias_tile_length -1 : 0] bias_tile_val; //will come from args buffer that has not existed
+        
+    wire [E_scale_tail_tile_length -1 : 0] E_scale_tail_tile_val; 
+    wire [E_scale_rank_tile_length -1 : 0] E_scale_rank_tile_val; 
+    
+    wire conv_load_start;
+    
+    //conv load ctrl
+    wire load_ddr_start;
+    
+    wire load_ddr_continue; //str_fin
+    
+    wire [3:0] buf_depth_in_row_2pow_init;
+    
+    wire [15:0] word_lenth_mult_word_num_mult_spare_num, word_num_mult_spare_num;
+
+    wire valid_load_data;
+    
+    //ddr info
+    wire [15:0] load_row_idx_ddr; 
+    wire [15:0] load_row_start_idx_ddr, load_row_end_idx_ddr;
+    wire [15:0] load_if_start_idx_ddr, load_if_end_idx_ddr;
+    
+    wire [15:0] load_ddr_adr;
+    //buf info
+    wire [1:0] load_buf_idx;
+    wire [15:0] load_row_idx_in_3_buf, load_row_idx_buf;
+    wire [15:0] load_row_start_idx_buf, load_row_end_idx_buf;
+    wire [15:0] load_if_start_idx_buf, load_if_end_idx_buf;
+    
+    wire [15:0] load_buf_adr;
+    
+    wire load_tile_fin;
+    
+    wire load_tile0_fin, load_tileN_fin;
         
     //conv compute ctrl //cv router wire
+    wire conv_compute_start;
+    wire conv_compute_continue;
+    
     wire [15:0] cur_pox, cur_poy, cur_pof, cur_ox_start, cur_oy_start, cur_of_start;
     wire [15:0] ox_start, oy_start, of_start, pox, poy, pof, if_idx; //tile info
     
@@ -268,6 +335,8 @@ parameter ddr_load_ratio = 2;
     
     wire [out_width - 1: 0] out_rowi_channel_seti[sa_column_num-1 :0][sa_row_num-1 :0]; // pox res per channel
     
+    wire conv_compute_tile_fin;
+    
     //bias
     wire [bias_set_4_channel_width-1 :0] bias_4_channel_sets; //4 sets of 16bit(1 bias or 2 bias)
     
@@ -312,7 +381,10 @@ parameter ddr_load_ratio = 2;
     wire fifo_rowi_channel_seti_empty[sa_column_num-1 : 0][sa_row_num-1 : 0];
     wire [8 : 0] data_counts[sa_column_num-1 : 0][sa_row_num-1 : 0];
 
-    //conv store ctrl 
+    //conv store ctrl
+    //cycle 0 in
+    wire conv_store_start; 
+    
     //cycle 1 in
     wire [quantified_row_width-1 : 0] fifo_data;
     
@@ -327,41 +399,17 @@ parameter ddr_load_ratio = 2;
     wire conv_out_tile_add_end;
     wire [out_data_width-1 : 0] out_data;
     
-    //instr rom
-    wire [9 : 0] instr_adr;
+    wire conv_store_tile_fin;
     
-    //top_controller
-    wire [15:0] instr;
+    //conv args control
+    wire conv_args_tile_fin;
+    wire conv_args_tile0_fin;
+    wire conv_args_tileN_fin;
     
-    wire conv_fin, pool_fin , concate_fin, shortcut_fin, upsample_fin;
     
-    wire instr_rd;
-    
-    wire [3:0] state;
-    
-    wire conv_start;
-    
-    //conv initial
-    wire conv_inital_fin;
-    
-    wire mode;
-    
-    wire [31:0] nif_mult_k_mult_k;
-    
-    wire [3:0] k, s, p;
-    
-    wire [15:0] of, ox, oy, ix, iy, nif;
-    
-    wire [3:0] nif_in_2pow, ix_in_2pow;
-    
-    wire [3:0] of_in_2pow, ox_in_2pow;
-    
-    wire [bias_tile_length -1 : 0] bias_tile_val; //will come from args buffer that has not existed
-        
-    wire [E_scale_tail_tile_length -1 : 0] E_scale_tail_tile_val; 
-    wire [E_scale_rank_tile_length -1 : 0] E_scale_rank_tile_val; 
-    
-    wire conv_compute_reset, conv_compute_en;
+    //ddr simulator
+    wire valid_ddr_data;
+    wire [511:0] ddr_data;
     
     Top_Controller top_controller (
         .clk(clk), 
@@ -401,12 +449,14 @@ parameter ddr_load_ratio = 2;
         .ox_in_2pow(ox_in_2pow),
         .nif_mult_k_mult_k(nif_mult_k_mult_k),
         
+        .buf_depth_in_row_2pow(buf_depth_in_row_2pow),
+        
         .mode(mode),
         .bias_tile_val(bias_tile_val),
         .E_scale_tail_tile_val(E_scale_tail_tile_val),
         .E_scale_rank_tile_val(E_scale_rank_tile_val),
 
-        .conv_load_tile_start(conv_load_tile_start)
+        .conv_load_start(conv_load_start)
     );
     
     instr_rom instr_rom (
@@ -425,7 +475,7 @@ parameter ddr_load_ratio = 2;
         .p_init(p),
         .clk(clk), 
         .load_ddr_start(load_ddr_start), 
-        .reset(reset | conv_load_tile_reset),
+        .reset(reset | conv_inital_fin),
         .load_ddr_continue(load_ddr_continue),
         .nif_in_2pow_init(nif_in_2pow),
         .ix_in_2pow_init(ix_in_2pow),
@@ -441,6 +491,7 @@ parameter ddr_load_ratio = 2;
         .load_row_end_idx_ddr(load_row_end_idx_ddr),
         .load_if_start_idx_ddr(load_if_start_idx_ddr), 
         .load_if_end_idx_ddr(load_if_end_idx_ddr),
+        .load_ddr_adr(load_ddr_adr),
         
         //buf info
         .load_buf_idx(load_buf_idx),
@@ -450,6 +501,7 @@ parameter ddr_load_ratio = 2;
         .load_row_end_idx_buf(load_row_end_idx_buf),
         .load_if_start_idx_buf(load_if_start_idx_buf), 
         .load_if_end_idx_buf(load_if_end_idx_buf),
+        .load_buf_adr(load_buf_adr),
             
         .load_tile_fin(load_tile_fin),
             
@@ -457,7 +509,11 @@ parameter ddr_load_ratio = 2;
         .load_tileN_fin(load_tileN_fin)
     );
     
-    assign load_ddr_continue = conv_store_tile_fin;
+    assign load_ddr_start = conv_load_start;
+    assign load_ddr_continue = ((conv_store_tile_fin == 1'b1) && (conv_args_tile_fin == 1'b1))
+                               || (conv_args_tile0_fin == 1'b1);
+    
+    assign valid_load_data = valid_ddr_data;
     
     conv_compute_controller cv_compute_controller( //conv_router_v2 // conv_router_flat
         .mode_init(mode),
@@ -471,14 +527,14 @@ parameter ddr_load_ratio = 2;
         .s_init(s), 
         .p_init(p),
         .clk(clk), 
-        .conv_compute_tile_start(conv_compute_tile_start), 
+        .conv_compute_start(conv_compute_start), 
         .reset((reset | conv_inital_fin)),
         .nif_in_2pow_init(nif_in_2pow), 
         .ix_in_2pow_init(ix_in_2pow),
         
 //        .channel_out_add_end(channel_out_add_end), //the last sa output channel
 //        .quantify_add_end(quantify_add_end),
-        .conv_store_tile_fin(conv_store_tile_fin),
+        .conv_compute_continue(conv_compute_continue),
     
         .nif_mult_k_mult_k(nif_mult_k_mult_k), 
 
@@ -538,7 +594,8 @@ parameter ddr_load_ratio = 2;
         .valid_row3_adr(valid_row3_adr)
     );
     
-    assign conv_compute_tile_start = load_tile0_fin;
+    assign conv_compute_start = conv_args_tile0_fin;
+    assign conv_compute_continue = (conv_store_tile_fin == 1'b1) && (conv_args_tile_fin == 1'b1);
     
      //last regs
     reg [3:0] last_west_pad, last_slab_num, last_east_pad;
@@ -565,7 +622,7 @@ parameter ddr_load_ratio = 2;
     reg [1:0] last_row3_slab_idx;
     
     always@(posedge clk) begin
-        if ((reset == 1'b1) || (conv_compute_reset == 1'b1)) begin
+        if ((reset == 1'b1) || (conv_inital_fin == 1'b1)) begin
             state_conv_pixels_add_end <= 0;  
             state_valid_row1_adr <= 0; 
             state_valid_row2_adr <= 0;  
@@ -623,7 +680,7 @@ parameter ddr_load_ratio = 2;
     end    
     
     Row_Regs row_regs(
-        .reset((reset | conv_compute_reset)),
+        .reset((reset | conv_inital_fin)),
         .clk(clk),
 //        .en(conv_inital_fin),
         
@@ -663,7 +720,7 @@ parameter ddr_load_ratio = 2;
     );
     
     Shift_Regs shift_regs(
-        .reset((reset | conv_compute_reset)),
+        .reset((reset | conv_inital_fin)),
         .clk(clk),
 //        .en(conv_inital_fin),
         
@@ -685,7 +742,7 @@ parameter ddr_load_ratio = 2;
     
         
     conv_bram_handler cv_bram_handler(
-        .reset((reset | conv_compute_reset)),
+        .reset((reset | conv_inital_fin)),
         .clk(clk),
 //        .en(en),
                 
@@ -790,9 +847,9 @@ parameter ddr_load_ratio = 2;
       .doutb(in_buf1_rd_data)  // output wire [511 : 0] doutb
     );
     
-    assign in_buf1_wr = 0;
-    assign in_buf1_addr_wr = 0;
-    assign in_buf1_wr_data = 0;
+    assign in_buf1_wr = (valid_load_data == 1'b1) && (load_buf_idx == 2'd1);
+    assign in_buf1_addr_wr = load_buf_adr;
+    assign in_buf1_wr_data = ddr_data;
     
     assign buf1_pixels_32 = (last_buf1_word_select == 1'b0) ?
                             in_buf1_rd_data[pixels_in_row * 8 - 1 :0]:
@@ -818,9 +875,9 @@ parameter ddr_load_ratio = 2;
       .doutb(in_buf2_rd_data)  // output wire [511 : 0] doutb
     );
     
-    assign in_buf2_wr = 0;
-    assign in_buf2_addr_wr = 0;
-    assign in_buf2_wr_data = 0;
+    assign in_buf2_wr = (valid_load_data == 1'b1) && (load_buf_idx == 2'd2);
+    assign in_buf2_addr_wr = load_buf_adr;
+    assign in_buf2_wr_data = ddr_data;
     
     assign buf2_pixels_32 = (last_buf2_word_select == 1'b0) ?
                             in_buf2_rd_data[pixels_in_row * 8 - 1 :0]:
@@ -847,9 +904,9 @@ parameter ddr_load_ratio = 2;
       .doutb(in_buf3_rd_data)  // output wire [511 : 0] doutb
     );
     
-    assign in_buf3_wr = 0;
-    assign in_buf3_addr_wr = 0;
-    assign in_buf3_wr_data = 0;
+    assign in_buf3_wr = (valid_load_data == 1'b1) && (load_buf_idx == 2'd3);
+    assign in_buf3_addr_wr = load_buf_adr;
+    assign in_buf3_wr_data = ddr_data;
     
     assign buf3_pixels_32 = (last_buf3_word_select == 1'b0) ?
                             in_buf3_rd_data[pixels_in_row * 8 - 1 :0]:
@@ -895,7 +952,7 @@ parameter ddr_load_ratio = 2;
     cv_weights_handler cv_weights_handler(
         .mode(mode),
         .clk(clk), 
-        .reset((reset | conv_load_tile_reset)), //need xxxx
+        .reset((reset | conv_inital_fin)), //need xxxx
         .re_fm_en(re_fm_en),
         .re_fm_end(re_fm_end),
         .weights_vector(weights_vector)
@@ -1113,7 +1170,7 @@ parameter ddr_load_ratio = 2;
         .cur_pox(cur_pox), 
         .cur_poy(cur_poy), 
         .cur_pof(cur_pof), 
-        .conv_store_tile_start(conv_store_tile_start),
+        .conv_store_start(conv_store_start),
         .of_in_2pow(of_in_2pow), 
         .ox_in_2pow(ox_in_2pow),
         
@@ -1134,7 +1191,7 @@ parameter ddr_load_ratio = 2;
     );
     
     assign conv_store_tile_fin = conv_out_tile_add_end;
-    assign conv_store_tile_start = (conv_compute_tile_fin == 1'b1) && (load_tileN_fin == 1'b1);
+    assign conv_store_start = (conv_compute_tile_fin == 1'b1) && (load_tileN_fin == 1'b1);
     
     assign fifo_data = fifo_rowi_channel_seti_dout[fifo_column_no][fifo_row_no];
     

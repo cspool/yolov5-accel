@@ -25,7 +25,7 @@ module conv_store_controller(
 mode,
 clk, reset,
 cur_ox_start, cur_oy_start, cur_of_start, cur_pox, cur_poy, cur_pof,
-conv_store_tile_start,
+conv_store_start,
 of_in_2pow, ox_in_2pow,
 
 //cycle 0 out
@@ -68,7 +68,7 @@ conv_out_tile_add_end
     
     input [15:0] cur_ox_start, cur_oy_start, cur_of_start, cur_pox, cur_poy, cur_pof;
     
-    input conv_store_tile_start;
+    input conv_store_start;
     
     input [3:0] of_in_2pow, ox_in_2pow;
     
@@ -169,7 +169,7 @@ conv_out_tile_add_end
         if (reset == 1'b1) begin
             signal_add <= 0;
         end
-        else if (conv_store_tile_start == 1'b1) begin
+        else if (conv_store_start == 1'b1) begin
             signal_add <= 1;
         end
         else if (loop_oy_counter_add_end == 1'b1) begin // conv out end

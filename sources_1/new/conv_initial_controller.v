@@ -32,6 +32,8 @@ of, ox, oy, ix, iy, nif,
 nif_in_2pow, ix_in_2pow, of_in_2pow, ox_in_2pow,
     
 nif_mult_k_mult_k,
+
+buf_depth_in_row_2pow,
     
 mode,
     
@@ -41,13 +43,7 @@ E_scale_tail_tile_val,
     
 E_scale_rank_tile_val,
 
-conv_compute_tile_reset,
-
-conv_load_tile_reset,
-
-conv_store_tile_reset,
-
-conv_load_tile_start
+conv_load_start
     );
     
 parameter sa_row_num = 4; //how many rows in conv core
@@ -157,6 +153,8 @@ parameter scaled_rank_row_width = (quantified_pixel_width+1) * pe_parallel_weigh
     
     output reg [31:0] nif_mult_k_mult_k;
     
+    output reg [15:0] buf_depth_in_row_2pow;
+    
     output reg mode;
     
     output reg [bias_tile_length -1 : 0] bias_tile_val;
@@ -165,7 +163,7 @@ parameter scaled_rank_row_width = (quantified_pixel_width+1) * pe_parallel_weigh
     
     output reg [E_scale_rank_tile_length -1 : 0] E_scale_rank_tile_val; 
 
-    output reg conv_load_tile_start;
+    output reg conv_load_start;
     
     always@(posedge clk) begin //xxxxx
        if(reset == 1'b1)begin
@@ -184,16 +182,16 @@ parameter scaled_rank_row_width = (quantified_pixel_width+1) * pe_parallel_weigh
     
     always@(posedge clk) begin //xxxxx
        if(reset == 1'b1)begin
-           conv_load_tile_start <= 1'b0;
+           conv_load_start <= 1'b0;
        end
        else if(conv_inital_fin == 1'b1)begin
-           conv_load_tile_start <= 1'b1;
+           conv_load_start <= 1'b1;
        end
-       else if(conv_load_tile_start == 1'b1)begin
-           conv_load_tile_start <= 1'b0;
+       else if(conv_load_start == 1'b1)begin
+           conv_load_start <= 1'b0;
        end
        else begin
-           conv_load_tile_start <= conv_load_tile_start;
+           conv_load_start <= conv_load_start;
        end
     end
     
@@ -213,6 +211,7 @@ parameter scaled_rank_row_width = (quantified_pixel_width+1) * pe_parallel_weigh
             nif <= 0; 
             nif_in_2pow <= 0; 
             nif_mult_k_mult_k <= 0;
+            buf_depth_in_row_2pow <= 0;
             mode <= 0; 
             bias_tile_val <= 0;
                              
@@ -234,6 +233,7 @@ parameter scaled_rank_row_width = (quantified_pixel_width+1) * pe_parallel_weigh
             nif <= 2; 
             nif_in_2pow <= 1; 
             nif_mult_k_mult_k <= 18; //nif*k*k
+            buf_depth_in_row_2pow <= 13;
             
             //mode 0
             mode <= 0; 
@@ -364,6 +364,7 @@ parameter scaled_rank_row_width = (quantified_pixel_width+1) * pe_parallel_weigh
             nif <= nif; 
             nif_in_2pow <= nif_in_2pow; 
             nif_mult_k_mult_k <= nif_mult_k_mult_k;
+            buf_depth_in_row_2pow <= buf_depth_in_row_2pow;
             mode <= mode; 
             bias_tile_val <= bias_tile_val;
                              
