@@ -29,7 +29,8 @@ module conv_ddr_simulator(
         
         ddr_rd,
         
-        ddr_word
+        ddr_data,
+        valid_ddr_data
     );
     
     input reset, clk;
@@ -38,23 +39,41 @@ module conv_ddr_simulator(
     
     input ddr_rd;
     
-    output [511:0] ddr_word;
+    output reg [511:0] ddr_data;
     
-    reg [511:0] word_counter;
+    output reg valid_ddr_data;
+
     
     always@(posedge clk) begin
         if (reset == 1'b1) begin
-            word_counter <= 0; 
+            ddr_data <= 0; 
         end
         else if (ddr_rd == 1'b1) begin
-            word_counter[255:0] <= word_counter[255:0] + 256'd1; 
-            word_counter[511:256] <= word_counter[511:256] + 256'd1; 
+            ddr_data[255:0] <= ddr_data[255:0] + 256'd1; 
+            ddr_data[511:256] <= ddr_data[511:256] + 256'd1; 
+            
         end
         else begin
-            word_counter <= word_counter; 
+            ddr_data <= ddr_data;
+            
         end
     end
     
-    assign ddr_word = word_counter;
+     always@(posedge clk) begin
+        if (reset == 1'b1) begin
+            valid_ddr_data <= 0;
+        end
+        else if (valid_ddr_data == 1'b1) begin
+            if (ddr_rd == 1'b1) begin
+                valid_ddr_data <= 1;
+            end
+            else begin
+                valid_ddr_data <= 0;
+            end
+        end
+        else begin  
+            valid_ddr_data <= valid_ddr_data; 
+        end
+    end
     
 endmodule

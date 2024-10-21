@@ -40,6 +40,7 @@ load_if_start_idx_ddr,
 load_if_end_idx_ddr,
 
 load_ddr_adr,
+valid_load_ddr_adr,
 
 //buf info
 load_buf_idx,
@@ -121,6 +122,8 @@ load_tileN_fin
     output [15:0] load_if_start_idx_ddr, load_if_end_idx_ddr;
     
     output [15:0] load_ddr_adr;
+    
+    output valid_load_ddr_adr;
     
     //load stall
     reg load_tile_ddr_stall;
@@ -386,6 +389,8 @@ load_tileN_fin
     assign load_ddr_adr =  ((load_row_idx_ddr << ((nif_in_2pow - ifs_in_row_2pow) + ix_in_2pow - pixels_in_row_in_2pow))
                         + ((load_row_start_idx_ddr << (nif_in_2pow - ifs_in_row_2pow)) >> pixels_in_row_in_2pow))
                         + ((load_if_start_idx_ddr - 1) >> ifs_in_row_2pow);
+    
+    assign valid_load_ddr_adr = (signal_add == 1'b1) && (load_tile_ddr_stall == 1'b0);
     
     //load to buf
     //loop tif_buf

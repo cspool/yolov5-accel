@@ -31,11 +31,11 @@ module conv_args_controller(
     
     args_tile_fin,
    
-    bias_buf_adr,
+    bias_buf_adr_rd,
     
-    e_scale_tail_buf_adr,
+    e_scale_tail_buf_adr_rd,
     
-    e_scale_rank_buf_adr,
+    e_scale_rank_buf_adr_rd,
     
     bias_buf_rd,
     e_scale_tail_buf_rd,
@@ -55,9 +55,9 @@ module conv_args_controller(
     output args_tile_fin;
     
     //args  buf rd adr
-    output [15:0] bias_buf_adr;
-    output [15:0] e_scale_tail_buf_adr;
-    output [15:0] e_scale_rank_buf_adr;
+    output [15:0] bias_buf_adr_rd;
+    output [15:0] e_scale_tail_buf_adr_rd;
+    output [15:0] e_scale_rank_buf_adr_rd;
     
     output bias_buf_rd;
     output e_scale_tail_buf_rd;
@@ -123,9 +123,9 @@ module conv_args_controller(
     
     assign loop_args_tof_of_end = (loop_args_tof_add_begin == 1'b1) && (args_tof == of_row_num);
     
-    assign bias_buf_adr = args_tof - 1;
-    assign e_scale_tail_buf_adr = args_tof - 1;
-    assign e_scale_rank_buf_adr = args_tof - 1;
+    assign bias_buf_adr_rd = args_tof - 1;
+    assign e_scale_tail_buf_adr_rd = args_tof - 1;
+    assign e_scale_rank_buf_adr_rd = args_tof - 1;
     
     assign bias_buf_rd = loop_args_tof_add_begin;
     assign e_scale_tail_buf_rd = loop_args_tof_add_begin;

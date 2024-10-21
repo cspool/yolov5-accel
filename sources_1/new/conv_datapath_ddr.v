@@ -179,6 +179,8 @@ parameter ddr_load_ratio = 2;
     wire [15:0] load_if_start_idx_ddr, load_if_end_idx_ddr;
     
     wire [15:0] load_ddr_adr;
+    wire valid_load_ddr_adr;
+    
     //buf info
     wire [1:0] load_buf_idx;
     wire [15:0] load_row_idx_in_3_buf, load_row_idx_buf;
@@ -274,7 +276,11 @@ parameter ddr_load_ratio = 2;
     wire [15:0] slab3_pixels_2_wr;
     
     wire valid_slab1_adr_wr, valid_slab2_adr_wr, valid_slab3_adr_wr;
-        
+    
+    //ddr simu
+    wire valid_ddr_data;
+    wire [511:0] ddr_data;
+    
     //in_buf1
     wire [pixels_in_row * 8 * ddr_load_ratio - 1 :0] in_buf1_rd_data;
     wire [pixels_in_row * 8 * ddr_load_ratio - 1 :0] in_buf1_wr_data;
@@ -406,10 +412,29 @@ parameter ddr_load_ratio = 2;
     wire conv_args_tile0_fin;
     wire conv_args_tileN_fin;
     
+    //conv args buf
+    wire [15:0] bias_buf_adr_rd;
+    wire [15:0] e_scale_tail_buf_adr_rd;
+    wire [15:0] e_scale_rank_buf_adr_rd;
     
-    //ddr simulator
-    wire valid_ddr_data;
-    wire [511:0] ddr_data;
+    wire bias_buf_rd;
+    wire e_scale_tail_buf_rd;
+    wire e_scale_rank_buf_rd;
+        
+    wire e_scale_tail_buf_wr;
+    wire [15:0] e_scale_tail_buf_adr_wr;
+    wire [31 : 0] e_scale_tail_buf_data_wr;
+    wire [31 : 0] e_scale_tail_buf_data_rd;
+    
+    wire e_scale_rank_buf_wr;
+    wire [15:0] e_scale_rank_buf_adr_wr;
+    wire [15:0] e_scale_rank_buf_data_wr;
+    wire [15:0] e_scale_rank_buf_data_rd;
+    
+    wire bias_buf_wr;
+    wire [15:0] bias_buf_adr_wr;
+    wire [15:0] bias_buf_data_wr;
+    wire [15:0] bias_buf_data_rd;
     
     Top_Controller top_controller (
         .clk(clk), 
@@ -492,6 +517,7 @@ parameter ddr_load_ratio = 2;
         .load_if_start_idx_ddr(load_if_start_idx_ddr), 
         .load_if_end_idx_ddr(load_if_end_idx_ddr),
         .load_ddr_adr(load_ddr_adr),
+        .valid_load_ddr_adr(valid_load_ddr_adr),
         
         //buf info
         .load_buf_idx(load_buf_idx),
@@ -827,6 +853,18 @@ parameter ddr_load_ratio = 2;
         .valid_slab3_adr_wr(valid_slab3_adr_wr)
     );
     
+    //DDR
+    conv_ddr_simulator cv_ddr_simulator(
+        .reset((reset | conv_inital_fin)),
+        .clk(clk),
+        
+        .ddr_rd_adr(load_ddr_adr),
+        .ddr_rd(valid_load_ddr_adr),
+        
+        .ddr_data(ddr_data),
+        .valid_ddr_data(valid_ddr_data)
+    );
+    
 //    ROM1_handler rom1_handler( //in buf 1
 //        .clk(clk),
 //        .ena(valid_buf1_adr),
@@ -949,6 +987,10 @@ parameter ddr_load_ratio = 2;
       .doutb(slab3_pixels_2)  // output wire [15 : 0] doutb
     );
     
+    //weights buf  ctrl
+    
+    //weights buf
+    
     cv_weights_handler cv_weights_handler(
         .mode(mode),
         .clk(clk), 
@@ -957,6 +999,69 @@ parameter ddr_load_ratio = 2;
         .re_fm_end(re_fm_end),
         .weights_vector(weights_vector)
     );
+    
+    //args buf ctrl
+    
+    //args buf
+    conv_args_controller cv_args_controller(
+        .mode(mode),
+        .clk(clk), 
+        .reset((reset | conv_inital_fin)), //next tile need clr
+        
+        .args_refresh(conv_compute_tile_fin),
+       
+        .of_init(of),
+        
+        .pof(pof), //pof args sets to wr to regs in a cycle
+        
+        .args_tile_fin(conv_args_tile_fin),
+       
+        .bias_buf_adr_rd(bias_buf_adr_rd),
+        
+        .e_scale_tail_buf_adr_rd(e_scale_tail_buf_adr_rd),
+        
+        .e_scale_rank_buf_adr_rd(e_scale_rank_buf_adr_rd),
+        
+        .bias_buf_rd(bias_buf_rd),
+        .e_scale_tail_buf_rd(e_scale_tail_buf_rd),
+        .e_scale_rank_buf_rd(e_scale_rank_buf_rd)
+    );
+    
+    e_scale_tail_buf e_scale_tail_buf(
+        .clk(clk),    
+        .mode(mode),
+        .e_scale_tail_buf_rd(e_scale_tail_buf_rd), //ena
+        .e_scale_tail_buf_wr(e_scale_tail_buf_wr),
+        .e_scale_tail_buf_adr(e_scale_tail_buf_adr_rd),
+        .e_scale_tail_buf_data_wr(e_scale_tail_buf_data_wr), 
+        .e_scale_tail_buf_data_rd(e_scale_tail_buf_data_rd)
+    );
+    assign e_scale_tail_buf_wr = 0;
+    
+
+    e_scale_rank_buf e_scale_rank_buf(
+        .clk(clk),    
+        .mode(mode),
+        .e_scale_rank_buf_rd(e_scale_rank_buf_rd), //ena
+        .e_scale_rank_buf_wr(e_scale_rank_buf_wr),
+        .e_scale_rank_buf_adr(e_scale_rank_buf_adr_rd),
+        .e_scale_rank_buf_data_wr(e_scale_rank_buf_data_wr), 
+        .e_scale_rank_buf_data_rd(e_scale_rank_buf_data_rd)
+    );
+    
+    assign e_scale_rank_buf_wr = 0;
+    
+    bias_buf bias_buf(
+        .clk(clk),    
+        .mode(mode),
+        .bias_buf_rd(bias_buf_rd), //ena  write need more logic
+        .bias_buf_wr(bias_buf_wr),
+        .bias_buf_adr(bias_buf_adr_rd),
+        .bias_buf_data_wr(bias_buf_data_wr), 
+        .bias_buf_data_rd(bias_buf_data_rd)
+    );
+    
+    assign bias_buf_wr = 0;
     
     genvar i, j;
     
