@@ -42,14 +42,10 @@ parameter pixel_width = pixel_width_14;
     input reset;
 //    input [pe_out_width-1 :0] psum;
     output reg [pe_out_width-1 :0] O;
+
+wire [4:0] AA;
     
-    wire [4-1:0] BB;
-    
-    wire [4-1:0] AB;
-    
-    assign BB = {4{B}};
-    
-    assign AB = A ^ BB + {{(4-1){1'b0}},{B}};
+    assign AA = {(~({{A[3]},A}))+5'b1};
     
     always @(posedge clk) begin
 if (reset) begin
@@ -58,7 +54,11 @@ if (reset) begin
 end
 else if(en) begin
 
-        O <= O + {{(pe_out_width-4){AB[3]}},AB};
+        O <= O + (
+                  (B == 1'b0)? {{(pe_out_width - 4){A[3]}},A}:
+                   (B == 1'b1)? {{(pe_out_width - 5){AA[4]}},AA}: 
+                   0
+        );
     
 end
     
@@ -67,4 +67,6 @@ else begin
 end
     
  end
+
+
 endmodule

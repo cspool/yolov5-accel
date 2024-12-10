@@ -165,6 +165,7 @@ parameter scaled_rank_row_width = (quantified_pixel_width+1) * pe_parallel_weigh
     genvar i;
     
     //cycle 0
+    //add_bias_row * E_scale_tail in mult_array outside
     generate
         // add_bias_row_in_24[24 * pe_parallel_pixel_88 * column_num -1 : 0]
         //24 bit * 32 pixels * 1 channel or 16 bit * 32 pixels * 2 channel
@@ -199,6 +200,7 @@ parameter scaled_rank_row_width = (quantified_pixel_width+1) * pe_parallel_weigh
     endgenerate
     
     //cycle 1
+    //add_bias_row * E_scale_tail is right shifted by scale and relu
     generate
         //row_E_scale_tail_in_43->last_row_E_scale_tail_88
         //40 bit * 32 pixels * 1 channel
@@ -229,16 +231,18 @@ parameter scaled_rank_row_width = (quantified_pixel_width+1) * pe_parallel_weigh
 //        end
         
         for (i = 0; i < pe_parallel_pixel_18 * column_num; i = i + 1) begin
-            assign scaled_rank_row[i*(quantified_pixel_width+1) +: (quantified_pixel_width+1)]
+            //right shift and blocked in 8 bit
+            assign scaled_rank_row[i*(quantified_pixel_width) +: (quantified_pixel_width)]
             = (mode == 1'b0)? ((row_E_scale_tail_in_mult_P_width[i*mult_P_width +: pixel_E_scale_tail_width_88])
              >> (last_E_scale_rank_88)):
             (mode == 1'b1)? ((row_E_scale_tail_in_mult_P_width[i*mult_P_width +: pixel_E_scale_tail_width_18])
              >> (last_E_scale_rank_18_1)):
             0; 
             
+            //relu fix
             assign quantified_row[i*(quantified_pixel_width) +: (quantified_pixel_width)]
-            = (scaled_rank_row[(i*(quantified_pixel_width+1)+quantified_pixel_width)] == 1'b0)?
-            scaled_rank_row[i*(quantified_pixel_width+1) +: (quantified_pixel_width)] :
+            = (scaled_rank_row[(i*(quantified_pixel_width)+quantified_pixel_width-1)] == 1'b0)?
+            scaled_rank_row[i*(quantified_pixel_width) +: (quantified_pixel_width)] :
             0;
             
 //            always@(posedge clk) begin
