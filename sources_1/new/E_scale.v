@@ -22,10 +22,10 @@
 
 module E_Scale(
 //cycle 0 in
-mode, 
+mode_init, 
 clk, 
+reset,
 e_tail_reset,
-quantify_en, quantify_reset,
 E_scale_tail_set,
 E_scale_rank_set,
  
@@ -112,9 +112,10 @@ parameter scaled_rank_row_width = (quantified_pixel_width+1) * pe_parallel_weigh
     //8 bit * 2 channel
 
     //cycle 0
-    input mode;
+    input mode_init;
+    reg mode;
     
-    input clk, quantify_en, quantify_reset, e_tail_reset;
+    input clk, reset, e_tail_reset;
     
     input [add_bias_row_width - 1: 0] add_bias_row;
     //16 bit * 32 pixels * 2 channel    
@@ -150,6 +151,18 @@ parameter scaled_rank_row_width = (quantified_pixel_width+1) * pe_parallel_weigh
     wire [add_bias_row_width_18_2 - 1 : 0] add_bias_row_18_1, add_bias_row_18_2;
     //16 bit * 32 pixels * 1 channel
     
+    always@(posedge clk)
+    begin
+      if (reset == 1'b1)
+      begin //set
+        mode <= mode_init;
+      end
+      else
+      begin
+        mode <= mode;
+      end
+    end
+
     assign add_bias_row_88 = add_bias_row[add_bias_row_width_88 - 1 : 0];
     assign add_bias_row_18_1 = add_bias_row[add_bias_row_width_18_2 - 1 : 0];
     assign add_bias_row_18_2 = add_bias_row[add_bias_row_width - 1 : add_bias_row_width_18_2];
@@ -244,23 +257,6 @@ parameter scaled_rank_row_width = (quantified_pixel_width+1) * pe_parallel_weigh
             = (scaled_rank_row[(i*(quantified_pixel_width)+quantified_pixel_width-1)] == 1'b0)?
             scaled_rank_row[i*(quantified_pixel_width) +: (quantified_pixel_width)] :
             0;
-            
-//            always@(posedge clk) begin
-//                if (quantify_reset == 1'b1) begin
-//                    quantified_row_regs[i*(quantified_pixel_width) +: (quantified_pixel_width)]
-//                    <= 0;  
-//                end
-//                else if (quantify_en == 1'b1) begin
-//                    quantified_row_regs[i*(quantified_pixel_width) +: (quantified_pixel_width)]
-//                    <= (scaled_rank_row[(i*(quantified_pixel_width+1)+quantified_pixel_width) +: 1] == 1'b0)?
-//                    scaled_rank_row[i*(quantified_pixel_width+1) +: (quantified_pixel_width)] :
-//                    0;
-//                end
-//                else begin
-//                    quantified_row_regs[i*(quantified_pixel_width) +: (quantified_pixel_width)]
-//                    <= quantified_row_regs[i*(quantified_pixel_width) +: (quantified_pixel_width)];
-//                end
-//            end
         end
         
         // qualified_row[qualified_row_width-1 : 9 * pe_parallel_pixel_18 * column_num]
@@ -276,22 +272,6 @@ parameter scaled_rank_row_width = (quantified_pixel_width+1) * pe_parallel_weigh
             scaled_rank_row[(pe_parallel_pixel_18 * column_num + i)*(quantified_pixel_width+1) +: (quantified_pixel_width)]:
             0;
              
-//            always@(posedge clk) begin
-//                if (quantify_reset == 1'b1) begin
-//                    quantified_row_regs[(pe_parallel_pixel_18 * column_num+i)*(quantified_pixel_width) +: (quantified_pixel_width)]
-//                    <= 0;  
-//                end
-//                else if (quantify_en == 1'b1) begin
-//                    quantified_row_regs[(pe_parallel_pixel_18 * column_num+i)*(quantified_pixel_width) +: (quantified_pixel_width)]
-//                    <= (scaled_rank_row[(i*(quantified_pixel_width+1)+quantified_pixel_width) +: 1] == 1'b0) ?
-//                    scaled_rank_row[i*(quantified_pixel_width) +: (quantified_pixel_width)]:
-//                    0;
-//                end
-//                else begin
-//                    quantified_row_regs[(pe_parallel_pixel_18 * column_num+i)*(quantified_pixel_width) +: (quantified_pixel_width)]
-//                    <= quantified_row[(pe_parallel_pixel_18 * column_num+i)*(quantified_pixel_width) +: (quantified_pixel_width)];
-//                end
-//            end
         end
         
     endgenerate

@@ -22,7 +22,6 @@
 
 module Bias_Regs(
 clk, set,
-mode,
 
 bias_tile_val,
 
@@ -50,7 +49,7 @@ parameter bias_set_4_channel_width = bias_set_width * sa_row_num; //4 * 16 bit
     
     parameter bias_tile_length = bias_set_width * bias_sets_num_in_row; //64 * 16bit
     
-    input clk, set, mode;
+    input clk, set;
     
     input [bias_tile_length -1 : 0] bias_tile_val; 
     // tile bias, will be set at first of the tiling compute, maybe set in several cycles
@@ -61,7 +60,6 @@ parameter bias_set_4_channel_width = bias_set_width * sa_row_num; //4 * 16 bit
     output [bias_set_4_channel_width-1 :0] bias_4_channel_sets;
     
     reg [bias_set_width -1 : 0] bias_tile[sa_row_num-1 :0][row_num-1 :0];
-    
     
     genvar i, j;
     
