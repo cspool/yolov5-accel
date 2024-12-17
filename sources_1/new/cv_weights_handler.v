@@ -21,15 +21,15 @@
 
 
 module cv_weights_handler(
-    mode_init,
     clk, reset,
 
+    mode_init,
+    of_init,
     //cycle 0 in
     re_fm_en, //the first input is needed in next cycle
     re_fm_end,//the last input is needed in cur cycle
     cur_pof,
     cur_of_start,
-    of_init,
 
     weights_counter,
 
@@ -134,25 +134,26 @@ module cv_weights_handler(
     end
     else if ((re_fm_en == 1'b1) && (re_fm_end == 1'b1))
     begin
-      if (mode == 1'b0)
-      begin
-        weight_base_adr_rd <= (conv_out_channel_fin == 1'b0)? weight_adr_rd + 1: 0;
-      end
-      else if (mode == 1'b1)
-      begin
-        if (part_select == 2'd3)
-        begin
-          weight_base_adr_rd <= (conv_out_channel_fin == 1'b0)? weight_adr_rd + 1: 0;
-        end
-        else
-        begin
-          weight_base_adr_rd <= weight_base_adr_rd;
-        end
-      end
-      else
-      begin
-        weight_base_adr_rd <= 0;
-      end
+      weight_base_adr_rd <= 0; //every weight tile is loaded before needed, and discarded after used 
+      // if (mode == 1'b0)
+      // begin
+      //   weight_base_adr_rd <= (conv_out_channel_fin == 1'b0)? weight_adr_rd + 1: 0;
+      // end
+      // else if (mode == 1'b1)
+      // begin
+      //   if (part_select == 2'd3)
+      //   begin
+      //     weight_base_adr_rd <= (conv_out_channel_fin == 1'b0)? weight_adr_rd + 1: 0;
+      //   end
+      //   else
+      //   begin
+      //     weight_base_adr_rd <= weight_base_adr_rd;
+      //   end
+      // end
+      // else
+      // begin
+      //   weight_base_adr_rd <= 0;
+      // end
     end
     else
     begin

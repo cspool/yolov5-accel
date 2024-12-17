@@ -25,8 +25,8 @@ module Row_Regs(
     clk,
     //en,
 
-    k_init,
-    s_init,
+    k,
+    s,
 
     last_west_pad,
     last_slab_num,
@@ -65,9 +65,9 @@ module Row_Regs(
 
   input reset,clk;
 
-  input [3:0] k_init, s_init;
+  input [3:0] k, s;
 
-  reg [3:0] k, s;
+  // reg [3:0] k, s;
 
   //    input [3:0] west_pad, slab_num, east_pad;
   //    input [15:0] row1_idx, row2_idx, row3_idx;
@@ -120,19 +120,19 @@ module Row_Regs(
 
   wire [shift_regs_num * 2 -1 : 0] ops_0_buf_0;
 
-  always@(posedge clk)
-  begin
-    if (reset == 1'b1)
-    begin //set
-      k <= k_init;
-      s <= s_init;
-    end
-    else
-    begin
-      k <= k;
-      s <= s;
-    end
-  end
+  // always@(posedge clk)
+  // begin
+  //   if (reset == 1'b1)
+  //   begin //set
+  //     k <= k_init;
+  //     s <= s_init;
+  //   end
+  //   else
+  //   begin
+  //     k <= k;
+  //     s <= s;
+  //   end
+  // end
 
 
   assign row1_buf_mask = {(shift_regs_num){8'hff}} >> ((shift_regs_num - last_reg_end_idx)<<3);

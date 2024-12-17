@@ -23,10 +23,10 @@
 module SA_Ctrl(
     reset,clk,
 
-    mode_init,
+    mode,
 
     re_fm_en,
-    nif_mult_k_mult_k_init,
+    nif_mult_k_mult_k,
 
     sa_en,
     sa_reset,
@@ -48,13 +48,13 @@ module SA_Ctrl(
     quantify_add_end
 
   );
-  input mode_init;
+  input mode;
   input reset,clk;
   input re_fm_en;
-  input [31:0] nif_mult_k_mult_k_init;
+  input [31:0] nif_mult_k_mult_k;
 
-  reg mode;
-  reg [31:0] nif_mult_k_mult_k;
+  // reg mode;
+  // reg [31:0] nif_mult_k_mult_k;
 
   reg pixels_counter_signal;
   reg [31:0] pixels_counter;
@@ -85,19 +85,19 @@ module SA_Ctrl(
   reg e_tail_add_end;
   output reg quantify_add_end;
 
-  always@(posedge clk)
-  begin
-    if (reset == 1'b1)
-    begin //set
-      mode <= mode_init;
-      nif_mult_k_mult_k <= nif_mult_k_mult_k_init;
-    end
-    else
-    begin
-      mode <= mode;
-      nif_mult_k_mult_k <= nif_mult_k_mult_k;
-    end
-  end
+  // always@(posedge clk)
+  // begin
+  //   if (reset == 1'b1)
+  //   begin //set
+  //     mode <= mode_init;
+  //     nif_mult_k_mult_k <= nif_mult_k_mult_k_init;
+  //   end
+  //   else
+  //   begin
+  //     mode <= mode;
+  //     nif_mult_k_mult_k <= nif_mult_k_mult_k;
+  //   end
+  // end
 
   always @(posedge clk)
   begin

@@ -22,7 +22,7 @@
 
 module E_Scale(
 //cycle 0 in
-mode_init, 
+mode, 
 clk, 
 reset,
 e_tail_reset,
@@ -112,8 +112,8 @@ parameter scaled_rank_row_width = (quantified_pixel_width+1) * pe_parallel_weigh
     //8 bit * 2 channel
 
     //cycle 0
-    input mode_init;
-    reg mode;
+    input mode;
+    // reg mode;
     
     input clk, reset, e_tail_reset;
     
@@ -151,17 +151,17 @@ parameter scaled_rank_row_width = (quantified_pixel_width+1) * pe_parallel_weigh
     wire [add_bias_row_width_18_2 - 1 : 0] add_bias_row_18_1, add_bias_row_18_2;
     //16 bit * 32 pixels * 1 channel
     
-    always@(posedge clk)
-    begin
-      if (reset == 1'b1)
-      begin //set
-        mode <= mode_init;
-      end
-      else
-      begin
-        mode <= mode;
-      end
-    end
+    // always@(posedge clk)
+    // begin
+    //   if (reset == 1'b1)
+    //   begin //set
+    //     mode <= mode_init;
+    //   end
+    //   else
+    //   begin
+    //     mode <= mode;
+    //   end
+    // end
 
     assign add_bias_row_88 = add_bias_row[add_bias_row_width_88 - 1 : 0];
     assign add_bias_row_18_1 = add_bias_row[add_bias_row_width_18_2 - 1 : 0];

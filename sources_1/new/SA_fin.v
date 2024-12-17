@@ -25,7 +25,7 @@ clk, reset, en,
 
 out_sa_row_idx,
 
-mode_init, channel_out_reset,channel_out_en, 
+mode, channel_out_reset,channel_out_en, 
 
 row_in, column_in, 
 
@@ -71,7 +71,7 @@ parameter mult_array_length = 576;
 parameter mult_dsp_array_length = 528;
 parameter mult_lut_array_length = mult_array_length - mult_dsp_array_length;
 
-input clk, reset, en, mode_init, channel_out_reset,channel_out_en;
+input clk, reset, en, mode, channel_out_reset,channel_out_en;
 
 input mult_array_mode;
 
@@ -85,7 +85,7 @@ output [column_num * mult_P_width -1:0] row0_out;
 output [out_width - 1: 0] out; // pox res per channel
 //pe_parallel_pixel_88 = pe_parallel_pixel_18
 
-reg mode;
+// reg mode;
 
 wire [pe_out_width-1 : 0] all_out [row_num - 1: 0][column_num - 1 : 0]; // all results
 
@@ -112,17 +112,17 @@ wire loop_row_counter_add_begin, loop_row_counter_add_end;
 
 wire [row_num-1 :0] row_en;
 
-always@(posedge clk)
-  begin
-    if (reset == 1'b1)
-    begin //set
-      mode <= mode_init;
-    end
-    else
-    begin
-      mode <= mode;
-    end
-  end
+// always@(posedge clk)
+//   begin
+//     if (reset == 1'b1)
+//     begin //set
+//       mode <= mode_init;
+//     end
+//     else
+//     begin
+//       mode <= mode;
+//     end
+//   end
 
 
 assign row_en = {(row_num){en}} << (out_sa_row_idx);

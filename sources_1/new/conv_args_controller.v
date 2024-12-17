@@ -23,7 +23,7 @@
 module conv_args_controller(
     mode_init, clk, reset,
 
-    args_refresh,
+    args_refresh, //begin to refresh the pof regs of args
 
     of_init,
 

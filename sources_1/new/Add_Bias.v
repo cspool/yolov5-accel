@@ -22,7 +22,7 @@
 
 module Add_Bias(
     clk, en, reset,
-    mode_init,
+    mode,
 
     rowi_channel_seti, // pox res per channel
 
@@ -68,7 +68,7 @@ module Add_Bias(
   parameter add_bias_row_width_18_2 = pixel_width_18 * pe_parallel_pixel_18 * 1 * column_num;
   //res_width_88 == res_width_18_one_channel
 
-  input mode_init;
+  input mode;
 
   input clk, en, reset;
 
@@ -78,19 +78,19 @@ module Add_Bias(
 
   output reg [add_bias_row_width - 1: 0] add_bias_row;
 
-  reg mode;
+  // reg mode;
 
-  always@(posedge clk)
-  begin
-    if (reset == 1'b1)
-    begin //set
-      mode <= mode_init;
-    end
-    else
-    begin
-      mode <= mode;
-    end
-  end
+  // always@(posedge clk)
+  // begin
+  //   if (reset == 1'b1)
+  //   begin //set
+  //     mode <= mode_init;
+  //   end
+  //   else
+  //   begin
+  //     mode <= mode;
+  //   end
+  // end
 
   wire [8-1 :0] bias_88;
   wire [8-1:0] bias_18_1, bias_18_2;

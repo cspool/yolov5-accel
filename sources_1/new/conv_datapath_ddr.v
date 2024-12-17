@@ -72,7 +72,8 @@ module conv_datapath_ddr(
   parameter bias_set_4_channel_width = bias_set_width * sa_row_num; //4 * 16 bit
 
   parameter bias_sets_num_in_row = sa_row_num * row_num; //64
-  parameter bias_tile_length = bias_set_width * bias_sets_num_in_row; //64 * 16bit
+//   parameter bias_tile_length = bias_set_width * bias_sets_num_in_row; //64 * 16bit
+  parameter bias_word_length = 512;
 
   parameter add_bias_row_width = pixel_width_18 * pe_parallel_pixel_18 * pe_parallel_weight_18 * column_num;
   parameter add_bias_row_width_88 = pixel_width_88 * pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num;
@@ -94,12 +95,14 @@ module conv_datapath_ddr(
   parameter E_scale_tail_set_4_channel_width = E_scale_tail_set_width * sa_row_num; //4 * 32 bit
   parameter E_scale_tail_sets_num_in_row = sa_row_num * row_num; //64
   parameter E_scale_tail_tile_length = E_scale_tail_set_width * E_scale_tail_sets_num_in_row; //64 * 32bit regs to str
+  parameter E_scale_tail_word_width = 512;
 
   parameter E_scale_rank_width = 8; //8 bit E_scale rank
   parameter E_scale_rank_set_width = E_scale_rank_width * pe_parallel_weight_18; //16 bit
   parameter E_scale_rank_set_4_channel_width = E_scale_rank_set_width * sa_row_num; //4 * 16 bit
   parameter E_scale_rank_sets_num_in_row = sa_row_num * row_num; //64
   parameter E_scale_rank_tile_length = E_scale_rank_set_width * E_scale_rank_sets_num_in_row; //64 * 16bit regs to str
+  parameter E_scale_rank_word_width = 512;
 
   parameter pixel_E_scale_tail_width_88 = pixel_width_88 + E_scale_tail_width; //40 bit
   parameter pixel_E_scale_tail_width_18 = pixel_width_18 + E_scale_tail_width; //32 bit
@@ -157,7 +160,7 @@ module conv_datapath_ddr(
 
   wire [15:0] buf_depth_in_row_2pow;
 
-  wire [bias_tile_length -1 : 0] bias_tile_val; //will come from args buffer that has not existed
+//   wire [bias_tile_length -1 : 0] bias_tile_val; //will come from args buffer that has not existed
 
   wire [E_scale_tail_tile_length -1 : 0] E_scale_tail_tile_val;
   wire [E_scale_rank_tile_length -1 : 0] E_scale_rank_tile_val;
@@ -351,6 +354,9 @@ module conv_datapath_ddr(
   wire conv_compute_tile_fin;
 
   //bias
+  wire [bias_word_length-1 : 0] bias_word;
+  wire [7:0] bias_reg_start; // 0-63
+  wire [7:0] bias_reg_size; // 0-63
   wire [bias_set_4_channel_width-1 :0] bias_4_channel_sets; //4 sets of 16bit(1 bias or 2 bias)
 
   wire [add_bias_row_width - 1: 0] add_bias_rowi_channel_seti[sa_column_num-1 : 0][sa_row_num-1 : 0];
@@ -371,6 +377,13 @@ module conv_datapath_ddr(
 
   //e_scale regs
   // tile e-scale, will be set at first of the tiling compute, maybe set in several cycles
+  wire [E_scale_tail_word_width -1 : 0] E_scale_tail_word;
+  wire [6:0] E_scale_tail_reg_start;
+  wire [6:0] E_scale_tail_reg_size;
+
+  wire [E_scale_rank_word_width -1 : 0] E_scale_rank_word;
+  wire [6:0] E_scale_rank_reg_start;
+  wire [6:0] E_scale_rank_reg_size;
   wire [E_scale_tail_set_4_channel_width-1 :0] E_scale_tail_4_channel_sets;
   wire [E_scale_rank_set_4_channel_width-1 :0] E_scale_rank_4_channel_sets;
 
@@ -430,18 +443,18 @@ module conv_datapath_ddr(
 
   wire e_scale_tail_buf_wr;
   wire [15:0] e_scale_tail_buf_adr_wr;
-  wire [31 : 0] e_scale_tail_buf_data_wr;
-  wire [31 : 0] e_scale_tail_buf_data_rd;
+  wire [E_scale_tail_word_width-1 : 0] e_scale_tail_buf_data_wr;
+  wire [E_scale_tail_word_width-1 : 0] e_scale_tail_buf_data_rd;
 
   wire e_scale_rank_buf_wr;
   wire [15:0] e_scale_rank_buf_adr_wr;
-  wire [15:0] e_scale_rank_buf_data_wr;
-  wire [15:0] e_scale_rank_buf_data_rd;
+  wire [E_scale_rank_word_width-1 :0] e_scale_rank_buf_data_wr;
+  wire [E_scale_rank_word_width-1 :0] e_scale_rank_buf_data_rd;
 
   wire bias_buf_wr;
   wire [15:0] bias_buf_adr_wr;
-  wire [15:0] bias_buf_data_wr;
-  wire [15:0] bias_buf_data_rd;
+  wire [bias_word_length-1 :0] bias_buf_data_wr;
+  wire [bias_word_length-1 :0] bias_buf_data_rd;
 
   Top_Controller top_controller (
                    .clk(clk),
@@ -484,9 +497,9 @@ module conv_datapath_ddr(
                             .buf_depth_in_row_2pow(buf_depth_in_row_2pow),
 
                             .mode(mode),
-                            .bias_tile_val(bias_tile_val),
-                            .E_scale_tail_tile_val(E_scale_tail_tile_val),
-                            .E_scale_rank_tile_val(E_scale_rank_tile_val),
+                            // .bias_tile_val(bias_tile_val),
+                            // .E_scale_tail_tile_val(E_scale_tail_tile_val),
+                            // .E_scale_rank_tile_val(E_scale_rank_tile_val),
 
                             .conv_load_start(conv_load_start)
                           );
@@ -513,7 +526,7 @@ module conv_datapath_ddr(
                          .load_ddr_start(load_ddr_start),
                          .reset(reset | conv_inital_fin),
                          .load_ddr_continue(load_ddr_continue),
-                         
+
                          .word_lenth_mult_word_num_mult_spare_num(word_lenth_mult_word_num_mult_spare_num),
                          .word_num_mult_spare_num(word_num_mult_spare_num),
                          .valid_load_data(valid_load_data),
@@ -717,8 +730,8 @@ module conv_datapath_ddr(
              .clk(clk),
              //        .en(conv_inital_fin),
 
-             .k_init(k),
-             .s_init(s),
+             .k(k),
+             .s(s),
 
              .last_west_pad(last_west_pad),
              .last_slab_num(last_slab_num),
@@ -757,8 +770,8 @@ module conv_datapath_ddr(
                .clk(clk),
                //        .en(conv_inital_fin),
 
-               .k_init(k),
-               .s_init(s),
+               .k(k),
+               .s(s),
 
                .row_regs_1(row_regs_1),
                .row_regs_2(row_regs_2),
@@ -999,9 +1012,12 @@ module conv_datapath_ddr(
   //weights buf
 
   cv_weights_handler cv_weights_handler(
-                       .mode_init(mode),
                        .clk(clk),
                        .reset((reset | conv_inital_fin)), //need xxxx
+
+                       .mode_init(mode),
+                       .of_init(of),
+
                        //cycle 0 in
                        .re_fm_en(re_fm_en),
                        .re_fm_end(re_fm_end),
@@ -1030,15 +1046,14 @@ module conv_datapath_ddr(
 
   //args buf
   conv_args_controller cv_args_controller(
-                         .mode_init(mode),
                          .clk(clk),
                          .reset((reset | conv_inital_fin)), //next tile need clr
 
+                         .mode_init(mode),
+                         .of_init(of),
                          .args_refresh(conv_compute_tile_fin),
 
-                         .of_init(of),
-
-                         .pof(pof), //pof args sets to wr to regs in cycles
+                         .pof(pof), //pof args sets to wr to 64 regs in 1 cycle
 
                          .args_tile_fin(conv_args_tile_fin),
 
@@ -1053,41 +1068,59 @@ module conv_datapath_ddr(
                          .e_scale_rank_buf_rd(e_scale_rank_buf_rd)
                        );
 
-  e_scale_tail_buf e_scale_tail_buf(
-                     .clk(clk),
-                     .mode(mode), //init
-                     .e_scale_tail_buf_rd(e_scale_tail_buf_rd), //ena
-                     .e_scale_tail_buf_wr(e_scale_tail_buf_wr),
-                     .e_scale_tail_buf_adr(e_scale_tail_buf_adr_rd),
-                     .e_scale_tail_buf_data_wr(e_scale_tail_buf_data_wr),
-                     .e_scale_tail_buf_data_rd(e_scale_tail_buf_data_rd)
-                   );
+  tail_buffer e_scale_tail_buffer (
+                .clka(clk),    // input wire clka
+                .ena(e_scale_tail_buf_rd),      // input wire ena
+                .wea(e_scale_tail_buf_wr),      // input wire [0 : 0] wea
+                .addra(e_scale_tail_buf_adr),  // input wire [8 : 0] addra
+                .dina(e_scale_tail_buf_data_wr),    // input wire [511 : 0] dina
+                .douta(e_scale_tail_buf_data_rd)  // output wire [511 : 0] douta
+              );
+
+  assign e_scale_tail_buf_adr = (e_scale_tail_buf_wr == 1'b1)? e_scale_tail_buf_adr_wr :
+         ((e_scale_tail_buf_rd == 1'b1) && (e_scale_tail_buf_wr == 1'b0))? e_scale_tail_buf_adr_rd : 0;
+
   assign e_scale_tail_buf_wr = 0;
 
+  assign e_scale_tail_buf_data_wr = 0;
 
-  e_scale_rank_buf e_scale_rank_buf(
-                     .clk(clk),
-                     .mode(mode), //init
-                     .e_scale_rank_buf_rd(e_scale_rank_buf_rd), //ena
-                     .e_scale_rank_buf_wr(e_scale_rank_buf_wr),
-                     .e_scale_rank_buf_adr(e_scale_rank_buf_adr_rd),
-                     .e_scale_rank_buf_data_wr(e_scale_rank_buf_data_wr),
-                     .e_scale_rank_buf_data_rd(e_scale_rank_buf_data_rd)
-                   );
+  assign e_scale_tail_word = e_scale_tail_buf_data_rd;
+
+  rank_buffer e_scale_rank_buffer (
+                .clka(clk),    // input wire clka
+                .ena(e_scale_rank_buf_rd),      // input wire ena
+                .wea(e_scale_rank_buf_wr),      // input wire [0 : 0] wea
+                .addra(e_scale_rank_buf_adr),  // input wire [8 : 0] addra
+                .dina(e_scale_rank_buf_data_wr),    // input wire [511 : 0] dina
+                .douta(e_scale_rank_buf_data_rd)  // output wire [511 : 0] douta
+              );
+
+  assign e_scale_rank_buf_adr = (e_scale_rank_buf_wr == 1'b1)? e_scale_rank_buf_adr_wr :
+         ((e_scale_rank_buf_rd == 1'b1) && (e_scale_rank_buf_wr == 1'b0))? e_scale_rank_buf_adr_rd : 0;
 
   assign e_scale_rank_buf_wr = 0;
 
-  bias_buf bias_buf(
-             .clk(clk),
-             .mode(mode), //init
-             .bias_buf_rd(bias_buf_rd), //ena  write need more logic
-             .bias_buf_wr(bias_buf_wr),
-             .bias_buf_adr(bias_buf_adr_rd),
-             .bias_buf_data_wr(bias_buf_data_wr),
-             .bias_buf_data_rd(bias_buf_data_rd)
-           );
+  assign e_scale_rank_buf_data_wr = 0;
+
+  assign e_scale_rank_word = e_scale_rank_buf_data_rd;
+
+  bias_buffer bias_buffer (
+                .clka(clk),    // input wire clka
+                .ena(bias_buf_rd),      // input wire ena
+                .wea(bias_buf_wr),      // input wire [0 : 0] wea
+                .addra(bias_buf_adr),  // input wire [8 : 0] addra
+                .dina(bias_buf_data_wr),    // input wire [511 : 0] dina
+                .douta(bias_buf_data_rd)  // output wire [511 : 0] douta
+              );
+
+  assign bias_buf_adr = (bias_buf_wr == 1'b1)? bias_buf_adr_wr :
+         ((bias_buf_rd == 1'b1) && (bias_buf_wr == 1'b0))? bias_buf_adr_rd : 0;
 
   assign bias_buf_wr = 0;
+
+  assign bias_buf_data_wr = 0;
+
+  assign bias_word = bias_buf_data_rd;
 
   genvar i, j;
 
@@ -1137,7 +1170,7 @@ module conv_datapath_ddr(
                  .clk(clk),
                  .reset((sa_reset | reset | conv_inital_fin)),
                  .en(sa_en),
-                 .mode_init(mode),
+                 .mode(mode),
                  .channel_out_reset((channel_out_reset | reset | conv_inital_fin)),
                  .channel_out_en(channel_out_en),
                  .out_sa_row_idx(out_sa_row_idx),
@@ -1155,7 +1188,7 @@ module conv_datapath_ddr(
                    .clk(clk),
                    .reset((add_bias_reset | reset | conv_inital_fin)),
                    .en(add_bias_en),
-                   .mode_init(mode),
+                   .mode(mode),
                    .rowi_channel_seti(out_rowi_channel_seti[i-1][j-1]), // pox res per channel
                    .bias_set(bias_4_channel_sets[(j-1)*bias_set_width +: bias_set_width]),
                    .add_bias_row(add_bias_rowi_channel_seti[i-1][j-1]) // pox res per channel
@@ -1166,7 +1199,7 @@ module conv_datapath_ddr(
                   .clk(clk),
                   .reset((reset | conv_inital_fin)),
                   .e_tail_reset(e_tail_reset),
-                  .mode_init(mode),
+                  .mode(mode),
                   .E_scale_tail_set(E_scale_tail_4_channel_sets[(j-1)*E_scale_tail_set_width +: E_scale_tail_set_width]),
                   .E_scale_rank_set(E_scale_rank_4_channel_sets[(j-1)*E_scale_rank_set_width +: E_scale_rank_set_width]),
 
@@ -1232,12 +1265,13 @@ module conv_datapath_ddr(
 
   // sa control
   SA_Ctrl sa_ctrl(
-            .mode_init(mode),
             .clk(clk),
             .reset((reset | conv_inital_fin)), //next tile need clr
             //        .en(en),
             .re_fm_en(re_fm_en),
-            .nif_mult_k_mult_k_init(nif_mult_k_mult_k),
+            .mode(mode),
+            .nif_mult_k_mult_k(nif_mult_k_mult_k),
+
             .sa_en(sa_en),
             .sa_reset(sa_reset),
             .channel_out_reset(channel_out_reset),
@@ -1261,7 +1295,11 @@ module conv_datapath_ddr(
   Bias_Regs bias_regs(
               .clk(clk),
               .set(conv_inital_fin), // next tile need clr
-              .bias_tile_val(bias_tile_val),
+            //   .bias_tile_val(bias_tile_val),
+              .bias_word(bias_word),
+              .bias_reg_start(bias_reg_start),
+              .bias_reg_size(bias_reg_size),
+
               .out_sa_row_idx(out_sa_row_idx),
               .bias_4_channel_sets(bias_4_channel_sets)
             );
@@ -1281,16 +1319,22 @@ module conv_datapath_ddr(
 
   E_Scale_Regs E_scale_regs (
                  .clk(clk),
-                 .set(conv_inital_fin), // next tile need clr
+                 .tail_set(conv_inital_fin), // next tile need clr
+                 .rank_set(conv_inital_fin),
 
-                 .E_scale_tail_tile_val(E_scale_tail_tile_val),
-                 .E_scale_rank_tile_val(E_scale_rank_tile_val),
+                 .E_scale_tail_word(E_scale_tail_word),
+                 .E_scale_tail_reg_start(E_scale_tail_reg_start),
+                 .E_scale_tail_reg_size(E_scale_tail_reg_size),
+                 
+                 .E_scale_rank_word(E_scale_rank_word),
+                 .E_scale_rank_reg_start(E_scale_rank_reg_start),
+                 .E_scale_rank_reg_size(E_scale_rank_reg_size),
+
                  .out_sa_row_idx(out_sa_row_idx),
 
                  .E_scale_tail_4_channel_sets(E_scale_tail_4_channel_sets),
                  .E_scale_rank_4_channel_sets(E_scale_rank_4_channel_sets)
                );
-
 
   conv_store_controller cv_store_controller ( // conv_out_handler
                           //cycle 0 in

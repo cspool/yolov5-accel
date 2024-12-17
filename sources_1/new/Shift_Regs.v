@@ -25,8 +25,8 @@ module Shift_Regs(
     clk,
     //en,
 
-    k_init,
-    s_init,
+    k,
+    s,
 
     row_regs_1,
     row_regs_2,
@@ -47,9 +47,9 @@ module Shift_Regs(
 
   input reset,clk;
 
-  input [3:0] k_init, s_init;
+  input [3:0] k, s;
 
-  reg [3:0] k, s;
+  // reg [3:0] k, s;
 
   input [shift_regs_num * 8 -1 : 0] row_regs_1;
   input [shift_regs_num * 8 -1 : 0] row_regs_2;
@@ -75,19 +75,19 @@ module Shift_Regs(
 
   reg state_shift_start;
 
-  always@(posedge clk)
-  begin
-    if (reset == 1'b1)
-    begin //set
-      k <= k_init;
-      s <= s_init;
-    end
-    else
-    begin
-      k <= k;
-      s <= s;
-    end
-  end
+  // always@(posedge clk)
+  // begin
+  //   if (reset == 1'b1)
+  //   begin //set
+  //     k <= k_init;
+  //     s <= s_init;
+  //   end
+  //   else
+  //   begin
+  //     k <= k;
+  //     s <= s;
+  //   end
+  // end
 
 
   always@(posedge clk)
