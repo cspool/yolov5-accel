@@ -203,6 +203,7 @@ module conv_datapath_ddr(
   wire conv_compute_continue;
 
   wire [15:0] cur_pox, cur_poy, cur_pof, cur_ox_start, cur_oy_start, cur_of_start;
+  wire [15:0] next_ox_start, next_oy_start, next_of_start, next_pox, next_poy, next_pof;
   wire [15:0] ox_start, oy_start, of_start, pox, poy, pof, if_idx; //tile info
 
   wire [3:0] west_pad, slab_num, east_pad;
@@ -589,11 +590,17 @@ module conv_datapath_ddr(
                             .cur_oy_start(cur_oy_start),
                             .ox_start(ox_start),
                             .oy_start(oy_start),
+                            .of_start(of_start),
                             .pox(pox),
                             .poy(poy),
-                            .of_start(of_start),
                             .pof(pof),
                             .if_idx(if_idx),
+                            .next_ox_start(next_ox_start), 
+                            .next_oy_start(next_oy_start), 
+                            .next_of_start(next_of_start), 
+                            .next_pox(next_pox), 
+                            .next_poy(next_poy), 
+                            .next_pof(next_pof),
 
                             .row_slab_start_idx(row_slab_start_idx),
 

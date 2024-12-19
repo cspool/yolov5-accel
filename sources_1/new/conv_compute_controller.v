@@ -155,6 +155,8 @@ module conv_compute_controller(
 
   output reg [15:0] cur_ox_start, cur_of_start, cur_oy_start;
 
+  wire [15:0] next_ox_start, next_oy_start;
+
   output [3:0] west_pad, slab_num, east_pad;
   output [15:0] row1_idx, row2_idx, row3_idx;
   wire [15:0] row_y1, row_y2, row_y3;
@@ -198,8 +200,6 @@ module conv_compute_controller(
   wire [15:0] row3_buf_adr_in_row;
 
   output [15:0] ox_start, oy_start, of_start, pox, poy, pof, if_idx;
-
-  wire [15:0] next_ox_start, next_oy_start;
 
   wire [15:0] iy_start;
   wire[15:0] iy_start_plus_s;
@@ -1791,12 +1791,14 @@ module conv_compute_controller(
   assign ox_start = tile_x_start;
 
   //assign loop_y_add_end = ((((signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix))) && ((ky1 + 1) == (k)) && ((if_start + 1) > nif) && ((tile_f_start + row_num) > of)) && ((tile_x_start + pixels_in_row) > ox)) && ((tile_y_start + buffers_num) > oy);
-  //    assign next_oy_start = ((reset ==1'b1) || (loop_y_add_end == 1'b1))? 1 : tile_y_start + buffers_num;
-  assign next_oy_start = ((reset ==1'b1) || (((((signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && (ifx_stall == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix))) && ((ky1 + 1) == (k)) && ((if_start + 1) > nif) && ((tile_f_start + row_num) > of)) && ((tile_x_start + pixels_in_row) > ox)) && ((tile_y_start + buffers_num) > oy)))? 1 : tile_y_start + buffers_num;
+  assign next_oy_start = ((reset ==1'b1) || (loop_y_add_end == 1'b1))? 1 : tile_y_start + buffers_num;
+  // assign next_oy_start = ((reset ==1'b1) || (((((signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && (ifx_stall == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix))) && ((ky1 + 1) == (k)) && ((if_start + 1) > nif) && ((tile_f_start + row_num) > of)) && ((tile_x_start + pixels_in_row) > ox)) && ((tile_y_start + buffers_num) > oy)))? 1 : tile_y_start + buffers_num;
 
   assign oy_start = tile_y_start;
 
   assign of_start = tile_f_start;
+
+  assign next_of_start = ((reset ==1'b1) || (loop_f_add_end == 1'b1))? 1 : tile_f_start + row_num;
 
   assign pox = (tile_x_start + pixels_in_row_minus_1 > ox)? (ox - tile_x_start + 1):
          pixels_in_row;

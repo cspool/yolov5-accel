@@ -18,7 +18,8 @@ input_width = 128
 ddr_word_width = 512
 activation_word_width = 8
 weight_word_width = 8 # 8 or 1
-out_channel_parallel = 64 if weight_word_width == 8 else 128 # 64 or 128, parallel can be less
+out_channel_parallel = 64 if weight_word_width == 8 else 128 
+# 64 or 128, cannot be less because hardware adr mapping is based a static parallel
 bias_word_width = 8
 e_scale_tail_width = 16
 e_scale_rank_width = 8
