@@ -62,7 +62,7 @@ module conv_args_ctrl_tb(
   wire e_scale_tail_buf_rd;
   wire e_scale_rank_buf_rd;
 
-  conv_args_controller cv_args_ctrl(
+  conv_args_handler cv_args_handler(
                          .mode_init(mode_init),
                          .clk(clk),
                          .reset(reset),

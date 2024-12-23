@@ -28,7 +28,7 @@
 // clk, reset;
 // description: clock, register reset
 
-// conv_compute_continue, conv_compute_start;
+// conv_compute;
 // description:
 // start signal to start the compute ctrl process,
 // continue signal to continue the compute process when load and store of the tile finished
@@ -67,11 +67,9 @@ module conv_compute_controller(
     mode_init,
     of_init, ox_init, oy_init, ix_init, iy_init, nif_init,
     k_init, s_init, p_init,
-    clk, conv_compute_start, reset,
+    clk, conv_compute, reset,
     nif_in_2pow_init,
     ix_in_2pow_init,
-
-    conv_compute_continue,
 
     cur_pox, cur_pof, cur_poy,
     cur_ox_start, cur_of_start, cur_oy_start,
@@ -137,7 +135,7 @@ module conv_compute_controller(
 
   input [15:0] of_init, ox_init, oy_init, ix_init, iy_init, nif_init;
 
-  input clk, conv_compute_start, reset;
+  input clk, conv_compute, reset;
 
   input [3:0] nif_in_2pow_init, ix_in_2pow_init;
 
@@ -148,8 +146,6 @@ module conv_compute_controller(
   reg [15:0] of, ox, oy, ix, iy, nif;
 
   reg [3:0] nif_in_2pow, ix_in_2pow;
-
-  input conv_compute_continue;
 
   output reg [15:0] cur_pox, cur_pof, cur_poy;
 
@@ -367,8 +363,8 @@ module conv_compute_controller(
   wire loop_if_stall_counter_add_end;
 
   assign loop_if_stall_counter_add_end =
-         (ifx_stall == 1'b1) &&
-         (conv_compute_continue == 1'b1);
+         (ifx_stall == 1'b1) && (conv_compute == 1'b1);
+        //  (conv_compute_continue == 1'b1);
 
 
   always@(posedge clk)
@@ -3396,7 +3392,7 @@ module conv_compute_controller(
     begin
       signal_adr1_add <= 0;
     end
-    else if (conv_compute_start == 1'b1)
+    else if (conv_compute == 1'b1)
     begin
       signal_adr1_add <= 1;
     end
@@ -3551,7 +3547,7 @@ module conv_compute_controller(
     begin
       row_length <= 0;
     end
-    else if (conv_compute_start == 1'b1)
+    else if (conv_compute == 1'b1)
     begin
       row_length <= 1;
     end
@@ -3579,7 +3575,7 @@ module conv_compute_controller(
     begin
       stall_in_row_counter <= 0;
     end
-    else if (conv_compute_start == 1'b1)
+    else if (conv_compute == 1'b1)
     begin //first cycle no need stall
       stall_in_row_counter <= 0;
     end

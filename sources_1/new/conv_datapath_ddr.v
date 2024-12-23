@@ -72,7 +72,7 @@ module conv_datapath_ddr(
   parameter bias_set_4_channel_width = bias_set_width * sa_row_num; //4 * 16 bit
 
   parameter bias_sets_num_in_row = sa_row_num * row_num; //64
-//   parameter bias_tile_length = bias_set_width * bias_sets_num_in_row; //64 * 16bit
+  //   parameter bias_tile_length = bias_set_width * bias_sets_num_in_row; //64 * 16bit
   parameter bias_word_length = 512;
 
   parameter add_bias_row_width = pixel_width_18 * pe_parallel_pixel_18 * pe_parallel_weight_18 * column_num;
@@ -160,7 +160,7 @@ module conv_datapath_ddr(
 
   wire [15:0] buf_depth_in_row_2pow;
 
-//   wire [bias_tile_length -1 : 0] bias_tile_val; //will come from args buffer that has not existed
+  //   wire [bias_tile_length -1 : 0] bias_tile_val; //will come from args buffer that has not existed
 
   wire [E_scale_tail_tile_length -1 : 0] E_scale_tail_tile_val;
   wire [E_scale_rank_tile_length -1 : 0] E_scale_rank_tile_val;
@@ -578,11 +578,10 @@ module conv_datapath_ddr(
                             .ix_in_2pow_init(ix_in_2pow),
 
                             .clk(clk),
-                            .conv_compute_start(conv_compute_start),
+                            .conv_compute(conv_compute),
                             .reset((reset | conv_inital_fin)),
-                            .conv_compute_continue(conv_compute_continue),
 
-                            .cur_pox(cur_pox),
+                            .cur_pox(cur_pox), //maybe delete
                             .cur_pof(cur_pof),
                             .cur_poy(cur_poy),
                             .cur_ox_start(cur_ox_start),
@@ -595,12 +594,6 @@ module conv_datapath_ddr(
                             .poy(poy),
                             .pof(pof),
                             .if_idx(if_idx),
-                            .next_ox_start(next_ox_start), 
-                            .next_oy_start(next_oy_start), 
-                            .next_of_start(next_of_start), 
-                            .next_pox(next_pox), 
-                            .next_poy(next_poy), 
-                            .next_pof(next_pof),
 
                             .row_slab_start_idx(row_slab_start_idx),
 
@@ -644,8 +637,8 @@ module conv_datapath_ddr(
                             .valid_row3_adr(valid_row3_adr)
                           );
 
-  assign conv_compute_start = conv_args_tile0_fin;
-  assign conv_compute_continue = (conv_store_tile_fin == 1'b1) && (conv_args_tile_fin == 1'b1);
+  assign conv_compute = conv_args_tile0_fin ||
+  (conv_store_tile_fin == 1'b1) && (conv_args_tile_fin == 1'b1);
 
   //last regs
   reg [3:0] last_west_pad, last_slab_num, last_east_pad;
@@ -881,16 +874,37 @@ module conv_datapath_ddr(
                     );
 
   //DDR
-  conv_ddr_simulator cv_ddr_simulator(
-                       .reset((reset | conv_inital_fin)),
-                       .clk(clk),
+  // conv_ddr_simulator cv_ddr_simulator(
+  //                      .reset((reset | conv_inital_fin)),
+  //                      .clk(clk),
 
-                       .ddr_rd_adr(load_ddr_adr),
-                       .ddr_rd(valid_load_ddr_adr),
+  //                      .ddr_rd_adr(load_ddr_adr),
+  //                      .ddr_rd(valid_load_ddr_adr),
 
-                       .ddr_data(ddr_data),
-                       .valid_ddr_data(valid_ddr_data)
-                     );
+  //                      .ddr_data(ddr_data),
+  //                      .valid_ddr_data(valid_ddr_data)
+  //                    );
+
+  DDR cv_ddr_simulator (
+        .clka(clk),    // input wire clka
+        .ena(ddr_en),      // input wire ena
+        .wea(valid_store_ddr_adr),      // input wire [0 : 0] wea
+        .addra(DDR_adr),  // input wire [12 : 0] addra
+        .dina(ddr_store_data),    // input wire [511 : 0] dina
+        .douta(ddr_load_data)  // output wire [511 : 0] douta
+      );
+
+  assign ddr_en = valid_load_ddr_adr | valid_store_ddr_adr;
+
+  assign DDR_adr = (valid_load_ddr_adr == 1'b1)? load_ddr_adr :
+         (valid_store_ddr_adr == 1'b1)? store_ddr_adr :
+         0;
+
+  always @(posedge clk)
+  begin
+    valid_ddr_data <= valid_load_ddr_adr;
+  end
+
 
   //    ROM1_handler rom1_handler( //in buf 1
   //        .clk(clk),
@@ -1023,13 +1037,10 @@ module conv_datapath_ddr(
                        .reset((reset | conv_inital_fin)), //need xxxx
 
                        .mode_init(mode),
-                       .of_init(of),
 
                        //cycle 0 in
                        .re_fm_en(re_fm_en),
                        .re_fm_end(re_fm_end),
-                       .cur_pof(cur_pof),
-                       .cur_of_start(cur_of_start),
 
                        //cylce 1 in
                        .weights_dout(weights_dout),
@@ -1042,6 +1053,7 @@ module conv_datapath_ddr(
                        .weights_vector(weights_vector)
                      );
 
+                     // xxxxxxx should be ping-pong buffers
   weights_buffer weights_buffer (
                    .clka(clk),    // input wire clka
                    .ena(weight_en_rd),      // input wire ena
@@ -1052,7 +1064,7 @@ module conv_datapath_ddr(
   //args buf ctrl
 
   //args buf
-  conv_args_controller cv_args_controller(
+  conv_args_handler cv_args_handler(
                          .clk(clk),
                          .reset((reset | conv_inital_fin)), //next tile need clr
 
@@ -1075,6 +1087,7 @@ module conv_datapath_ddr(
                          .e_scale_rank_buf_rd(e_scale_rank_buf_rd)
                        );
 
+  //xxxxxxxxxx write control need fix
   tail_buffer e_scale_tail_buffer (
                 .clka(clk),    // input wire clka
                 .ena(e_scale_tail_buf_rd),      // input wire ena
@@ -1093,6 +1106,7 @@ module conv_datapath_ddr(
 
   assign e_scale_tail_word = e_scale_tail_buf_data_rd;
 
+  //xxxxxxxxxx write control need fix
   rank_buffer e_scale_rank_buffer (
                 .clka(clk),    // input wire clka
                 .ena(e_scale_rank_buf_rd),      // input wire ena
@@ -1111,6 +1125,7 @@ module conv_datapath_ddr(
 
   assign e_scale_rank_word = e_scale_rank_buf_data_rd;
 
+  //xxxxxxxxxx write control need fix
   bias_buffer bias_buffer (
                 .clka(clk),    // input wire clka
                 .ena(bias_buf_rd),      // input wire ena
@@ -1302,7 +1317,7 @@ module conv_datapath_ddr(
   Bias_Regs bias_regs(
               .clk(clk),
               .set(conv_inital_fin), // next tile need clr
-            //   .bias_tile_val(bias_tile_val),
+              //   .bias_tile_val(bias_tile_val),
               .bias_word(bias_word),
               .bias_reg_start(bias_reg_start),
               .bias_reg_size(bias_reg_size),
@@ -1332,7 +1347,7 @@ module conv_datapath_ddr(
                  .E_scale_tail_word(E_scale_tail_word),
                  .E_scale_tail_reg_start(E_scale_tail_reg_start),
                  .E_scale_tail_reg_size(E_scale_tail_reg_size),
-                 
+
                  .E_scale_rank_word(E_scale_rank_word),
                  .E_scale_rank_reg_start(E_scale_rank_reg_start),
                  .E_scale_rank_reg_size(E_scale_rank_reg_size),
