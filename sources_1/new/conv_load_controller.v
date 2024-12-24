@@ -81,12 +81,15 @@ module conv_load_controller(
 
   input [3:0] nif_in_2pow_init, ix_in_2pow_init, buf_depth_in_row_2pow_init;
 
+  input [15:0] nif_mult_k_mult_k_init;
 
   reg [3:0] k, s, p;
 
   reg [15:0] ix, iy, nif;
 
   reg [3:0] nif_in_2pow, ix_in_2pow, buf_depth_in_row_2pow;
+
+  reg [15:0] nif_mult_k_mult_k;
 
   input valid_load_data;
 
@@ -95,6 +98,10 @@ module conv_load_controller(
   reg signal_add;
   reg [15:0] tif_ddr;
   wire loop_load_tif_ddr_add_begin, loop_load_tif_ddr_add_end;
+
+  //loop spare num
+  reg [15:0] sparex_ddr;
+  wire loop_load_sparex_ddr_add_begin, loop_load_sparex_ddr_add_end;
 
   //loop bufy
   reg [15:0] bufy_ddr;
@@ -121,6 +128,10 @@ module conv_load_controller(
 
   output valid_load_ddr_adr;
 
+
+
+
+
   //load input
   //load stall
   reg load_tile_ddr_stall;
@@ -128,6 +139,10 @@ module conv_load_controller(
   //loop tif
   reg [15:0] tif_buf;
   wire loop_load_tif_buf_add_begin, loop_load_tif_buf_add_end;
+
+  //loop spare num
+  reg [15:0] sparex_buf;
+  wire loop_load_sparex_buf_add_begin, loop_load_sparex_buf_add_end;
 
   //loop bufy
   reg [1:0] bufy_buf;
@@ -188,6 +203,8 @@ module conv_load_controller(
       buf_depth_in_row_2pow <= buf_depth_in_row_2pow;
     end
   end
+
+
 
   //load input
 

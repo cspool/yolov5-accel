@@ -512,50 +512,50 @@ module conv_datapath_ddr(
               .douta(instr)  // output wire [15 : 0] douta
             );
 
-  conv_load_controller cv_load_controller(
-                         .ix_init(ix),
-                         .iy_init(iy),
-                         .nif_init(nif),
-                         .k_init(k),
-                         .s_init(s),
-                         .p_init(p),
-                         .nif_in_2pow_init(nif_in_2pow),
-                         .ix_in_2pow_init(ix_in_2pow),
-                         .buf_depth_in_row_2pow_init(buf_depth_in_row_2pow),
+  // conv_load_controller cv_load_controller(
+  //                        .ix_init(ix),
+  //                        .iy_init(iy),
+  //                        .nif_init(nif),
+  //                        .k_init(k),
+  //                        .s_init(s),
+  //                        .p_init(p),
+  //                        .nif_in_2pow_init(nif_in_2pow),
+  //                        .ix_in_2pow_init(ix_in_2pow),
+  //                        .buf_depth_in_row_2pow_init(buf_depth_in_row_2pow),
 
-                         .clk(clk),
-                         .load_ddr_start(load_ddr_start),
-                         .reset(reset | conv_inital_fin),
-                         .load_ddr_continue(load_ddr_continue),
+  //                        .clk(clk),
+  //                        .load_ddr_start(load_ddr_start),
+  //                        .reset(reset | conv_inital_fin),
+  //                        .load_ddr_continue(load_ddr_continue),
 
-                         .word_lenth_mult_word_num_mult_spare_num(word_lenth_mult_word_num_mult_spare_num),
-                         .word_num_mult_spare_num(word_num_mult_spare_num),
-                         .valid_load_data(valid_load_data),
+  //                        .word_lenth_mult_word_num_mult_spare_num(word_lenth_mult_word_num_mult_spare_num),
+  //                        .word_num_mult_spare_num(word_num_mult_spare_num),
+  //                        .valid_load_data(valid_load_data),
 
-                         //ddr info
-                         .load_row_idx_ddr(load_row_idx_ddr),
-                         .load_row_start_idx_ddr(load_row_start_idx_ddr),
-                         .load_row_end_idx_ddr(load_row_end_idx_ddr),
-                         .load_if_start_idx_ddr(load_if_start_idx_ddr),
-                         .load_if_end_idx_ddr(load_if_end_idx_ddr),
-                         .load_ddr_adr(load_ddr_adr),
-                         .valid_load_ddr_adr(valid_load_ddr_adr),
+  //                        //ddr info
+  //                        .load_row_idx_ddr(load_row_idx_ddr),
+  //                        .load_row_start_idx_ddr(load_row_start_idx_ddr),
+  //                        .load_row_end_idx_ddr(load_row_end_idx_ddr),
+  //                        .load_if_start_idx_ddr(load_if_start_idx_ddr),
+  //                        .load_if_end_idx_ddr(load_if_end_idx_ddr),
+  //                        .load_ddr_adr(load_ddr_adr),
+  //                        .valid_load_ddr_adr(valid_load_ddr_adr),
 
-                         //buf info
-                         .load_buf_idx(load_buf_idx),
-                         .load_row_idx_in_3_buf(load_row_idx_in_3_buf),
-                         .load_row_idx_buf(load_row_idx_buf),
-                         .load_row_start_idx_buf(load_row_start_idx_buf),
-                         .load_row_end_idx_buf(load_row_end_idx_buf),
-                         .load_if_start_idx_buf(load_if_start_idx_buf),
-                         .load_if_end_idx_buf(load_if_end_idx_buf),
-                         .load_buf_adr(load_buf_adr),
+  //                        //buf info
+  //                        .load_buf_idx(load_buf_idx),
+  //                        .load_row_idx_in_3_buf(load_row_idx_in_3_buf),
+  //                        .load_row_idx_buf(load_row_idx_buf),
+  //                        .load_row_start_idx_buf(load_row_start_idx_buf),
+  //                        .load_row_end_idx_buf(load_row_end_idx_buf),
+  //                        .load_if_start_idx_buf(load_if_start_idx_buf),
+  //                        .load_if_end_idx_buf(load_if_end_idx_buf),
+  //                        .load_buf_adr(load_buf_adr),
 
-                         .load_tile_fin(load_tile_fin),
+  //                        .load_tile_fin(load_tile_fin),
 
-                         .load_tile0_fin(load_tile0_fin),
-                         .load_tileN_fin(load_tileN_fin)
-                       );
+  //                        .load_tile0_fin(load_tile0_fin),
+  //                        .load_tileN_fin(load_tileN_fin)
+  //                      );
 
   assign load_ddr_start = conv_load_start;
   assign load_ddr_continue = ((conv_store_tile_fin == 1'b1) && (conv_args_tile_fin == 1'b1))

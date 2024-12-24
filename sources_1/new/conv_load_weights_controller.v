@@ -50,7 +50,7 @@ module conv_load_weights_controller(
   input conv_load_weights; //begin weights loading
 
   input ddr_en; //mig fifo can accept request
-  input valid_load_weights; //ddr words is loadedfrom ddr
+  input valid_load_weights; //ddr words is loaded from ddr
 
   input mode_init;
   input [15:0] nif_mult_k_mult_k_init;

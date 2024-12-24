@@ -58,40 +58,69 @@ module conv_args_ctrl_tb(
   wire [7:0] rank_reg_start; // 0-63
   wire [7:0] rank_reg_size; // 0-63
 
-  wire e_scale_bias_buf_rd;
-  wire e_scale_tail_buf_rd;
-  wire e_scale_rank_buf_rd;
+  wire e_scale_bias_buf_en_rd;
+  wire e_scale_tail_buf_en_rd;
+  wire e_scale_rank_buf_en_rd;
+
+  wire [511:0] bias_vector, tail_vector, rank_vector;
 
   conv_args_handler cv_args_handler(
-                         .mode_init(mode_init),
-                         .clk(clk),
-                         .reset(reset),
-                         .args_refresh(args_refresh),
-                         .of_init(of_init),
-                         .bias_layer_base_adr_init(bias_layer_base_adr_init),
-                         .tail_layer_base_adr_init(tail_layer_base_adr_init),
-                         .rank_layer_base_adr_init(rank_layer_base_adr_init),
+                      .mode_init(mode_init),
+                      .clk(clk),
+                      .reset(reset),
+                      .args_refresh(args_refresh),
+                      .of_init(of_init),
+                      .bias_layer_base_adr_init(bias_layer_base_adr_init),
+                      .tail_layer_base_adr_init(tail_layer_base_adr_init),
+                      .rank_layer_base_adr_init(rank_layer_base_adr_init),
 
-                         //args  buf rd adr
-                         .e_scale_bias_buf_adr_rd(e_scale_bias_buf_adr_rd),
-                         .e_scale_tail_buf_adr_rd(e_scale_tail_buf_adr_rd),
-                         .e_scale_rank_buf_adr_rd(e_scale_rank_buf_adr_rd),
+                      //args  buf rd adr
+                      .e_scale_bias_buf_adr_rd(e_scale_bias_buf_adr_rd),
+                      .e_scale_tail_buf_adr_rd(e_scale_tail_buf_adr_rd),
+                      .e_scale_rank_buf_adr_rd(e_scale_rank_buf_adr_rd),
 
-                         .bias_reg_start(bias_reg_start), // 0-63
-                         .bias_reg_size(bias_reg_size), // 0-63
+                      .bias_reg_start(bias_reg_start), // 0-63
+                      .bias_reg_size(bias_reg_size), // 0-63
 
-                         .tail_reg_start(tail_reg_start), // 0-63
-                         .tail_reg_size(tail_reg_size), // 0-63
+                      .tail_reg_start(tail_reg_start), // 0-63
+                      .tail_reg_size(tail_reg_size), // 0-63
 
-                         .rank_reg_start(rank_reg_start), // 0-63
-                         .rank_reg_size(rank_reg_size), // 0-63
+                      .rank_reg_start(rank_reg_start), // 0-63
+                      .rank_reg_size(rank_reg_size), // 0-63
 
-                         .e_scale_bias_buf_rd(e_scale_bias_buf_rd),
-                         .e_scale_tail_buf_rd(e_scale_tail_buf_rd),
-                         .e_scale_rank_buf_rd(e_scale_rank_buf_rd)
+                      .e_scale_bias_buf_en_rd(e_scale_bias_buf_en_rd),
+                      .e_scale_tail_buf_en_rd(e_scale_tail_buf_en_rd),
+                      .e_scale_rank_buf_en_rd(e_scale_rank_buf_en_rd)
 
-                       );
+                    );
 
+
+  bias_buffer bias_buffer (
+                .clka(clk),    // input wire clka
+                .ena(e_scale_bias_buf_en_rd),      // input wire ena
+                .wea(0),      // input wire [0 : 0] wea
+                .addra(e_scale_bias_buf_adr_rd),  // input wire [8 : 0] addra
+                .dina(0),    // input wire [511 : 0] dina
+                .douta(bias_vector)  // output wire [511 : 0] douta
+              );
+
+  tail_buffer tail_buffer (
+                .clka(clk),    // input wire clka
+                .ena(e_scale_tail_buf_en_rd),      // input wire ena
+                .wea(0),      // input wire [0 : 0] wea
+                .addra(e_scale_tail_buf_adr_rd),  // input wire [8 : 0] addra
+                .dina(0),    // input wire [511 : 0] dina
+                .douta(tail_vector)  // output wire [511 : 0] douta
+              );
+
+  rank_buffer rank_buffer (
+                .clka(clk),    // input wire clka
+                .ena(e_scale_rank_buf_en_rd),      // input wire ena
+                .wea(0),      // input wire [0 : 0] wea
+                .addra(e_scale_rank_buf_adr_rd),  // input wire [8 : 0] addra
+                .dina(0),    // input wire [511 : 0] dina
+                .douta(rank_vector)  // output wire [511 : 0] douta
+              );
 
   always
   begin

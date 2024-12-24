@@ -36,9 +36,9 @@ module conv_args_handler(
     e_scale_tail_buf_adr_rd,
     e_scale_rank_buf_adr_rd,
 
-    e_scale_bias_buf_rd,
-    e_scale_tail_buf_rd,
-    e_scale_rank_buf_rd,
+    e_scale_bias_buf_en_rd,
+    e_scale_tail_buf_en_rd,
+    e_scale_rank_buf_en_rd,
 
     bias_reg_start,
     bias_reg_size,
@@ -85,9 +85,9 @@ module conv_args_handler(
   output reg [7:0] rank_reg_start; // 0-63
   output [7:0] rank_reg_size; // 0-63
 
-  output e_scale_bias_buf_rd;
-  output e_scale_tail_buf_rd;
-  output e_scale_rank_buf_rd;
+  output e_scale_bias_buf_en_rd;
+  output e_scale_tail_buf_en_rd;
+  output e_scale_rank_buf_en_rd;
 
   reg mode;
   reg [15:0] of;
@@ -194,7 +194,7 @@ module conv_args_handler(
          ((tile_of_size - ((bias_word_counter-1) << bias_num_in_word_2pow))>>args_num_in_reg_2pow):
          (1 << bias_num_in_word_2pow) >> args_num_in_reg_2pow;
   assign e_scale_bias_buf_adr_rd = bias_layer_base_adr_rd + ((args_tof_start - 1) >> bias_num_in_word_2pow) + bias_word_counter - 1;
-  assign e_scale_bias_buf_rd = loop_bias_word_counter_add_begin;
+  assign e_scale_bias_buf_en_rd = loop_bias_word_counter_add_begin;
 
   always@(posedge clk)
   begin
@@ -276,7 +276,7 @@ module conv_args_handler(
          ((tile_of_size - ((tail_word_counter-1) << tail_num_in_word_2pow))>>args_num_in_reg_2pow):
          (1 << tail_num_in_word_2pow) >> args_num_in_reg_2pow;
   assign e_scale_tail_buf_adr_rd = tail_layer_base_adr_rd + ((args_tof_start - 1) >> tail_num_in_word_2pow) + tail_word_counter - 1;
-  assign e_scale_tail_buf_rd = loop_tail_word_counter_add_begin;
+  assign e_scale_tail_buf_en_rd = loop_tail_word_counter_add_begin;
 
   always@(posedge clk)
   begin
@@ -359,7 +359,7 @@ module conv_args_handler(
          (1 << rank_num_in_word_2pow) >> args_num_in_reg_2pow;
   assign e_scale_rank_buf_adr_rd = rank_layer_base_adr_rd + ((args_tof_start - 1) >> rank_num_in_word_2pow) + rank_word_counter - 1;
   //(args_tof_start - 1) is the of nums(the arg nums) before
-  assign e_scale_rank_buf_rd = loop_rank_word_counter_add_begin;
+  assign e_scale_rank_buf_en_rd = loop_rank_word_counter_add_begin;
 
 
   always@(posedge clk)

@@ -53,6 +53,10 @@ module cv_weights_handler(
 
   input re_fm_en, re_fm_end;
 
+  output weights_word_buf_en_rd;
+
+  output [15:0] weights_word_buf_adr_rd;
+
   input [weight_word_length-1 : 0] weights_dout;
 
   wire [weights_in_tile_mode0 * 8 -1 : 0] weights_vector_mode0;
@@ -62,10 +66,6 @@ module cv_weights_handler(
   wire [weight_word_length-1 :0] weights_vector_mode1_fin;
 
   output [weight_word_length-1 : 0] weights_vector;
-
-  output weights_word_buf_en_rd;
-
-  output [15:0] weights_word_buf_adr_rd;
 
   reg valid_weight;
 
@@ -117,6 +117,7 @@ module cv_weights_handler(
 
   assign loop_weights_counter_add_begin = re_fm_en;
   assign loop_weights_counter_add_end = loop_weights_counter_add_begin && (re_fm_end == 1'b1);
+  // re_fm_end == 1'b1 <=====> weights_counter == nif*k*k 
 
   assign weights_word_buf_adr_rd = weights_counter - 1; //weights_counter is 1,...,nif*k*k
 
