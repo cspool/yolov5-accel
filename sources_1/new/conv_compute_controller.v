@@ -128,27 +128,22 @@ module conv_compute_controller(
 
   parameter ifs_in_row_2pow = 1;
 
+  parameter input_buffer_size_2pow = 13;//8192
+  parameter slab_buffer_size_2pow = 13;//8192
+
   // conv tiling module
   input mode_init;
-
   input [3:0] k_init, s_init, p_init;
-
   input [15:0] of_init, ox_init, oy_init, ix_init, iy_init, nif_init;
-
   input clk, conv_compute, reset;
-
   input [3:0] nif_in_2pow_init, ix_in_2pow_init;
 
   reg mode;
-
   reg [3:0] k, s, p;
-
   reg [15:0] of, ox, oy, ix, iy, nif;
-
   reg [3:0] nif_in_2pow, ix_in_2pow;
 
   output reg [15:0] cur_pox, cur_pof, cur_poy;
-
   output reg [15:0] cur_ox_start, cur_of_start, cur_oy_start;
 
   wire [15:0] next_ox_start, next_oy_start;
@@ -161,23 +156,19 @@ module conv_compute_controller(
 
   output conv_end;
   output conv_pixels_add_end;
-
   output conv_nif_add_end;
 
   output [15:0] row1_buf_adr;
   output [1:0] row1_buf_idx;
   output row1_buf_word_select;
-
   output [15:0] row2_buf_adr;
   output [1:0] row2_buf_idx;
   output row2_buf_word_select;
-
   output [15:0] row3_buf_adr;
   output [1:0] row3_buf_idx;
   output row3_buf_word_select;
 
   output [15:0] row_slab_start_idx;
-
   output [15:0] row1_slab_adr;
   output [1:0] row1_slab_idx;
   output [15:0] row2_slab_adr;
@@ -188,11 +179,8 @@ module conv_compute_controller(
   output valid_row1_adr, valid_row2_adr, valid_row3_adr;
 
   wire valid_adr;
-
   wire [15:0] row1_buf_adr_in_row;
-
   wire [15:0] row2_buf_adr_in_row;
-
   wire [15:0] row3_buf_adr_in_row;
 
   output [15:0] ox_start, oy_start, of_start, pox, poy, pof, if_idx;
@@ -202,7 +190,6 @@ module conv_compute_controller(
   wire[15:0] iy_start_plus_2s;
 
   wire conv_rows_add_end1, conv_rows_add_end2, conv_rows_add_end3;
-
   wire conv_tiling_add_end;
 
   //conv tile module
@@ -230,13 +217,10 @@ module conv_compute_controller(
 
   wire [15:0] row1_offset_s1;
   wire [15:0] row1_buf_idx_s1;
-
   wire [15:0] row2_offset_s1;
   wire [15:0] row2_buf_idx_s1;
-
   wire [15:0] row3_offset_s1;
   wire [15:0] row3_buf_idx_s1;
-
 
   wire loop_y_add_begin, loop_y_add_end;
   wire loop_x_add_begin, loop_x_add_end;
@@ -244,7 +228,6 @@ module conv_compute_controller(
   wire loop_if_add_begin, loop_if_add_end;
 
   reg [15:0] tile_y_start, tile_x_start, tile_f_start; // tile_f_start is the inner loop
-
   reg [15:0] if_start;
 
   wire [15:0] row_num;
@@ -255,42 +238,28 @@ module conv_compute_controller(
   wire [15:0] iy_start_1, iy_start_2, iy_start_3;
 
   reg [15:0] ky1, ky2, ky3;
-
   wire loop_ky1_add_begin, loop_ky1_add_end;
   wire loop_ky2_add_begin, loop_ky2_add_end;
   wire loop_ky3_add_begin, loop_ky3_add_end;
 
   wire [15:0] p_plus_1, p_plus_iy;
-
   wire [15:0] ky1_plus_irow_y1;
   wire [15:0] ky2_plus_irow_y2;
   wire [15:0] ky3_plus_irow_y3;
 
   //conv pixels
   wire [15:0] ix_start;
-
   wire [15:0] next_ix_start;
-
   wire [15:0] ix_end;
-
   wire [3:0] left_pad, right_pad, overlap;
-
   wire [3:0] next_left_pad, next_overlap;
-
   wire [15:0] row_start_fix;
-
   wire [15:0] row_end;
-
   wire [15:0] row_end_low, row_end_high;
-
   wire [15:0] row_end_fix0, row_end_fix;
-
   wire [15:0] ix_end_s_1;
-
   wire [15:0] p_plus_ix;
-
   wire[15:0] ix_minus_1;
-
   wire [15:0] ix_mask = (16'hffff) >> (16 - ix_in_2pow);
 
   wire [15:0] pox_minus_1;
@@ -299,23 +268,27 @@ module conv_compute_controller(
   wire [15:0] pox_mult_2;
 
   wire [15:0] reg_from_initial;
-
   wire [15:0] next_reg_from_initial;
 
   reg [15:0] reg_from;
   wire [15:0] reg_to;
 
   reg [15:0] adr1;
-
   reg signal_adr1_add;
-
   wire loop_adr1_add_begin, loop_adr1_add_end;
 
   wire stall_in_row;
-
   wire last_pixel_and_tile_end, last_pixel_not_tile_end;
-
   reg[3:0] row_length, stall_in_row_counter;
+
+  //adr mod mapping
+  wire [3:0] row_num_limit_input_buffer_2pow = input_buffer_size_2pow - (
+         nif_in_2pow - ifs_in_row_2pow + ix_in_2pow - pixels_in_row_in_2pow);
+
+  wire [3:0] row_num_limit_slab_buffer_2pow = slab_buffer_size_2pow - (
+         nif_in_2pow + ix_in_2pow - pixels_in_row_in_2pow);
+
+  wire [15:0] row_num_limit_mask_input_buffer = 16'hffff >> (16 - row_num_limit_input_buffer_2pow);
 
   always@(posedge clk)
   begin
@@ -364,7 +337,7 @@ module conv_compute_controller(
 
   assign loop_if_stall_counter_add_end =
          (ifx_stall == 1'b1) && (conv_compute == 1'b1);
-        //  (conv_compute_continue == 1'b1);
+  //  (conv_compute_continue == 1'b1);
 
 
   always@(posedge clk)
@@ -4313,6 +4286,9 @@ module conv_compute_controller(
            )
          );
 
+  //  assign row1_buf_adr_in_row = (row1_idx == 16'hffff)? 16'hffff:
+  //  (row1_base_in_3 + row1_offset_s1);
+
   //    assign row1_offset_s1 =
   //    ((row1_bias0[15] == 1'b1) || (row1_bias0 == 0))? (
   //        ((row1_bias0 + {12'b0, {s_mult_3}}) <= 6)?
@@ -4367,7 +4343,7 @@ module conv_compute_controller(
   // the adr need more completely logic
   //xxxxxxxxxxxx
   assign row1_buf_adr = (row1_idx == 16'hffff)? 16'hffff:
-         ((row1_buf_adr_in_row << ((nif_in_2pow - ifs_in_row_2pow) + ix_in_2pow - pixels_in_row_in_2pow))
+         (((row1_buf_adr_in_row & row_num_limit_mask_input_buffer) << ((nif_in_2pow - ifs_in_row_2pow) + ix_in_2pow - pixels_in_row_in_2pow))
           + ((row_start_idx << (nif_in_2pow - ifs_in_row_2pow)) >> pixels_in_row_in_2pow))
          + ((if_idx - 1) >> ifs_in_row_2pow);
 
@@ -4424,9 +4400,13 @@ module conv_compute_controller(
          );
 
   assign row2_buf_adr = (row2_idx == 16'hffff)? 16'hffff :
-         ((row2_buf_adr_in_row << ((nif_in_2pow - ifs_in_row_2pow) + ix_in_2pow - pixels_in_row_in_2pow))
+         (((row2_buf_adr_in_row & row_num_limit_mask_input_buffer) << ((nif_in_2pow - ifs_in_row_2pow) + ix_in_2pow - pixels_in_row_in_2pow))
           + ((row_start_idx << (nif_in_2pow - ifs_in_row_2pow)) >> pixels_in_row_in_2pow))
          + ((if_idx - 1) >> ifs_in_row_2pow);
+
+  //row2_buf_adr_in_row = row2_buf_adr_in_row % buf_row_limit
+  // = row2_buf_adr_in_row & (16'hffff >> (16 - row_words_2pow))
+  // row_words_2pow = (nif_in_2pow - ifs_in_row_2pow) + ix_in_2pow - pixels_in_row_in_2pow
 
   assign row2_buf_word_select = (if_idx - 1) & 16'h0001;
 
@@ -4482,7 +4462,7 @@ module conv_compute_controller(
          );
 
   assign row3_buf_adr = (row3_idx == 16'hffff)? 16'hffff :
-         ((row3_buf_adr_in_row << ((nif_in_2pow - ifs_in_row_2pow) + ix_in_2pow - pixels_in_row_in_2pow))
+         (((row3_buf_adr_in_row & row_num_limit_mask_input_buffer) << ((nif_in_2pow - ifs_in_row_2pow) + ix_in_2pow - pixels_in_row_in_2pow))
           + ((row_start_idx << (nif_in_2pow - ifs_in_row_2pow)) >> pixels_in_row_in_2pow))
          + ((if_idx - 1) >> ifs_in_row_2pow);
 
@@ -4494,7 +4474,7 @@ module conv_compute_controller(
   assign row1_slab_idx = (slab_num > 0)? row1_buf_idx : 0;
 
   assign row1_slab_adr = (slab_num > 0)?
-         ((row1_buf_adr_in_row << (nif_in_2pow + ix_in_2pow - pixels_in_row_in_2pow))
+         (((row1_buf_adr_in_row & row_num_limit_slab_buffer_2pow) << (nif_in_2pow + ix_in_2pow - pixels_in_row_in_2pow))
           + ((row_slab_start_idx << nif_in_2pow) >> pixels_in_row_in_2pow))
          + (if_idx - 1):
          16'hffff;
@@ -4504,7 +4484,7 @@ module conv_compute_controller(
   //    assign row2_slab_adr = (slab_num > 0)? (row2_buf_adr - nif): 16'hffff;
 
   assign row2_slab_adr = (slab_num > 0)?
-         ((row2_buf_adr_in_row << (nif_in_2pow + ix_in_2pow - pixels_in_row_in_2pow))
+         (((row2_buf_adr_in_row & row_num_limit_slab_buffer_2pow) << (nif_in_2pow + ix_in_2pow - pixels_in_row_in_2pow))
           + ((row_slab_start_idx << nif_in_2pow) >> pixels_in_row_in_2pow))
          + (if_idx - 1):
          16'hffff;
@@ -4512,7 +4492,7 @@ module conv_compute_controller(
   assign row3_slab_idx = (slab_num > 0)? row3_buf_idx : 0;
 
   assign row3_slab_adr = (slab_num > 0)?
-         ((row3_buf_adr_in_row << (nif_in_2pow + ix_in_2pow - pixels_in_row_in_2pow))
+         (((row3_buf_adr_in_row & row_num_limit_slab_buffer_2pow) << (nif_in_2pow + ix_in_2pow - pixels_in_row_in_2pow))
           + ((row_slab_start_idx << nif_in_2pow) >> pixels_in_row_in_2pow))
          + (if_idx - 1):
          16'hffff;
