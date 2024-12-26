@@ -58,11 +58,11 @@ in_buf3 your_instance_name (
   .clka(clka),    // input wire clka
   .ena(ena),      // input wire ena
   .wea(wea),      // input wire [0 : 0] wea
-  .addra(addra),  // input wire [12 : 0] addra
+  .addra(addra),  // input wire [11 : 0] addra
   .dina(dina),    // input wire [511 : 0] dina
   .clkb(clkb),    // input wire clkb
   .enb(enb),      // input wire enb
-  .addrb(addrb),  // input wire [12 : 0] addrb
+  .addrb(addrb),  // input wire [11 : 0] addrb
   .doutb(doutb)  // output wire [511 : 0] doutb
 );
 // INST_TAG_END ------ End INSTANTIATION Template ---------
