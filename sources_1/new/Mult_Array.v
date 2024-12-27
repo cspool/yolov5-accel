@@ -31,7 +31,7 @@ module Mult_Array(
     parameter mult_B_width = 16;
     parameter mult_P_width = 40;
     parameter mult_array_length = 576;
-    parameter mult_dsp_array_length = 528;
+    parameter mult_dsp_array_length = 528; //0 of 528 is used to calculate load adress
     parameter mult_lut_array_length = mult_array_length - mult_dsp_array_length;
     parameter vector_A_width = mult_array_length * mult_A_width;
     parameter vector_B_width = mult_array_length * mult_B_width;

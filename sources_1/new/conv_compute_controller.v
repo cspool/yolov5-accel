@@ -1791,8 +1791,8 @@ module conv_compute_controller(
   assign row2_idx = (poy < 2)? 16'hffff : row_y2;
   assign row3_idx = (poy < 3)? 16'hffff : row_y3;
 
-  assign iy_start = (s == 4'd1)? oy_start:
-         (s == 4'd2)? (oy_start << 1) - 1:
+  assign iy_start = (s == 4'd1)? tile_y_start:
+         (s == 4'd2)? (tile_y_start << 1) - 1:
          0;
 
   assign iy_start_plus_s = iy_start + {{12'b0}, s};
@@ -4104,7 +4104,7 @@ module conv_compute_controller(
   assign valid_row3_adr = (poy < 3)? 0 : valid_adr;
 
   //address translation
-
+  // consider the rows whose row_idx is in [p+1, p+iy], the rest of rows dont need address translation
   //    assign row1_bias0 = idx1_in_k + 1 - {{12'b0},p};
   //    assign row2_bias0 = idx2_in_k + 1 + {{12'b0},s} - {{12'b0},p};
   //    assign row3_bias0 = idx3_in_k + 1 + {{11'b0}, s, {1'b0}} - {{12'b0},p};

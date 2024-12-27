@@ -34,7 +34,6 @@ module conv_load_input_controller(
     row_start_idx, row_end_idx,
 
     conv_end,
-    conv_pixels_add_end,
     conv_nif_add_end,
 
     row1_buf_adr,
@@ -55,12 +54,11 @@ module conv_load_input_controller(
   parameter pixels_in_row_minus_2 = pixels_in_row-2;
   parameter pixels_in_row_minus_3 = pixels_in_row-3;
   parameter buffers_num_minus_1 = buffers_num-1;
-
   parameter row_num_in_mode0 = 64; // 64 in 8 bit, 128 in 1 bit
   parameter row_num_in_mode1 = 128; // 64 in 8 bit, 128 in 1 bit
-
+  parameter row_num_mode0_2pow = 6;
+  parameter row_num_mode1_2pow = 7;
   parameter ifs_in_row_2pow = 1;
-
   parameter input_buffer_size_2pow = 12;//4096
 
   // conv tiling module
@@ -68,36 +66,24 @@ module conv_load_input_controller(
   input [3:0] k_init, s_init, p_init;
   input [15:0] of_init, ox_init, oy_init, ix_init, iy_init, nif_init;
   input clk, conv_load_input, reset;
-  input [3:0] nif_in_2pow_init, ix_in_2pow_init;
-
+  input [3:0] nif_in_2pow_init, ix_in_2pow_init, of_in_2pow_init;
   reg mode;
   reg [3:0] k, s, p;
   reg [15:0] of, ox, oy, ix, iy, nif;
-  reg [3:0] nif_in_2pow, ix_in_2pow;
-
+  reg [3:0] nif_in_2pow, ix_in_2pow, of_in_2pow;
   output [15:0] row1_idx;
   wire [15:0] row_y1;
   output [15:0] row_start_idx, row_end_idx;
-
   output conv_end;
-  output conv_pixels_add_end;
   output conv_nif_add_end;
-
   output [15:0] row1_buf_adr;
   output [1:0] row1_buf_idx;
   output row1_buf_word_select;
-
   output valid_row1_adr;
-
   wire valid_adr;
   wire [15:0] row1_buf_adr_in_row;
-
   output [15:0] ox_start, oy_start, pox, poy, if_idx;
-
   wire [15:0] iy_start;
-  wire[15:0] iy_start_plus_s;
-  wire[15:0] iy_start_plus_2s;
-
   wire conv_tiling_add_end;
 
   //conv tile module
@@ -105,28 +91,20 @@ module conv_load_input_controller(
   //    wire [15:0] row_base0_in_3s;
   wire [15:0] row1_base_in_3;
   wire [15:0] row1_base_in_3s;
-
   wire [15:0] row1_bias0;
   wire [15:0] row1_bias;
-
   wire [3:0] s_mult_3;
-
   wire leq3_1, leq6_1, leq9_1;
-
   wire [15:0] row1_offset_s1;
   wire [15:0] row1_buf_idx_s1;
-
   wire loop_y_add_begin, loop_y_add_end;
   wire loop_x_add_begin, loop_x_add_end;
   wire loop_if_add_begin, loop_if_add_end;
-
   reg [15:0] tile_y_start, tile_x_start; // tile_x_start is the inner loop
   reg [15:0] if_start;
-
   wire [15:0] row_num;
-
+  wire [3:0] row_num_2pow;
   reg[15:0] row_base_in_3s;
-
   wire [15:0] ix_start;
 
   //adr mod mapping
@@ -145,7 +123,7 @@ module conv_load_input_controller(
   //ddr word stall
   reg input_ddr_word_stall;
   wire [15:0] input_tile_of_split_size; //ceil(ix_size * iy_size * row_num / of_ceil)
-  wire [15:0] of_ceil = ceil(of / row_num) * row_num;
+  wire [15:0] of_ceil;
 
   //chunk_ix_counter
   reg [15:0] chunk_ix_counter;
@@ -174,6 +152,7 @@ module conv_load_input_controller(
       nif <= nif_init;
       nif_in_2pow <= nif_in_2pow_init;
       ix_in_2pow <= ix_in_2pow_init;
+      of_in_2pow <= of_in_2pow_init;
     end
     else
     begin
@@ -189,11 +168,15 @@ module conv_load_input_controller(
       nif <= nif;
       nif_in_2pow <= nif_in_2pow;
       ix_in_2pow <= ix_in_2pow;
+      of_in_2pow <= of_in_2pow;
     end
   end
 
   assign row_num = (mode == 1'b0)? row_num_in_mode0 :
          (mode == 1'b1)? row_num_in_mode1 : 0;
+
+  assign row_num_2pow = (mode == 1'b0)? row_num_mode0_2pow :
+         (mode == 1'b1)? row_num_mode1_2pow : 0;
 
   //loop ddr_word_counter
 
@@ -300,14 +283,108 @@ module conv_load_input_controller(
   assign loop_input_ddr_word_tile_counter_add_end = loop_input_ddr_word_tile_counter_add_begin
          && ((input_ddr_word_tile_counter == chunk_ix_size_mult_chunk_iy_size));
 
+  //  assign chunk_ix_size = (tile_x_start == 1)? (
+  //   //tilex_first_ix_word_num = ceil(((pixels_in_row - 1) * s + k - p)/pixels_in_row)
+  //   tilex_first_ix_word_num
+  // ):
+  // (tile_x_start > 1)? (
+  //   (tile_x_start + pixels_in_row_minus_1 > ox)?
+  //   //tilex_last_ix_word_num = ceil((ox - tile_x_start + 1) * s /pixels_in_row)
+  //   // = ceil(((ox % pixels_in_row)*s+k-p)/pixels_in_row)
+  //   tilex_last_ix_word_num:
+  //   //tilex_mid_ix_word_num = s
+  //   tilex_mid_ix_word_num
+  // ): 0;
 
-  assign input_tile_of_split_size = ceil(chunk_ix_size * chunk_iy_size * row_num / of_ceil);
+  //  assign chunk_iy_size = (tile_y_start == 1)? (
+  //    //tiley_first_iy_row_num = (buffers_num - 1) * s + k - p
+  //    tiley_first_iy_row_num
+  //  ):
+  //  (tile_y_start > 1)? (
+  //    (tile_y_start + buffers_num_minus_1 > oy)?
+  //    // tiley_last_iy_row_num = (oy - tile_y_start + 1) * s
+  //    // (oy % buffers_num) * s
+  //    tiley_last_iy_row_num:
+  //    //tiley_mid_iy_row_num = buffers_num * s
+  //    tiley_mid_iy_row_num
+  //  ):
+  //  0;
+
+  // assign input_tile_of_split_size = ceil(chunk_ix_size * chunk_iy_size / of_div_row_num_ceil);
+  assign input_tile_of_split_size =
+         (tile_y_start == 1)? (
+           //tiley_first_iy_row_num = (buffers_num - 1) * s + k - p
+           (tile_x_start == 1)? (
+             //tilex_first_ix_word_num = ceil(((pixels_in_row - 1) * s + k - p)/pixels_in_row)
+             //tiley_first_tilex_first_split_size = ceil(tiley_first_iy_row_num * tilex_first_ix_word_num / of_div_row_num_ceil)
+             tiley_first_tilex_first_split_size
+           ):
+           (tile_x_start > 1)? (
+             (tile_x_start + pixels_in_row_minus_1 > ox)?
+             //tilex_last_ix_word_num = ceil((ox - tile_x_start + 1) * s /pixels_in_row) = ceil(((ox % pixels_in_row)*s+k-p)/pixels_in_row)
+             // tiley_first_tilex_last_split_size = ceil(tiley_first_iy_row_num * tilex_last_ix_word_num / of_div_row_num_ceil)
+             tiley_first_tilex_last_split_size:
+             //tilex_mid_ix_word_num = s
+             //tiley_first_tilex_mid_split_size = ceil(tiley_first_iy_row_num * tilex_mid_ix_word_num / of_div_row_num_ceil)
+             tiley_first_tilex_mid_split_size
+           ): 0
+         ):
+         (tile_y_start > 1)? (
+           (tile_y_start + buffers_num_minus_1 > oy)?
+           // tiley_last_iy_row_num = (oy - tile_y_start + 1) * s
+           // (oy % buffers_num) * s
+           (
+             (tile_x_start == 1)? (
+               //tilex_first_ix_word_num = ceil(((pixels_in_row - 1) * s + k - p)/pixels_in_row)
+               //tiley_last_tilex_first_split_size = ceil(tiley_last_iy_row_num * tilex_first_ix_word_num / of_div_row_num_ceil)
+               tiley_last_tilex_first_split_size
+             ):
+             (tile_x_start > 1)? (
+               (tile_x_start + pixels_in_row_minus_1 > ox)?
+               //tilex_last_ix_word_num = ceil((ox - tile_x_start + 1) * s /pixels_in_row) = ceil(((ox % pixels_in_row)*s+k-p)/pixels_in_row)
+               //tiley_last_tilex_last_split_size = ceil(tiley_last_iy_row_num * tilex_last_ix_word_num / of_div_row_num_ceil)
+               tiley_last_tilex_last_split_size:
+               //tilex_mid_ix_word_num = s
+               //tiley_last_tilex_mid_split_size = ceil(tiley_last_iy_row_num * tilex_mid_ix_word_num / of_div_row_num_ceil)
+               tiley_last_tilex_mid_split_size
+             ): 0
+           ):
+           //tiley_mid_iy_row_num = buffers_num * s
+           (
+             (tile_x_start == 1)? (
+               //tilex_first_ix_word_num = ceil(((pixels_in_row - 1) * s + k - p)/pixels_in_row)
+               //tiley_mid_tilex_first_split_size = ceil(tiley_mid_iy_row_num * tilex_first_ix_word_num / of_div_row_num_ceil)
+               tiley_mid_tilex_first_split_size
+             ):
+             (tile_x_start > 1)? (
+               (tile_x_start + pixels_in_row_minus_1 > ox)?
+               //tilex_last_ix_word_num = ceil((ox - tile_x_start + 1) * s /pixels_in_row) = ceil(((ox % pixels_in_row)*s+k-p)/pixels_in_row)
+               //tiley_mid_tilex_last_split_size = ceil(tiley_mid_iy_row_num * tilex_last_ix_word_num / of_div_row_num_ceil)
+               tiley_mid_tilex_last_split_size:
+               //tilex_mid_ix_word_num = s
+               //tiley_mid_tilex_mid_split_size = ceil(tiley_mid_iy_row_num * tilex_mid_ix_word_num / of_div_row_num_ceil)
+               tiley_mid_tilex_mid_split_size
+             ): 0
+           )
+         ):
+         0;
+
+  // assign of_ceil = ceil(of / row_num) * row_num;
+  assign row_num_mask = 16'hffff >> (16 - row_num_2pow);
+
+  //can pre-compute
+  assign of_div_row_num_ceil = ((of & row_num_mask) == 0)? (of >> row_num_2pow):
+         ((of & row_num_mask) != 0)? ((of >> row_num_2pow) + 1): 0;
+
+  // assign of_ceil = of_div_row_num_ceil << row_num_2pow;
+  assign of_ceil = ((of & row_num_mask) == 0)? ((1 << of_in_2pow) >> row_num_2pow) << row_num_2pow:
+         (((1 << of_in_2pow) & row_num_mask) != 0)? (((1 << of_in_2pow) >> row_num_2pow) + 1) << row_num_2pow : 0;
 
   assign chunk_ix_size_mult_chunk_iy_size = (chunk_ix_size == 1)? chunk_iy_size:
          (chunk_ix_size == 2)? (chunk_iy_size << 1):
          (chunk_ix_size == 3)? (chunk_iy_size << 1) + chunk_iy_size: 0;
 
-  //loop [ix_start, ix_start + chunk_ix_size)
+  //loop [ix_start - p, ix_start - p + chunk_ix_size)
   //chunk_ix_counter
   always@(posedge clk)
   begin
@@ -335,10 +412,37 @@ module conv_load_input_controller(
   assign loop_chunk_ix_counter_add_end = loop_chunk_ix_counter_add_begin
          && ((chunk_ix_counter == chunk_ix_size));
 
-  assign chunk_ix_size = (ix_start == 1)? ceil(((pixels_in_row - 1) * s + k - p)/pixels_in_row) :
-         (ix_start > 1)? s: 0;
+  // assign pox = (tile_x_start + pixels_in_row_minus_1 > ox)? (ox - tile_x_start + 1):
+  //        pixels_in_row;
+  // assign chunk_ix_size = (ox_start == 1)? ceil(((pox - 1) * s + k - p)/pixels_in_row) :
+  //        (ox_start > 1)? ceil(pox * s /pixels_in_row): 0;
 
-  //loop [iy_start, iy_start + chunk_iy_size)
+  // assign chunk_ix_size = (tile_x_start == 1)? (
+  //          (tile_x_start + pixels_in_row_minus_1 > ox)?
+  //          ceil(((ox - tile_x_start) * s + k - p)/pixels_in_row): //ceil(((ox % pixels_in_row - 1)*s+k-p)/pixels_in_row)
+  //          ceil(((pixels_in_row - 1) * s + k - p)/pixels_in_row)
+  //        ):
+  //        (tile_x_start > 1)? (
+  //          (tile_x_start + pixels_in_row_minus_1 > ox)?
+  //          ceil((ox - tile_x_start + 1) * s /pixels_in_row): //ceil(((ox % pixels_in_row)*s+k-p)/pixels_in_row)
+  //          s
+  //        ): 0;
+
+  //ox >= 32
+  assign chunk_ix_size = (tile_x_start == 1)? (
+           //tilex_first_ix_word_num = ceil(((pixels_in_row - 1) * s + k - p)/pixels_in_row)
+           tilex_first_ix_word_num
+         ):
+         (tile_x_start > 1)? (
+           (tile_x_start + pixels_in_row_minus_1 > ox)?
+           //tilex_last_ix_word_num = ceil((ox - tile_x_start + 1) * s /pixels_in_row)
+           // = ceil(((ox % pixels_in_row)*s+k-p)/pixels_in_row)
+           tilex_last_ix_word_num:
+           //tilex_mid_ix_word_num = s
+           tilex_mid_ix_word_num
+         ): 0;
+
+  //loop [iy_start - p, iy_start - p + chunk_iy_size)
   //chunk_iy_counter
   always@(posedge clk)
   begin
@@ -366,8 +470,37 @@ module conv_load_input_controller(
   assign loop_chunk_iy_counter_add_end = loop_chunk_iy_counter_add_begin
          && ((chunk_iy_counter == chunk_iy_size));
 
-  assign chunk_iy_size = (iy_start == 1)? ceil(((pixels_in_row - 1) * s + k - p)/pixels_in_row) :
-         (ix_start > 1)? s: 0;
+  // assign poy = (tile_y_start + buffers_num_minus_1 > oy)? (oy - tile_y_start + 1):
+  //        buffers_num;
+  // assign chunk_iy_size = (oy_start == 1)? (poy - 1) * s + k - p :
+  //        (oy_start > 1)? poy * s: 0;
+
+  // assign chunk_iy_size = (oy_start == 1)? (
+  //          (tile_y_start + buffers_num_minus_1 > oy)?
+  //          (oy - tile_y_start) * s + k - p: // (oy % buffers_num - 1) * s + k - p
+  //          (buffers_num - 1) * s + k - p
+  //        ):
+  //        (oy_start > 1)? (
+  //          (tile_y_start + buffers_num_minus_1 > oy)?
+  //          (oy - tile_y_start + 1) * s: // (oy % buffers_num) * s
+  //          buffers_num * s
+  //        ):
+  //        0;
+
+  //oy >= 3
+  assign chunk_iy_size = (tile_y_start == 1)? (
+           //tiley_first_iy_row_num = (buffers_num - 1) * s + k - p
+           tiley_first_iy_row_num
+         ):
+         (tile_y_start > 1)? (
+           (tile_y_start + buffers_num_minus_1 > oy)?
+           // tiley_last_iy_row_num = (oy - tile_y_start + 1) * s
+           // (oy % buffers_num) * s
+           tiley_last_iy_row_num:
+           //tiley_mid_iy_row_num = buffers_num * s
+           tiley_mid_iy_row_num
+         ):
+         0;
 
   //output tersor tiling
   //loop ox
@@ -437,17 +570,16 @@ module conv_load_input_controller(
   assign poy = (tile_y_start + buffers_num_minus_1 > oy)? (oy - tile_y_start + 1):
          buffers_num;
 
-  assign conv_tiling_add_end = loop_y_add_end;
-
   assign if_idx = if_start;
 
-  assign conv_end = conv_tiling_add_end;
+  assign conv_load_input_end = loop_y_add_end;
 
-  assign row1_idx = (poy < 1)? 16'hffff : row_y1;
+  assign row1_idx = (((chunk_iy_counter - 1 + iy_start) < (p + 1))
+                     || ((chunk_iy_counter - 1 + iy_start) > (p + 1)))?
+         16'hffff: ((chunk_iy_counter - 1 + iy_start) - {{12'b0},p});
 
-  //need - p
-  assign iy_start = (s == 4'd1)? oy_start:
-         (s == 4'd2)? (oy_start << 1) - 1:
+  assign iy_start = (s == 4'd1)? tile_y_start:
+         (s == 4'd2)? (tile_y_start << 1) - 1:
          0;
 
   // ix_start = (ox_start - 1) * s + 1;
@@ -455,25 +587,23 @@ module conv_load_input_controller(
          (s == 4'd2)? (tile_x_start << 1) - 1:
          0;
 
+  //load ddr words generate
 
-  //xxxxxx
-  assign row1_bias0 = iy_start + chunk_iy_counter - 1 - {{12'b0},p};
 
+  // ddr words of input row write into input buffer
+  // consider the rows whose row_idx is in [p+1, p+iy], the rest of rows dont need address translation
+  assign row1_bias0 = chunk_iy_counter - {{12'b0},p};
   assign row1_base_in_3s = ((row1_bias0[15] == 1'b1) || (row1_bias0 == 0))? (row_base_in_3s - 1) : row_base_in_3s;
-
   assign row1_base_in_3 = (s == 4'd1)? row1_base_in_3s:
          (s == 4'd2)? (row1_base_in_3s << 1):
          0;
-
   assign s_mult_3 = (s << 1) + s;
-
   assign row1_bias = ((row1_bias0[15] == 1'b1) || (row1_bias0 == 0))? (row1_bias0 + {12'b0, {s_mult_3}}) : row1_bias0;
-
   assign leq3_1 = (row1_bias <= 3)? 1 : 0;
   assign leq6_1 = (row1_bias <= 6)? 1 : 0;
   assign leq9_1 = (row1_bias <= 9)? 1 : 0;
 
-
+  //row buf index
   assign row1_buf_idx_s1 = (leq6_1 == 1'b1)?
          ((leq3_1 == 1'b1)? row1_bias: (row1_bias - 3)) :
          ((leq9_1 == 1'b1)? (row1_bias - 6): (row1_bias - 9));
@@ -482,8 +612,7 @@ module conv_load_input_controller(
          ((leq3_1 == 1'b1)? 0: 1) :
          ((leq9_1 == 1'b1)? 2: 3);
 
-  assign row1_bias = ((row1_bias0[15] == 1'b1) || (row1_bias0 == 0))? (row1_bias0 + {12'b0, {s_mult_3}}) : row1_bias0;
-
+  //row buf adr of the row index
   assign row1_buf_adr_in_row = (row1_idx == 16'hffff)? 16'hffff:
          (row1_base_in_3 + row1_offset_s1);
 
