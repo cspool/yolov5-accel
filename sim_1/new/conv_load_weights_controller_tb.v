@@ -82,7 +82,7 @@ module conv_load_weights_controller_tb(
         .douta(DDR_out)  // output wire [511 : 0] douta
       );
 
-  assign weights_word_buf_wt = (weights_word_buf_en_wt == 1'b1)? DDR_out : 0;
+  assign weights_word_buf_wt = (valid_load_weights == 1'b1)? DDR_out : 0;
 
   conv_load_weights_controller cv_load_weights_controller(
                                  .clk(clk),

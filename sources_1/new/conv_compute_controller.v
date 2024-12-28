@@ -4343,9 +4343,9 @@ module conv_compute_controller(
   assign row1_buf_adr = (row1_idx == 16'hffff)? 16'hffff:
          (((row1_buf_adr_in_row & row_num_limit_mask_input_buffer) << ((nif_in_2pow - ifs_in_row_2pow) + ix_in_2pow - pixels_in_row_in_2pow))
           + ((row_start_idx << (nif_in_2pow - ifs_in_row_2pow)) >> pixels_in_row_in_2pow))
-         + ((if_idx - 1) >> ifs_in_row_2pow);
+         + ((if_start - 1) >> ifs_in_row_2pow); //if_idx
 
-  assign row1_buf_word_select = (if_idx - 1) & 16'h0001;
+  assign row1_buf_word_select = (if_start - 1) & 16'h0001;
 
   //    assign row2_buf_idx = (row2_idx == 16'hffff)? 0 :
   //                          (row2_buf_idx_s1);
@@ -4400,13 +4400,13 @@ module conv_compute_controller(
   assign row2_buf_adr = (row2_idx == 16'hffff)? 16'hffff :
          (((row2_buf_adr_in_row & row_num_limit_mask_input_buffer) << ((nif_in_2pow - ifs_in_row_2pow) + ix_in_2pow - pixels_in_row_in_2pow))
           + ((row_start_idx << (nif_in_2pow - ifs_in_row_2pow)) >> pixels_in_row_in_2pow))
-         + ((if_idx - 1) >> ifs_in_row_2pow);
+         + ((if_start - 1) >> ifs_in_row_2pow);
 
   //row2_buf_adr_in_row = row2_buf_adr_in_row % buf_row_limit
   // = row2_buf_adr_in_row & (16'hffff >> (16 - row_words_2pow))
   // row_words_2pow = (nif_in_2pow - ifs_in_row_2pow) + ix_in_2pow - pixels_in_row_in_2pow
 
-  assign row2_buf_word_select = (if_idx - 1) & 16'h0001;
+  assign row2_buf_word_select = (if_start - 1) & 16'h0001;
 
 
   //    assign row3_buf_idx = (row3_idx == 16'hffff)? 0 :
@@ -4462,9 +4462,9 @@ module conv_compute_controller(
   assign row3_buf_adr = (row3_idx == 16'hffff)? 16'hffff :
          (((row3_buf_adr_in_row & row_num_limit_mask_input_buffer) << ((nif_in_2pow - ifs_in_row_2pow) + ix_in_2pow - pixels_in_row_in_2pow))
           + ((row_start_idx << (nif_in_2pow - ifs_in_row_2pow)) >> pixels_in_row_in_2pow))
-         + ((if_idx - 1) >> ifs_in_row_2pow);
+         + ((if_start - 1) >> ifs_in_row_2pow);
 
-  assign row3_buf_word_select = (if_idx - 1) & 16'h0001;
+  assign row3_buf_word_select = (if_start - 1) & 16'h0001;
 
   //slab
   assign row_slab_start_idx = (slab_num > 0)? (row_start_idx - 16'd32): 16'hffff;
@@ -4474,7 +4474,7 @@ module conv_compute_controller(
   assign row1_slab_adr = (slab_num > 0)?
          (((row1_buf_adr_in_row & row_num_limit_mask_slab_buffer) << (nif_in_2pow + ix_in_2pow - pixels_in_row_in_2pow))
           + ((row_slab_start_idx << nif_in_2pow) >> pixels_in_row_in_2pow))
-         + (if_idx - 1):
+         + (if_start - 1):
          16'hffff;
 
   assign row2_slab_idx = (slab_num > 0)? row2_buf_idx : 0;
@@ -4484,7 +4484,7 @@ module conv_compute_controller(
   assign row2_slab_adr = (slab_num > 0)?
          (((row2_buf_adr_in_row & row_num_limit_mask_slab_buffer) << (nif_in_2pow + ix_in_2pow - pixels_in_row_in_2pow))
           + ((row_slab_start_idx << nif_in_2pow) >> pixels_in_row_in_2pow))
-         + (if_idx - 1):
+         + (if_start - 1):
          16'hffff;
 
   assign row3_slab_idx = (slab_num > 0)? row3_buf_idx : 0;
@@ -4492,7 +4492,7 @@ module conv_compute_controller(
   assign row3_slab_adr = (slab_num > 0)?
          (((row3_buf_adr_in_row & row_num_limit_mask_slab_buffer) << (nif_in_2pow + ix_in_2pow - pixels_in_row_in_2pow))
           + ((row_slab_start_idx << nif_in_2pow) >> pixels_in_row_in_2pow))
-         + (if_idx - 1):
+         + (if_start - 1):
          16'hffff;
 
 endmodule
