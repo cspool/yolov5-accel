@@ -64,10 +64,12 @@
 
 
 module conv_compute_controller(
+    
+    clk, conv_compute, reset,
+
     mode_init,
     of_init, ox_init, oy_init, ix_init, iy_init, nif_init,
     k_init, s_init, p_init,
-    clk, conv_compute, reset,
     nif_in_2pow_init,
     ix_in_2pow_init,
 
@@ -132,10 +134,11 @@ module conv_compute_controller(
   parameter slab_buffer_size_2pow = 13;//8192
 
   // conv tiling module
+  
+  input clk, conv_compute, reset;
   input mode_init;
   input [3:0] k_init, s_init, p_init;
   input [15:0] of_init, ox_init, oy_init, ix_init, iy_init, nif_init;
-  input clk, conv_compute, reset;
   input [3:0] nif_in_2pow_init, ix_in_2pow_init;
 
   reg mode;

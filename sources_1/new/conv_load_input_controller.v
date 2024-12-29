@@ -21,14 +21,15 @@
 
 
 module conv_load_input_controller(
+    clk, conv_load_input, reset,
+    ddr_en,
+
     mode_init,
     of_init, ox_init, oy_init, ix_init, iy_init, nif_init,
     k_init, s_init, p_init,
-    clk, conv_load_input, reset,
     nif_in_2pow_init,
     ix_in_2pow_init,
     input_ddr_layer_base_adr_init,
-
     of_div_row_num_ceil_init,
     tiley_first_tilex_first_split_size_init,
     tiley_first_tilex_last_split_size_init,
@@ -46,18 +47,15 @@ module conv_load_input_controller(
     tiley_last_iy_row_num_init,
     tiley_mid_iy_row_num_init,
 
-    // ox_start, oy_start, pox, poy, if_idx,
-    row1_idx,
-    row_start_idx, row_end_idx,
-
-    conv_end,
-    conv_nif_add_end,
-
-    row1_buf_adr,
-    row1_buf_idx,
-    row1_buf_word_select,
-
-    valid_row1_adr
+    load_input_row_idx,
+    load_input_row_start_idx,
+    load_input_if_idx,
+    load_input_row_buf_adr,
+    load_input_row_buf_idx,
+    input_word_ddr_en_rd,
+    input_word_ddr_adr_rd,
+    input_word_load_info_fifo_en_wt,
+    input_word_load_info_fifo_wt
   );
   parameter pixels_in_row = 32;
   parameter pixels_in_row_mult_2 = pixels_in_row * 2;
@@ -79,29 +77,99 @@ module conv_load_input_controller(
   parameter input_buffer_size_2pow = 12;//4096
 
   // conv tiling module
+  input clk, conv_load_input, reset; //load input means fin of the last execuation term
+  input ddr_en;
+
   input mode_init;
   input [3:0] k_init, s_init, p_init;
   input [15:0] of_init, ox_init, oy_init, ix_init, iy_init, nif_init;
-  input clk, conv_load_input, reset; //load input means fin of the last execuation term
+
   input [3:0] nif_in_2pow_init, ix_in_2pow_init;
   input [15:0] input_ddr_layer_base_adr_init;
+
+  input [7:0] of_div_row_num_ceil_init;
+  //tiley_first_tilex_first_split_size = ceil(tiley_first_iy_row_num * tilex_first_ix_word_num / of_div_row_num_ceil)
+  input [7:0] tiley_first_tilex_first_split_size_init;
+  // tiley_first_tilex_last_split_size = ceil(tiley_first_iy_row_num * tilex_last_ix_word_num / of_div_row_num_ceil)
+  input [7:0] tiley_first_tilex_last_split_size_init;
+  //tiley_first_tilex_mid_split_size = ceil(tiley_first_iy_row_num * tilex_mid_ix_word_num / of_div_row_num_ceil)
+  input [7:0] tiley_first_tilex_mid_split_size_init;
+  //tiley_last_tilex_first_split_size = ceil(tiley_last_iy_row_num * tilex_first_ix_word_num / of_div_row_num_ceil)
+  input [7:0] tiley_last_tilex_first_split_size_init;
+  //tiley_last_tilex_last_split_size = ceil(tiley_last_iy_row_num * tilex_last_ix_word_num / of_div_row_num_ceil)
+  input [7:0] tiley_last_tilex_last_split_size_init;
+  //tiley_last_tilex_mid_split_size = ceil(tiley_last_iy_row_num * tilex_mid_ix_word_num / of_div_row_num_ceil)
+  input [7:0] tiley_last_tilex_mid_split_size_init;
+  //tiley_mid_tilex_first_split_size = ceil(tiley_mid_iy_row_num * tilex_first_ix_word_num / of_div_row_num_ceil)
+  input [7:0] tiley_mid_tilex_first_split_size_init;
+  //tiley_mid_tilex_last_split_size = ceil(tiley_mid_iy_row_num * tilex_last_ix_word_num / of_div_row_num_ceil)
+  input [7:0] tiley_mid_tilex_last_split_size_init;
+  //tiley_mid_tilex_mid_split_size = ceil(tiley_mid_iy_row_num * tilex_mid_ix_word_num / of_div_row_num_ceil)
+  input [7:0] tiley_mid_tilex_mid_split_size_init;
+  //tilex_first_ix_word_num = ceil(((pixels_in_row - 1) * s + k - p)/pixels_in_row)
+  input [7:0] tilex_first_ix_word_num_init;
+  //tilex_last_ix_word_num = ceil((ox - tile_x_start + 1) * s /pixels_in_row) = ceil(((ox % pixels_in_row)*s+k-p)/pixels_in_row)
+  input [7:0] tilex_last_ix_word_num_init;
+  //tilex_mid_ix_word_num = s
+  input [7:0] tilex_mid_ix_word_num_init;
+  //tiley_first_iy_row_num = (buffers_num - 1) * s + k - p
+  input [7:0] tiley_first_iy_row_num_init;
+  // tiley_last_iy_row_num = (oy - tile_y_start + 1) * s = (oy % buffers_num) * s
+  input [7:0] tiley_last_iy_row_num_init;
+  //tiley_mid_iy_row_num = buffers_num * s
+  input [7:0] tiley_mid_iy_row_num_init;
+
   reg mode;
   reg [3:0] k, s, p;
   reg [15:0] of, ox, oy, ix, iy, nif;
   reg [3:0] nif_in_2pow, ix_in_2pow;
   reg [15:0] input_ddr_layer_base_adr;
-  output [15:0] row1_idx;
-  wire [15:0] row_y1;
-  output [15:0] row_start_idx, row_end_idx;
-  output conv_end;
-  output conv_nif_add_end;
-  output [15:0] row1_buf_adr;
-  output [1:0] row1_buf_idx;
-  output row1_buf_word_select;
-  output valid_row1_adr;
+  reg [7:0] of_div_row_num_ceil;
+  //of_div_row_num_ceil = ceil(of / row_num)
+  reg [7:0] tiley_first_tilex_first_split_size;
+  // tiley_first_tilex_last_split_size = ceil(tiley_first_iy_row_num * tilex_last_ix_word_num / of_div_row_num_ceil)
+  reg [7:0] tiley_first_tilex_last_split_size;
+  //tiley_first_tilex_mid_split_size = ceil(tiley_first_iy_row_num * tilex_mid_ix_word_num / of_div_row_num_ceil)
+  reg [7:0] tiley_first_tilex_mid_split_size;
+  //tiley_last_tilex_first_split_size = ceil(tiley_last_iy_row_num * tilex_first_ix_word_num / of_div_row_num_ceil)
+  reg [7:0] tiley_last_tilex_first_split_size;
+  //tiley_last_tilex_last_split_size = ceil(tiley_last_iy_row_num * tilex_last_ix_word_num / of_div_row_num_ceil)
+  reg [7:0] tiley_last_tilex_last_split_size;
+  //tiley_last_tilex_mid_split_size = ceil(tiley_last_iy_row_num * tilex_mid_ix_word_num / of_div_row_num_ceil)
+  reg [7:0] tiley_last_tilex_mid_split_size;
+  //tiley_mid_tilex_first_split_size = ceil(tiley_mid_iy_row_num * tilex_first_ix_word_num / of_div_row_num_ceil)
+  reg [7:0] tiley_mid_tilex_first_split_size;
+  //tiley_mid_tilex_last_split_size = ceil(tiley_mid_iy_row_num * tilex_last_ix_word_num / of_div_row_num_ceil)
+  reg [7:0] tiley_mid_tilex_last_split_size;
+  //tiley_mid_tilex_mid_split_size = ceil(tiley_mid_iy_row_num * tilex_mid_ix_word_num / of_div_row_num_ceil)
+  reg [7:0] tiley_mid_tilex_mid_split_size;
+  //tilex_first_ix_word_num = ceil(((pixels_in_row - 1) * s + k - p)/pixels_in_row)
+  reg [7:0] tilex_first_ix_word_num;
+  //tilex_last_ix_word_num = ceil((ox - tile_x_start + 1) * s /pixels_in_row) = ceil(((ox % pixels_in_row)*s+k-p)/pixels_in_row)
+  reg [7:0] tilex_last_ix_word_num;
+  //tilex_mid_ix_word_num = s
+  reg [7:0] tilex_mid_ix_word_num;
+  //tiley_first_iy_row_num = (buffers_num - 1) * s + k - p
+  reg [7:0] tiley_first_iy_row_num;
+  // tiley_last_iy_row_num = (oy - tile_y_start + 1) * s = (oy % buffers_num) * s
+  reg [7:0] tiley_last_iy_row_num;
+  //tiley_mid_iy_row_num = buffers_num * s
+  reg [7:0] tiley_mid_iy_row_num;
+
+  output [15:0] load_input_row_idx;
+  output [15:0] load_input_row_start_idx;
+  output [15:0] load_input_if_idx;
+  output [15:0] load_input_row_buf_adr;
+  output [1:0] load_input_row_buf_idx;
+
+  output input_word_ddr_en_rd;
+  output [15:0] input_word_ddr_adr_rd;
+
+  output input_word_load_info_fifo_en_wt;
+  output [31:0] input_word_load_info_fifo_wt;
+
   wire valid_adr;
   wire [15:0] row1_buf_adr_in_row;
-  // output [15:0] ox_start, oy_start, of_start, pox, poy, pof, if_idx;
   wire [15:0] iy_start;
   wire conv_tiling_add_end;
 
@@ -144,7 +212,6 @@ module conv_load_input_controller(
   reg state_load_input_tile_fin;
 
   //ddr word stall
-  reg input_ddr_word_stall;
   wire [7:0] input_tile_of_split_size; //ceil(ix_size * iy_size * row_num / of_ceil)
   // wire [15:0] of_ceil;
 
@@ -158,70 +225,6 @@ module conv_load_input_controller(
   wire [7:0] chunk_ix_size;
   wire [7:0] chunk_iy_size;
   wire [7:0] chunk_ix_size_mult_chunk_iy_size;//ix_size * iy_size
-
-  input [7:0] of_div_row_num_ceil_init;
-  //tiley_first_tilex_first_split_size = ceil(tiley_first_iy_row_num * tilex_first_ix_word_num / of_div_row_num_ceil)
-  input [7:0] tiley_first_tilex_first_split_size_init;
-  // tiley_first_tilex_last_split_size = ceil(tiley_first_iy_row_num * tilex_last_ix_word_num / of_div_row_num_ceil)
-  input [7:0] tiley_first_tilex_last_split_size_init;
-  //tiley_first_tilex_mid_split_size = ceil(tiley_first_iy_row_num * tilex_mid_ix_word_num / of_div_row_num_ceil)
-  input [7:0] tiley_first_tilex_mid_split_size_init;
-  //tiley_last_tilex_first_split_size = ceil(tiley_last_iy_row_num * tilex_first_ix_word_num / of_div_row_num_ceil)
-  input [7:0] tiley_last_tilex_first_split_size_init;
-  //tiley_last_tilex_last_split_size = ceil(tiley_last_iy_row_num * tilex_last_ix_word_num / of_div_row_num_ceil)
-  input [7:0] tiley_last_tilex_last_split_size_init;
-  //tiley_last_tilex_mid_split_size = ceil(tiley_last_iy_row_num * tilex_mid_ix_word_num / of_div_row_num_ceil)
-  input [7:0] tiley_last_tilex_mid_split_size_init;
-  //tiley_mid_tilex_first_split_size = ceil(tiley_mid_iy_row_num * tilex_first_ix_word_num / of_div_row_num_ceil)
-  input [7:0] tiley_mid_tilex_first_split_size_init;
-  //tiley_mid_tilex_last_split_size = ceil(tiley_mid_iy_row_num * tilex_last_ix_word_num / of_div_row_num_ceil)
-  input [7:0] tiley_mid_tilex_last_split_size_init;
-  //tiley_mid_tilex_mid_split_size = ceil(tiley_mid_iy_row_num * tilex_mid_ix_word_num / of_div_row_num_ceil)
-  input [7:0] tiley_mid_tilex_mid_split_size_init;
-  //tilex_first_ix_word_num = ceil(((pixels_in_row - 1) * s + k - p)/pixels_in_row)
-  input [7:0] tilex_first_ix_word_num_init;
-  //tilex_last_ix_word_num = ceil((ox - tile_x_start + 1) * s /pixels_in_row) = ceil(((ox % pixels_in_row)*s+k-p)/pixels_in_row)
-  input [7:0] tilex_last_ix_word_num_init;
-  //tilex_mid_ix_word_num = s
-  input [7:0] tilex_mid_ix_word_num_init;
-  //tiley_first_iy_row_num = (buffers_num - 1) * s + k - p
-  input [7:0] tiley_first_iy_row_num_init;
-  // tiley_last_iy_row_num = (oy - tile_y_start + 1) * s = (oy % buffers_num) * s
-  input [7:0] tiley_last_iy_row_num_init;
-  //tiley_mid_iy_row_num = buffers_num * s
-  input [7:0] tiley_mid_iy_row_num_init;
-
-  reg [7:0] of_div_row_num_ceil;
-  //of_div_row_num_ceil = ceil(of / row_num)
-  reg [7:0] tiley_first_tilex_first_split_size;
-  // tiley_first_tilex_last_split_size = ceil(tiley_first_iy_row_num * tilex_last_ix_word_num / of_div_row_num_ceil)
-  reg [7:0] tiley_first_tilex_last_split_size;
-  //tiley_first_tilex_mid_split_size = ceil(tiley_first_iy_row_num * tilex_mid_ix_word_num / of_div_row_num_ceil)
-  reg [7:0] tiley_first_tilex_mid_split_size;
-  //tiley_last_tilex_first_split_size = ceil(tiley_last_iy_row_num * tilex_first_ix_word_num / of_div_row_num_ceil)
-  reg [7:0] tiley_last_tilex_first_split_size;
-  //tiley_last_tilex_last_split_size = ceil(tiley_last_iy_row_num * tilex_last_ix_word_num / of_div_row_num_ceil)
-  reg [7:0] tiley_last_tilex_last_split_size;
-  //tiley_last_tilex_mid_split_size = ceil(tiley_last_iy_row_num * tilex_mid_ix_word_num / of_div_row_num_ceil)
-  reg [7:0] tiley_last_tilex_mid_split_size;
-  //tiley_mid_tilex_first_split_size = ceil(tiley_mid_iy_row_num * tilex_first_ix_word_num / of_div_row_num_ceil)
-  reg [7:0] tiley_mid_tilex_first_split_size;
-  //tiley_mid_tilex_last_split_size = ceil(tiley_mid_iy_row_num * tilex_last_ix_word_num / of_div_row_num_ceil)
-  reg [7:0] tiley_mid_tilex_last_split_size;
-  //tiley_mid_tilex_mid_split_size = ceil(tiley_mid_iy_row_num * tilex_mid_ix_word_num / of_div_row_num_ceil)
-  reg [7:0] tiley_mid_tilex_mid_split_size;
-  //tilex_first_ix_word_num = ceil(((pixels_in_row - 1) * s + k - p)/pixels_in_row)
-  reg [7:0] tilex_first_ix_word_num;
-  //tilex_last_ix_word_num = ceil((ox - tile_x_start + 1) * s /pixels_in_row) = ceil(((ox % pixels_in_row)*s+k-p)/pixels_in_row)
-  reg [7:0] tilex_last_ix_word_num;
-  //tilex_mid_ix_word_num = s
-  reg [7:0] tilex_mid_ix_word_num;
-  //tiley_first_iy_row_num = (buffers_num - 1) * s + k - p
-  reg [7:0] tiley_first_iy_row_num;
-  // tiley_last_iy_row_num = (oy - tile_y_start + 1) * s = (oy % buffers_num) * s
-  reg [7:0] tiley_last_iy_row_num;
-  //tiley_mid_iy_row_num = buffers_num * s
-  reg [7:0] tiley_mid_iy_row_num;
 
   always@(posedge clk)
   begin
@@ -364,8 +367,10 @@ module conv_load_input_controller(
       if_start <= if_start;
     end
   end
-  assign loop_if_add_begin = (input_ddr_word_signal == 1'b1);
+  assign loop_if_add_begin = (input_ddr_word_signal == 1'b1) && (ddr_en == 1'b1);
   assign loop_if_add_end = loop_if_add_begin && ((if_start + 2) > nif);
+
+  assign if_idx = if_start;
 
   //chunk counter is reset every computation term
   always@(posedge clk)
@@ -788,40 +793,8 @@ module conv_load_input_controller(
 
   //FIFO should be in the tb or top module
   //fifo
-  assign input_word_load_info_fifo_wt = input_word_ddr_en_rd;
-  assign input_word_load_info_fifo_in = {row1_buf_idx_s1,input_word_buf_adr_wr};
-
-  always@(posedge clk)
-  begin
-    if (reset == 1'b1)
-    begin
-      last_load_input_word <= 0;
-      state_valid_load_input <= 0;
-    end
-    else if (valid_load_input == 1'b1)
-    begin
-      last_load_input_word <= load_input_word;
-      state_valid_load_input <= valid_load_input;
-    end
-    else if ((valid_load_input == 1'b0) && (state_valid_load_input == 1'b1))
-    begin
-      last_load_input_word <= 0;
-      state_valid_load_input <= 0;
-    end
-    else
-    begin
-      last_load_input_word <= last_load_input_word;
-      state_valid_load_input <= state_valid_load_input;
-    end
-  end
-
-  assign input_word_load_info_fifo_rd = valid_load_input;
-  assign load_input_word = (valid_load_input == 1'b1) ? DDR_out : 0;
-
-  assign input_word_buf_wr = last_load_input_word;
-  assign input_word_buf_en_wr = state_valid_load_input;
-  assign input_word_buf_idx_wr = input_word_load_info_fifo_out[];
-  assign input_word_buf_adr_wr = input_word_load_info_fifo_out[];
+  assign input_word_load_info_fifo_en_wt = input_word_ddr_en_rd;
+  assign input_word_load_info_fifo_wt = {row1_buf_idx_s1,input_word_buf_adr_wr};
 
 
 endmodule
