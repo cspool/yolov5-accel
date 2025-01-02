@@ -1,4 +1,4 @@
--- (c) Copyright 1995-2024 Xilinx, Inc. All rights reserved.
+-- (c) Copyright 1995-2025 Xilinx, Inc. All rights reserved.
 -- 
 -- This file contains confidential and proprietary information
 -- of Xilinx, Inc. and is protected under U.S. and
@@ -52,7 +52,7 @@
 -- The following code must appear in the VHDL architecture header.
 
 ------------- Begin Cut here for COMPONENT Declaration ------ COMP_TAG
-COMPONENT wieghts_buffer_ping
+COMPONENT weights_buffer_ping
   PORT (
     clka : IN STD_LOGIC;
     ena : IN STD_LOGIC;
@@ -68,7 +68,7 @@ END COMPONENT;
 -- body. Substitute your own instance name and net names.
 
 ------------- Begin Cut here for INSTANTIATION Template ----- INST_TAG
-your_instance_name : wieghts_buffer_ping
+your_instance_name : weights_buffer_ping
   PORT MAP (
     clka => clka,
     ena => ena,
@@ -79,7 +79,7 @@ your_instance_name : wieghts_buffer_ping
   );
 -- INST_TAG_END ------ End INSTANTIATION Template ---------
 
--- You must compile the wrapper file wieghts_buffer_ping.vhd when simulating
--- the core, wieghts_buffer_ping. When compiling the wrapper file, be sure to
+-- You must compile the wrapper file weights_buffer_ping.vhd when simulating
+-- the core, weights_buffer_ping. When compiling the wrapper file, be sure to
 -- reference the VHDL simulation library.
 

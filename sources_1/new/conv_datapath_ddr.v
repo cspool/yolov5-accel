@@ -284,7 +284,7 @@ module conv_datapath_ddr(
   wire valid_slab1_adr_wr, valid_slab2_adr_wr, valid_slab3_adr_wr;
 
   //ddr simu
-  wire valid_ddr_data;
+  reg valid_ddr_data;
   wire [511:0] ddr_data;
 
   //in_buf1
@@ -897,7 +897,7 @@ module conv_datapath_ddr(
   assign ddr_en = valid_load_ddr_adr | valid_store_ddr_adr;
 
   assign DDR_adr = (valid_load_ddr_adr == 1'b1)? load_ddr_adr :
-         (valid_store_ddr_adr == 1'b1)? store_ddr_adr :
+        //  (valid_store_ddr_adr == 1'b1)? store_ddr_adr :
          0;
 
   always @(posedge clk)
@@ -905,14 +905,6 @@ module conv_datapath_ddr(
     valid_ddr_data <= valid_load_ddr_adr;
   end
 
-
-  //    ROM1_handler rom1_handler( //in buf 1
-  //        .clk(clk),
-  //        .ena(valid_buf1_adr),
-  //        .s(s),
-  //        .address(buf1_adr),
-  //        .data(buf1_pixels_32)
-  //    );
 
   in_buf1 in_buf1 (
             .clka(clk),    // input wire clka
@@ -934,13 +926,6 @@ module conv_datapath_ddr(
          in_buf1_rd_data[pixels_in_row * 8 - 1 :0]:
          in_buf1_rd_data[pixels_in_row * 8 * ddr_load_ratio - 1 :pixels_in_row * 8];
 
-  //    ROM2_handler rom2_handler(
-  //        .clk(clk),
-  //        .ena(valid_buf2_adr),
-  //        .s(s),
-  //        .address(buf2_adr),
-  //        .data(buf2_pixels_32)
-  //    );
 
   in_buf2 in_buf2 (
             .clka(clk),    // input wire clka
@@ -962,14 +947,6 @@ module conv_datapath_ddr(
          in_buf2_rd_data[pixels_in_row * 8 - 1 :0]:
          in_buf2_rd_data[pixels_in_row * 8 * ddr_load_ratio - 1 :pixels_in_row * 8];
 
-
-  //    ROM3_handler rom3_handler(
-  //        .clk(clk),
-  //        .ena(valid_buf3_adr),
-  //        .s(s),
-  //        .address(buf3_adr),
-  //        .data(buf3_pixels_32)
-  //    );
 
   in_buf3 in_buf3 (
             .clka(clk),    // input wire clka

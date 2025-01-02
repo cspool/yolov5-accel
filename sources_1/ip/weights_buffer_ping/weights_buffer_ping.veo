@@ -1,4 +1,4 @@
-// (c) Copyright 1995-2024 Xilinx, Inc. All rights reserved.
+// (c) Copyright 1995-2025 Xilinx, Inc. All rights reserved.
 // 
 // This file contains confidential and proprietary information
 // of Xilinx, Inc. and is protected under U.S. and
@@ -54,7 +54,7 @@
 // (in parentheses) to your own signal names.
 
 //----------- Begin Cut here for INSTANTIATION Template ---// INST_TAG
-wieghts_buffer_ping your_instance_name (
+weights_buffer_ping your_instance_name (
   .clka(clka),    // input wire clka
   .ena(ena),      // input wire ena
   .wea(wea),      // input wire [0 : 0] wea
@@ -64,7 +64,7 @@ wieghts_buffer_ping your_instance_name (
 );
 // INST_TAG_END ------ End INSTANTIATION Template ---------
 
-// You must compile the wrapper file wieghts_buffer_ping.v when simulating
-// the core, wieghts_buffer_ping. When compiling the wrapper file, be sure to
+// You must compile the wrapper file weights_buffer_ping.v when simulating
+// the core, weights_buffer_ping. When compiling the wrapper file, be sure to
 // reference the Verilog simulation library.
 

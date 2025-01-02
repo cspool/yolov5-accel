@@ -87,6 +87,7 @@ module conv_load_input_controller(
   input [3:0] nif_in_2pow_init, ix_in_2pow_init;
   input [15:0] input_ddr_layer_base_adr_init;
 
+  //of_div_row_num_ceil = ceil(of / row_num)
   input [7:0] of_div_row_num_ceil_init;
   //tiley_first_tilex_first_split_size = ceil(tiley_first_iy_row_num * tilex_first_ix_word_num / of_div_row_num_ceil)
   input [7:0] tiley_first_tilex_first_split_size_init;
@@ -124,8 +125,10 @@ module conv_load_input_controller(
   reg [15:0] of, ox, oy, ix, iy, nif;
   reg [3:0] nif_in_2pow, ix_in_2pow;
   reg [15:0] input_ddr_layer_base_adr;
-  reg [7:0] of_div_row_num_ceil;
+
   //of_div_row_num_ceil = ceil(of / row_num)
+  reg [7:0] of_div_row_num_ceil;
+  //tiley_first_tilex_first_split_size = ceil(tiley_first_iy_row_num * tilex_first_ix_word_num / of_div_row_num_ceil)
   reg [7:0] tiley_first_tilex_first_split_size;
   // tiley_first_tilex_last_split_size = ceil(tiley_first_iy_row_num * tilex_last_ix_word_num / of_div_row_num_ceil)
   reg [7:0] tiley_first_tilex_last_split_size;
@@ -370,7 +373,7 @@ module conv_load_input_controller(
   assign loop_if_add_begin = (input_ddr_word_signal == 1'b1) && (ddr_en == 1'b1);
   assign loop_if_add_end = loop_if_add_begin && ((if_start + 2) > nif);
 
-  assign if_idx = if_start;
+  assign load_input_if_idx = if_start;
 
   //chunk counter is reset every computation term
   always@(posedge clk)
@@ -741,6 +744,8 @@ module conv_load_input_controller(
                      || ((chunk_iy_counter - 1 + iy_start) > (p + 1)))?
          16'hffff: ((chunk_iy_counter - 1 + iy_start) - {{12'b0},p});
 
+  assign load_input_row_idx = row1_idx;
+
   assign iy_start = (s == 4'd1)? tile_y_start:
          (s == 4'd2)? (tile_y_start << 1) - 1:
          0;
@@ -751,6 +756,7 @@ module conv_load_input_controller(
          0;
 
   assign row_start_idx = ((chunk_ix_counter - 1) << pixels_in_row_in_2pow) + ix_start;
+  assign load_input_row_start_idx = row_start_idx;
 
   //load ddr words instr generate
   assign input_word_ddr_adr_rd = input_ddr_layer_base_adr
@@ -778,6 +784,8 @@ module conv_load_input_controller(
          ((leq3_1 == 1'b1)? row1_bias: (row1_bias - 3)) :
          ((leq9_1 == 1'b1)? (row1_bias - 6): (row1_bias - 9));
 
+  assign load_input_row_buf_idx = row1_buf_idx_s1;
+
   assign row1_offset_s1 = (leq6_1 == 1'b1)?
          ((leq3_1 == 1'b1)? 0: 1) :
          ((leq9_1 == 1'b1)? 2: 3);
@@ -790,6 +798,8 @@ module conv_load_input_controller(
          (((row1_buf_adr_in_row & row_num_limit_mask_input_buffer) << ((nif_in_2pow - ifs_in_row_2pow) + ix_in_2pow - pixels_in_row_in_2pow))
           + ((row_start_idx << (nif_in_2pow - ifs_in_row_2pow)) >> pixels_in_row_in_2pow))
          + ((if_start - 1) >> ifs_in_row_2pow);
+
+  assign load_input_row_buf_adr = input_word_buf_adr_wr;
 
   //FIFO should be in the tb or top module
   //fifo

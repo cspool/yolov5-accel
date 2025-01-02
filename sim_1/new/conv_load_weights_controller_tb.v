@@ -71,17 +71,26 @@ module conv_load_weights_controller_tb(
 
   //DDR sim
   wire [weight_word_length-1 :0] weights_word_buf_wt; //o: weights read from DDR, write into buf
+
+  wire DDR_en;
+  wire DDR_en_wr;
+  wire [511:0] DDR_in;
+  wire [12:0] DDR_adr;
   wire [511:0] DDR_out; //o
 
   DDR DDR (
         .clka(clk),    // input wire clka
-        .ena(weights_word_ddr_en_rd),      // input wire ena
-        .wea(0),      // input wire [0 : 0] wea
-        .addra(weights_word_ddr_adr_rd),  // input wire [12 : 0] addra
-        .dina(0),    // input wire [511 : 0] dina
+        .ena(DDR_en),      // input wire ena
+        .wea(DDR_en_wr),      // input wire [0 : 0] wea
+        .addra(DDR_adr),  // input wire [12 : 0] addra
+        .dina(DDR_in),    // input wire [511 : 0] dina
         .douta(DDR_out)  // output wire [511 : 0] douta
       );
 
+  assign DDR_en = weights_word_ddr_en_rd;
+  assign DDR_en_wr = 0;
+  assign DDR_adr = weights_word_ddr_adr_rd;
+  assign DDR_in = 0;
   assign weights_word_buf_wt = (valid_load_weights == 1'b1)? DDR_out : 0;
 
   conv_load_weights_controller cv_load_weights_controller(
@@ -217,7 +226,7 @@ module conv_load_weights_controller_tb(
     #10;
     conv_load_weights = 0;
 
-    #50;
+    #50; //wait the input word ing2col
     re_fm_en = 1;
     re_fm_end = 0;
 

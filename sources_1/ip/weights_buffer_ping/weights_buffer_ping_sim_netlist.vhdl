@@ -1,10 +1,10 @@
 -- Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2018.3 (win64) Build 2405991 Thu Dec  6 23:38:27 MST 2018
--- Date        : Tue Dec 24 10:40:48 2024
+-- Date        : Tue Dec 24 10:40:47 2024
 -- Host        : yang running 64-bit major release  (build 9200)
--- Command     : write_vhdl -force -mode funcsim
---               e:/vivado_pros/yolov5_accel_2/yolov5_accel_2.srcs/sources_1/ip/wieghts_buffer_ping/wieghts_buffer_ping_sim_netlist.vhdl
+-- Command     : write_vhdl -force -mode funcsim -rename_top weights_buffer_ping -prefix
+--               weights_buffer_ping_ wieghts_buffer_ping_sim_netlist.vhdl
 -- Design      : wieghts_buffer_ping
 -- Purpose     : This VHDL netlist is a functional simulation representation of the design and should not be modified or
 --               synthesized. This netlist cannot be used for SDF annotated simulation.
@@ -14,17 +14,15 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity wieghts_buffer_ping_bindec is
+entity weights_buffer_ping_bindec is
   port (
     ena_array : out STD_LOGIC_VECTOR ( 0 to 0 );
     addra : in STD_LOGIC_VECTOR ( 2 downto 0 );
     ena : in STD_LOGIC
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of wieghts_buffer_ping_bindec : entity is "bindec";
-end wieghts_buffer_ping_bindec;
+end weights_buffer_ping_bindec;
 
-architecture STRUCTURE of wieghts_buffer_ping_bindec is
+architecture STRUCTURE of weights_buffer_ping_bindec is
 begin
 ENOUT: unisim.vcomponents.LUT4
     generic map(
@@ -42,7 +40,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity wieghts_buffer_ping_blk_mem_gen_mux is
+entity weights_buffer_ping_blk_mem_gen_mux is
   port (
     douta : out STD_LOGIC_VECTOR ( 502 downto 0 );
     addra : in STD_LOGIC_VECTOR ( 2 downto 0 );
@@ -112,11 +110,9 @@ entity wieghts_buffer_ping_blk_mem_gen_mux is
     \douta[511]\ : in STD_LOGIC_VECTOR ( 15 downto 0 );
     \douta[503]\ : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of wieghts_buffer_ping_blk_mem_gen_mux : entity is "blk_mem_gen_mux";
-end wieghts_buffer_ping_blk_mem_gen_mux;
+end weights_buffer_ping_blk_mem_gen_mux;
 
-architecture STRUCTURE of wieghts_buffer_ping_blk_mem_gen_mux is
+architecture STRUCTURE of weights_buffer_ping_blk_mem_gen_mux is
   signal \no_softecc_sel_reg.ce_pri.sel_pipe[0]_i_1_n_0\ : STD_LOGIC;
   signal \no_softecc_sel_reg.ce_pri.sel_pipe[1]_i_1_n_0\ : STD_LOGIC;
   signal \no_softecc_sel_reg.ce_pri.sel_pipe[2]_i_1_n_0\ : STD_LOGIC;
@@ -6229,7 +6225,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init is
+entity weights_buffer_ping_blk_mem_gen_prim_wrapper_init is
   port (
     douta : out STD_LOGIC_VECTOR ( 8 downto 0 );
     clka : in STD_LOGIC;
@@ -6238,11 +6234,9 @@ entity wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init is
     dina : in STD_LOGIC_VECTOR ( 8 downto 0 );
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init : entity is "blk_mem_gen_prim_wrapper_init";
-end wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init;
+end weights_buffer_ping_blk_mem_gen_prim_wrapper_init;
 
-architecture STRUCTURE of wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init is
+architecture STRUCTURE of weights_buffer_ping_blk_mem_gen_prim_wrapper_init is
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_DBITERR_UNCONNECTED\ : STD_LOGIC;
@@ -6482,7 +6476,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized0\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized0\ is
   port (
     DOADO : out STD_LOGIC_VECTOR ( 15 downto 0 );
     DOPADOP : out STD_LOGIC_VECTOR ( 1 downto 0 );
@@ -6493,10 +6487,10 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized0\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized0\ : entity is "blk_mem_gen_prim_wrapper_init";
-end \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized0\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized0\ : entity is "blk_mem_gen_prim_wrapper_init";
+end \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized0\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized0\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized0\ is
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_DBITERR_UNCONNECTED\ : STD_LOGIC;
@@ -6738,7 +6732,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized1\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized1\ is
   port (
     p_135_out : out STD_LOGIC_VECTOR ( 71 downto 0 );
     clka : in STD_LOGIC;
@@ -6748,10 +6742,10 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized1\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized1\ : entity is "blk_mem_gen_prim_wrapper_init";
-end \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized1\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized1\ : entity is "blk_mem_gen_prim_wrapper_init";
+end \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized1\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized1\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized1\ is
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.WIDE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.WIDE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.WIDE_PRIM36.ram_DBITERR_UNCONNECTED\ : STD_LOGIC;
@@ -7013,7 +7007,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized10\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized10\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 15 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1\ : out STD_LOGIC_VECTOR ( 1 downto 0 );
@@ -7024,10 +7018,10 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized10\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized10\ : entity is "blk_mem_gen_prim_wrapper_init";
-end \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized10\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized10\ : entity is "blk_mem_gen_prim_wrapper_init";
+end \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized10\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized10\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized10\ is
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_DBITERR_UNCONNECTED\ : STD_LOGIC;
@@ -7269,7 +7263,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized11\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized11\ is
   port (
     p_95_out : out STD_LOGIC_VECTOR ( 71 downto 0 );
     clka : in STD_LOGIC;
@@ -7279,10 +7273,10 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized11\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized11\ : entity is "blk_mem_gen_prim_wrapper_init";
-end \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized11\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized11\ : entity is "blk_mem_gen_prim_wrapper_init";
+end \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized11\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized11\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized11\ is
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.WIDE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.WIDE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.WIDE_PRIM36.ram_DBITERR_UNCONNECTED\ : STD_LOGIC;
@@ -7544,7 +7538,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized12\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized12\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 15 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1\ : out STD_LOGIC_VECTOR ( 1 downto 0 );
@@ -7555,10 +7549,10 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized12\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized12\ : entity is "blk_mem_gen_prim_wrapper_init";
-end \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized12\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized12\ : entity is "blk_mem_gen_prim_wrapper_init";
+end \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized12\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized12\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized12\ is
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_DBITERR_UNCONNECTED\ : STD_LOGIC;
@@ -7800,7 +7794,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized13\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized13\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 15 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1\ : out STD_LOGIC_VECTOR ( 1 downto 0 );
@@ -7811,10 +7805,10 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized13\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized13\ : entity is "blk_mem_gen_prim_wrapper_init";
-end \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized13\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized13\ : entity is "blk_mem_gen_prim_wrapper_init";
+end \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized13\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized13\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized13\ is
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_DBITERR_UNCONNECTED\ : STD_LOGIC;
@@ -8056,7 +8050,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized14\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized14\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 15 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1\ : out STD_LOGIC_VECTOR ( 1 downto 0 );
@@ -8067,10 +8061,10 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized14\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized14\ : entity is "blk_mem_gen_prim_wrapper_init";
-end \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized14\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized14\ : entity is "blk_mem_gen_prim_wrapper_init";
+end \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized14\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized14\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized14\ is
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_DBITERR_UNCONNECTED\ : STD_LOGIC;
@@ -8312,7 +8306,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized15\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized15\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 15 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1\ : out STD_LOGIC_VECTOR ( 1 downto 0 );
@@ -8323,10 +8317,10 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized15\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized15\ : entity is "blk_mem_gen_prim_wrapper_init";
-end \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized15\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized15\ : entity is "blk_mem_gen_prim_wrapper_init";
+end \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized15\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized15\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized15\ is
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_DBITERR_UNCONNECTED\ : STD_LOGIC;
@@ -8568,7 +8562,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized16\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized16\ is
   port (
     p_75_out : out STD_LOGIC_VECTOR ( 71 downto 0 );
     clka : in STD_LOGIC;
@@ -8578,10 +8572,10 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized16\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized16\ : entity is "blk_mem_gen_prim_wrapper_init";
-end \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized16\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized16\ : entity is "blk_mem_gen_prim_wrapper_init";
+end \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized16\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized16\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized16\ is
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.WIDE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.WIDE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.WIDE_PRIM36.ram_DBITERR_UNCONNECTED\ : STD_LOGIC;
@@ -8843,7 +8837,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized17\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized17\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 15 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1\ : out STD_LOGIC_VECTOR ( 1 downto 0 );
@@ -8854,10 +8848,10 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized17\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized17\ : entity is "blk_mem_gen_prim_wrapper_init";
-end \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized17\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized17\ : entity is "blk_mem_gen_prim_wrapper_init";
+end \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized17\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized17\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized17\ is
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_DBITERR_UNCONNECTED\ : STD_LOGIC;
@@ -9099,7 +9093,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized18\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized18\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 15 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1\ : out STD_LOGIC_VECTOR ( 1 downto 0 );
@@ -9110,10 +9104,10 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized18\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized18\ : entity is "blk_mem_gen_prim_wrapper_init";
-end \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized18\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized18\ : entity is "blk_mem_gen_prim_wrapper_init";
+end \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized18\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized18\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized18\ is
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_DBITERR_UNCONNECTED\ : STD_LOGIC;
@@ -9355,7 +9349,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized19\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized19\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 15 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1\ : out STD_LOGIC_VECTOR ( 1 downto 0 );
@@ -9366,10 +9360,10 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized19\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized19\ : entity is "blk_mem_gen_prim_wrapper_init";
-end \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized19\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized19\ : entity is "blk_mem_gen_prim_wrapper_init";
+end \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized19\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized19\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized19\ is
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_DBITERR_UNCONNECTED\ : STD_LOGIC;
@@ -9611,7 +9605,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized2\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized2\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 15 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1\ : out STD_LOGIC_VECTOR ( 1 downto 0 );
@@ -9622,10 +9616,10 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized2\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized2\ : entity is "blk_mem_gen_prim_wrapper_init";
-end \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized2\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized2\ : entity is "blk_mem_gen_prim_wrapper_init";
+end \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized2\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized2\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized2\ is
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_DBITERR_UNCONNECTED\ : STD_LOGIC;
@@ -9867,7 +9861,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized20\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized20\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 15 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1\ : out STD_LOGIC_VECTOR ( 1 downto 0 );
@@ -9878,10 +9872,10 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized20\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized20\ : entity is "blk_mem_gen_prim_wrapper_init";
-end \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized20\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized20\ : entity is "blk_mem_gen_prim_wrapper_init";
+end \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized20\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized20\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized20\ is
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_DBITERR_UNCONNECTED\ : STD_LOGIC;
@@ -10123,7 +10117,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized21\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized21\ is
   port (
     p_55_out : out STD_LOGIC_VECTOR ( 71 downto 0 );
     clka : in STD_LOGIC;
@@ -10133,10 +10127,10 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized21\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized21\ : entity is "blk_mem_gen_prim_wrapper_init";
-end \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized21\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized21\ : entity is "blk_mem_gen_prim_wrapper_init";
+end \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized21\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized21\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized21\ is
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.WIDE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.WIDE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.WIDE_PRIM36.ram_DBITERR_UNCONNECTED\ : STD_LOGIC;
@@ -10398,7 +10392,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized22\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized22\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 15 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1\ : out STD_LOGIC_VECTOR ( 1 downto 0 );
@@ -10409,10 +10403,10 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized22\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized22\ : entity is "blk_mem_gen_prim_wrapper_init";
-end \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized22\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized22\ : entity is "blk_mem_gen_prim_wrapper_init";
+end \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized22\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized22\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized22\ is
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_DBITERR_UNCONNECTED\ : STD_LOGIC;
@@ -10654,7 +10648,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized23\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized23\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 15 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1\ : out STD_LOGIC_VECTOR ( 1 downto 0 );
@@ -10665,10 +10659,10 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized23\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized23\ : entity is "blk_mem_gen_prim_wrapper_init";
-end \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized23\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized23\ : entity is "blk_mem_gen_prim_wrapper_init";
+end \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized23\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized23\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized23\ is
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_DBITERR_UNCONNECTED\ : STD_LOGIC;
@@ -10910,7 +10904,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized24\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized24\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 15 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1\ : out STD_LOGIC_VECTOR ( 1 downto 0 );
@@ -10921,10 +10915,10 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized24\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized24\ : entity is "blk_mem_gen_prim_wrapper_init";
-end \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized24\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized24\ : entity is "blk_mem_gen_prim_wrapper_init";
+end \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized24\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized24\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized24\ is
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_DBITERR_UNCONNECTED\ : STD_LOGIC;
@@ -11166,7 +11160,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized25\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized25\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 15 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1\ : out STD_LOGIC_VECTOR ( 1 downto 0 );
@@ -11177,10 +11171,10 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized25\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized25\ : entity is "blk_mem_gen_prim_wrapper_init";
-end \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized25\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized25\ : entity is "blk_mem_gen_prim_wrapper_init";
+end \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized25\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized25\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized25\ is
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_DBITERR_UNCONNECTED\ : STD_LOGIC;
@@ -11422,7 +11416,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized26\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized26\ is
   port (
     p_35_out : out STD_LOGIC_VECTOR ( 71 downto 0 );
     clka : in STD_LOGIC;
@@ -11432,10 +11426,10 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized26\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized26\ : entity is "blk_mem_gen_prim_wrapper_init";
-end \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized26\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized26\ : entity is "blk_mem_gen_prim_wrapper_init";
+end \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized26\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized26\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized26\ is
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.WIDE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.WIDE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.WIDE_PRIM36.ram_DBITERR_UNCONNECTED\ : STD_LOGIC;
@@ -11697,7 +11691,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized27\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized27\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 15 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1\ : out STD_LOGIC_VECTOR ( 1 downto 0 );
@@ -11708,10 +11702,10 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized27\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized27\ : entity is "blk_mem_gen_prim_wrapper_init";
-end \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized27\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized27\ : entity is "blk_mem_gen_prim_wrapper_init";
+end \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized27\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized27\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized27\ is
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_DBITERR_UNCONNECTED\ : STD_LOGIC;
@@ -11953,7 +11947,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized28\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized28\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 15 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1\ : out STD_LOGIC_VECTOR ( 1 downto 0 );
@@ -11964,10 +11958,10 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized28\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized28\ : entity is "blk_mem_gen_prim_wrapper_init";
-end \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized28\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized28\ : entity is "blk_mem_gen_prim_wrapper_init";
+end \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized28\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized28\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized28\ is
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_DBITERR_UNCONNECTED\ : STD_LOGIC;
@@ -12209,7 +12203,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized29\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized29\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 15 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1\ : out STD_LOGIC_VECTOR ( 1 downto 0 );
@@ -12220,10 +12214,10 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized29\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized29\ : entity is "blk_mem_gen_prim_wrapper_init";
-end \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized29\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized29\ : entity is "blk_mem_gen_prim_wrapper_init";
+end \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized29\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized29\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized29\ is
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_DBITERR_UNCONNECTED\ : STD_LOGIC;
@@ -12465,7 +12459,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized3\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized3\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 15 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1\ : out STD_LOGIC_VECTOR ( 1 downto 0 );
@@ -12476,10 +12470,10 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized3\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized3\ : entity is "blk_mem_gen_prim_wrapper_init";
-end \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized3\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized3\ : entity is "blk_mem_gen_prim_wrapper_init";
+end \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized3\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized3\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized3\ is
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_DBITERR_UNCONNECTED\ : STD_LOGIC;
@@ -12721,7 +12715,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized30\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized30\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 15 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1\ : out STD_LOGIC_VECTOR ( 1 downto 0 );
@@ -12732,10 +12726,10 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized30\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized30\ : entity is "blk_mem_gen_prim_wrapper_init";
-end \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized30\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized30\ : entity is "blk_mem_gen_prim_wrapper_init";
+end \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized30\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized30\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized30\ is
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_DBITERR_UNCONNECTED\ : STD_LOGIC;
@@ -12977,7 +12971,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized31\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized31\ is
   port (
     p_15_out : out STD_LOGIC_VECTOR ( 70 downto 0 );
     clka : in STD_LOGIC;
@@ -12987,10 +12981,10 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized31\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized31\ : entity is "blk_mem_gen_prim_wrapper_init";
-end \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized31\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized31\ : entity is "blk_mem_gen_prim_wrapper_init";
+end \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized31\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized31\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized31\ is
   signal \DEVICE_7SERIES.NO_BMM_INFO.SP.WIDE_PRIM36.ram_n_72\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.WIDE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.WIDE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
@@ -13253,7 +13247,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized32\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized32\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 15 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1\ : out STD_LOGIC_VECTOR ( 1 downto 0 );
@@ -13264,10 +13258,10 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized32\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized32\ : entity is "blk_mem_gen_prim_wrapper_init";
-end \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized32\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized32\ : entity is "blk_mem_gen_prim_wrapper_init";
+end \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized32\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized32\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized32\ is
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_DBITERR_UNCONNECTED\ : STD_LOGIC;
@@ -13509,7 +13503,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized33\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized33\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 15 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1\ : out STD_LOGIC_VECTOR ( 1 downto 0 );
@@ -13520,10 +13514,10 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized33\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized33\ : entity is "blk_mem_gen_prim_wrapper_init";
-end \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized33\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized33\ : entity is "blk_mem_gen_prim_wrapper_init";
+end \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized33\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized33\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized33\ is
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_DBITERR_UNCONNECTED\ : STD_LOGIC;
@@ -13765,7 +13759,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized34\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized34\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 15 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1\ : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -13777,10 +13771,10 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized34\ is
     ena : in STD_LOGIC
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized34\ : entity is "blk_mem_gen_prim_wrapper_init";
-end \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized34\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized34\ : entity is "blk_mem_gen_prim_wrapper_init";
+end \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized34\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized34\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized34\ is
   signal \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_n_70\ : STD_LOGIC;
   signal \^ram_ena\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
@@ -14034,7 +14028,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized4\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized4\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 15 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1\ : out STD_LOGIC_VECTOR ( 1 downto 0 );
@@ -14045,10 +14039,10 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized4\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized4\ : entity is "blk_mem_gen_prim_wrapper_init";
-end \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized4\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized4\ : entity is "blk_mem_gen_prim_wrapper_init";
+end \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized4\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized4\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized4\ is
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_DBITERR_UNCONNECTED\ : STD_LOGIC;
@@ -14290,7 +14284,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized5\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized5\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 15 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1\ : out STD_LOGIC_VECTOR ( 1 downto 0 );
@@ -14301,10 +14295,10 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized5\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized5\ : entity is "blk_mem_gen_prim_wrapper_init";
-end \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized5\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized5\ : entity is "blk_mem_gen_prim_wrapper_init";
+end \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized5\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized5\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized5\ is
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_DBITERR_UNCONNECTED\ : STD_LOGIC;
@@ -14546,7 +14540,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized6\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized6\ is
   port (
     p_115_out : out STD_LOGIC_VECTOR ( 71 downto 0 );
     clka : in STD_LOGIC;
@@ -14556,10 +14550,10 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized6\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized6\ : entity is "blk_mem_gen_prim_wrapper_init";
-end \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized6\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized6\ : entity is "blk_mem_gen_prim_wrapper_init";
+end \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized6\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized6\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized6\ is
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.WIDE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.WIDE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.WIDE_PRIM36.ram_DBITERR_UNCONNECTED\ : STD_LOGIC;
@@ -14821,7 +14815,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized7\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized7\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 15 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1\ : out STD_LOGIC_VECTOR ( 1 downto 0 );
@@ -14832,10 +14826,10 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized7\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized7\ : entity is "blk_mem_gen_prim_wrapper_init";
-end \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized7\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized7\ : entity is "blk_mem_gen_prim_wrapper_init";
+end \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized7\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized7\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized7\ is
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_DBITERR_UNCONNECTED\ : STD_LOGIC;
@@ -15077,7 +15071,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized8\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized8\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 15 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1\ : out STD_LOGIC_VECTOR ( 1 downto 0 );
@@ -15088,10 +15082,10 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized8\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized8\ : entity is "blk_mem_gen_prim_wrapper_init";
-end \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized8\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized8\ : entity is "blk_mem_gen_prim_wrapper_init";
+end \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized8\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized8\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized8\ is
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_DBITERR_UNCONNECTED\ : STD_LOGIC;
@@ -15333,7 +15327,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized9\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized9\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 15 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1\ : out STD_LOGIC_VECTOR ( 1 downto 0 );
@@ -15344,10 +15338,10 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized9\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized9\ : entity is "blk_mem_gen_prim_wrapper_init";
-end \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized9\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized9\ : entity is "blk_mem_gen_prim_wrapper_init";
+end \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized9\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized9\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized9\ is
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_DBITERR_UNCONNECTED\ : STD_LOGIC;
@@ -15589,7 +15583,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity wieghts_buffer_ping_blk_mem_gen_prim_width is
+entity weights_buffer_ping_blk_mem_gen_prim_width is
   port (
     douta : out STD_LOGIC_VECTOR ( 8 downto 0 );
     clka : in STD_LOGIC;
@@ -15598,13 +15592,11 @@ entity wieghts_buffer_ping_blk_mem_gen_prim_width is
     dina : in STD_LOGIC_VECTOR ( 8 downto 0 );
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of wieghts_buffer_ping_blk_mem_gen_prim_width : entity is "blk_mem_gen_prim_width";
-end wieghts_buffer_ping_blk_mem_gen_prim_width;
+end weights_buffer_ping_blk_mem_gen_prim_width;
 
-architecture STRUCTURE of wieghts_buffer_ping_blk_mem_gen_prim_width is
+architecture STRUCTURE of weights_buffer_ping_blk_mem_gen_prim_width is
 begin
-\prim_init.ram\: entity work.wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init
+\prim_init.ram\: entity work.weights_buffer_ping_blk_mem_gen_prim_wrapper_init
      port map (
       addra(11 downto 0) => addra(11 downto 0),
       clka => clka,
@@ -15618,7 +15610,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized0\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_width__parameterized0\ is
   port (
     DOADO : out STD_LOGIC_VECTOR ( 15 downto 0 );
     DOPADOP : out STD_LOGIC_VECTOR ( 1 downto 0 );
@@ -15629,12 +15621,12 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized0\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized0\ : entity is "blk_mem_gen_prim_width";
-end \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized0\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized0\ : entity is "blk_mem_gen_prim_width";
+end \weights_buffer_ping_blk_mem_gen_prim_width__parameterized0\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized0\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized0\ is
 begin
-\prim_init.ram\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized0\
+\prim_init.ram\: entity work.\weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized0\
      port map (
       DOADO(15 downto 0) => DOADO(15 downto 0),
       DOPADOP(1 downto 0) => DOPADOP(1 downto 0),
@@ -15649,7 +15641,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized1\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_width__parameterized1\ is
   port (
     p_135_out : out STD_LOGIC_VECTOR ( 71 downto 0 );
     clka : in STD_LOGIC;
@@ -15659,12 +15651,12 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized1\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized1\ : entity is "blk_mem_gen_prim_width";
-end \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized1\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized1\ : entity is "blk_mem_gen_prim_width";
+end \weights_buffer_ping_blk_mem_gen_prim_width__parameterized1\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized1\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized1\ is
 begin
-\prim_init.ram\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized1\
+\prim_init.ram\: entity work.\weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized1\
      port map (
       addra(8 downto 0) => addra(8 downto 0),
       clka => clka,
@@ -15678,7 +15670,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized10\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_width__parameterized10\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\ : out STD_LOGIC_VECTOR ( 15 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 1 downto 0 );
@@ -15689,12 +15681,12 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized10\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized10\ : entity is "blk_mem_gen_prim_width";
-end \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized10\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized10\ : entity is "blk_mem_gen_prim_width";
+end \weights_buffer_ping_blk_mem_gen_prim_width__parameterized10\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized10\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized10\ is
 begin
-\prim_init.ram\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized10\
+\prim_init.ram\: entity work.\weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized10\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\(15 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(15 downto 0),
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1\(1 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\(1 downto 0),
@@ -15709,7 +15701,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized11\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_width__parameterized11\ is
   port (
     p_95_out : out STD_LOGIC_VECTOR ( 71 downto 0 );
     clka : in STD_LOGIC;
@@ -15719,12 +15711,12 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized11\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized11\ : entity is "blk_mem_gen_prim_width";
-end \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized11\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized11\ : entity is "blk_mem_gen_prim_width";
+end \weights_buffer_ping_blk_mem_gen_prim_width__parameterized11\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized11\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized11\ is
 begin
-\prim_init.ram\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized11\
+\prim_init.ram\: entity work.\weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized11\
      port map (
       addra(8 downto 0) => addra(8 downto 0),
       clka => clka,
@@ -15738,7 +15730,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized12\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_width__parameterized12\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\ : out STD_LOGIC_VECTOR ( 15 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 1 downto 0 );
@@ -15749,12 +15741,12 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized12\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized12\ : entity is "blk_mem_gen_prim_width";
-end \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized12\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized12\ : entity is "blk_mem_gen_prim_width";
+end \weights_buffer_ping_blk_mem_gen_prim_width__parameterized12\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized12\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized12\ is
 begin
-\prim_init.ram\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized12\
+\prim_init.ram\: entity work.\weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized12\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\(15 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(15 downto 0),
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1\(1 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\(1 downto 0),
@@ -15769,7 +15761,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized13\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_width__parameterized13\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\ : out STD_LOGIC_VECTOR ( 15 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 1 downto 0 );
@@ -15780,12 +15772,12 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized13\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized13\ : entity is "blk_mem_gen_prim_width";
-end \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized13\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized13\ : entity is "blk_mem_gen_prim_width";
+end \weights_buffer_ping_blk_mem_gen_prim_width__parameterized13\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized13\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized13\ is
 begin
-\prim_init.ram\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized13\
+\prim_init.ram\: entity work.\weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized13\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\(15 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(15 downto 0),
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1\(1 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\(1 downto 0),
@@ -15800,7 +15792,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized14\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_width__parameterized14\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\ : out STD_LOGIC_VECTOR ( 15 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 1 downto 0 );
@@ -15811,12 +15803,12 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized14\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized14\ : entity is "blk_mem_gen_prim_width";
-end \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized14\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized14\ : entity is "blk_mem_gen_prim_width";
+end \weights_buffer_ping_blk_mem_gen_prim_width__parameterized14\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized14\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized14\ is
 begin
-\prim_init.ram\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized14\
+\prim_init.ram\: entity work.\weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized14\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\(15 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(15 downto 0),
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1\(1 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\(1 downto 0),
@@ -15831,7 +15823,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized15\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_width__parameterized15\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\ : out STD_LOGIC_VECTOR ( 15 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 1 downto 0 );
@@ -15842,12 +15834,12 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized15\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized15\ : entity is "blk_mem_gen_prim_width";
-end \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized15\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized15\ : entity is "blk_mem_gen_prim_width";
+end \weights_buffer_ping_blk_mem_gen_prim_width__parameterized15\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized15\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized15\ is
 begin
-\prim_init.ram\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized15\
+\prim_init.ram\: entity work.\weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized15\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\(15 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(15 downto 0),
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1\(1 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\(1 downto 0),
@@ -15862,7 +15854,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized16\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_width__parameterized16\ is
   port (
     p_75_out : out STD_LOGIC_VECTOR ( 71 downto 0 );
     clka : in STD_LOGIC;
@@ -15872,12 +15864,12 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized16\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized16\ : entity is "blk_mem_gen_prim_width";
-end \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized16\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized16\ : entity is "blk_mem_gen_prim_width";
+end \weights_buffer_ping_blk_mem_gen_prim_width__parameterized16\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized16\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized16\ is
 begin
-\prim_init.ram\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized16\
+\prim_init.ram\: entity work.\weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized16\
      port map (
       addra(8 downto 0) => addra(8 downto 0),
       clka => clka,
@@ -15891,7 +15883,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized17\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_width__parameterized17\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\ : out STD_LOGIC_VECTOR ( 15 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 1 downto 0 );
@@ -15902,12 +15894,12 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized17\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized17\ : entity is "blk_mem_gen_prim_width";
-end \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized17\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized17\ : entity is "blk_mem_gen_prim_width";
+end \weights_buffer_ping_blk_mem_gen_prim_width__parameterized17\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized17\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized17\ is
 begin
-\prim_init.ram\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized17\
+\prim_init.ram\: entity work.\weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized17\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\(15 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(15 downto 0),
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1\(1 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\(1 downto 0),
@@ -15922,7 +15914,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized18\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_width__parameterized18\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\ : out STD_LOGIC_VECTOR ( 15 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 1 downto 0 );
@@ -15933,12 +15925,12 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized18\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized18\ : entity is "blk_mem_gen_prim_width";
-end \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized18\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized18\ : entity is "blk_mem_gen_prim_width";
+end \weights_buffer_ping_blk_mem_gen_prim_width__parameterized18\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized18\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized18\ is
 begin
-\prim_init.ram\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized18\
+\prim_init.ram\: entity work.\weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized18\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\(15 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(15 downto 0),
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1\(1 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\(1 downto 0),
@@ -15953,7 +15945,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized19\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_width__parameterized19\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\ : out STD_LOGIC_VECTOR ( 15 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 1 downto 0 );
@@ -15964,12 +15956,12 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized19\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized19\ : entity is "blk_mem_gen_prim_width";
-end \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized19\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized19\ : entity is "blk_mem_gen_prim_width";
+end \weights_buffer_ping_blk_mem_gen_prim_width__parameterized19\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized19\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized19\ is
 begin
-\prim_init.ram\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized19\
+\prim_init.ram\: entity work.\weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized19\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\(15 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(15 downto 0),
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1\(1 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\(1 downto 0),
@@ -15984,7 +15976,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized2\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_width__parameterized2\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\ : out STD_LOGIC_VECTOR ( 15 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 1 downto 0 );
@@ -15995,12 +15987,12 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized2\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized2\ : entity is "blk_mem_gen_prim_width";
-end \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized2\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized2\ : entity is "blk_mem_gen_prim_width";
+end \weights_buffer_ping_blk_mem_gen_prim_width__parameterized2\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized2\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized2\ is
 begin
-\prim_init.ram\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized2\
+\prim_init.ram\: entity work.\weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized2\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\(15 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(15 downto 0),
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1\(1 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\(1 downto 0),
@@ -16015,7 +16007,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized20\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_width__parameterized20\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\ : out STD_LOGIC_VECTOR ( 15 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 1 downto 0 );
@@ -16026,12 +16018,12 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized20\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized20\ : entity is "blk_mem_gen_prim_width";
-end \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized20\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized20\ : entity is "blk_mem_gen_prim_width";
+end \weights_buffer_ping_blk_mem_gen_prim_width__parameterized20\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized20\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized20\ is
 begin
-\prim_init.ram\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized20\
+\prim_init.ram\: entity work.\weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized20\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\(15 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(15 downto 0),
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1\(1 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\(1 downto 0),
@@ -16046,7 +16038,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized21\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_width__parameterized21\ is
   port (
     p_55_out : out STD_LOGIC_VECTOR ( 71 downto 0 );
     clka : in STD_LOGIC;
@@ -16056,12 +16048,12 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized21\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized21\ : entity is "blk_mem_gen_prim_width";
-end \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized21\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized21\ : entity is "blk_mem_gen_prim_width";
+end \weights_buffer_ping_blk_mem_gen_prim_width__parameterized21\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized21\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized21\ is
 begin
-\prim_init.ram\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized21\
+\prim_init.ram\: entity work.\weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized21\
      port map (
       addra(8 downto 0) => addra(8 downto 0),
       clka => clka,
@@ -16075,7 +16067,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized22\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_width__parameterized22\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\ : out STD_LOGIC_VECTOR ( 15 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 1 downto 0 );
@@ -16086,12 +16078,12 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized22\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized22\ : entity is "blk_mem_gen_prim_width";
-end \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized22\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized22\ : entity is "blk_mem_gen_prim_width";
+end \weights_buffer_ping_blk_mem_gen_prim_width__parameterized22\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized22\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized22\ is
 begin
-\prim_init.ram\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized22\
+\prim_init.ram\: entity work.\weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized22\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\(15 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(15 downto 0),
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1\(1 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\(1 downto 0),
@@ -16106,7 +16098,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized23\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_width__parameterized23\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\ : out STD_LOGIC_VECTOR ( 15 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 1 downto 0 );
@@ -16117,12 +16109,12 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized23\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized23\ : entity is "blk_mem_gen_prim_width";
-end \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized23\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized23\ : entity is "blk_mem_gen_prim_width";
+end \weights_buffer_ping_blk_mem_gen_prim_width__parameterized23\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized23\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized23\ is
 begin
-\prim_init.ram\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized23\
+\prim_init.ram\: entity work.\weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized23\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\(15 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(15 downto 0),
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1\(1 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\(1 downto 0),
@@ -16137,7 +16129,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized24\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_width__parameterized24\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\ : out STD_LOGIC_VECTOR ( 15 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 1 downto 0 );
@@ -16148,12 +16140,12 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized24\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized24\ : entity is "blk_mem_gen_prim_width";
-end \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized24\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized24\ : entity is "blk_mem_gen_prim_width";
+end \weights_buffer_ping_blk_mem_gen_prim_width__parameterized24\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized24\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized24\ is
 begin
-\prim_init.ram\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized24\
+\prim_init.ram\: entity work.\weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized24\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\(15 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(15 downto 0),
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1\(1 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\(1 downto 0),
@@ -16168,7 +16160,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized25\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_width__parameterized25\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\ : out STD_LOGIC_VECTOR ( 15 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 1 downto 0 );
@@ -16179,12 +16171,12 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized25\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized25\ : entity is "blk_mem_gen_prim_width";
-end \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized25\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized25\ : entity is "blk_mem_gen_prim_width";
+end \weights_buffer_ping_blk_mem_gen_prim_width__parameterized25\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized25\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized25\ is
 begin
-\prim_init.ram\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized25\
+\prim_init.ram\: entity work.\weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized25\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\(15 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(15 downto 0),
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1\(1 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\(1 downto 0),
@@ -16199,7 +16191,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized26\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_width__parameterized26\ is
   port (
     p_35_out : out STD_LOGIC_VECTOR ( 71 downto 0 );
     clka : in STD_LOGIC;
@@ -16209,12 +16201,12 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized26\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized26\ : entity is "blk_mem_gen_prim_width";
-end \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized26\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized26\ : entity is "blk_mem_gen_prim_width";
+end \weights_buffer_ping_blk_mem_gen_prim_width__parameterized26\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized26\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized26\ is
 begin
-\prim_init.ram\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized26\
+\prim_init.ram\: entity work.\weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized26\
      port map (
       addra(8 downto 0) => addra(8 downto 0),
       clka => clka,
@@ -16228,7 +16220,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized27\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_width__parameterized27\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\ : out STD_LOGIC_VECTOR ( 15 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 1 downto 0 );
@@ -16239,12 +16231,12 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized27\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized27\ : entity is "blk_mem_gen_prim_width";
-end \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized27\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized27\ : entity is "blk_mem_gen_prim_width";
+end \weights_buffer_ping_blk_mem_gen_prim_width__parameterized27\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized27\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized27\ is
 begin
-\prim_init.ram\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized27\
+\prim_init.ram\: entity work.\weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized27\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\(15 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(15 downto 0),
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1\(1 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\(1 downto 0),
@@ -16259,7 +16251,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized28\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_width__parameterized28\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\ : out STD_LOGIC_VECTOR ( 15 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 1 downto 0 );
@@ -16270,12 +16262,12 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized28\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized28\ : entity is "blk_mem_gen_prim_width";
-end \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized28\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized28\ : entity is "blk_mem_gen_prim_width";
+end \weights_buffer_ping_blk_mem_gen_prim_width__parameterized28\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized28\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized28\ is
 begin
-\prim_init.ram\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized28\
+\prim_init.ram\: entity work.\weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized28\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\(15 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(15 downto 0),
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1\(1 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\(1 downto 0),
@@ -16290,7 +16282,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized29\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_width__parameterized29\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\ : out STD_LOGIC_VECTOR ( 15 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 1 downto 0 );
@@ -16301,12 +16293,12 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized29\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized29\ : entity is "blk_mem_gen_prim_width";
-end \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized29\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized29\ : entity is "blk_mem_gen_prim_width";
+end \weights_buffer_ping_blk_mem_gen_prim_width__parameterized29\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized29\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized29\ is
 begin
-\prim_init.ram\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized29\
+\prim_init.ram\: entity work.\weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized29\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\(15 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(15 downto 0),
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1\(1 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\(1 downto 0),
@@ -16321,7 +16313,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized3\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_width__parameterized3\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\ : out STD_LOGIC_VECTOR ( 15 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 1 downto 0 );
@@ -16332,12 +16324,12 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized3\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized3\ : entity is "blk_mem_gen_prim_width";
-end \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized3\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized3\ : entity is "blk_mem_gen_prim_width";
+end \weights_buffer_ping_blk_mem_gen_prim_width__parameterized3\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized3\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized3\ is
 begin
-\prim_init.ram\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized3\
+\prim_init.ram\: entity work.\weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized3\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\(15 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(15 downto 0),
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1\(1 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\(1 downto 0),
@@ -16352,7 +16344,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized30\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_width__parameterized30\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\ : out STD_LOGIC_VECTOR ( 15 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 1 downto 0 );
@@ -16363,12 +16355,12 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized30\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized30\ : entity is "blk_mem_gen_prim_width";
-end \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized30\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized30\ : entity is "blk_mem_gen_prim_width";
+end \weights_buffer_ping_blk_mem_gen_prim_width__parameterized30\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized30\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized30\ is
 begin
-\prim_init.ram\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized30\
+\prim_init.ram\: entity work.\weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized30\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\(15 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(15 downto 0),
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1\(1 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\(1 downto 0),
@@ -16383,7 +16375,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized31\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_width__parameterized31\ is
   port (
     p_15_out : out STD_LOGIC_VECTOR ( 70 downto 0 );
     clka : in STD_LOGIC;
@@ -16393,12 +16385,12 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized31\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized31\ : entity is "blk_mem_gen_prim_width";
-end \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized31\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized31\ : entity is "blk_mem_gen_prim_width";
+end \weights_buffer_ping_blk_mem_gen_prim_width__parameterized31\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized31\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized31\ is
 begin
-\prim_init.ram\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized31\
+\prim_init.ram\: entity work.\weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized31\
      port map (
       addra(8 downto 0) => addra(8 downto 0),
       clka => clka,
@@ -16412,7 +16404,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized32\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_width__parameterized32\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\ : out STD_LOGIC_VECTOR ( 15 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 1 downto 0 );
@@ -16423,12 +16415,12 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized32\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized32\ : entity is "blk_mem_gen_prim_width";
-end \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized32\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized32\ : entity is "blk_mem_gen_prim_width";
+end \weights_buffer_ping_blk_mem_gen_prim_width__parameterized32\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized32\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized32\ is
 begin
-\prim_init.ram\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized32\
+\prim_init.ram\: entity work.\weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized32\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\(15 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(15 downto 0),
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1\(1 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\(1 downto 0),
@@ -16443,7 +16435,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized33\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_width__parameterized33\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\ : out STD_LOGIC_VECTOR ( 15 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 1 downto 0 );
@@ -16454,12 +16446,12 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized33\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized33\ : entity is "blk_mem_gen_prim_width";
-end \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized33\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized33\ : entity is "blk_mem_gen_prim_width";
+end \weights_buffer_ping_blk_mem_gen_prim_width__parameterized33\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized33\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized33\ is
 begin
-\prim_init.ram\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized33\
+\prim_init.ram\: entity work.\weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized33\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\(15 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(15 downto 0),
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1\(1 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\(1 downto 0),
@@ -16474,7 +16466,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized34\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_width__parameterized34\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\ : out STD_LOGIC_VECTOR ( 15 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -16486,12 +16478,12 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized34\ is
     ena : in STD_LOGIC
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized34\ : entity is "blk_mem_gen_prim_width";
-end \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized34\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized34\ : entity is "blk_mem_gen_prim_width";
+end \weights_buffer_ping_blk_mem_gen_prim_width__parameterized34\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized34\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized34\ is
 begin
-\prim_init.ram\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized34\
+\prim_init.ram\: entity work.\weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized34\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\(15 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(15 downto 0),
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1\(0) => \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\(0),
@@ -16507,7 +16499,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized4\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_width__parameterized4\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\ : out STD_LOGIC_VECTOR ( 15 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 1 downto 0 );
@@ -16518,12 +16510,12 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized4\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized4\ : entity is "blk_mem_gen_prim_width";
-end \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized4\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized4\ : entity is "blk_mem_gen_prim_width";
+end \weights_buffer_ping_blk_mem_gen_prim_width__parameterized4\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized4\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized4\ is
 begin
-\prim_init.ram\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized4\
+\prim_init.ram\: entity work.\weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized4\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\(15 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(15 downto 0),
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1\(1 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\(1 downto 0),
@@ -16538,7 +16530,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized5\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_width__parameterized5\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\ : out STD_LOGIC_VECTOR ( 15 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 1 downto 0 );
@@ -16549,12 +16541,12 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized5\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized5\ : entity is "blk_mem_gen_prim_width";
-end \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized5\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized5\ : entity is "blk_mem_gen_prim_width";
+end \weights_buffer_ping_blk_mem_gen_prim_width__parameterized5\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized5\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized5\ is
 begin
-\prim_init.ram\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized5\
+\prim_init.ram\: entity work.\weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized5\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\(15 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(15 downto 0),
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1\(1 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\(1 downto 0),
@@ -16569,7 +16561,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized6\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_width__parameterized6\ is
   port (
     p_115_out : out STD_LOGIC_VECTOR ( 71 downto 0 );
     clka : in STD_LOGIC;
@@ -16579,12 +16571,12 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized6\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized6\ : entity is "blk_mem_gen_prim_width";
-end \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized6\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized6\ : entity is "blk_mem_gen_prim_width";
+end \weights_buffer_ping_blk_mem_gen_prim_width__parameterized6\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized6\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized6\ is
 begin
-\prim_init.ram\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized6\
+\prim_init.ram\: entity work.\weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized6\
      port map (
       addra(8 downto 0) => addra(8 downto 0),
       clka => clka,
@@ -16598,7 +16590,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized7\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_width__parameterized7\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\ : out STD_LOGIC_VECTOR ( 15 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 1 downto 0 );
@@ -16609,12 +16601,12 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized7\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized7\ : entity is "blk_mem_gen_prim_width";
-end \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized7\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized7\ : entity is "blk_mem_gen_prim_width";
+end \weights_buffer_ping_blk_mem_gen_prim_width__parameterized7\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized7\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized7\ is
 begin
-\prim_init.ram\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized7\
+\prim_init.ram\: entity work.\weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized7\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\(15 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(15 downto 0),
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1\(1 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\(1 downto 0),
@@ -16629,7 +16621,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized8\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_width__parameterized8\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\ : out STD_LOGIC_VECTOR ( 15 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 1 downto 0 );
@@ -16640,12 +16632,12 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized8\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized8\ : entity is "blk_mem_gen_prim_width";
-end \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized8\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized8\ : entity is "blk_mem_gen_prim_width";
+end \weights_buffer_ping_blk_mem_gen_prim_width__parameterized8\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized8\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized8\ is
 begin
-\prim_init.ram\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized8\
+\prim_init.ram\: entity work.\weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized8\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\(15 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(15 downto 0),
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1\(1 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\(1 downto 0),
@@ -16660,7 +16652,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized9\ is
+entity \weights_buffer_ping_blk_mem_gen_prim_width__parameterized9\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\ : out STD_LOGIC_VECTOR ( 15 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 1 downto 0 );
@@ -16671,12 +16663,12 @@ entity \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized9\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized9\ : entity is "blk_mem_gen_prim_width";
-end \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized9\;
+  attribute ORIG_REF_NAME of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized9\ : entity is "blk_mem_gen_prim_width";
+end \weights_buffer_ping_blk_mem_gen_prim_width__parameterized9\;
 
-architecture STRUCTURE of \wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized9\ is
+architecture STRUCTURE of \weights_buffer_ping_blk_mem_gen_prim_width__parameterized9\ is
 begin
-\prim_init.ram\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized9\
+\prim_init.ram\: entity work.\weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized9\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\(15 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(15 downto 0),
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1\(1 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0\(1 downto 0),
@@ -16691,7 +16683,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity wieghts_buffer_ping_blk_mem_gen_generic_cstr is
+entity weights_buffer_ping_blk_mem_gen_generic_cstr is
   port (
     douta : out STD_LOGIC_VECTOR ( 511 downto 0 );
     clka : in STD_LOGIC;
@@ -16700,11 +16692,9 @@ entity wieghts_buffer_ping_blk_mem_gen_generic_cstr is
     dina : in STD_LOGIC_VECTOR ( 511 downto 0 );
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of wieghts_buffer_ping_blk_mem_gen_generic_cstr : entity is "blk_mem_gen_generic_cstr";
-end wieghts_buffer_ping_blk_mem_gen_generic_cstr;
+end weights_buffer_ping_blk_mem_gen_generic_cstr;
 
-architecture STRUCTURE of wieghts_buffer_ping_blk_mem_gen_generic_cstr is
+architecture STRUCTURE of weights_buffer_ping_blk_mem_gen_generic_cstr is
   signal ena_array : STD_LOGIC_VECTOR ( 4 to 4 );
   signal p_115_out : STD_LOGIC_VECTOR ( 71 downto 0 );
   signal p_135_out : STD_LOGIC_VECTOR ( 71 downto 0 );
@@ -17218,13 +17208,13 @@ architecture STRUCTURE of wieghts_buffer_ping_blk_mem_gen_generic_cstr is
   signal \ramloop[9].ram.r_n_8\ : STD_LOGIC;
   signal \ramloop[9].ram.r_n_9\ : STD_LOGIC;
 begin
-\bindec_a.bindec_inst_a\: entity work.wieghts_buffer_ping_bindec
+\bindec_a.bindec_inst_a\: entity work.weights_buffer_ping_bindec
      port map (
       addra(2 downto 0) => addra(11 downto 9),
       ena => ena,
       ena_array(0) => ena_array(4)
     );
-\has_mux_a.A\: entity work.wieghts_buffer_ping_blk_mem_gen_mux
+\has_mux_a.A\: entity work.weights_buffer_ping_blk_mem_gen_mux
      port map (
       DOADO(15) => \ramloop[1].ram.r_n_0\,
       DOADO(14) => \ramloop[1].ram.r_n_1\,
@@ -17741,7 +17731,7 @@ begin
       p_75_out(71 downto 0) => p_75_out(71 downto 0),
       p_95_out(71 downto 0) => p_95_out(71 downto 0)
     );
-\ramloop[0].ram.r\: entity work.wieghts_buffer_ping_blk_mem_gen_prim_width
+\ramloop[0].ram.r\: entity work.weights_buffer_ping_blk_mem_gen_prim_width
      port map (
       addra(11 downto 0) => addra(11 downto 0),
       clka => clka,
@@ -17750,7 +17740,7 @@ begin
       ena => ena,
       wea(0) => wea(0)
     );
-\ramloop[10].ram.r\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized9\
+\ramloop[10].ram.r\: entity work.\weights_buffer_ping_blk_mem_gen_prim_width__parameterized9\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(15) => \ramloop[10].ram.r_n_0\,
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(14) => \ramloop[10].ram.r_n_1\,
@@ -17776,7 +17766,7 @@ begin
       ram_ena => ram_ena,
       wea(0) => wea(0)
     );
-\ramloop[11].ram.r\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized10\
+\ramloop[11].ram.r\: entity work.\weights_buffer_ping_blk_mem_gen_prim_width__parameterized10\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(15) => \ramloop[11].ram.r_n_0\,
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(14) => \ramloop[11].ram.r_n_1\,
@@ -17802,7 +17792,7 @@ begin
       ram_ena => ram_ena,
       wea(0) => wea(0)
     );
-\ramloop[12].ram.r\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized11\
+\ramloop[12].ram.r\: entity work.\weights_buffer_ping_blk_mem_gen_prim_width__parameterized11\
      port map (
       addra(8 downto 0) => addra(8 downto 0),
       clka => clka,
@@ -17811,7 +17801,7 @@ begin
       p_95_out(71 downto 0) => p_95_out(71 downto 0),
       wea(0) => wea(0)
     );
-\ramloop[13].ram.r\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized12\
+\ramloop[13].ram.r\: entity work.\weights_buffer_ping_blk_mem_gen_prim_width__parameterized12\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(15) => \ramloop[13].ram.r_n_0\,
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(14) => \ramloop[13].ram.r_n_1\,
@@ -17837,7 +17827,7 @@ begin
       ram_ena => ram_ena,
       wea(0) => wea(0)
     );
-\ramloop[14].ram.r\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized13\
+\ramloop[14].ram.r\: entity work.\weights_buffer_ping_blk_mem_gen_prim_width__parameterized13\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(15) => \ramloop[14].ram.r_n_0\,
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(14) => \ramloop[14].ram.r_n_1\,
@@ -17863,7 +17853,7 @@ begin
       ram_ena => ram_ena,
       wea(0) => wea(0)
     );
-\ramloop[15].ram.r\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized14\
+\ramloop[15].ram.r\: entity work.\weights_buffer_ping_blk_mem_gen_prim_width__parameterized14\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(15) => \ramloop[15].ram.r_n_0\,
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(14) => \ramloop[15].ram.r_n_1\,
@@ -17889,7 +17879,7 @@ begin
       ram_ena => ram_ena,
       wea(0) => wea(0)
     );
-\ramloop[16].ram.r\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized15\
+\ramloop[16].ram.r\: entity work.\weights_buffer_ping_blk_mem_gen_prim_width__parameterized15\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(15) => \ramloop[16].ram.r_n_0\,
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(14) => \ramloop[16].ram.r_n_1\,
@@ -17915,7 +17905,7 @@ begin
       ram_ena => ram_ena,
       wea(0) => wea(0)
     );
-\ramloop[17].ram.r\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized16\
+\ramloop[17].ram.r\: entity work.\weights_buffer_ping_blk_mem_gen_prim_width__parameterized16\
      port map (
       addra(8 downto 0) => addra(8 downto 0),
       clka => clka,
@@ -17924,7 +17914,7 @@ begin
       p_75_out(71 downto 0) => p_75_out(71 downto 0),
       wea(0) => wea(0)
     );
-\ramloop[18].ram.r\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized17\
+\ramloop[18].ram.r\: entity work.\weights_buffer_ping_blk_mem_gen_prim_width__parameterized17\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(15) => \ramloop[18].ram.r_n_0\,
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(14) => \ramloop[18].ram.r_n_1\,
@@ -17950,7 +17940,7 @@ begin
       ram_ena => ram_ena,
       wea(0) => wea(0)
     );
-\ramloop[19].ram.r\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized18\
+\ramloop[19].ram.r\: entity work.\weights_buffer_ping_blk_mem_gen_prim_width__parameterized18\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(15) => \ramloop[19].ram.r_n_0\,
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(14) => \ramloop[19].ram.r_n_1\,
@@ -17976,7 +17966,7 @@ begin
       ram_ena => ram_ena,
       wea(0) => wea(0)
     );
-\ramloop[1].ram.r\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized0\
+\ramloop[1].ram.r\: entity work.\weights_buffer_ping_blk_mem_gen_prim_width__parameterized0\
      port map (
       DOADO(15) => \ramloop[1].ram.r_n_0\,
       DOADO(14) => \ramloop[1].ram.r_n_1\,
@@ -18002,7 +17992,7 @@ begin
       ram_ena => ram_ena,
       wea(0) => wea(0)
     );
-\ramloop[20].ram.r\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized19\
+\ramloop[20].ram.r\: entity work.\weights_buffer_ping_blk_mem_gen_prim_width__parameterized19\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(15) => \ramloop[20].ram.r_n_0\,
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(14) => \ramloop[20].ram.r_n_1\,
@@ -18028,7 +18018,7 @@ begin
       ram_ena => ram_ena,
       wea(0) => wea(0)
     );
-\ramloop[21].ram.r\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized20\
+\ramloop[21].ram.r\: entity work.\weights_buffer_ping_blk_mem_gen_prim_width__parameterized20\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(15) => \ramloop[21].ram.r_n_0\,
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(14) => \ramloop[21].ram.r_n_1\,
@@ -18054,7 +18044,7 @@ begin
       ram_ena => ram_ena,
       wea(0) => wea(0)
     );
-\ramloop[22].ram.r\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized21\
+\ramloop[22].ram.r\: entity work.\weights_buffer_ping_blk_mem_gen_prim_width__parameterized21\
      port map (
       addra(8 downto 0) => addra(8 downto 0),
       clka => clka,
@@ -18063,7 +18053,7 @@ begin
       p_55_out(71 downto 0) => p_55_out(71 downto 0),
       wea(0) => wea(0)
     );
-\ramloop[23].ram.r\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized22\
+\ramloop[23].ram.r\: entity work.\weights_buffer_ping_blk_mem_gen_prim_width__parameterized22\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(15) => \ramloop[23].ram.r_n_0\,
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(14) => \ramloop[23].ram.r_n_1\,
@@ -18089,7 +18079,7 @@ begin
       ram_ena => ram_ena,
       wea(0) => wea(0)
     );
-\ramloop[24].ram.r\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized23\
+\ramloop[24].ram.r\: entity work.\weights_buffer_ping_blk_mem_gen_prim_width__parameterized23\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(15) => \ramloop[24].ram.r_n_0\,
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(14) => \ramloop[24].ram.r_n_1\,
@@ -18115,7 +18105,7 @@ begin
       ram_ena => ram_ena,
       wea(0) => wea(0)
     );
-\ramloop[25].ram.r\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized24\
+\ramloop[25].ram.r\: entity work.\weights_buffer_ping_blk_mem_gen_prim_width__parameterized24\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(15) => \ramloop[25].ram.r_n_0\,
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(14) => \ramloop[25].ram.r_n_1\,
@@ -18141,7 +18131,7 @@ begin
       ram_ena => ram_ena,
       wea(0) => wea(0)
     );
-\ramloop[26].ram.r\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized25\
+\ramloop[26].ram.r\: entity work.\weights_buffer_ping_blk_mem_gen_prim_width__parameterized25\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(15) => \ramloop[26].ram.r_n_0\,
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(14) => \ramloop[26].ram.r_n_1\,
@@ -18167,7 +18157,7 @@ begin
       ram_ena => ram_ena,
       wea(0) => wea(0)
     );
-\ramloop[27].ram.r\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized26\
+\ramloop[27].ram.r\: entity work.\weights_buffer_ping_blk_mem_gen_prim_width__parameterized26\
      port map (
       addra(8 downto 0) => addra(8 downto 0),
       clka => clka,
@@ -18176,7 +18166,7 @@ begin
       p_35_out(71 downto 0) => p_35_out(71 downto 0),
       wea(0) => wea(0)
     );
-\ramloop[28].ram.r\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized27\
+\ramloop[28].ram.r\: entity work.\weights_buffer_ping_blk_mem_gen_prim_width__parameterized27\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(15) => \ramloop[28].ram.r_n_0\,
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(14) => \ramloop[28].ram.r_n_1\,
@@ -18202,7 +18192,7 @@ begin
       ram_ena => ram_ena,
       wea(0) => wea(0)
     );
-\ramloop[29].ram.r\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized28\
+\ramloop[29].ram.r\: entity work.\weights_buffer_ping_blk_mem_gen_prim_width__parameterized28\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(15) => \ramloop[29].ram.r_n_0\,
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(14) => \ramloop[29].ram.r_n_1\,
@@ -18228,7 +18218,7 @@ begin
       ram_ena => ram_ena,
       wea(0) => wea(0)
     );
-\ramloop[2].ram.r\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized1\
+\ramloop[2].ram.r\: entity work.\weights_buffer_ping_blk_mem_gen_prim_width__parameterized1\
      port map (
       addra(8 downto 0) => addra(8 downto 0),
       clka => clka,
@@ -18237,7 +18227,7 @@ begin
       p_135_out(71 downto 0) => p_135_out(71 downto 0),
       wea(0) => wea(0)
     );
-\ramloop[30].ram.r\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized29\
+\ramloop[30].ram.r\: entity work.\weights_buffer_ping_blk_mem_gen_prim_width__parameterized29\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(15) => \ramloop[30].ram.r_n_0\,
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(14) => \ramloop[30].ram.r_n_1\,
@@ -18263,7 +18253,7 @@ begin
       ram_ena => ram_ena,
       wea(0) => wea(0)
     );
-\ramloop[31].ram.r\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized30\
+\ramloop[31].ram.r\: entity work.\weights_buffer_ping_blk_mem_gen_prim_width__parameterized30\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(15) => \ramloop[31].ram.r_n_0\,
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(14) => \ramloop[31].ram.r_n_1\,
@@ -18289,7 +18279,7 @@ begin
       ram_ena => ram_ena,
       wea(0) => wea(0)
     );
-\ramloop[32].ram.r\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized31\
+\ramloop[32].ram.r\: entity work.\weights_buffer_ping_blk_mem_gen_prim_width__parameterized31\
      port map (
       addra(8 downto 0) => addra(8 downto 0),
       clka => clka,
@@ -18298,7 +18288,7 @@ begin
       p_15_out(70 downto 0) => p_15_out(70 downto 0),
       wea(0) => wea(0)
     );
-\ramloop[33].ram.r\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized32\
+\ramloop[33].ram.r\: entity work.\weights_buffer_ping_blk_mem_gen_prim_width__parameterized32\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(15) => \ramloop[33].ram.r_n_0\,
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(14) => \ramloop[33].ram.r_n_1\,
@@ -18324,7 +18314,7 @@ begin
       ram_ena => ram_ena,
       wea(0) => wea(0)
     );
-\ramloop[34].ram.r\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized33\
+\ramloop[34].ram.r\: entity work.\weights_buffer_ping_blk_mem_gen_prim_width__parameterized33\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(15) => \ramloop[34].ram.r_n_0\,
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(14) => \ramloop[34].ram.r_n_1\,
@@ -18350,7 +18340,7 @@ begin
       ram_ena => ram_ena,
       wea(0) => wea(0)
     );
-\ramloop[35].ram.r\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized34\
+\ramloop[35].ram.r\: entity work.\weights_buffer_ping_blk_mem_gen_prim_width__parameterized34\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(15) => \ramloop[35].ram.r_n_0\,
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(14) => \ramloop[35].ram.r_n_1\,
@@ -18376,7 +18366,7 @@ begin
       ram_ena => ram_ena,
       wea(0) => wea(0)
     );
-\ramloop[3].ram.r\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized2\
+\ramloop[3].ram.r\: entity work.\weights_buffer_ping_blk_mem_gen_prim_width__parameterized2\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(15) => \ramloop[3].ram.r_n_0\,
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(14) => \ramloop[3].ram.r_n_1\,
@@ -18402,7 +18392,7 @@ begin
       ram_ena => ram_ena,
       wea(0) => wea(0)
     );
-\ramloop[4].ram.r\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized3\
+\ramloop[4].ram.r\: entity work.\weights_buffer_ping_blk_mem_gen_prim_width__parameterized3\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(15) => \ramloop[4].ram.r_n_0\,
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(14) => \ramloop[4].ram.r_n_1\,
@@ -18428,7 +18418,7 @@ begin
       ram_ena => ram_ena,
       wea(0) => wea(0)
     );
-\ramloop[5].ram.r\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized4\
+\ramloop[5].ram.r\: entity work.\weights_buffer_ping_blk_mem_gen_prim_width__parameterized4\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(15) => \ramloop[5].ram.r_n_0\,
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(14) => \ramloop[5].ram.r_n_1\,
@@ -18454,7 +18444,7 @@ begin
       ram_ena => ram_ena,
       wea(0) => wea(0)
     );
-\ramloop[6].ram.r\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized5\
+\ramloop[6].ram.r\: entity work.\weights_buffer_ping_blk_mem_gen_prim_width__parameterized5\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(15) => \ramloop[6].ram.r_n_0\,
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(14) => \ramloop[6].ram.r_n_1\,
@@ -18480,7 +18470,7 @@ begin
       ram_ena => ram_ena,
       wea(0) => wea(0)
     );
-\ramloop[7].ram.r\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized6\
+\ramloop[7].ram.r\: entity work.\weights_buffer_ping_blk_mem_gen_prim_width__parameterized6\
      port map (
       addra(8 downto 0) => addra(8 downto 0),
       clka => clka,
@@ -18489,7 +18479,7 @@ begin
       p_115_out(71 downto 0) => p_115_out(71 downto 0),
       wea(0) => wea(0)
     );
-\ramloop[8].ram.r\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized7\
+\ramloop[8].ram.r\: entity work.\weights_buffer_ping_blk_mem_gen_prim_width__parameterized7\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(15) => \ramloop[8].ram.r_n_0\,
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(14) => \ramloop[8].ram.r_n_1\,
@@ -18515,7 +18505,7 @@ begin
       ram_ena => ram_ena,
       wea(0) => wea(0)
     );
-\ramloop[9].ram.r\: entity work.\wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized8\
+\ramloop[9].ram.r\: entity work.\weights_buffer_ping_blk_mem_gen_prim_width__parameterized8\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(15) => \ramloop[9].ram.r_n_0\,
       \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram\(14) => \ramloop[9].ram.r_n_1\,
@@ -18546,7 +18536,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity wieghts_buffer_ping_blk_mem_gen_top is
+entity weights_buffer_ping_blk_mem_gen_top is
   port (
     douta : out STD_LOGIC_VECTOR ( 511 downto 0 );
     clka : in STD_LOGIC;
@@ -18555,13 +18545,11 @@ entity wieghts_buffer_ping_blk_mem_gen_top is
     dina : in STD_LOGIC_VECTOR ( 511 downto 0 );
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of wieghts_buffer_ping_blk_mem_gen_top : entity is "blk_mem_gen_top";
-end wieghts_buffer_ping_blk_mem_gen_top;
+end weights_buffer_ping_blk_mem_gen_top;
 
-architecture STRUCTURE of wieghts_buffer_ping_blk_mem_gen_top is
+architecture STRUCTURE of weights_buffer_ping_blk_mem_gen_top is
 begin
-\valid.cstr\: entity work.wieghts_buffer_ping_blk_mem_gen_generic_cstr
+\valid.cstr\: entity work.weights_buffer_ping_blk_mem_gen_generic_cstr
      port map (
       addra(11 downto 0) => addra(11 downto 0),
       clka => clka,
@@ -18575,7 +18563,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity wieghts_buffer_ping_blk_mem_gen_v8_4_2_synth is
+entity weights_buffer_ping_blk_mem_gen_v8_4_2_synth is
   port (
     douta : out STD_LOGIC_VECTOR ( 511 downto 0 );
     clka : in STD_LOGIC;
@@ -18584,13 +18572,11 @@ entity wieghts_buffer_ping_blk_mem_gen_v8_4_2_synth is
     dina : in STD_LOGIC_VECTOR ( 511 downto 0 );
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of wieghts_buffer_ping_blk_mem_gen_v8_4_2_synth : entity is "blk_mem_gen_v8_4_2_synth";
-end wieghts_buffer_ping_blk_mem_gen_v8_4_2_synth;
+end weights_buffer_ping_blk_mem_gen_v8_4_2_synth;
 
-architecture STRUCTURE of wieghts_buffer_ping_blk_mem_gen_v8_4_2_synth is
+architecture STRUCTURE of weights_buffer_ping_blk_mem_gen_v8_4_2_synth is
 begin
-\gnbram.gnativebmg.native_blk_mem_gen\: entity work.wieghts_buffer_ping_blk_mem_gen_top
+\gnbram.gnativebmg.native_blk_mem_gen\: entity work.weights_buffer_ping_blk_mem_gen_top
      port map (
       addra(11 downto 0) => addra(11 downto 0),
       clka => clka,
@@ -18604,7 +18590,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity wieghts_buffer_ping_blk_mem_gen_v8_4_2 is
+entity weights_buffer_ping_blk_mem_gen_v8_4_2 is
   port (
     clka : in STD_LOGIC;
     rsta : in STD_LOGIC;
@@ -18671,162 +18657,160 @@ entity wieghts_buffer_ping_blk_mem_gen_v8_4_2 is
     s_axi_rdaddrecc : out STD_LOGIC_VECTOR ( 11 downto 0 )
   );
   attribute C_ADDRA_WIDTH : integer;
-  attribute C_ADDRA_WIDTH of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is 12;
+  attribute C_ADDRA_WIDTH of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is 12;
   attribute C_ADDRB_WIDTH : integer;
-  attribute C_ADDRB_WIDTH of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is 12;
+  attribute C_ADDRB_WIDTH of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is 12;
   attribute C_ALGORITHM : integer;
-  attribute C_ALGORITHM of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is 1;
+  attribute C_ALGORITHM of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is 1;
   attribute C_AXI_ID_WIDTH : integer;
-  attribute C_AXI_ID_WIDTH of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is 4;
+  attribute C_AXI_ID_WIDTH of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is 4;
   attribute C_AXI_SLAVE_TYPE : integer;
-  attribute C_AXI_SLAVE_TYPE of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
+  attribute C_AXI_SLAVE_TYPE of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
   attribute C_AXI_TYPE : integer;
-  attribute C_AXI_TYPE of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is 1;
+  attribute C_AXI_TYPE of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is 1;
   attribute C_BYTE_SIZE : integer;
-  attribute C_BYTE_SIZE of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is 9;
+  attribute C_BYTE_SIZE of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is 9;
   attribute C_COMMON_CLK : integer;
-  attribute C_COMMON_CLK of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
+  attribute C_COMMON_CLK of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
   attribute C_COUNT_18K_BRAM : string;
-  attribute C_COUNT_18K_BRAM of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is "0";
+  attribute C_COUNT_18K_BRAM of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is "0";
   attribute C_COUNT_36K_BRAM : string;
-  attribute C_COUNT_36K_BRAM of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is "36";
+  attribute C_COUNT_36K_BRAM of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is "36";
   attribute C_CTRL_ECC_ALGO : string;
-  attribute C_CTRL_ECC_ALGO of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is "NONE";
+  attribute C_CTRL_ECC_ALGO of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is "NONE";
   attribute C_DEFAULT_DATA : string;
-  attribute C_DEFAULT_DATA of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is "0";
+  attribute C_DEFAULT_DATA of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is "0";
   attribute C_DISABLE_WARN_BHV_COLL : integer;
-  attribute C_DISABLE_WARN_BHV_COLL of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
+  attribute C_DISABLE_WARN_BHV_COLL of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
   attribute C_DISABLE_WARN_BHV_RANGE : integer;
-  attribute C_DISABLE_WARN_BHV_RANGE of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
+  attribute C_DISABLE_WARN_BHV_RANGE of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
   attribute C_ELABORATION_DIR : string;
-  attribute C_ELABORATION_DIR of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is "./";
+  attribute C_ELABORATION_DIR of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is "./";
   attribute C_ENABLE_32BIT_ADDRESS : integer;
-  attribute C_ENABLE_32BIT_ADDRESS of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
+  attribute C_ENABLE_32BIT_ADDRESS of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
   attribute C_EN_DEEPSLEEP_PIN : integer;
-  attribute C_EN_DEEPSLEEP_PIN of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
+  attribute C_EN_DEEPSLEEP_PIN of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
   attribute C_EN_ECC_PIPE : integer;
-  attribute C_EN_ECC_PIPE of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
+  attribute C_EN_ECC_PIPE of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
   attribute C_EN_RDADDRA_CHG : integer;
-  attribute C_EN_RDADDRA_CHG of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
+  attribute C_EN_RDADDRA_CHG of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
   attribute C_EN_RDADDRB_CHG : integer;
-  attribute C_EN_RDADDRB_CHG of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
+  attribute C_EN_RDADDRB_CHG of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
   attribute C_EN_SAFETY_CKT : integer;
-  attribute C_EN_SAFETY_CKT of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
+  attribute C_EN_SAFETY_CKT of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
   attribute C_EN_SHUTDOWN_PIN : integer;
-  attribute C_EN_SHUTDOWN_PIN of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
+  attribute C_EN_SHUTDOWN_PIN of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
   attribute C_EN_SLEEP_PIN : integer;
-  attribute C_EN_SLEEP_PIN of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
+  attribute C_EN_SLEEP_PIN of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
   attribute C_EST_POWER_SUMMARY : string;
-  attribute C_EST_POWER_SUMMARY of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is "Estimated Power for IP     :     73.154872 mW";
+  attribute C_EST_POWER_SUMMARY of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is "Estimated Power for IP     :     73.154872 mW";
   attribute C_FAMILY : string;
-  attribute C_FAMILY of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is "virtex7";
+  attribute C_FAMILY of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is "virtex7";
   attribute C_HAS_AXI_ID : integer;
-  attribute C_HAS_AXI_ID of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
+  attribute C_HAS_AXI_ID of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
   attribute C_HAS_ENA : integer;
-  attribute C_HAS_ENA of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is 1;
+  attribute C_HAS_ENA of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is 1;
   attribute C_HAS_ENB : integer;
-  attribute C_HAS_ENB of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
+  attribute C_HAS_ENB of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
   attribute C_HAS_INJECTERR : integer;
-  attribute C_HAS_INJECTERR of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
+  attribute C_HAS_INJECTERR of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
   attribute C_HAS_MEM_OUTPUT_REGS_A : integer;
-  attribute C_HAS_MEM_OUTPUT_REGS_A of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
+  attribute C_HAS_MEM_OUTPUT_REGS_A of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
   attribute C_HAS_MEM_OUTPUT_REGS_B : integer;
-  attribute C_HAS_MEM_OUTPUT_REGS_B of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
+  attribute C_HAS_MEM_OUTPUT_REGS_B of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
   attribute C_HAS_MUX_OUTPUT_REGS_A : integer;
-  attribute C_HAS_MUX_OUTPUT_REGS_A of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
+  attribute C_HAS_MUX_OUTPUT_REGS_A of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
   attribute C_HAS_MUX_OUTPUT_REGS_B : integer;
-  attribute C_HAS_MUX_OUTPUT_REGS_B of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
+  attribute C_HAS_MUX_OUTPUT_REGS_B of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
   attribute C_HAS_REGCEA : integer;
-  attribute C_HAS_REGCEA of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
+  attribute C_HAS_REGCEA of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
   attribute C_HAS_REGCEB : integer;
-  attribute C_HAS_REGCEB of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
+  attribute C_HAS_REGCEB of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
   attribute C_HAS_RSTA : integer;
-  attribute C_HAS_RSTA of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
+  attribute C_HAS_RSTA of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
   attribute C_HAS_RSTB : integer;
-  attribute C_HAS_RSTB of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
+  attribute C_HAS_RSTB of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
   attribute C_HAS_SOFTECC_INPUT_REGS_A : integer;
-  attribute C_HAS_SOFTECC_INPUT_REGS_A of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
+  attribute C_HAS_SOFTECC_INPUT_REGS_A of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
   attribute C_HAS_SOFTECC_OUTPUT_REGS_B : integer;
-  attribute C_HAS_SOFTECC_OUTPUT_REGS_B of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
+  attribute C_HAS_SOFTECC_OUTPUT_REGS_B of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
   attribute C_INITA_VAL : string;
-  attribute C_INITA_VAL of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is "0";
+  attribute C_INITA_VAL of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is "0";
   attribute C_INITB_VAL : string;
-  attribute C_INITB_VAL of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is "0";
+  attribute C_INITB_VAL of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is "0";
   attribute C_INIT_FILE : string;
-  attribute C_INIT_FILE of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is "wieghts_buffer_ping.mem";
+  attribute C_INIT_FILE of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is "wieghts_buffer_ping.mem";
   attribute C_INIT_FILE_NAME : string;
-  attribute C_INIT_FILE_NAME of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is "no_coe_file_loaded";
+  attribute C_INIT_FILE_NAME of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is "no_coe_file_loaded";
   attribute C_INTERFACE_TYPE : integer;
-  attribute C_INTERFACE_TYPE of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
+  attribute C_INTERFACE_TYPE of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
   attribute C_LOAD_INIT_FILE : integer;
-  attribute C_LOAD_INIT_FILE of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
+  attribute C_LOAD_INIT_FILE of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
   attribute C_MEM_TYPE : integer;
-  attribute C_MEM_TYPE of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
+  attribute C_MEM_TYPE of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
   attribute C_MUX_PIPELINE_STAGES : integer;
-  attribute C_MUX_PIPELINE_STAGES of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
+  attribute C_MUX_PIPELINE_STAGES of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
   attribute C_PRIM_TYPE : integer;
-  attribute C_PRIM_TYPE of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is 1;
+  attribute C_PRIM_TYPE of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is 1;
   attribute C_READ_DEPTH_A : integer;
-  attribute C_READ_DEPTH_A of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is 2560;
+  attribute C_READ_DEPTH_A of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is 2560;
   attribute C_READ_DEPTH_B : integer;
-  attribute C_READ_DEPTH_B of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is 2560;
+  attribute C_READ_DEPTH_B of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is 2560;
   attribute C_READ_LATENCY_A : integer;
-  attribute C_READ_LATENCY_A of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is 1;
+  attribute C_READ_LATENCY_A of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is 1;
   attribute C_READ_LATENCY_B : integer;
-  attribute C_READ_LATENCY_B of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is 1;
+  attribute C_READ_LATENCY_B of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is 1;
   attribute C_READ_WIDTH_A : integer;
-  attribute C_READ_WIDTH_A of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is 512;
+  attribute C_READ_WIDTH_A of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is 512;
   attribute C_READ_WIDTH_B : integer;
-  attribute C_READ_WIDTH_B of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is 512;
+  attribute C_READ_WIDTH_B of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is 512;
   attribute C_RSTRAM_A : integer;
-  attribute C_RSTRAM_A of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
+  attribute C_RSTRAM_A of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
   attribute C_RSTRAM_B : integer;
-  attribute C_RSTRAM_B of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
+  attribute C_RSTRAM_B of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
   attribute C_RST_PRIORITY_A : string;
-  attribute C_RST_PRIORITY_A of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is "CE";
+  attribute C_RST_PRIORITY_A of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is "CE";
   attribute C_RST_PRIORITY_B : string;
-  attribute C_RST_PRIORITY_B of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is "CE";
+  attribute C_RST_PRIORITY_B of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is "CE";
   attribute C_SIM_COLLISION_CHECK : string;
-  attribute C_SIM_COLLISION_CHECK of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is "ALL";
+  attribute C_SIM_COLLISION_CHECK of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is "ALL";
   attribute C_USE_BRAM_BLOCK : integer;
-  attribute C_USE_BRAM_BLOCK of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
+  attribute C_USE_BRAM_BLOCK of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
   attribute C_USE_BYTE_WEA : integer;
-  attribute C_USE_BYTE_WEA of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
+  attribute C_USE_BYTE_WEA of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
   attribute C_USE_BYTE_WEB : integer;
-  attribute C_USE_BYTE_WEB of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
+  attribute C_USE_BYTE_WEB of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
   attribute C_USE_DEFAULT_DATA : integer;
-  attribute C_USE_DEFAULT_DATA of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is 1;
+  attribute C_USE_DEFAULT_DATA of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is 1;
   attribute C_USE_ECC : integer;
-  attribute C_USE_ECC of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
+  attribute C_USE_ECC of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
   attribute C_USE_SOFTECC : integer;
-  attribute C_USE_SOFTECC of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
+  attribute C_USE_SOFTECC of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
   attribute C_USE_URAM : integer;
-  attribute C_USE_URAM of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
+  attribute C_USE_URAM of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is 0;
   attribute C_WEA_WIDTH : integer;
-  attribute C_WEA_WIDTH of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is 1;
+  attribute C_WEA_WIDTH of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is 1;
   attribute C_WEB_WIDTH : integer;
-  attribute C_WEB_WIDTH of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is 1;
+  attribute C_WEB_WIDTH of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is 1;
   attribute C_WRITE_DEPTH_A : integer;
-  attribute C_WRITE_DEPTH_A of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is 2560;
+  attribute C_WRITE_DEPTH_A of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is 2560;
   attribute C_WRITE_DEPTH_B : integer;
-  attribute C_WRITE_DEPTH_B of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is 2560;
+  attribute C_WRITE_DEPTH_B of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is 2560;
   attribute C_WRITE_MODE_A : string;
-  attribute C_WRITE_MODE_A of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is "WRITE_FIRST";
+  attribute C_WRITE_MODE_A of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is "WRITE_FIRST";
   attribute C_WRITE_MODE_B : string;
-  attribute C_WRITE_MODE_B of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is "WRITE_FIRST";
+  attribute C_WRITE_MODE_B of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is "WRITE_FIRST";
   attribute C_WRITE_WIDTH_A : integer;
-  attribute C_WRITE_WIDTH_A of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is 512;
+  attribute C_WRITE_WIDTH_A of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is 512;
   attribute C_WRITE_WIDTH_B : integer;
-  attribute C_WRITE_WIDTH_B of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is 512;
+  attribute C_WRITE_WIDTH_B of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is 512;
   attribute C_XDEVICEFAMILY : string;
-  attribute C_XDEVICEFAMILY of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is "virtex7";
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is "blk_mem_gen_v8_4_2";
+  attribute C_XDEVICEFAMILY of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is "virtex7";
   attribute downgradeipidentifiedwarnings : string;
-  attribute downgradeipidentifiedwarnings of wieghts_buffer_ping_blk_mem_gen_v8_4_2 : entity is "yes";
-end wieghts_buffer_ping_blk_mem_gen_v8_4_2;
+  attribute downgradeipidentifiedwarnings of weights_buffer_ping_blk_mem_gen_v8_4_2 : entity is "yes";
+end weights_buffer_ping_blk_mem_gen_v8_4_2;
 
-architecture STRUCTURE of wieghts_buffer_ping_blk_mem_gen_v8_4_2 is
+architecture STRUCTURE of weights_buffer_ping_blk_mem_gen_v8_4_2 is
   signal \<const0>\ : STD_LOGIC;
 begin
   dbiterr <= \<const0>\;
@@ -19905,7 +19889,7 @@ GND: unisim.vcomponents.GND
      port map (
       G => \<const0>\
     );
-inst_blk_mem_gen: entity work.wieghts_buffer_ping_blk_mem_gen_v8_4_2_synth
+inst_blk_mem_gen: entity work.weights_buffer_ping_blk_mem_gen_v8_4_2_synth
      port map (
       addra(11 downto 0) => addra(11 downto 0),
       clka => clka,
@@ -19919,7 +19903,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity wieghts_buffer_ping is
+entity weights_buffer_ping is
   port (
     clka : in STD_LOGIC;
     ena : in STD_LOGIC;
@@ -19929,16 +19913,16 @@ entity wieghts_buffer_ping is
     douta : out STD_LOGIC_VECTOR ( 511 downto 0 )
   );
   attribute NotValidForBitStream : boolean;
-  attribute NotValidForBitStream of wieghts_buffer_ping : entity is true;
+  attribute NotValidForBitStream of weights_buffer_ping : entity is true;
   attribute CHECK_LICENSE_TYPE : string;
-  attribute CHECK_LICENSE_TYPE of wieghts_buffer_ping : entity is "wieghts_buffer_ping,blk_mem_gen_v8_4_2,{}";
+  attribute CHECK_LICENSE_TYPE of weights_buffer_ping : entity is "wieghts_buffer_ping,blk_mem_gen_v8_4_2,{}";
   attribute downgradeipidentifiedwarnings : string;
-  attribute downgradeipidentifiedwarnings of wieghts_buffer_ping : entity is "yes";
+  attribute downgradeipidentifiedwarnings of weights_buffer_ping : entity is "yes";
   attribute x_core_info : string;
-  attribute x_core_info of wieghts_buffer_ping : entity is "blk_mem_gen_v8_4_2,Vivado 2018.3";
-end wieghts_buffer_ping;
+  attribute x_core_info of weights_buffer_ping : entity is "blk_mem_gen_v8_4_2,Vivado 2018.3";
+end weights_buffer_ping;
 
-architecture STRUCTURE of wieghts_buffer_ping is
+architecture STRUCTURE of weights_buffer_ping is
   signal NLW_U0_dbiterr_UNCONNECTED : STD_LOGIC;
   signal NLW_U0_rsta_busy_UNCONNECTED : STD_LOGIC;
   signal NLW_U0_rstb_busy_UNCONNECTED : STD_LOGIC;
@@ -20120,7 +20104,7 @@ architecture STRUCTURE of wieghts_buffer_ping is
   attribute x_interface_info of douta : signal is "xilinx.com:interface:bram:1.0 BRAM_PORTA DOUT";
   attribute x_interface_info of wea : signal is "xilinx.com:interface:bram:1.0 BRAM_PORTA WE";
 begin
-U0: entity work.wieghts_buffer_ping_blk_mem_gen_v8_4_2
+U0: entity work.weights_buffer_ping_blk_mem_gen_v8_4_2
      port map (
       addra(11 downto 0) => addra(11 downto 0),
       addrb(11 downto 0) => B"000000000000",

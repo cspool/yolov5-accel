@@ -1,10 +1,10 @@
 -- Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2018.3 (win64) Build 2405991 Thu Dec  6 23:38:27 MST 2018
--- Date        : Tue Dec 24 10:40:48 2024
+-- Date        : Tue Dec 24 10:40:47 2024
 -- Host        : yang running 64-bit major release  (build 9200)
--- Command     : write_vhdl -force -mode synth_stub
---               e:/vivado_pros/yolov5_accel_2/yolov5_accel_2.srcs/sources_1/ip/wieghts_buffer_ping/wieghts_buffer_ping_stub.vhdl
+-- Command     : write_vhdl -force -mode synth_stub -rename_top weights_buffer_ping -prefix
+--               weights_buffer_ping_ wieghts_buffer_ping_stub.vhdl
 -- Design      : wieghts_buffer_ping
 -- Purpose     : Stub declaration of top-level module interface
 -- Device      : xc7vx690tffg1761-2
@@ -12,7 +12,7 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 
-entity wieghts_buffer_ping is
+entity weights_buffer_ping is
   Port ( 
     clka : in STD_LOGIC;
     ena : in STD_LOGIC;
@@ -22,9 +22,9 @@ entity wieghts_buffer_ping is
     douta : out STD_LOGIC_VECTOR ( 511 downto 0 )
   );
 
-end wieghts_buffer_ping;
+end weights_buffer_ping;
 
-architecture stub of wieghts_buffer_ping is
+architecture stub of weights_buffer_ping is
 attribute syn_black_box : boolean;
 attribute black_box_pad_pin : string;
 attribute syn_black_box of stub : architecture is true;

@@ -1,10 +1,10 @@
 // Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
 // Tool Version: Vivado v.2018.3 (win64) Build 2405991 Thu Dec  6 23:38:27 MST 2018
-// Date        : Tue Dec 24 10:40:48 2024
+// Date        : Tue Dec 24 10:40:47 2024
 // Host        : yang running 64-bit major release  (build 9200)
-// Command     : write_verilog -force -mode funcsim
-//               e:/vivado_pros/yolov5_accel_2/yolov5_accel_2.srcs/sources_1/ip/wieghts_buffer_ping/wieghts_buffer_ping_sim_netlist.v
+// Command     : write_verilog -force -mode funcsim -rename_top weights_buffer_ping -prefix
+//               weights_buffer_ping_ wieghts_buffer_ping_sim_netlist.v
 // Design      : wieghts_buffer_ping
 // Purpose     : This verilog netlist is a functional simulation representation of the design and should not be modified
 //               or synthesized. This netlist cannot be used for SDF annotated simulation.
@@ -14,7 +14,7 @@
 
 (* CHECK_LICENSE_TYPE = "wieghts_buffer_ping,blk_mem_gen_v8_4_2,{}" *) (* downgradeipidentifiedwarnings = "yes" *) (* x_core_info = "blk_mem_gen_v8_4_2,Vivado 2018.3" *) 
 (* NotValidForBitStream *)
-module wieghts_buffer_ping
+module weights_buffer_ping
    (clka,
     ena,
     wea,
@@ -131,7 +131,7 @@ module wieghts_buffer_ping
   (* C_WRITE_WIDTH_B = "512" *) 
   (* C_XDEVICEFAMILY = "virtex7" *) 
   (* downgradeipidentifiedwarnings = "yes" *) 
-  wieghts_buffer_ping_blk_mem_gen_v8_4_2 U0
+  weights_buffer_ping_blk_mem_gen_v8_4_2 U0
        (.addra(addra),
         .addrb({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
         .clka(clka),
@@ -197,8 +197,7 @@ module wieghts_buffer_ping
         .web(1'b0));
 endmodule
 
-(* ORIG_REF_NAME = "bindec" *) 
-module wieghts_buffer_ping_bindec
+module weights_buffer_ping_bindec
    (ena_array,
     addra,
     ena);
@@ -220,8 +219,7 @@ module wieghts_buffer_ping_bindec
         .O(ena_array));
 endmodule
 
-(* ORIG_REF_NAME = "blk_mem_gen_generic_cstr" *) 
-module wieghts_buffer_ping_blk_mem_gen_generic_cstr
+module weights_buffer_ping_blk_mem_gen_generic_cstr
    (douta,
     clka,
     ena,
@@ -754,11 +752,11 @@ module wieghts_buffer_ping_blk_mem_gen_generic_cstr
   wire \ramloop[9].ram.r_n_9 ;
   wire [0:0]wea;
 
-  wieghts_buffer_ping_bindec \bindec_a.bindec_inst_a 
+  weights_buffer_ping_bindec \bindec_a.bindec_inst_a 
        (.addra(addra[11:9]),
         .ena(ena),
         .ena_array(ena_array));
-  wieghts_buffer_ping_blk_mem_gen_mux \has_mux_a.A 
+  weights_buffer_ping_blk_mem_gen_mux \has_mux_a.A 
        (.DOADO({\ramloop[1].ram.r_n_0 ,\ramloop[1].ram.r_n_1 ,\ramloop[1].ram.r_n_2 ,\ramloop[1].ram.r_n_3 ,\ramloop[1].ram.r_n_4 ,\ramloop[1].ram.r_n_5 ,\ramloop[1].ram.r_n_6 ,\ramloop[1].ram.r_n_7 ,\ramloop[1].ram.r_n_8 ,\ramloop[1].ram.r_n_9 ,\ramloop[1].ram.r_n_10 ,\ramloop[1].ram.r_n_11 ,\ramloop[1].ram.r_n_12 ,\ramloop[1].ram.r_n_13 ,\ramloop[1].ram.r_n_14 ,\ramloop[1].ram.r_n_15 }),
         .DOPADOP({\ramloop[1].ram.r_n_16 ,\ramloop[1].ram.r_n_17 }),
         .addra(addra[11:9]),
@@ -826,14 +824,14 @@ module wieghts_buffer_ping_blk_mem_gen_generic_cstr
         .p_55_out(p_55_out),
         .p_75_out(p_75_out),
         .p_95_out(p_95_out));
-  wieghts_buffer_ping_blk_mem_gen_prim_width \ramloop[0].ram.r 
+  weights_buffer_ping_blk_mem_gen_prim_width \ramloop[0].ram.r 
        (.addra(addra),
         .clka(clka),
         .dina(dina[8:0]),
         .douta(douta[8:0]),
         .ena(ena),
         .wea(wea));
-  wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized9 \ramloop[10].ram.r 
+  weights_buffer_ping_blk_mem_gen_prim_width__parameterized9 \ramloop[10].ram.r 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ({\ramloop[10].ram.r_n_0 ,\ramloop[10].ram.r_n_1 ,\ramloop[10].ram.r_n_2 ,\ramloop[10].ram.r_n_3 ,\ramloop[10].ram.r_n_4 ,\ramloop[10].ram.r_n_5 ,\ramloop[10].ram.r_n_6 ,\ramloop[10].ram.r_n_7 ,\ramloop[10].ram.r_n_8 ,\ramloop[10].ram.r_n_9 ,\ramloop[10].ram.r_n_10 ,\ramloop[10].ram.r_n_11 ,\ramloop[10].ram.r_n_12 ,\ramloop[10].ram.r_n_13 ,\ramloop[10].ram.r_n_14 ,\ramloop[10].ram.r_n_15 }),
         .\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ({\ramloop[10].ram.r_n_16 ,\ramloop[10].ram.r_n_17 }),
         .addra(addra[10:0]),
@@ -841,7 +839,7 @@ module wieghts_buffer_ping_blk_mem_gen_generic_cstr
         .dina(dina[152:135]),
         .ram_ena(ram_ena),
         .wea(wea));
-  wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized10 \ramloop[11].ram.r 
+  weights_buffer_ping_blk_mem_gen_prim_width__parameterized10 \ramloop[11].ram.r 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ({\ramloop[11].ram.r_n_0 ,\ramloop[11].ram.r_n_1 ,\ramloop[11].ram.r_n_2 ,\ramloop[11].ram.r_n_3 ,\ramloop[11].ram.r_n_4 ,\ramloop[11].ram.r_n_5 ,\ramloop[11].ram.r_n_6 ,\ramloop[11].ram.r_n_7 ,\ramloop[11].ram.r_n_8 ,\ramloop[11].ram.r_n_9 ,\ramloop[11].ram.r_n_10 ,\ramloop[11].ram.r_n_11 ,\ramloop[11].ram.r_n_12 ,\ramloop[11].ram.r_n_13 ,\ramloop[11].ram.r_n_14 ,\ramloop[11].ram.r_n_15 }),
         .\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ({\ramloop[11].ram.r_n_16 ,\ramloop[11].ram.r_n_17 }),
         .addra(addra[10:0]),
@@ -849,14 +847,14 @@ module wieghts_buffer_ping_blk_mem_gen_generic_cstr
         .dina(dina[170:153]),
         .ram_ena(ram_ena),
         .wea(wea));
-  wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized11 \ramloop[12].ram.r 
+  weights_buffer_ping_blk_mem_gen_prim_width__parameterized11 \ramloop[12].ram.r 
        (.addra(addra[8:0]),
         .clka(clka),
         .dina(dina[224:153]),
         .ena_array(ena_array),
         .p_95_out(p_95_out),
         .wea(wea));
-  wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized12 \ramloop[13].ram.r 
+  weights_buffer_ping_blk_mem_gen_prim_width__parameterized12 \ramloop[13].ram.r 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ({\ramloop[13].ram.r_n_0 ,\ramloop[13].ram.r_n_1 ,\ramloop[13].ram.r_n_2 ,\ramloop[13].ram.r_n_3 ,\ramloop[13].ram.r_n_4 ,\ramloop[13].ram.r_n_5 ,\ramloop[13].ram.r_n_6 ,\ramloop[13].ram.r_n_7 ,\ramloop[13].ram.r_n_8 ,\ramloop[13].ram.r_n_9 ,\ramloop[13].ram.r_n_10 ,\ramloop[13].ram.r_n_11 ,\ramloop[13].ram.r_n_12 ,\ramloop[13].ram.r_n_13 ,\ramloop[13].ram.r_n_14 ,\ramloop[13].ram.r_n_15 }),
         .\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ({\ramloop[13].ram.r_n_16 ,\ramloop[13].ram.r_n_17 }),
         .addra(addra[10:0]),
@@ -864,7 +862,7 @@ module wieghts_buffer_ping_blk_mem_gen_generic_cstr
         .dina(dina[188:171]),
         .ram_ena(ram_ena),
         .wea(wea));
-  wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized13 \ramloop[14].ram.r 
+  weights_buffer_ping_blk_mem_gen_prim_width__parameterized13 \ramloop[14].ram.r 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ({\ramloop[14].ram.r_n_0 ,\ramloop[14].ram.r_n_1 ,\ramloop[14].ram.r_n_2 ,\ramloop[14].ram.r_n_3 ,\ramloop[14].ram.r_n_4 ,\ramloop[14].ram.r_n_5 ,\ramloop[14].ram.r_n_6 ,\ramloop[14].ram.r_n_7 ,\ramloop[14].ram.r_n_8 ,\ramloop[14].ram.r_n_9 ,\ramloop[14].ram.r_n_10 ,\ramloop[14].ram.r_n_11 ,\ramloop[14].ram.r_n_12 ,\ramloop[14].ram.r_n_13 ,\ramloop[14].ram.r_n_14 ,\ramloop[14].ram.r_n_15 }),
         .\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ({\ramloop[14].ram.r_n_16 ,\ramloop[14].ram.r_n_17 }),
         .addra(addra[10:0]),
@@ -872,7 +870,7 @@ module wieghts_buffer_ping_blk_mem_gen_generic_cstr
         .dina(dina[206:189]),
         .ram_ena(ram_ena),
         .wea(wea));
-  wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized14 \ramloop[15].ram.r 
+  weights_buffer_ping_blk_mem_gen_prim_width__parameterized14 \ramloop[15].ram.r 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ({\ramloop[15].ram.r_n_0 ,\ramloop[15].ram.r_n_1 ,\ramloop[15].ram.r_n_2 ,\ramloop[15].ram.r_n_3 ,\ramloop[15].ram.r_n_4 ,\ramloop[15].ram.r_n_5 ,\ramloop[15].ram.r_n_6 ,\ramloop[15].ram.r_n_7 ,\ramloop[15].ram.r_n_8 ,\ramloop[15].ram.r_n_9 ,\ramloop[15].ram.r_n_10 ,\ramloop[15].ram.r_n_11 ,\ramloop[15].ram.r_n_12 ,\ramloop[15].ram.r_n_13 ,\ramloop[15].ram.r_n_14 ,\ramloop[15].ram.r_n_15 }),
         .\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ({\ramloop[15].ram.r_n_16 ,\ramloop[15].ram.r_n_17 }),
         .addra(addra[10:0]),
@@ -880,7 +878,7 @@ module wieghts_buffer_ping_blk_mem_gen_generic_cstr
         .dina(dina[224:207]),
         .ram_ena(ram_ena),
         .wea(wea));
-  wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized15 \ramloop[16].ram.r 
+  weights_buffer_ping_blk_mem_gen_prim_width__parameterized15 \ramloop[16].ram.r 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ({\ramloop[16].ram.r_n_0 ,\ramloop[16].ram.r_n_1 ,\ramloop[16].ram.r_n_2 ,\ramloop[16].ram.r_n_3 ,\ramloop[16].ram.r_n_4 ,\ramloop[16].ram.r_n_5 ,\ramloop[16].ram.r_n_6 ,\ramloop[16].ram.r_n_7 ,\ramloop[16].ram.r_n_8 ,\ramloop[16].ram.r_n_9 ,\ramloop[16].ram.r_n_10 ,\ramloop[16].ram.r_n_11 ,\ramloop[16].ram.r_n_12 ,\ramloop[16].ram.r_n_13 ,\ramloop[16].ram.r_n_14 ,\ramloop[16].ram.r_n_15 }),
         .\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ({\ramloop[16].ram.r_n_16 ,\ramloop[16].ram.r_n_17 }),
         .addra(addra[10:0]),
@@ -888,14 +886,14 @@ module wieghts_buffer_ping_blk_mem_gen_generic_cstr
         .dina(dina[242:225]),
         .ram_ena(ram_ena),
         .wea(wea));
-  wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized16 \ramloop[17].ram.r 
+  weights_buffer_ping_blk_mem_gen_prim_width__parameterized16 \ramloop[17].ram.r 
        (.addra(addra[8:0]),
         .clka(clka),
         .dina(dina[296:225]),
         .ena_array(ena_array),
         .p_75_out(p_75_out),
         .wea(wea));
-  wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized17 \ramloop[18].ram.r 
+  weights_buffer_ping_blk_mem_gen_prim_width__parameterized17 \ramloop[18].ram.r 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ({\ramloop[18].ram.r_n_0 ,\ramloop[18].ram.r_n_1 ,\ramloop[18].ram.r_n_2 ,\ramloop[18].ram.r_n_3 ,\ramloop[18].ram.r_n_4 ,\ramloop[18].ram.r_n_5 ,\ramloop[18].ram.r_n_6 ,\ramloop[18].ram.r_n_7 ,\ramloop[18].ram.r_n_8 ,\ramloop[18].ram.r_n_9 ,\ramloop[18].ram.r_n_10 ,\ramloop[18].ram.r_n_11 ,\ramloop[18].ram.r_n_12 ,\ramloop[18].ram.r_n_13 ,\ramloop[18].ram.r_n_14 ,\ramloop[18].ram.r_n_15 }),
         .\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ({\ramloop[18].ram.r_n_16 ,\ramloop[18].ram.r_n_17 }),
         .addra(addra[10:0]),
@@ -903,7 +901,7 @@ module wieghts_buffer_ping_blk_mem_gen_generic_cstr
         .dina(dina[260:243]),
         .ram_ena(ram_ena),
         .wea(wea));
-  wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized18 \ramloop[19].ram.r 
+  weights_buffer_ping_blk_mem_gen_prim_width__parameterized18 \ramloop[19].ram.r 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ({\ramloop[19].ram.r_n_0 ,\ramloop[19].ram.r_n_1 ,\ramloop[19].ram.r_n_2 ,\ramloop[19].ram.r_n_3 ,\ramloop[19].ram.r_n_4 ,\ramloop[19].ram.r_n_5 ,\ramloop[19].ram.r_n_6 ,\ramloop[19].ram.r_n_7 ,\ramloop[19].ram.r_n_8 ,\ramloop[19].ram.r_n_9 ,\ramloop[19].ram.r_n_10 ,\ramloop[19].ram.r_n_11 ,\ramloop[19].ram.r_n_12 ,\ramloop[19].ram.r_n_13 ,\ramloop[19].ram.r_n_14 ,\ramloop[19].ram.r_n_15 }),
         .\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ({\ramloop[19].ram.r_n_16 ,\ramloop[19].ram.r_n_17 }),
         .addra(addra[10:0]),
@@ -911,7 +909,7 @@ module wieghts_buffer_ping_blk_mem_gen_generic_cstr
         .dina(dina[278:261]),
         .ram_ena(ram_ena),
         .wea(wea));
-  wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized0 \ramloop[1].ram.r 
+  weights_buffer_ping_blk_mem_gen_prim_width__parameterized0 \ramloop[1].ram.r 
        (.DOADO({\ramloop[1].ram.r_n_0 ,\ramloop[1].ram.r_n_1 ,\ramloop[1].ram.r_n_2 ,\ramloop[1].ram.r_n_3 ,\ramloop[1].ram.r_n_4 ,\ramloop[1].ram.r_n_5 ,\ramloop[1].ram.r_n_6 ,\ramloop[1].ram.r_n_7 ,\ramloop[1].ram.r_n_8 ,\ramloop[1].ram.r_n_9 ,\ramloop[1].ram.r_n_10 ,\ramloop[1].ram.r_n_11 ,\ramloop[1].ram.r_n_12 ,\ramloop[1].ram.r_n_13 ,\ramloop[1].ram.r_n_14 ,\ramloop[1].ram.r_n_15 }),
         .DOPADOP({\ramloop[1].ram.r_n_16 ,\ramloop[1].ram.r_n_17 }),
         .addra(addra[10:0]),
@@ -919,7 +917,7 @@ module wieghts_buffer_ping_blk_mem_gen_generic_cstr
         .dina(dina[26:9]),
         .ram_ena(ram_ena),
         .wea(wea));
-  wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized19 \ramloop[20].ram.r 
+  weights_buffer_ping_blk_mem_gen_prim_width__parameterized19 \ramloop[20].ram.r 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ({\ramloop[20].ram.r_n_0 ,\ramloop[20].ram.r_n_1 ,\ramloop[20].ram.r_n_2 ,\ramloop[20].ram.r_n_3 ,\ramloop[20].ram.r_n_4 ,\ramloop[20].ram.r_n_5 ,\ramloop[20].ram.r_n_6 ,\ramloop[20].ram.r_n_7 ,\ramloop[20].ram.r_n_8 ,\ramloop[20].ram.r_n_9 ,\ramloop[20].ram.r_n_10 ,\ramloop[20].ram.r_n_11 ,\ramloop[20].ram.r_n_12 ,\ramloop[20].ram.r_n_13 ,\ramloop[20].ram.r_n_14 ,\ramloop[20].ram.r_n_15 }),
         .\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ({\ramloop[20].ram.r_n_16 ,\ramloop[20].ram.r_n_17 }),
         .addra(addra[10:0]),
@@ -927,7 +925,7 @@ module wieghts_buffer_ping_blk_mem_gen_generic_cstr
         .dina(dina[296:279]),
         .ram_ena(ram_ena),
         .wea(wea));
-  wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized20 \ramloop[21].ram.r 
+  weights_buffer_ping_blk_mem_gen_prim_width__parameterized20 \ramloop[21].ram.r 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ({\ramloop[21].ram.r_n_0 ,\ramloop[21].ram.r_n_1 ,\ramloop[21].ram.r_n_2 ,\ramloop[21].ram.r_n_3 ,\ramloop[21].ram.r_n_4 ,\ramloop[21].ram.r_n_5 ,\ramloop[21].ram.r_n_6 ,\ramloop[21].ram.r_n_7 ,\ramloop[21].ram.r_n_8 ,\ramloop[21].ram.r_n_9 ,\ramloop[21].ram.r_n_10 ,\ramloop[21].ram.r_n_11 ,\ramloop[21].ram.r_n_12 ,\ramloop[21].ram.r_n_13 ,\ramloop[21].ram.r_n_14 ,\ramloop[21].ram.r_n_15 }),
         .\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ({\ramloop[21].ram.r_n_16 ,\ramloop[21].ram.r_n_17 }),
         .addra(addra[10:0]),
@@ -935,14 +933,14 @@ module wieghts_buffer_ping_blk_mem_gen_generic_cstr
         .dina(dina[314:297]),
         .ram_ena(ram_ena),
         .wea(wea));
-  wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized21 \ramloop[22].ram.r 
+  weights_buffer_ping_blk_mem_gen_prim_width__parameterized21 \ramloop[22].ram.r 
        (.addra(addra[8:0]),
         .clka(clka),
         .dina(dina[368:297]),
         .ena_array(ena_array),
         .p_55_out(p_55_out),
         .wea(wea));
-  wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized22 \ramloop[23].ram.r 
+  weights_buffer_ping_blk_mem_gen_prim_width__parameterized22 \ramloop[23].ram.r 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ({\ramloop[23].ram.r_n_0 ,\ramloop[23].ram.r_n_1 ,\ramloop[23].ram.r_n_2 ,\ramloop[23].ram.r_n_3 ,\ramloop[23].ram.r_n_4 ,\ramloop[23].ram.r_n_5 ,\ramloop[23].ram.r_n_6 ,\ramloop[23].ram.r_n_7 ,\ramloop[23].ram.r_n_8 ,\ramloop[23].ram.r_n_9 ,\ramloop[23].ram.r_n_10 ,\ramloop[23].ram.r_n_11 ,\ramloop[23].ram.r_n_12 ,\ramloop[23].ram.r_n_13 ,\ramloop[23].ram.r_n_14 ,\ramloop[23].ram.r_n_15 }),
         .\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ({\ramloop[23].ram.r_n_16 ,\ramloop[23].ram.r_n_17 }),
         .addra(addra[10:0]),
@@ -950,7 +948,7 @@ module wieghts_buffer_ping_blk_mem_gen_generic_cstr
         .dina(dina[332:315]),
         .ram_ena(ram_ena),
         .wea(wea));
-  wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized23 \ramloop[24].ram.r 
+  weights_buffer_ping_blk_mem_gen_prim_width__parameterized23 \ramloop[24].ram.r 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ({\ramloop[24].ram.r_n_0 ,\ramloop[24].ram.r_n_1 ,\ramloop[24].ram.r_n_2 ,\ramloop[24].ram.r_n_3 ,\ramloop[24].ram.r_n_4 ,\ramloop[24].ram.r_n_5 ,\ramloop[24].ram.r_n_6 ,\ramloop[24].ram.r_n_7 ,\ramloop[24].ram.r_n_8 ,\ramloop[24].ram.r_n_9 ,\ramloop[24].ram.r_n_10 ,\ramloop[24].ram.r_n_11 ,\ramloop[24].ram.r_n_12 ,\ramloop[24].ram.r_n_13 ,\ramloop[24].ram.r_n_14 ,\ramloop[24].ram.r_n_15 }),
         .\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ({\ramloop[24].ram.r_n_16 ,\ramloop[24].ram.r_n_17 }),
         .addra(addra[10:0]),
@@ -958,7 +956,7 @@ module wieghts_buffer_ping_blk_mem_gen_generic_cstr
         .dina(dina[350:333]),
         .ram_ena(ram_ena),
         .wea(wea));
-  wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized24 \ramloop[25].ram.r 
+  weights_buffer_ping_blk_mem_gen_prim_width__parameterized24 \ramloop[25].ram.r 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ({\ramloop[25].ram.r_n_0 ,\ramloop[25].ram.r_n_1 ,\ramloop[25].ram.r_n_2 ,\ramloop[25].ram.r_n_3 ,\ramloop[25].ram.r_n_4 ,\ramloop[25].ram.r_n_5 ,\ramloop[25].ram.r_n_6 ,\ramloop[25].ram.r_n_7 ,\ramloop[25].ram.r_n_8 ,\ramloop[25].ram.r_n_9 ,\ramloop[25].ram.r_n_10 ,\ramloop[25].ram.r_n_11 ,\ramloop[25].ram.r_n_12 ,\ramloop[25].ram.r_n_13 ,\ramloop[25].ram.r_n_14 ,\ramloop[25].ram.r_n_15 }),
         .\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ({\ramloop[25].ram.r_n_16 ,\ramloop[25].ram.r_n_17 }),
         .addra(addra[10:0]),
@@ -966,7 +964,7 @@ module wieghts_buffer_ping_blk_mem_gen_generic_cstr
         .dina(dina[368:351]),
         .ram_ena(ram_ena),
         .wea(wea));
-  wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized25 \ramloop[26].ram.r 
+  weights_buffer_ping_blk_mem_gen_prim_width__parameterized25 \ramloop[26].ram.r 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ({\ramloop[26].ram.r_n_0 ,\ramloop[26].ram.r_n_1 ,\ramloop[26].ram.r_n_2 ,\ramloop[26].ram.r_n_3 ,\ramloop[26].ram.r_n_4 ,\ramloop[26].ram.r_n_5 ,\ramloop[26].ram.r_n_6 ,\ramloop[26].ram.r_n_7 ,\ramloop[26].ram.r_n_8 ,\ramloop[26].ram.r_n_9 ,\ramloop[26].ram.r_n_10 ,\ramloop[26].ram.r_n_11 ,\ramloop[26].ram.r_n_12 ,\ramloop[26].ram.r_n_13 ,\ramloop[26].ram.r_n_14 ,\ramloop[26].ram.r_n_15 }),
         .\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ({\ramloop[26].ram.r_n_16 ,\ramloop[26].ram.r_n_17 }),
         .addra(addra[10:0]),
@@ -974,14 +972,14 @@ module wieghts_buffer_ping_blk_mem_gen_generic_cstr
         .dina(dina[386:369]),
         .ram_ena(ram_ena),
         .wea(wea));
-  wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized26 \ramloop[27].ram.r 
+  weights_buffer_ping_blk_mem_gen_prim_width__parameterized26 \ramloop[27].ram.r 
        (.addra(addra[8:0]),
         .clka(clka),
         .dina(dina[440:369]),
         .ena_array(ena_array),
         .p_35_out(p_35_out),
         .wea(wea));
-  wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized27 \ramloop[28].ram.r 
+  weights_buffer_ping_blk_mem_gen_prim_width__parameterized27 \ramloop[28].ram.r 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ({\ramloop[28].ram.r_n_0 ,\ramloop[28].ram.r_n_1 ,\ramloop[28].ram.r_n_2 ,\ramloop[28].ram.r_n_3 ,\ramloop[28].ram.r_n_4 ,\ramloop[28].ram.r_n_5 ,\ramloop[28].ram.r_n_6 ,\ramloop[28].ram.r_n_7 ,\ramloop[28].ram.r_n_8 ,\ramloop[28].ram.r_n_9 ,\ramloop[28].ram.r_n_10 ,\ramloop[28].ram.r_n_11 ,\ramloop[28].ram.r_n_12 ,\ramloop[28].ram.r_n_13 ,\ramloop[28].ram.r_n_14 ,\ramloop[28].ram.r_n_15 }),
         .\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ({\ramloop[28].ram.r_n_16 ,\ramloop[28].ram.r_n_17 }),
         .addra(addra[10:0]),
@@ -989,7 +987,7 @@ module wieghts_buffer_ping_blk_mem_gen_generic_cstr
         .dina(dina[404:387]),
         .ram_ena(ram_ena),
         .wea(wea));
-  wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized28 \ramloop[29].ram.r 
+  weights_buffer_ping_blk_mem_gen_prim_width__parameterized28 \ramloop[29].ram.r 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ({\ramloop[29].ram.r_n_0 ,\ramloop[29].ram.r_n_1 ,\ramloop[29].ram.r_n_2 ,\ramloop[29].ram.r_n_3 ,\ramloop[29].ram.r_n_4 ,\ramloop[29].ram.r_n_5 ,\ramloop[29].ram.r_n_6 ,\ramloop[29].ram.r_n_7 ,\ramloop[29].ram.r_n_8 ,\ramloop[29].ram.r_n_9 ,\ramloop[29].ram.r_n_10 ,\ramloop[29].ram.r_n_11 ,\ramloop[29].ram.r_n_12 ,\ramloop[29].ram.r_n_13 ,\ramloop[29].ram.r_n_14 ,\ramloop[29].ram.r_n_15 }),
         .\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ({\ramloop[29].ram.r_n_16 ,\ramloop[29].ram.r_n_17 }),
         .addra(addra[10:0]),
@@ -997,14 +995,14 @@ module wieghts_buffer_ping_blk_mem_gen_generic_cstr
         .dina(dina[422:405]),
         .ram_ena(ram_ena),
         .wea(wea));
-  wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized1 \ramloop[2].ram.r 
+  weights_buffer_ping_blk_mem_gen_prim_width__parameterized1 \ramloop[2].ram.r 
        (.addra(addra[8:0]),
         .clka(clka),
         .dina(dina[80:9]),
         .ena_array(ena_array),
         .p_135_out(p_135_out),
         .wea(wea));
-  wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized29 \ramloop[30].ram.r 
+  weights_buffer_ping_blk_mem_gen_prim_width__parameterized29 \ramloop[30].ram.r 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ({\ramloop[30].ram.r_n_0 ,\ramloop[30].ram.r_n_1 ,\ramloop[30].ram.r_n_2 ,\ramloop[30].ram.r_n_3 ,\ramloop[30].ram.r_n_4 ,\ramloop[30].ram.r_n_5 ,\ramloop[30].ram.r_n_6 ,\ramloop[30].ram.r_n_7 ,\ramloop[30].ram.r_n_8 ,\ramloop[30].ram.r_n_9 ,\ramloop[30].ram.r_n_10 ,\ramloop[30].ram.r_n_11 ,\ramloop[30].ram.r_n_12 ,\ramloop[30].ram.r_n_13 ,\ramloop[30].ram.r_n_14 ,\ramloop[30].ram.r_n_15 }),
         .\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ({\ramloop[30].ram.r_n_16 ,\ramloop[30].ram.r_n_17 }),
         .addra(addra[10:0]),
@@ -1012,7 +1010,7 @@ module wieghts_buffer_ping_blk_mem_gen_generic_cstr
         .dina(dina[440:423]),
         .ram_ena(ram_ena),
         .wea(wea));
-  wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized30 \ramloop[31].ram.r 
+  weights_buffer_ping_blk_mem_gen_prim_width__parameterized30 \ramloop[31].ram.r 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ({\ramloop[31].ram.r_n_0 ,\ramloop[31].ram.r_n_1 ,\ramloop[31].ram.r_n_2 ,\ramloop[31].ram.r_n_3 ,\ramloop[31].ram.r_n_4 ,\ramloop[31].ram.r_n_5 ,\ramloop[31].ram.r_n_6 ,\ramloop[31].ram.r_n_7 ,\ramloop[31].ram.r_n_8 ,\ramloop[31].ram.r_n_9 ,\ramloop[31].ram.r_n_10 ,\ramloop[31].ram.r_n_11 ,\ramloop[31].ram.r_n_12 ,\ramloop[31].ram.r_n_13 ,\ramloop[31].ram.r_n_14 ,\ramloop[31].ram.r_n_15 }),
         .\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ({\ramloop[31].ram.r_n_16 ,\ramloop[31].ram.r_n_17 }),
         .addra(addra[10:0]),
@@ -1020,14 +1018,14 @@ module wieghts_buffer_ping_blk_mem_gen_generic_cstr
         .dina(dina[458:441]),
         .ram_ena(ram_ena),
         .wea(wea));
-  wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized31 \ramloop[32].ram.r 
+  weights_buffer_ping_blk_mem_gen_prim_width__parameterized31 \ramloop[32].ram.r 
        (.addra(addra[8:0]),
         .clka(clka),
         .dina(dina[511:441]),
         .ena_array(ena_array),
         .p_15_out(p_15_out),
         .wea(wea));
-  wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized32 \ramloop[33].ram.r 
+  weights_buffer_ping_blk_mem_gen_prim_width__parameterized32 \ramloop[33].ram.r 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ({\ramloop[33].ram.r_n_0 ,\ramloop[33].ram.r_n_1 ,\ramloop[33].ram.r_n_2 ,\ramloop[33].ram.r_n_3 ,\ramloop[33].ram.r_n_4 ,\ramloop[33].ram.r_n_5 ,\ramloop[33].ram.r_n_6 ,\ramloop[33].ram.r_n_7 ,\ramloop[33].ram.r_n_8 ,\ramloop[33].ram.r_n_9 ,\ramloop[33].ram.r_n_10 ,\ramloop[33].ram.r_n_11 ,\ramloop[33].ram.r_n_12 ,\ramloop[33].ram.r_n_13 ,\ramloop[33].ram.r_n_14 ,\ramloop[33].ram.r_n_15 }),
         .\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ({\ramloop[33].ram.r_n_16 ,\ramloop[33].ram.r_n_17 }),
         .addra(addra[10:0]),
@@ -1035,7 +1033,7 @@ module wieghts_buffer_ping_blk_mem_gen_generic_cstr
         .dina(dina[476:459]),
         .ram_ena(ram_ena),
         .wea(wea));
-  wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized33 \ramloop[34].ram.r 
+  weights_buffer_ping_blk_mem_gen_prim_width__parameterized33 \ramloop[34].ram.r 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ({\ramloop[34].ram.r_n_0 ,\ramloop[34].ram.r_n_1 ,\ramloop[34].ram.r_n_2 ,\ramloop[34].ram.r_n_3 ,\ramloop[34].ram.r_n_4 ,\ramloop[34].ram.r_n_5 ,\ramloop[34].ram.r_n_6 ,\ramloop[34].ram.r_n_7 ,\ramloop[34].ram.r_n_8 ,\ramloop[34].ram.r_n_9 ,\ramloop[34].ram.r_n_10 ,\ramloop[34].ram.r_n_11 ,\ramloop[34].ram.r_n_12 ,\ramloop[34].ram.r_n_13 ,\ramloop[34].ram.r_n_14 ,\ramloop[34].ram.r_n_15 }),
         .\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ({\ramloop[34].ram.r_n_16 ,\ramloop[34].ram.r_n_17 }),
         .addra(addra[10:0]),
@@ -1043,7 +1041,7 @@ module wieghts_buffer_ping_blk_mem_gen_generic_cstr
         .dina(dina[494:477]),
         .ram_ena(ram_ena),
         .wea(wea));
-  wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized34 \ramloop[35].ram.r 
+  weights_buffer_ping_blk_mem_gen_prim_width__parameterized34 \ramloop[35].ram.r 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ({\ramloop[35].ram.r_n_0 ,\ramloop[35].ram.r_n_1 ,\ramloop[35].ram.r_n_2 ,\ramloop[35].ram.r_n_3 ,\ramloop[35].ram.r_n_4 ,\ramloop[35].ram.r_n_5 ,\ramloop[35].ram.r_n_6 ,\ramloop[35].ram.r_n_7 ,\ramloop[35].ram.r_n_8 ,\ramloop[35].ram.r_n_9 ,\ramloop[35].ram.r_n_10 ,\ramloop[35].ram.r_n_11 ,\ramloop[35].ram.r_n_12 ,\ramloop[35].ram.r_n_13 ,\ramloop[35].ram.r_n_14 ,\ramloop[35].ram.r_n_15 }),
         .\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 (\ramloop[35].ram.r_n_16 ),
         .addra(addra),
@@ -1052,7 +1050,7 @@ module wieghts_buffer_ping_blk_mem_gen_generic_cstr
         .ena(ena),
         .ram_ena(ram_ena),
         .wea(wea));
-  wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized2 \ramloop[3].ram.r 
+  weights_buffer_ping_blk_mem_gen_prim_width__parameterized2 \ramloop[3].ram.r 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ({\ramloop[3].ram.r_n_0 ,\ramloop[3].ram.r_n_1 ,\ramloop[3].ram.r_n_2 ,\ramloop[3].ram.r_n_3 ,\ramloop[3].ram.r_n_4 ,\ramloop[3].ram.r_n_5 ,\ramloop[3].ram.r_n_6 ,\ramloop[3].ram.r_n_7 ,\ramloop[3].ram.r_n_8 ,\ramloop[3].ram.r_n_9 ,\ramloop[3].ram.r_n_10 ,\ramloop[3].ram.r_n_11 ,\ramloop[3].ram.r_n_12 ,\ramloop[3].ram.r_n_13 ,\ramloop[3].ram.r_n_14 ,\ramloop[3].ram.r_n_15 }),
         .\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ({\ramloop[3].ram.r_n_16 ,\ramloop[3].ram.r_n_17 }),
         .addra(addra[10:0]),
@@ -1060,7 +1058,7 @@ module wieghts_buffer_ping_blk_mem_gen_generic_cstr
         .dina(dina[44:27]),
         .ram_ena(ram_ena),
         .wea(wea));
-  wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized3 \ramloop[4].ram.r 
+  weights_buffer_ping_blk_mem_gen_prim_width__parameterized3 \ramloop[4].ram.r 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ({\ramloop[4].ram.r_n_0 ,\ramloop[4].ram.r_n_1 ,\ramloop[4].ram.r_n_2 ,\ramloop[4].ram.r_n_3 ,\ramloop[4].ram.r_n_4 ,\ramloop[4].ram.r_n_5 ,\ramloop[4].ram.r_n_6 ,\ramloop[4].ram.r_n_7 ,\ramloop[4].ram.r_n_8 ,\ramloop[4].ram.r_n_9 ,\ramloop[4].ram.r_n_10 ,\ramloop[4].ram.r_n_11 ,\ramloop[4].ram.r_n_12 ,\ramloop[4].ram.r_n_13 ,\ramloop[4].ram.r_n_14 ,\ramloop[4].ram.r_n_15 }),
         .\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ({\ramloop[4].ram.r_n_16 ,\ramloop[4].ram.r_n_17 }),
         .addra(addra[10:0]),
@@ -1068,7 +1066,7 @@ module wieghts_buffer_ping_blk_mem_gen_generic_cstr
         .dina(dina[62:45]),
         .ram_ena(ram_ena),
         .wea(wea));
-  wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized4 \ramloop[5].ram.r 
+  weights_buffer_ping_blk_mem_gen_prim_width__parameterized4 \ramloop[5].ram.r 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ({\ramloop[5].ram.r_n_0 ,\ramloop[5].ram.r_n_1 ,\ramloop[5].ram.r_n_2 ,\ramloop[5].ram.r_n_3 ,\ramloop[5].ram.r_n_4 ,\ramloop[5].ram.r_n_5 ,\ramloop[5].ram.r_n_6 ,\ramloop[5].ram.r_n_7 ,\ramloop[5].ram.r_n_8 ,\ramloop[5].ram.r_n_9 ,\ramloop[5].ram.r_n_10 ,\ramloop[5].ram.r_n_11 ,\ramloop[5].ram.r_n_12 ,\ramloop[5].ram.r_n_13 ,\ramloop[5].ram.r_n_14 ,\ramloop[5].ram.r_n_15 }),
         .\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ({\ramloop[5].ram.r_n_16 ,\ramloop[5].ram.r_n_17 }),
         .addra(addra[10:0]),
@@ -1076,7 +1074,7 @@ module wieghts_buffer_ping_blk_mem_gen_generic_cstr
         .dina(dina[80:63]),
         .ram_ena(ram_ena),
         .wea(wea));
-  wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized5 \ramloop[6].ram.r 
+  weights_buffer_ping_blk_mem_gen_prim_width__parameterized5 \ramloop[6].ram.r 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ({\ramloop[6].ram.r_n_0 ,\ramloop[6].ram.r_n_1 ,\ramloop[6].ram.r_n_2 ,\ramloop[6].ram.r_n_3 ,\ramloop[6].ram.r_n_4 ,\ramloop[6].ram.r_n_5 ,\ramloop[6].ram.r_n_6 ,\ramloop[6].ram.r_n_7 ,\ramloop[6].ram.r_n_8 ,\ramloop[6].ram.r_n_9 ,\ramloop[6].ram.r_n_10 ,\ramloop[6].ram.r_n_11 ,\ramloop[6].ram.r_n_12 ,\ramloop[6].ram.r_n_13 ,\ramloop[6].ram.r_n_14 ,\ramloop[6].ram.r_n_15 }),
         .\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ({\ramloop[6].ram.r_n_16 ,\ramloop[6].ram.r_n_17 }),
         .addra(addra[10:0]),
@@ -1084,14 +1082,14 @@ module wieghts_buffer_ping_blk_mem_gen_generic_cstr
         .dina(dina[98:81]),
         .ram_ena(ram_ena),
         .wea(wea));
-  wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized6 \ramloop[7].ram.r 
+  weights_buffer_ping_blk_mem_gen_prim_width__parameterized6 \ramloop[7].ram.r 
        (.addra(addra[8:0]),
         .clka(clka),
         .dina(dina[152:81]),
         .ena_array(ena_array),
         .p_115_out(p_115_out),
         .wea(wea));
-  wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized7 \ramloop[8].ram.r 
+  weights_buffer_ping_blk_mem_gen_prim_width__parameterized7 \ramloop[8].ram.r 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ({\ramloop[8].ram.r_n_0 ,\ramloop[8].ram.r_n_1 ,\ramloop[8].ram.r_n_2 ,\ramloop[8].ram.r_n_3 ,\ramloop[8].ram.r_n_4 ,\ramloop[8].ram.r_n_5 ,\ramloop[8].ram.r_n_6 ,\ramloop[8].ram.r_n_7 ,\ramloop[8].ram.r_n_8 ,\ramloop[8].ram.r_n_9 ,\ramloop[8].ram.r_n_10 ,\ramloop[8].ram.r_n_11 ,\ramloop[8].ram.r_n_12 ,\ramloop[8].ram.r_n_13 ,\ramloop[8].ram.r_n_14 ,\ramloop[8].ram.r_n_15 }),
         .\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ({\ramloop[8].ram.r_n_16 ,\ramloop[8].ram.r_n_17 }),
         .addra(addra[10:0]),
@@ -1099,7 +1097,7 @@ module wieghts_buffer_ping_blk_mem_gen_generic_cstr
         .dina(dina[116:99]),
         .ram_ena(ram_ena),
         .wea(wea));
-  wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized8 \ramloop[9].ram.r 
+  weights_buffer_ping_blk_mem_gen_prim_width__parameterized8 \ramloop[9].ram.r 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ({\ramloop[9].ram.r_n_0 ,\ramloop[9].ram.r_n_1 ,\ramloop[9].ram.r_n_2 ,\ramloop[9].ram.r_n_3 ,\ramloop[9].ram.r_n_4 ,\ramloop[9].ram.r_n_5 ,\ramloop[9].ram.r_n_6 ,\ramloop[9].ram.r_n_7 ,\ramloop[9].ram.r_n_8 ,\ramloop[9].ram.r_n_9 ,\ramloop[9].ram.r_n_10 ,\ramloop[9].ram.r_n_11 ,\ramloop[9].ram.r_n_12 ,\ramloop[9].ram.r_n_13 ,\ramloop[9].ram.r_n_14 ,\ramloop[9].ram.r_n_15 }),
         .\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ({\ramloop[9].ram.r_n_16 ,\ramloop[9].ram.r_n_17 }),
         .addra(addra[10:0]),
@@ -1109,8 +1107,7 @@ module wieghts_buffer_ping_blk_mem_gen_generic_cstr
         .wea(wea));
 endmodule
 
-(* ORIG_REF_NAME = "blk_mem_gen_mux" *) 
-module wieghts_buffer_ping_blk_mem_gen_mux
+module weights_buffer_ping_blk_mem_gen_mux
    (douta,
     addra,
     ena,
@@ -5894,8 +5891,7 @@ module wieghts_buffer_ping_blk_mem_gen_mux
         .R(1'b0));
 endmodule
 
-(* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_width
+module weights_buffer_ping_blk_mem_gen_prim_width
    (douta,
     clka,
     ena,
@@ -5916,7 +5912,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width
   wire ena;
   wire [0:0]wea;
 
-  wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init \prim_init.ram 
+  weights_buffer_ping_blk_mem_gen_prim_wrapper_init \prim_init.ram 
        (.addra(addra),
         .clka(clka),
         .dina(dina),
@@ -5926,7 +5922,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized0
+module weights_buffer_ping_blk_mem_gen_prim_width__parameterized0
    (DOADO,
     DOPADOP,
     clka,
@@ -5950,7 +5946,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized0
   wire ram_ena;
   wire [0:0]wea;
 
-  wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized0 \prim_init.ram 
+  weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized0 \prim_init.ram 
        (.DOADO(DOADO),
         .DOPADOP(DOPADOP),
         .addra(addra),
@@ -5961,7 +5957,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized0
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized1
+module weights_buffer_ping_blk_mem_gen_prim_width__parameterized1
    (p_135_out,
     clka,
     ena_array,
@@ -5982,7 +5978,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized1
   wire [71:0]p_135_out;
   wire [0:0]wea;
 
-  wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized1 \prim_init.ram 
+  weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized1 \prim_init.ram 
        (.addra(addra),
         .clka(clka),
         .dina(dina),
@@ -5992,7 +5988,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized1
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized10
+module weights_buffer_ping_blk_mem_gen_prim_width__parameterized10
    (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ,
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ,
     clka,
@@ -6016,7 +6012,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized10
   wire ram_ena;
   wire [0:0]wea;
 
-  wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized10 \prim_init.ram 
+  weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized10 \prim_init.ram 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ),
         .\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1 (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ),
         .addra(addra),
@@ -6027,7 +6023,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized10
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized11
+module weights_buffer_ping_blk_mem_gen_prim_width__parameterized11
    (p_95_out,
     clka,
     ena_array,
@@ -6048,7 +6044,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized11
   wire [71:0]p_95_out;
   wire [0:0]wea;
 
-  wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized11 \prim_init.ram 
+  weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized11 \prim_init.ram 
        (.addra(addra),
         .clka(clka),
         .dina(dina),
@@ -6058,7 +6054,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized11
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized12
+module weights_buffer_ping_blk_mem_gen_prim_width__parameterized12
    (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ,
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ,
     clka,
@@ -6082,7 +6078,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized12
   wire ram_ena;
   wire [0:0]wea;
 
-  wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized12 \prim_init.ram 
+  weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized12 \prim_init.ram 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ),
         .\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1 (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ),
         .addra(addra),
@@ -6093,7 +6089,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized12
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized13
+module weights_buffer_ping_blk_mem_gen_prim_width__parameterized13
    (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ,
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ,
     clka,
@@ -6117,7 +6113,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized13
   wire ram_ena;
   wire [0:0]wea;
 
-  wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized13 \prim_init.ram 
+  weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized13 \prim_init.ram 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ),
         .\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1 (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ),
         .addra(addra),
@@ -6128,7 +6124,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized13
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized14
+module weights_buffer_ping_blk_mem_gen_prim_width__parameterized14
    (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ,
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ,
     clka,
@@ -6152,7 +6148,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized14
   wire ram_ena;
   wire [0:0]wea;
 
-  wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized14 \prim_init.ram 
+  weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized14 \prim_init.ram 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ),
         .\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1 (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ),
         .addra(addra),
@@ -6163,7 +6159,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized14
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized15
+module weights_buffer_ping_blk_mem_gen_prim_width__parameterized15
    (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ,
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ,
     clka,
@@ -6187,7 +6183,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized15
   wire ram_ena;
   wire [0:0]wea;
 
-  wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized15 \prim_init.ram 
+  weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized15 \prim_init.ram 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ),
         .\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1 (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ),
         .addra(addra),
@@ -6198,7 +6194,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized15
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized16
+module weights_buffer_ping_blk_mem_gen_prim_width__parameterized16
    (p_75_out,
     clka,
     ena_array,
@@ -6219,7 +6215,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized16
   wire [71:0]p_75_out;
   wire [0:0]wea;
 
-  wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized16 \prim_init.ram 
+  weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized16 \prim_init.ram 
        (.addra(addra),
         .clka(clka),
         .dina(dina),
@@ -6229,7 +6225,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized16
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized17
+module weights_buffer_ping_blk_mem_gen_prim_width__parameterized17
    (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ,
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ,
     clka,
@@ -6253,7 +6249,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized17
   wire ram_ena;
   wire [0:0]wea;
 
-  wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized17 \prim_init.ram 
+  weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized17 \prim_init.ram 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ),
         .\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1 (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ),
         .addra(addra),
@@ -6264,7 +6260,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized17
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized18
+module weights_buffer_ping_blk_mem_gen_prim_width__parameterized18
    (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ,
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ,
     clka,
@@ -6288,7 +6284,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized18
   wire ram_ena;
   wire [0:0]wea;
 
-  wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized18 \prim_init.ram 
+  weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized18 \prim_init.ram 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ),
         .\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1 (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ),
         .addra(addra),
@@ -6299,7 +6295,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized18
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized19
+module weights_buffer_ping_blk_mem_gen_prim_width__parameterized19
    (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ,
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ,
     clka,
@@ -6323,7 +6319,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized19
   wire ram_ena;
   wire [0:0]wea;
 
-  wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized19 \prim_init.ram 
+  weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized19 \prim_init.ram 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ),
         .\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1 (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ),
         .addra(addra),
@@ -6334,7 +6330,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized19
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized2
+module weights_buffer_ping_blk_mem_gen_prim_width__parameterized2
    (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ,
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ,
     clka,
@@ -6358,7 +6354,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized2
   wire ram_ena;
   wire [0:0]wea;
 
-  wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized2 \prim_init.ram 
+  weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized2 \prim_init.ram 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ),
         .\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1 (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ),
         .addra(addra),
@@ -6369,7 +6365,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized2
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized20
+module weights_buffer_ping_blk_mem_gen_prim_width__parameterized20
    (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ,
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ,
     clka,
@@ -6393,7 +6389,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized20
   wire ram_ena;
   wire [0:0]wea;
 
-  wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized20 \prim_init.ram 
+  weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized20 \prim_init.ram 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ),
         .\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1 (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ),
         .addra(addra),
@@ -6404,7 +6400,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized20
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized21
+module weights_buffer_ping_blk_mem_gen_prim_width__parameterized21
    (p_55_out,
     clka,
     ena_array,
@@ -6425,7 +6421,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized21
   wire [71:0]p_55_out;
   wire [0:0]wea;
 
-  wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized21 \prim_init.ram 
+  weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized21 \prim_init.ram 
        (.addra(addra),
         .clka(clka),
         .dina(dina),
@@ -6435,7 +6431,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized21
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized22
+module weights_buffer_ping_blk_mem_gen_prim_width__parameterized22
    (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ,
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ,
     clka,
@@ -6459,7 +6455,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized22
   wire ram_ena;
   wire [0:0]wea;
 
-  wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized22 \prim_init.ram 
+  weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized22 \prim_init.ram 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ),
         .\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1 (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ),
         .addra(addra),
@@ -6470,7 +6466,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized22
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized23
+module weights_buffer_ping_blk_mem_gen_prim_width__parameterized23
    (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ,
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ,
     clka,
@@ -6494,7 +6490,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized23
   wire ram_ena;
   wire [0:0]wea;
 
-  wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized23 \prim_init.ram 
+  weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized23 \prim_init.ram 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ),
         .\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1 (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ),
         .addra(addra),
@@ -6505,7 +6501,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized23
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized24
+module weights_buffer_ping_blk_mem_gen_prim_width__parameterized24
    (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ,
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ,
     clka,
@@ -6529,7 +6525,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized24
   wire ram_ena;
   wire [0:0]wea;
 
-  wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized24 \prim_init.ram 
+  weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized24 \prim_init.ram 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ),
         .\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1 (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ),
         .addra(addra),
@@ -6540,7 +6536,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized24
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized25
+module weights_buffer_ping_blk_mem_gen_prim_width__parameterized25
    (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ,
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ,
     clka,
@@ -6564,7 +6560,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized25
   wire ram_ena;
   wire [0:0]wea;
 
-  wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized25 \prim_init.ram 
+  weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized25 \prim_init.ram 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ),
         .\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1 (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ),
         .addra(addra),
@@ -6575,7 +6571,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized25
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized26
+module weights_buffer_ping_blk_mem_gen_prim_width__parameterized26
    (p_35_out,
     clka,
     ena_array,
@@ -6596,7 +6592,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized26
   wire [71:0]p_35_out;
   wire [0:0]wea;
 
-  wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized26 \prim_init.ram 
+  weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized26 \prim_init.ram 
        (.addra(addra),
         .clka(clka),
         .dina(dina),
@@ -6606,7 +6602,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized26
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized27
+module weights_buffer_ping_blk_mem_gen_prim_width__parameterized27
    (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ,
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ,
     clka,
@@ -6630,7 +6626,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized27
   wire ram_ena;
   wire [0:0]wea;
 
-  wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized27 \prim_init.ram 
+  weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized27 \prim_init.ram 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ),
         .\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1 (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ),
         .addra(addra),
@@ -6641,7 +6637,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized27
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized28
+module weights_buffer_ping_blk_mem_gen_prim_width__parameterized28
    (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ,
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ,
     clka,
@@ -6665,7 +6661,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized28
   wire ram_ena;
   wire [0:0]wea;
 
-  wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized28 \prim_init.ram 
+  weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized28 \prim_init.ram 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ),
         .\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1 (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ),
         .addra(addra),
@@ -6676,7 +6672,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized28
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized29
+module weights_buffer_ping_blk_mem_gen_prim_width__parameterized29
    (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ,
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ,
     clka,
@@ -6700,7 +6696,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized29
   wire ram_ena;
   wire [0:0]wea;
 
-  wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized29 \prim_init.ram 
+  weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized29 \prim_init.ram 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ),
         .\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1 (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ),
         .addra(addra),
@@ -6711,7 +6707,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized29
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized3
+module weights_buffer_ping_blk_mem_gen_prim_width__parameterized3
    (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ,
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ,
     clka,
@@ -6735,7 +6731,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized3
   wire ram_ena;
   wire [0:0]wea;
 
-  wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized3 \prim_init.ram 
+  weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized3 \prim_init.ram 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ),
         .\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1 (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ),
         .addra(addra),
@@ -6746,7 +6742,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized3
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized30
+module weights_buffer_ping_blk_mem_gen_prim_width__parameterized30
    (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ,
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ,
     clka,
@@ -6770,7 +6766,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized30
   wire ram_ena;
   wire [0:0]wea;
 
-  wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized30 \prim_init.ram 
+  weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized30 \prim_init.ram 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ),
         .\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1 (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ),
         .addra(addra),
@@ -6781,7 +6777,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized30
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized31
+module weights_buffer_ping_blk_mem_gen_prim_width__parameterized31
    (p_15_out,
     clka,
     ena_array,
@@ -6802,7 +6798,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized31
   wire [70:0]p_15_out;
   wire [0:0]wea;
 
-  wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized31 \prim_init.ram 
+  weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized31 \prim_init.ram 
        (.addra(addra),
         .clka(clka),
         .dina(dina),
@@ -6812,7 +6808,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized31
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized32
+module weights_buffer_ping_blk_mem_gen_prim_width__parameterized32
    (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ,
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ,
     clka,
@@ -6836,7 +6832,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized32
   wire ram_ena;
   wire [0:0]wea;
 
-  wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized32 \prim_init.ram 
+  weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized32 \prim_init.ram 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ),
         .\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1 (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ),
         .addra(addra),
@@ -6847,7 +6843,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized32
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized33
+module weights_buffer_ping_blk_mem_gen_prim_width__parameterized33
    (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ,
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ,
     clka,
@@ -6871,7 +6867,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized33
   wire ram_ena;
   wire [0:0]wea;
 
-  wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized33 \prim_init.ram 
+  weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized33 \prim_init.ram 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ),
         .\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1 (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ),
         .addra(addra),
@@ -6882,7 +6878,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized33
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized34
+module weights_buffer_ping_blk_mem_gen_prim_width__parameterized34
    (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ,
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ,
     ram_ena,
@@ -6909,7 +6905,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized34
   wire ram_ena;
   wire [0:0]wea;
 
-  wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized34 \prim_init.ram 
+  weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized34 \prim_init.ram 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ),
         .\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1 (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ),
         .addra(addra),
@@ -6921,7 +6917,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized34
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized4
+module weights_buffer_ping_blk_mem_gen_prim_width__parameterized4
    (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ,
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ,
     clka,
@@ -6945,7 +6941,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized4
   wire ram_ena;
   wire [0:0]wea;
 
-  wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized4 \prim_init.ram 
+  weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized4 \prim_init.ram 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ),
         .\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1 (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ),
         .addra(addra),
@@ -6956,7 +6952,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized4
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized5
+module weights_buffer_ping_blk_mem_gen_prim_width__parameterized5
    (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ,
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ,
     clka,
@@ -6980,7 +6976,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized5
   wire ram_ena;
   wire [0:0]wea;
 
-  wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized5 \prim_init.ram 
+  weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized5 \prim_init.ram 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ),
         .\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1 (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ),
         .addra(addra),
@@ -6991,7 +6987,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized5
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized6
+module weights_buffer_ping_blk_mem_gen_prim_width__parameterized6
    (p_115_out,
     clka,
     ena_array,
@@ -7012,7 +7008,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized6
   wire [71:0]p_115_out;
   wire [0:0]wea;
 
-  wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized6 \prim_init.ram 
+  weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized6 \prim_init.ram 
        (.addra(addra),
         .clka(clka),
         .dina(dina),
@@ -7022,7 +7018,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized6
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized7
+module weights_buffer_ping_blk_mem_gen_prim_width__parameterized7
    (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ,
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ,
     clka,
@@ -7046,7 +7042,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized7
   wire ram_ena;
   wire [0:0]wea;
 
-  wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized7 \prim_init.ram 
+  weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized7 \prim_init.ram 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ),
         .\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1 (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ),
         .addra(addra),
@@ -7057,7 +7053,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized7
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized8
+module weights_buffer_ping_blk_mem_gen_prim_width__parameterized8
    (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ,
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ,
     clka,
@@ -7081,7 +7077,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized8
   wire ram_ena;
   wire [0:0]wea;
 
-  wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized8 \prim_init.ram 
+  weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized8 \prim_init.ram 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ),
         .\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1 (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ),
         .addra(addra),
@@ -7092,7 +7088,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized8
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized9
+module weights_buffer_ping_blk_mem_gen_prim_width__parameterized9
    (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ,
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ,
     clka,
@@ -7116,7 +7112,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized9
   wire ram_ena;
   wire [0:0]wea;
 
-  wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized9 \prim_init.ram 
+  weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized9 \prim_init.ram 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram ),
         .\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1 (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ),
         .addra(addra),
@@ -7126,8 +7122,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_width__parameterized9
         .wea(wea));
 endmodule
 
-(* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper_init" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init
+module weights_buffer_ping_blk_mem_gen_prim_wrapper_init
    (douta,
     clka,
     ena,
@@ -7371,7 +7366,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper_init" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized0
+module weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized0
    (DOADO,
     DOPADOP,
     clka,
@@ -7618,7 +7613,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized0
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper_init" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized1
+module weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized1
    (p_135_out,
     clka,
     ena_array,
@@ -7858,7 +7853,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized1
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper_init" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized10
+module weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized10
    (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ,
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1 ,
     clka,
@@ -8105,7 +8100,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized10
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper_init" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized11
+module weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized11
    (p_95_out,
     clka,
     ena_array,
@@ -8345,7 +8340,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized11
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper_init" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized12
+module weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized12
    (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ,
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1 ,
     clka,
@@ -8592,7 +8587,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized12
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper_init" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized13
+module weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized13
    (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ,
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1 ,
     clka,
@@ -8839,7 +8834,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized13
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper_init" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized14
+module weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized14
    (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ,
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1 ,
     clka,
@@ -9086,7 +9081,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized14
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper_init" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized15
+module weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized15
    (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ,
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1 ,
     clka,
@@ -9333,7 +9328,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized15
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper_init" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized16
+module weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized16
    (p_75_out,
     clka,
     ena_array,
@@ -9573,7 +9568,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized16
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper_init" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized17
+module weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized17
    (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ,
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1 ,
     clka,
@@ -9820,7 +9815,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized17
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper_init" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized18
+module weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized18
    (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ,
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1 ,
     clka,
@@ -10067,7 +10062,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized18
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper_init" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized19
+module weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized19
    (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ,
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1 ,
     clka,
@@ -10314,7 +10309,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized19
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper_init" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized2
+module weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized2
    (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ,
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1 ,
     clka,
@@ -10561,7 +10556,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized2
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper_init" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized20
+module weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized20
    (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ,
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1 ,
     clka,
@@ -10808,7 +10803,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized20
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper_init" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized21
+module weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized21
    (p_55_out,
     clka,
     ena_array,
@@ -11048,7 +11043,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized21
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper_init" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized22
+module weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized22
    (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ,
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1 ,
     clka,
@@ -11295,7 +11290,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized22
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper_init" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized23
+module weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized23
    (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ,
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1 ,
     clka,
@@ -11542,7 +11537,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized23
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper_init" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized24
+module weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized24
    (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ,
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1 ,
     clka,
@@ -11789,7 +11784,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized24
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper_init" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized25
+module weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized25
    (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ,
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1 ,
     clka,
@@ -12036,7 +12031,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized25
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper_init" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized26
+module weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized26
    (p_35_out,
     clka,
     ena_array,
@@ -12276,7 +12271,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized26
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper_init" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized27
+module weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized27
    (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ,
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1 ,
     clka,
@@ -12523,7 +12518,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized27
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper_init" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized28
+module weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized28
    (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ,
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1 ,
     clka,
@@ -12770,7 +12765,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized28
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper_init" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized29
+module weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized29
    (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ,
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1 ,
     clka,
@@ -13017,7 +13012,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized29
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper_init" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized3
+module weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized3
    (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ,
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1 ,
     clka,
@@ -13264,7 +13259,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized3
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper_init" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized30
+module weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized30
    (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ,
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1 ,
     clka,
@@ -13511,7 +13506,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized30
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper_init" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized31
+module weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized31
    (p_15_out,
     clka,
     ena_array,
@@ -13752,7 +13747,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized31
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper_init" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized32
+module weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized32
    (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ,
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1 ,
     clka,
@@ -13999,7 +13994,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized32
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper_init" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized33
+module weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized33
    (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ,
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1 ,
     clka,
@@ -14246,7 +14241,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized33
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper_init" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized34
+module weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized34
    (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ,
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1 ,
     ram_ena,
@@ -14503,7 +14498,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized34
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper_init" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized4
+module weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized4
    (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ,
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1 ,
     clka,
@@ -14750,7 +14745,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized4
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper_init" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized5
+module weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized5
    (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ,
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1 ,
     clka,
@@ -14997,7 +14992,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized5
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper_init" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized6
+module weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized6
    (p_115_out,
     clka,
     ena_array,
@@ -15237,7 +15232,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized6
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper_init" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized7
+module weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized7
    (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ,
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1 ,
     clka,
@@ -15484,7 +15479,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized7
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper_init" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized8
+module weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized8
    (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ,
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1 ,
     clka,
@@ -15731,7 +15726,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized8
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper_init" *) 
-module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized9
+module weights_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized9
    (\DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_0 ,
     \DEVICE_7SERIES.NO_BMM_INFO.SP.SIMPLE_PRIM36.ram_1 ,
     clka,
@@ -15977,8 +15972,7 @@ module wieghts_buffer_ping_blk_mem_gen_prim_wrapper_init__parameterized9
         .WEBWE({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}));
 endmodule
 
-(* ORIG_REF_NAME = "blk_mem_gen_top" *) 
-module wieghts_buffer_ping_blk_mem_gen_top
+module weights_buffer_ping_blk_mem_gen_top
    (douta,
     clka,
     ena,
@@ -15999,7 +15993,7 @@ module wieghts_buffer_ping_blk_mem_gen_top
   wire ena;
   wire [0:0]wea;
 
-  wieghts_buffer_ping_blk_mem_gen_generic_cstr \valid.cstr 
+  weights_buffer_ping_blk_mem_gen_generic_cstr \valid.cstr 
        (.addra(addra),
         .clka(clka),
         .dina(dina),
@@ -16033,8 +16027,8 @@ endmodule
 (* C_WEA_WIDTH = "1" *) (* C_WEB_WIDTH = "1" *) (* C_WRITE_DEPTH_A = "2560" *) 
 (* C_WRITE_DEPTH_B = "2560" *) (* C_WRITE_MODE_A = "WRITE_FIRST" *) (* C_WRITE_MODE_B = "WRITE_FIRST" *) 
 (* C_WRITE_WIDTH_A = "512" *) (* C_WRITE_WIDTH_B = "512" *) (* C_XDEVICEFAMILY = "virtex7" *) 
-(* ORIG_REF_NAME = "blk_mem_gen_v8_4_2" *) (* downgradeipidentifiedwarnings = "yes" *) 
-module wieghts_buffer_ping_blk_mem_gen_v8_4_2
+(* downgradeipidentifiedwarnings = "yes" *) 
+module weights_buffer_ping_blk_mem_gen_v8_4_2
    (clka,
     rsta,
     ena,
@@ -17244,7 +17238,7 @@ module wieghts_buffer_ping_blk_mem_gen_v8_4_2
   assign sbiterr = \<const0> ;
   GND GND
        (.G(\<const0> ));
-  wieghts_buffer_ping_blk_mem_gen_v8_4_2_synth inst_blk_mem_gen
+  weights_buffer_ping_blk_mem_gen_v8_4_2_synth inst_blk_mem_gen
        (.addra(addra),
         .clka(clka),
         .dina(dina),
@@ -17253,8 +17247,7 @@ module wieghts_buffer_ping_blk_mem_gen_v8_4_2
         .wea(wea));
 endmodule
 
-(* ORIG_REF_NAME = "blk_mem_gen_v8_4_2_synth" *) 
-module wieghts_buffer_ping_blk_mem_gen_v8_4_2_synth
+module weights_buffer_ping_blk_mem_gen_v8_4_2_synth
    (douta,
     clka,
     ena,
@@ -17275,7 +17268,7 @@ module wieghts_buffer_ping_blk_mem_gen_v8_4_2_synth
   wire ena;
   wire [0:0]wea;
 
-  wieghts_buffer_ping_blk_mem_gen_top \gnbram.gnativebmg.native_blk_mem_gen 
+  weights_buffer_ping_blk_mem_gen_top \gnbram.gnativebmg.native_blk_mem_gen 
        (.addra(addra),
         .clka(clka),
         .dina(dina),
