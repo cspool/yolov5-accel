@@ -33,7 +33,6 @@ module conv_buffers_interface(
     row3_buf_adr,
     row3_buf_word_select,
     row3_buf_idx,
-
     //cycle 1 in/ rows rd from buf
     buf1_pixels_32,
     buf2_pixels_32,
@@ -41,7 +40,6 @@ module conv_buffers_interface(
     last_row1_buf_idx,
     last_row2_buf_idx,
     last_row3_buf_idx,
-
     //cycle 0 in/ slab rows rd info
     row1_slab_adr,
     row1_slab_idx,
@@ -56,12 +54,10 @@ module conv_buffers_interface(
     last_row1_slab_idx,
     last_row2_slab_idx,
     last_row3_slab_idx,
-
     //cycle 0 in/ valid row adr
     valid_row1_adr,
     valid_row2_adr,
     valid_row3_adr,
-
     //cycle 0 out/ buffer rd ctrl
     buf1_adr_rd,
     buf2_adr_rd,
@@ -72,12 +68,10 @@ module conv_buffers_interface(
     buf1_en_rd,
     buf2_en_rd,
     buf3_en_rd,
-
     //cycle 1 out/ last row data rd from buffer
     last_row1_pixels_32,
     last_row2_pixels_32,
     last_row3_pixels_32,
-
     //cycle 0 out/ slab rd ctrl
     slab1_adr_rd,
     slab2_adr_rd,
@@ -85,12 +79,10 @@ module conv_buffers_interface(
     slab1_en_rd,
     slab2_en_rd,
     slab3_en_rd,
-
     //cycle 1 out/ last row slab rd from slab
     last_row1_slab_2,
     last_row2_slab_2,
     last_row3_slab_2,
-
     //cycle 0 out/ slab wt ctrl
     slab1_adr_wr,
     slab2_adr_wr,
@@ -101,14 +93,12 @@ module conv_buffers_interface(
     slab1_en_wr,
     slab2_en_wr,
     slab3_en_wr,
-
     //-------------------------------------------
     //cycle 0 in/ rows wt info
     input_word_buf_wr,
     input_word_buf_en_wr,
     input_word_buf_idx_wr,
     input_word_buf_adr_wr,
-
     //cycle 0 out/ buf wt ctrl
     buf1_wr,
     buf2_wr,
@@ -123,7 +113,6 @@ module conv_buffers_interface(
   parameter pixels_in_row = 32;
 
   input reset,clk;
-
   //cycle 0 in/ input rows rd info
   input [15:0] row1_buf_adr;
   input row1_buf_word_select;
@@ -134,7 +123,6 @@ module conv_buffers_interface(
   input [15:0] row3_buf_adr;
   input row3_buf_word_select;
   input [1:0] row3_buf_idx;
-
   //cycle 1 in/ rows rd from buf
   input [pixels_in_row * 8 - 1: 0] buf1_pixels_32;
   input [pixels_in_row * 8 - 1: 0] buf2_pixels_32;
@@ -145,7 +133,6 @@ module conv_buffers_interface(
   input [1:0] last_row1_buf_idx;
   input [1:0] last_row2_buf_idx;
   input [1:0] last_row3_buf_idx;
-
   //cycle 0 in/ slab rows rd info
   input [15:0] row1_slab_adr;
   input [1:0] row1_slab_idx;
@@ -163,10 +150,8 @@ module conv_buffers_interface(
   input [1:0] last_row1_slab_idx;
   input [1:0] last_row2_slab_idx;
   input [1:0] last_row3_slab_idx;
-
   //cycle 0 in/ valid row adr
   input valid_row1_adr,valid_row2_adr,valid_row3_adr;
-
   //cycle 0 out/ buffer rd ctrl
   output [15:0] buf1_adr_rd;
   output [15:0] buf2_adr_rd;
@@ -182,7 +167,6 @@ module conv_buffers_interface(
   output [pixels_in_row * 8 - 1: 0] last_row1_pixels_32;
   output [pixels_in_row * 8 - 1: 0] last_row2_pixels_32;
   output [pixels_in_row * 8 - 1: 0] last_row3_pixels_32;
-
   //cycle 0 out/ slab rd ctrl
   output [15:0] slab1_adr_rd;
   output [15:0] slab2_adr_rd;
@@ -195,7 +179,6 @@ module conv_buffers_interface(
   output [15:0] last_row1_slab_2;
   output [15:0] last_row2_slab_2;
   output [15:0] last_row3_slab_2;
-
   //cycle 0 out/ slab wt ctrl
   output reg [15:0] slab1_adr_wr;
   output reg [15:0] slab2_adr_wr;
@@ -204,14 +187,12 @@ module conv_buffers_interface(
   output [15:0] slab2_pixels_2_wr;
   output [15:0] slab3_pixels_2_wr;
   output slab1_en_wr, slab2_en_wr, slab3_en_wr;
-
   //-------------------------------------------
   //cycle 0 in/ rows wt info
   input [511:0] input_word_buf_wr;
   input input_word_buf_en_wr;
   input [1:0] input_word_buf_idx_wr;
   input [15:0] input_word_buf_adr_wr;
-
   //cycle 0 out/ buf wt ctrl
   output [511:0] buf1_wr;
   output [511:0] buf2_wr;

@@ -27,57 +27,47 @@ module conv_datapath_ddr(
 
   parameter sa_row_num = 4; //how many rows in conv core
   parameter sa_column_num = 3; //how many columns in conv core
-
-  parameter row_num = 16; // how many rows in a sa
-  parameter column_num = 16; // how many columns in a sa
+  parameter row_num_in_sa = 16; // how many rows in a sa, row_num
+  parameter column_num_in_sa = 16; // how many columns in a sa
   parameter pixels_in_row = 32;
   parameter pixels_in_row_in_2pow = 5;
   parameter buffers_num = sa_column_num;
   parameter pixels_in_row_minus_1 = pixels_in_row-1;
   parameter buffers_num_minus_1 = buffers_num-1;
   parameter shift_regs_num = 70;
-
-  parameter weights_in_row = row_num * sa_row_num; // 8bit, length of 1 bit is shorter than that in 8 bit
+  parameter weights_in_row = row_num_in_sa * sa_row_num; // 8bit, length of 1 bit is shorter than that in 8 bit
   parameter weight_row_length = weights_in_row * 8;
-
   parameter weight_word_length = weight_row_length;
-
   parameter headroom = 8;
-
   parameter pixel_width_88 = 16 + headroom;
   //parameter pixel_width_18 = 10 + headroom;
   parameter pixel_width_18 = 8 + headroom;
-
   parameter pe_parallel_pixel_88 = 2;
   parameter pe_parallel_weight_88 = 1;
   parameter pe_parallel_pixel_18 = 2;
   parameter pe_parallel_weight_18 = 2;
-
-  parameter weights_row_in_width = 8 * row_num;
+  parameter weights_row_in_width = 8 * row_num_in_sa;
   parameter sa_row_in_width = weights_row_in_width;
-
-  parameter pixels_column_in_width = 16 * column_num;
-  parameter sa_column_in_width = 24 * column_num;
-
+  parameter pixels_column_in_width = 16 * column_num_in_sa;
+  parameter sa_column_in_width = 24 * column_num_in_sa;
   parameter pe_out_width =  (pixel_width_18) * pe_parallel_pixel_18 *  pe_parallel_weight_18; // width of 18 is bigger than 88
 
-  parameter row_counter_width = ($clog2(row_num+1));
+  parameter row_counter_width = ($clog2(row_num_in_sa+1));
 
-  parameter out_width = pixel_width_18 * pe_parallel_pixel_18 * pe_parallel_weight_18 * column_num;
-  parameter out_width_88 = pixel_width_88 * pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num;
-  parameter out_width_18 = pixel_width_18 * pe_parallel_pixel_18 * pe_parallel_weight_18 * column_num;
+  parameter out_width = pixel_width_18 * pe_parallel_pixel_18 * pe_parallel_weight_18 * column_num_in_sa;
+  parameter out_width_88 = pixel_width_88 * pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa;
+  parameter out_width_18 = pixel_width_18 * pe_parallel_pixel_18 * pe_parallel_weight_18 * column_num_in_sa;
 
   parameter bias_width = 8; //8 bit bias
   parameter bias_set_width = bias_width * pe_parallel_weight_18; //32; vconv pixel out_width
   parameter bias_set_4_channel_width = bias_set_width * sa_row_num; //4 * 16 bit
-
-  parameter bias_sets_num_in_row = sa_row_num * row_num; //64
+  parameter bias_sets_num_in_row = sa_row_num * row_num_in_sa; //64
   //   parameter bias_tile_length = bias_set_width * bias_sets_num_in_row; //64 * 16bit
   parameter bias_word_length = 512;
 
-  parameter add_bias_row_width = pixel_width_18 * pe_parallel_pixel_18 * pe_parallel_weight_18 * column_num;
-  parameter add_bias_row_width_88 = pixel_width_88 * pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num;
-  parameter add_bias_row_width_18_2 = pixel_width_18 * pe_parallel_pixel_18 * 1 * column_num;
+  parameter add_bias_row_width = pixel_width_18 * pe_parallel_pixel_18 * pe_parallel_weight_18 * column_num_in_sa;
+  parameter add_bias_row_width_88 = pixel_width_88 * pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa;
+  parameter add_bias_row_width_18_2 = pixel_width_18 * pe_parallel_pixel_18 * 1 * column_num_in_sa;
 
   parameter mult_A_width = 24;
   parameter mult_B_width = 16;
@@ -93,37 +83,37 @@ module conv_datapath_ddr(
   parameter E_scale_tail_width = 16; //16 bit E_scale tail
   parameter E_scale_tail_set_width = E_scale_tail_width * pe_parallel_weight_18; //32 bit
   parameter E_scale_tail_set_4_channel_width = E_scale_tail_set_width * sa_row_num; //4 * 32 bit
-  parameter E_scale_tail_sets_num_in_row = sa_row_num * row_num; //64
+  parameter E_scale_tail_sets_num_in_row = sa_row_num * row_num_in_sa; //64
   parameter E_scale_tail_tile_length = E_scale_tail_set_width * E_scale_tail_sets_num_in_row; //64 * 32bit regs to str
   parameter E_scale_tail_word_width = 512;
 
   parameter E_scale_rank_width = 8; //8 bit E_scale rank
   parameter E_scale_rank_set_width = E_scale_rank_width * pe_parallel_weight_18; //16 bit
   parameter E_scale_rank_set_4_channel_width = E_scale_rank_set_width * sa_row_num; //4 * 16 bit
-  parameter E_scale_rank_sets_num_in_row = sa_row_num * row_num; //64
+  parameter E_scale_rank_sets_num_in_row = sa_row_num * row_num_in_sa; //64
   parameter E_scale_rank_tile_length = E_scale_rank_set_width * E_scale_rank_sets_num_in_row; //64 * 16bit regs to str
   parameter E_scale_rank_word_width = 512;
 
   parameter pixel_E_scale_tail_width_88 = pixel_width_88 + E_scale_tail_width; //40 bit
   parameter pixel_E_scale_tail_width_18 = pixel_width_18 + E_scale_tail_width; //32 bit
-  parameter row_E_scale_tail_width_88 = pixel_E_scale_tail_width_88 * pe_parallel_weight_88 * pe_parallel_pixel_88 * column_num;
+  parameter row_E_scale_tail_width_88 = pixel_E_scale_tail_width_88 * pe_parallel_weight_88 * pe_parallel_pixel_88 * column_num_in_sa;
   //40 bit * 32 pixels * 1 channel
-  parameter row_E_scale_tail_width_18_2 = pixel_E_scale_tail_width_18 * 1 * pe_parallel_pixel_18 * column_num;
+  parameter row_E_scale_tail_width_18_2 = pixel_E_scale_tail_width_18 * 1 * pe_parallel_pixel_18 * column_num_in_sa;
   //32 bit * 32 pixels * 1 channel
 
-  parameter add_bias_row_in_mult_A_width_width = mult_A_width * pe_parallel_weight_18 * pe_parallel_pixel_18 * column_num;
+  parameter add_bias_row_in_mult_A_width_width = mult_A_width * pe_parallel_weight_18 * pe_parallel_pixel_18 * column_num_in_sa;
   //24 bit * 32 pixels * 2 channel
-  parameter E_scale_tail_row_in_mult_B_width_width = mult_B_width * pe_parallel_weight_18 * pe_parallel_pixel_18 * column_num;
+  parameter E_scale_tail_row_in_mult_B_width_width = mult_B_width * pe_parallel_weight_18 * pe_parallel_pixel_18 * column_num_in_sa;
   //16 bit * 32 pixels * 2 channel
-  parameter row_E_scale_tail_in_mult_P_width_width = mult_P_width * pe_parallel_weight_18 * pe_parallel_pixel_18 * column_num;
+  parameter row_E_scale_tail_in_mult_P_width_width = mult_P_width * pe_parallel_weight_18 * pe_parallel_pixel_18 * column_num_in_sa;
   //40 bit * 32 pixels * 2 channel > 32 bit * 32 pixels * 2 channel > 40 bit * 32 pixels * 1 channel
 
   parameter quantified_pixel_width = 8;
-  parameter quantified_row_width = (quantified_pixel_width) * pe_parallel_weight_18 * pe_parallel_pixel_18 * column_num;
+  parameter quantified_row_width = (quantified_pixel_width) * pe_parallel_weight_18 * pe_parallel_pixel_18 * column_num_in_sa;
   //8 bit * 32 pixels * 2 channel
-  parameter scaled_rank_row_width = (quantified_pixel_width+1) * pe_parallel_weight_18 * pe_parallel_pixel_18 * column_num;
+  parameter scaled_rank_row_width = (quantified_pixel_width+1) * pe_parallel_weight_18 * pe_parallel_pixel_18 * column_num_in_sa;
   //9 bit * 32 pixels * 2 channel
-  parameter out_data_width = quantified_pixel_width * pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num;
+  parameter out_data_width = quantified_pixel_width * pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa;
 
   parameter ddr_load_ratio = 2;
 
@@ -131,58 +121,39 @@ module conv_datapath_ddr(
 
   //instr rom
   wire [9 : 0] instr_adr;
-
   //top_controller
   wire [15:0] instr;
-
   wire conv_fin, pool_fin , concate_fin, shortcut_fin, upsample_fin;
-
   wire instr_rd;
-
   wire [3:0] state;
-
   wire conv_start;
 
   //conv initial
   wire conv_inital_fin;
-
   wire mode;
-
   wire [31:0] nif_mult_k_mult_k;
-
   wire [3:0] k, s, p;
-
   wire [15:0] of, ox, oy, ix, iy, nif;
-
   wire [3:0] nif_in_2pow, ix_in_2pow;
-
   wire [3:0] of_in_2pow, ox_in_2pow;
-
   wire [15:0] buf_depth_in_row_2pow;
 
   //   wire [bias_tile_length -1 : 0] bias_tile_val; //will come from args buffer that has not existed
-
   wire [E_scale_tail_tile_length -1 : 0] E_scale_tail_tile_val;
   wire [E_scale_rank_tile_length -1 : 0] E_scale_rank_tile_val;
-
   wire conv_load_start;
 
   //conv load ctrl
   wire load_ddr_start;
-
   wire load_ddr_continue; //str_fin
-
   wire [3:0] buf_depth_in_row_2pow_init;
-
   wire [15:0] word_lenth_mult_word_num_mult_spare_num, word_num_mult_spare_num;
-
   wire valid_load_data;
 
   //ddr info
   wire [15:0] load_row_idx_ddr;
   wire [15:0] load_row_start_idx_ddr, load_row_end_idx_ddr;
   wire [15:0] load_if_start_idx_ddr, load_if_end_idx_ddr;
-
   wire [15:0] load_ddr_adr;
   wire valid_load_ddr_adr;
 
@@ -191,67 +162,52 @@ module conv_datapath_ddr(
   wire [15:0] load_row_idx_in_3_buf, load_row_idx_buf;
   wire [15:0] load_row_start_idx_buf, load_row_end_idx_buf;
   wire [15:0] load_if_start_idx_buf, load_if_end_idx_buf;
-
   wire [15:0] load_buf_adr;
-
   wire load_tile_fin;
-
   wire load_tile0_fin, load_tileN_fin;
 
   //conv compute ctrl //cv router wire
   wire conv_compute_start;
-  wire conv_compute_continue;
-
-  wire [15:0] cur_pox, cur_poy, cur_pof, cur_ox_start, cur_oy_start, cur_of_start;
-  wire [15:0] next_ox_start, next_oy_start, next_of_start, next_pox, next_poy, next_pof;
+  // wire conv_compute_continue;
+  // wire [15:0] cur_pox, cur_poy, cur_pof, cur_ox_start, cur_oy_start, cur_of_start;
+  // wire [15:0] next_ox_start, next_oy_start, next_of_start, next_pox, next_poy, next_pof;
   wire [15:0] ox_start, oy_start, of_start, pox, poy, pof, if_idx; //tile info
-
   wire [3:0] west_pad, slab_num, east_pad;
   wire [15:0] row1_idx, row2_idx, row3_idx;
-
   wire [15:0] row_start_idx, row_end_idx;
   wire [15:0] reg_start_idx, reg_end_idx;
-
-  wire conv_end;
-  wire conv_pixels_add_end;
-  wire conv_nif_add_end;
-
   wire [15:0] row1_buf_adr;
   wire [1:0] row1_buf_idx;
   wire row1_buf_word_select;
-
   wire [15:0] row2_buf_adr;
   wire [1:0] row2_buf_idx;
   wire row2_buf_word_select;
-
   wire [15:0] row3_buf_adr;
   wire [1:0] row3_buf_idx;
   wire row3_buf_word_select;
-
   wire [15:0] row_slab_start_idx;
-
-  wire valid_row1_adr, valid_row2_adr, valid_row3_adr;
-
-  //cv_bram_handler wire
-
-  wire [15:0] buf1_adr;
-  wire [15:0] buf2_adr;
-  wire [15:0] buf3_adr;
-
-  wire buf1_word_select;
-  wire buf2_word_select;
-  wire buf3_word_select;
-
-  wire [pixels_in_row * 8 - 1: 0] buf1_pixels_32;
-  wire [pixels_in_row * 8 - 1: 0] buf2_pixels_32;
-  wire [pixels_in_row * 8 - 1: 0] buf3_pixels_32;
-
   wire [15:0] row1_slab_adr;
   wire [1:0] row1_slab_idx;
   wire [15:0] row2_slab_adr;
   wire [1:0] row2_slab_idx;
   wire [15:0] row3_slab_adr;
   wire [1:0] row3_slab_idx;
+  wire valid_row1_adr, valid_row2_adr, valid_row3_adr;
+
+  wire conv_end;
+  wire conv_pixels_add_end;
+  wire conv_nif_add_end;
+
+  //cv_bram_handler
+  wire [15:0] buf1_adr;
+  wire [15:0] buf2_adr;
+  wire [15:0] buf3_adr;
+  wire buf1_word_select;
+  wire buf2_word_select;
+  wire buf3_word_select;
+  wire [pixels_in_row * 8 - 1: 0] buf1_pixels_32;
+  wire [pixels_in_row * 8 - 1: 0] buf2_pixels_32;
+  wire [pixels_in_row * 8 - 1: 0] buf3_pixels_32;
 
   wire [15:0] slab1_pixels_2;
   wire [15:0] slab2_pixels_2;
@@ -261,12 +217,12 @@ module conv_datapath_ddr(
   wire [15:0] slab2_adr;
   wire [15:0] slab3_adr;
 
-  wire valid_buf1_adr,
-       valid_slab1_adr,
-       valid_buf2_adr,
-       valid_slab2_adr,
-       valid_buf3_adr,
-       valid_slab3_adr;
+  wire valid_buf1_adr;
+  wire valid_slab1_adr;
+  wire valid_buf2_adr;
+  wire valid_slab2_adr;
+  wire valid_buf3_adr;
+  wire valid_slab3_adr;
 
   wire [15:0] last_row1_slab_2;
   wire [15:0] last_row2_slab_2;
@@ -276,11 +232,9 @@ module conv_datapath_ddr(
   wire [15:0] slab1_adr_wr;
   wire [15:0] slab2_adr_wr;
   wire [15:0] slab3_adr_wr;
-
   wire [15:0] slab1_pixels_2_wr;
   wire [15:0] slab2_pixels_2_wr;
   wire [15:0] slab3_pixels_2_wr;
-
   wire valid_slab1_adr_wr, valid_slab2_adr_wr, valid_slab3_adr_wr;
 
   //ddr simu
@@ -314,7 +268,6 @@ module conv_datapath_ddr(
   //shift regs
   wire [pixels_in_row * 8 - 1: 0] last_row1_pixels_32, last_row2_pixels_32, last_row3_pixels_32;
   wire re_fm_en, re_fm_end;
-
   wire [pixels_in_row*8-1:0] re_rowi_pixels[sa_column_num-1 :0];
 
   //weight buf
@@ -326,32 +279,27 @@ module conv_datapath_ddr(
   wire [15:0] weight_adr_rd;
 
   //delay regs pixels
-  //    wire [column_num*16-1:0] delay_row1_pixels, delay_row2_pixels, delay_row3_pixels;
+  //    wire [column_num_in_sa*16-1:0] delay_row1_pixels, delay_row2_pixels, delay_row3_pixels;
   wire [pixels_column_in_width-1:0] delay_rowi_pixels[sa_column_num-1 :0];
 
   //delay regs weights
-  //    wire [row_num*8-1:0] delay_weights_1, delay_weights_2, delay_weights_3, delay_weights_4;
+  //    wire [row_num_in_sa*8-1:0] delay_weights_1, delay_weights_2, delay_weights_3, delay_weights_4;
   wire [weights_row_in_width -1:0] delay_weights_sets[sa_row_num-1 :0];
-  //sa
 
+  //sa
   wire [sa_column_in_width -1:0] sa_columni_ins[sa_column_num-1 :0][sa_row_num-1 :0];
   wire [sa_row_in_width -1:0] sa_rowi_ins[sa_column_num-1 :0][sa_row_num-1 :0];
-  wire [column_num * mult_P_width -1:0] sa_row0_outs [sa_column_num-1 : 0][sa_row_num-1 : 0];
+  wire [column_num_in_sa * mult_P_width -1:0] sa_row0_outs [sa_column_num-1 : 0][sa_row_num-1 : 0];
 
   // sa control
   wire sa_en, sa_reset;
   wire channel_out_reset, channel_out_en; //need logic
   wire add_bias_en, add_bias_reset;
-
   wire [5:0] out_sa_row_idx; //output sa row idx [1,16]
-
   wire mult_array_mode;
-
   wire channel_out_add_end;
   wire quantify_add_end;
-
   wire [out_width - 1: 0] out_rowi_channel_seti[sa_column_num-1 :0][sa_row_num-1 :0]; // pox res per channel
-
   wire conv_compute_tile_fin;
 
   //bias
@@ -359,7 +307,6 @@ module conv_datapath_ddr(
   wire [7:0] bias_reg_start; // 0-63
   wire [7:0] bias_reg_size; // 0-63
   wire [bias_set_4_channel_width-1 :0] bias_4_channel_sets; //4 sets of 16bit(1 bias or 2 bias)
-
   wire [add_bias_row_width - 1: 0] add_bias_rowi_channel_seti[sa_column_num-1 : 0][sa_row_num-1 : 0];
 
   //quantify ctrl
@@ -372,16 +319,15 @@ module conv_datapath_ddr(
   wire [vector_P_width-1 :0] vector_P, e_scale_vector_P;
 
   ///mult_sa
-  wire [column_num * mult_A_width -1:0] extra_sa_vector_As[sa_column_num-1 : 0][sa_row_num-1 : 0];
+  wire [column_num_in_sa * mult_A_width -1:0] extra_sa_vector_As[sa_column_num-1 : 0][sa_row_num-1 : 0];
   wire [mult_B_width -1:0] extra_sa_vector_B [sa_column_num-1 : 0][sa_row_num-1 : 0];
-  wire [column_num * mult_P_width -1:0] extra_sa_vector_Ps [sa_column_num-1 : 0][sa_row_num-1 : 0];
+  wire [column_num_in_sa * mult_P_width -1:0] extra_sa_vector_Ps [sa_column_num-1 : 0][sa_row_num-1 : 0];
 
   //e_scale regs
   // tile e-scale, will be set at first of the tiling compute, maybe set in several cycles
   wire [E_scale_tail_word_width -1 : 0] E_scale_tail_word;
   wire [6:0] E_scale_tail_reg_start;
   wire [6:0] E_scale_tail_reg_size;
-
   wire [E_scale_rank_word_width -1 : 0] E_scale_rank_word;
   wire [6:0] E_scale_rank_reg_start;
   wire [6:0] E_scale_rank_reg_size;
@@ -397,7 +343,6 @@ module conv_datapath_ddr(
   //cycle 1
   wire [row_E_scale_tail_in_mult_P_width_width-1 : 0] rowi_E_scale_tail_in_mult_P_width_channel_seti[sa_column_num-1 : 0][sa_row_num-1 : 0];
   //40 bit * 32 pixels * 2 channel
-
   wire [quantified_row_width-1 :0] quantified_rowi_channel_seti[sa_column_num-1 : 0][sa_row_num-1 : 0];
   //8 bit * 32 pixels * 2 channel
 
@@ -411,13 +356,10 @@ module conv_datapath_ddr(
   //conv store ctrl
   //cycle 0 in
   wire conv_store_start;
-
   //cycle 1 in
   wire [quantified_row_width-1 : 0] fifo_data;
-
   //cycle 0 out
   wire [sa_row_num * sa_column_num-1:0] fifo_rds;
-
   //cycle 1 out
   //    output reg [15:0] rowi_out_buf_adr;
   wire [3:0] fifo_column_no, fifo_row_no;
@@ -425,7 +367,6 @@ module conv_datapath_ddr(
   wire [15:0] out_y_idx, out_x_idx, out_f_idx;
   wire conv_out_tile_add_end;
   wire [out_data_width-1 : 0] out_data;
-
   wire conv_store_tile_fin;
 
   //conv args control
@@ -437,21 +378,17 @@ module conv_datapath_ddr(
   wire [15:0] bias_buf_adr_rd;
   wire [15:0] e_scale_tail_buf_adr_rd;
   wire [15:0] e_scale_rank_buf_adr_rd;
-
   wire bias_buf_rd;
   wire e_scale_tail_buf_rd;
   wire e_scale_rank_buf_rd;
-
   wire e_scale_tail_buf_wr;
   wire [15:0] e_scale_tail_buf_adr_wr;
   wire [E_scale_tail_word_width-1 : 0] e_scale_tail_buf_data_wr;
   wire [E_scale_tail_word_width-1 : 0] e_scale_tail_buf_data_rd;
-
   wire e_scale_rank_buf_wr;
   wire [15:0] e_scale_rank_buf_adr_wr;
   wire [E_scale_rank_word_width-1 :0] e_scale_rank_buf_data_wr;
   wire [E_scale_rank_word_width-1 :0] e_scale_rank_buf_data_rd;
-
   wire bias_buf_wr;
   wire [15:0] bias_buf_adr_wr;
   wire [bias_word_length-1 :0] bias_buf_data_wr;
@@ -564,6 +501,10 @@ module conv_datapath_ddr(
   assign valid_load_data = valid_ddr_data;
 
   conv_compute_controller cv_compute_controller( //conv_router_v2 // conv_router_flat
+                            .clk(clk),
+                            .conv_compute(conv_compute),
+                            .reset((reset | conv_inital_fin)),
+
                             .mode_init(mode),
                             .of_init(of),
                             .ox_init(ox),
@@ -577,16 +518,12 @@ module conv_datapath_ddr(
                             .nif_in_2pow_init(nif_in_2pow),
                             .ix_in_2pow_init(ix_in_2pow),
 
-                            .clk(clk),
-                            .conv_compute(conv_compute),
-                            .reset((reset | conv_inital_fin)),
-
-                            .cur_pox(cur_pox), //maybe delete
-                            .cur_pof(cur_pof),
-                            .cur_poy(cur_poy),
-                            .cur_ox_start(cur_ox_start),
-                            .cur_of_start(cur_of_start),
-                            .cur_oy_start(cur_oy_start),
+                            // .cur_pox(cur_pox), //maybe delete
+                            // .cur_pof(cur_pof),
+                            // .cur_poy(cur_poy),
+                            // .cur_ox_start(cur_ox_start),
+                            // .cur_of_start(cur_of_start),
+                            // .cur_oy_start(cur_oy_start),
                             .ox_start(ox_start),
                             .oy_start(oy_start),
                             .of_start(of_start),
@@ -594,26 +531,16 @@ module conv_datapath_ddr(
                             .poy(poy),
                             .pof(pof),
                             .if_idx(if_idx),
-
-                            .row_slab_start_idx(row_slab_start_idx),
-
                             .west_pad(west_pad),
                             .slab_num(slab_num),
                             .east_pad(east_pad),
-
                             .row1_idx(row1_idx),
                             .row2_idx(row2_idx),
                             .row3_idx(row3_idx),
-
                             .row_start_idx(row_start_idx),
                             .row_end_idx(row_end_idx),
-
                             .reg_start_idx(reg_start_idx),
                             .reg_end_idx(reg_end_idx),
-
-                            .conv_end(conv_end),
-                            .conv_pixels_add_end(conv_pixels_add_end),
-                            .conv_nif_add_end(conv_nif_add_end),
 
                             .row1_buf_adr(row1_buf_adr),
                             .row1_buf_idx(row1_buf_idx),
@@ -624,42 +551,38 @@ module conv_datapath_ddr(
                             .row3_buf_adr(row3_buf_adr),
                             .row3_buf_idx(row3_buf_idx),
                             .row3_buf_word_select(row3_buf_word_select),
-
+                            .row_slab_start_idx(row_slab_start_idx),
                             .row1_slab_adr(row1_slab_adr),
                             .row1_slab_idx(row1_slab_idx),
                             .row2_slab_adr(row2_slab_adr),
                             .row2_slab_idx(row2_slab_idx),
                             .row3_slab_adr(row3_slab_adr),
                             .row3_slab_idx(row3_slab_idx),
-
                             .valid_row1_adr(valid_row1_adr),
                             .valid_row2_adr(valid_row2_adr),
-                            .valid_row3_adr(valid_row3_adr)
+                            .valid_row3_adr(valid_row3_adr),
+
+                            .conv_end(conv_end),
+                            .conv_pixels_add_end(conv_pixels_add_end),
+                            .conv_nif_add_end(conv_nif_add_end)
                           );
 
   assign conv_compute = conv_args_tile0_fin ||
-  (conv_store_tile_fin == 1'b1) && (conv_args_tile_fin == 1'b1);
+         (conv_store_tile_fin == 1'b1) && (conv_args_tile_fin == 1'b1);
 
   //last regs
   reg [3:0] last_west_pad, last_slab_num, last_east_pad;
   reg [15:0] last_row1_idx, last_row2_idx, last_row3_idx;
-
   reg [15:0] last_row_start_idx, last_row_end_idx;
-
   reg [15:0] last_reg_start_idx, last_reg_end_idx;
-
   reg state_valid_row1_adr, state_valid_row2_adr, state_valid_row3_adr;
-
   reg state_conv_pixels_add_end;
-
   reg [1:0] last_row1_buf_idx;
   reg [1:0] last_row2_buf_idx;
   reg [1:0] last_row3_buf_idx;
-
   reg last_buf1_word_select;
   reg last_buf2_word_select;
   reg last_buf3_word_select;
-
   reg [1:0] last_row1_slab_idx;
   reg [1:0] last_row2_slab_idx;
   reg [1:0] last_row3_slab_idx;
@@ -685,11 +608,9 @@ module conv_datapath_ddr(
       last_row1_buf_idx <= 0;
       last_row2_buf_idx <= 0;
       last_row3_buf_idx <= 0;
-
       last_buf1_word_select <= 0;
       last_buf2_word_select <= 0;
       last_buf3_word_select <= 0;
-
       last_row1_slab_idx <= 0;
       last_row2_slab_idx <= 0;
       last_row3_slab_idx <= 0;
@@ -710,15 +631,12 @@ module conv_datapath_ddr(
       last_row_end_idx <= row_end_idx;
       last_reg_start_idx <= reg_start_idx;
       last_reg_end_idx <= reg_end_idx;
-
       last_row1_buf_idx <= row1_buf_idx;
       last_row2_buf_idx <= row2_buf_idx;
       last_row3_buf_idx <= row3_buf_idx;
-
       last_buf1_word_select <= buf1_word_select;
       last_buf2_word_select <= buf2_word_select;
       last_buf3_word_select <= buf3_word_select;
-
       last_row1_slab_idx <= row1_slab_idx;
       last_row2_slab_idx <= row2_slab_idx;
       last_row3_slab_idx <= row3_slab_idx;
@@ -732,7 +650,6 @@ module conv_datapath_ddr(
 
              .k(k),
              .s(s),
-
              .last_west_pad(last_west_pad),
              .last_slab_num(last_slab_num),
              .last_east_pad(last_east_pad),
@@ -741,28 +658,23 @@ module conv_datapath_ddr(
              .last_row3_idx(last_row3_idx),
              .last_row_start_idx(last_row_start_idx),
              .last_row_end_idx(last_row_end_idx),
-
              .last_reg_start_idx(last_reg_start_idx),
              .last_reg_end_idx(last_reg_end_idx),
-
              .last_row1_pixels_32(last_row1_pixels_32),
              .last_row2_pixels_32(last_row2_pixels_32),
              .last_row3_pixels_32(last_row3_pixels_32),
              .last_row1_slab_2(last_row1_slab_2),
              .last_row2_slab_2(last_row2_slab_2),
              .last_row3_slab_2(last_row3_slab_2),
-
              .state_valid_row1_adr(state_valid_row1_adr),
              .state_valid_row2_adr(state_valid_row2_adr),
              .state_valid_row3_adr(state_valid_row3_adr),
-
              .state_conv_pixels_add_end(state_conv_pixels_add_end),
 
+             .shift_start(shift_start),
              .row_regs_1(row_regs_1),
              .row_regs_2(row_regs_2),
-             .row_regs_3(row_regs_3),
-
-             .shift_start(shift_start)
+             .row_regs_3(row_regs_3)
            );
 
   Shift_Regs shift_regs(
@@ -772,20 +684,17 @@ module conv_datapath_ddr(
 
                .k(k),
                .s(s),
-
                .row_regs_1(row_regs_1),
                .row_regs_2(row_regs_2),
                .row_regs_3(row_regs_3),
-
                .shift_start(shift_start),
 
+               .re_fm_en(re_fm_en),
+               .re_fm_end(re_fm_end),
                .re_row1_pixels(re_rowi_pixels[1-1]),
                .re_row2_pixels(re_rowi_pixels[2-1]),
-               .re_row3_pixels(re_rowi_pixels[3-1]),
-               .re_fm_en(re_fm_en),
-               .re_fm_end(re_fm_end)
+               .re_row3_pixels(re_rowi_pixels[3-1])
              );
-
 
   conv_bram_handler cv_bram_handler(
                       .reset((reset | conv_inital_fin)),
@@ -897,7 +806,7 @@ module conv_datapath_ddr(
   assign ddr_en = valid_load_ddr_adr | valid_store_ddr_adr;
 
   assign DDR_adr = (valid_load_ddr_adr == 1'b1)? load_ddr_adr :
-        //  (valid_store_ddr_adr == 1'b1)? store_ddr_adr :
+         //  (valid_store_ddr_adr == 1'b1)? store_ddr_adr :
          0;
 
   always @(posedge clk)
@@ -968,7 +877,6 @@ module conv_datapath_ddr(
          in_buf3_rd_data[pixels_in_row * 8 - 1 :0]:
          in_buf3_rd_data[pixels_in_row * 8 * ddr_load_ratio - 1 :pixels_in_row * 8];
 
-
   slab_1 slab_1 (
            .clka(clk),    // input wire clka
            .ena(valid_slab1_adr_wr),      // input wire ena
@@ -1012,25 +920,20 @@ module conv_datapath_ddr(
   cv_weights_handler cv_weights_handler(
                        .clk(clk),
                        .reset((reset | conv_inital_fin)), //need xxxx
-
                        .mode_init(mode),
-
                        //cycle 0 in
                        .re_fm_en(re_fm_en),
                        .re_fm_end(re_fm_end),
-
                        //cylce 1 in
                        .weights_dout(weights_dout),
-
                        //cycle 0 out
                        .weight_en_rd(weight_en_rd),
                        .weight_adr_rd(weight_adr_rd),
-
                        // cycle 1 out
                        .weights_vector(weights_vector)
                      );
 
-                     // xxxxxxx should be ping-pong buffers
+  // xxxxxxx should be ping-pong buffers
   weights_buffer weights_buffer (
                    .clka(clk),    // input wire clka
                    .ena(weight_en_rd),      // input wire ena
@@ -1039,30 +942,22 @@ module conv_datapath_ddr(
                  );
 
   //args buf ctrl
-
   //args buf
   conv_args_handler cv_args_handler(
-                         .clk(clk),
-                         .reset((reset | conv_inital_fin)), //next tile need clr
-
-                         .mode_init(mode),
-                         .of_init(of),
-                         .args_refresh(conv_compute_tile_fin),
-
-                         .pof(pof), //pof args sets to wr to 64 regs in 1 cycle
-
-                         .args_tile_fin(conv_args_tile_fin),
-
-                         .bias_buf_adr_rd(bias_buf_adr_rd),
-
-                         .e_scale_tail_buf_adr_rd(e_scale_tail_buf_adr_rd),
-
-                         .e_scale_rank_buf_adr_rd(e_scale_rank_buf_adr_rd),
-
-                         .bias_buf_rd(bias_buf_rd),
-                         .e_scale_tail_buf_rd(e_scale_tail_buf_rd),
-                         .e_scale_rank_buf_rd(e_scale_rank_buf_rd)
-                       );
+                      .clk(clk),
+                      .reset((reset | conv_inital_fin)), //next tile need clr
+                      .mode_init(mode),
+                      .of_init(of),
+                      .args_refresh(conv_compute_tile_fin),
+                      .pof(pof), //pof args sets to wr to 64 regs in 1 cycle
+                      .args_tile_fin(conv_args_tile_fin),
+                      .bias_buf_adr_rd(bias_buf_adr_rd),
+                      .e_scale_tail_buf_adr_rd(e_scale_tail_buf_adr_rd),
+                      .e_scale_rank_buf_adr_rd(e_scale_rank_buf_adr_rd),
+                      .bias_buf_rd(bias_buf_rd),
+                      .e_scale_tail_buf_rd(e_scale_tail_buf_rd),
+                      .e_scale_rank_buf_rd(e_scale_rank_buf_rd)
+                    );
 
   //xxxxxxxxxx write control need fix
   tail_buffer e_scale_tail_buffer (
@@ -1073,14 +968,10 @@ module conv_datapath_ddr(
                 .dina(e_scale_tail_buf_data_wr),    // input wire [511 : 0] dina
                 .douta(e_scale_tail_buf_data_rd)  // output wire [511 : 0] douta
               );
-
   assign e_scale_tail_buf_adr = (e_scale_tail_buf_wr == 1'b1)? e_scale_tail_buf_adr_wr :
          ((e_scale_tail_buf_rd == 1'b1) && (e_scale_tail_buf_wr == 1'b0))? e_scale_tail_buf_adr_rd : 0;
-
   assign e_scale_tail_buf_wr = 0;
-
   assign e_scale_tail_buf_data_wr = 0;
-
   assign e_scale_tail_word = e_scale_tail_buf_data_rd;
 
   //xxxxxxxxxx write control need fix
@@ -1092,14 +983,10 @@ module conv_datapath_ddr(
                 .dina(e_scale_rank_buf_data_wr),    // input wire [511 : 0] dina
                 .douta(e_scale_rank_buf_data_rd)  // output wire [511 : 0] douta
               );
-
   assign e_scale_rank_buf_adr = (e_scale_rank_buf_wr == 1'b1)? e_scale_rank_buf_adr_wr :
          ((e_scale_rank_buf_rd == 1'b1) && (e_scale_rank_buf_wr == 1'b0))? e_scale_rank_buf_adr_rd : 0;
-
   assign e_scale_rank_buf_wr = 0;
-
   assign e_scale_rank_buf_data_wr = 0;
-
   assign e_scale_rank_word = e_scale_rank_buf_data_rd;
 
   //xxxxxxxxxx write control need fix
@@ -1111,14 +998,10 @@ module conv_datapath_ddr(
                 .dina(bias_buf_data_wr),    // input wire [511 : 0] dina
                 .douta(bias_buf_data_rd)  // output wire [511 : 0] douta
               );
-
   assign bias_buf_adr = (bias_buf_wr == 1'b1)? bias_buf_adr_wr :
          ((bias_buf_rd == 1'b1) && (bias_buf_wr == 1'b0))? bias_buf_adr_rd : 0;
-
   assign bias_buf_wr = 0;
-
   assign bias_buf_data_wr = 0;
-
   assign bias_word = bias_buf_data_rd;
 
   genvar i, j;
@@ -1150,7 +1033,7 @@ module conv_datapath_ddr(
                            .clk(clk),
                            .reset((sa_reset | reset | conv_inital_fin)),
                            .en(sa_en),
-                           .weights(weights_vector[(j-1)* row_num * 8 +: (row_num * 8)]),
+                           .weights(weights_vector[(j-1)* row_num_in_sa * 8 +: (row_num_in_sa * 8)]),
                            .delay_weights(delay_weights_sets[j-1])
                          );
       for (i = 1; i <= sa_column_num; i = i + 1)
@@ -1201,16 +1084,12 @@ module conv_datapath_ddr(
                   .mode(mode),
                   .E_scale_tail_set(E_scale_tail_4_channel_sets[(j-1)*E_scale_tail_set_width +: E_scale_tail_set_width]),
                   .E_scale_rank_set(E_scale_rank_4_channel_sets[(j-1)*E_scale_rank_set_width +: E_scale_rank_set_width]),
-
                   .add_bias_row(add_bias_rowi_channel_seti[i-1][j-1]),
-
                   //cycle 0 out
                   .add_bias_row_in_mult_A_width(add_bias_rowi_in_mult_A_width_channel_seti[i-1][j-1]),
                   .E_scale_tail_row_in_mult_B_width(E_scale_tail_rowi_in_mult_B_width_channel_seti[i-1][j-1]),
-
                   //cycle 1 in
                   .row_E_scale_tail_in_mult_P_width(rowi_E_scale_tail_in_mult_P_width_channel_seti[i-1][j-1]),
-
                   //cycle 1 out
                   .quantified_row(quantified_rowi_channel_seti[i-1][j-1])
                 );
@@ -1223,7 +1102,7 @@ module conv_datapath_ddr(
         assign extra_sa_vector_As[i-1][j-1]
                = (e_tail_en == 1'b1) ? add_bias_rowi_in_mult_A_width_channel_seti[i-1][j-1]
                [(mult_array_length_per_sa * mult_A_width)
-                +: (column_num * mult_A_width)] : 0;
+                +: (column_num_in_sa * mult_A_width)] : 0;
 
         assign e_scale_vector_B[((i-1)*sa_row_num+(j-1))*(mult_array_length_per_sa * mult_B_width)
                                 +: (mult_array_length_per_sa * mult_B_width)]
@@ -1240,7 +1119,7 @@ module conv_datapath_ddr(
                                   +: (mult_array_length_per_sa * mult_P_width)];
 
         assign rowi_E_scale_tail_in_mult_P_width_channel_seti[i-1][j-1]
-               [(mult_array_length_per_sa * mult_P_width) +: (column_num * mult_P_width)]
+               [(mult_array_length_per_sa * mult_P_width) +: (column_num_in_sa * mult_P_width)]
                = extra_sa_vector_Ps[i-1][j-1];
 
         fifo_rowi_channel_seti fifo_rowi_channel_seti (
@@ -1310,10 +1189,8 @@ module conv_datapath_ddr(
                .vector_B(vector_B),
                .vector_P(vector_P)
              );
-
   assign vector_A = e_scale_vector_A;
   assign vector_B = e_scale_vector_B;
-
   assign e_scale_vector_P = (quantify_en == 1'b1) ? vector_P : 0;
 
   E_Scale_Regs E_scale_regs (

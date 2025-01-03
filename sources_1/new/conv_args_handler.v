@@ -21,77 +21,66 @@
 
 
 module conv_args_handler(
-    mode_init, clk, reset,
-
+    clk, reset,
     args_refresh, //begin to refresh the pof regs of args
 
+    mode_init,
     of_init,
-    bias_layer_base_adr_rd_init,
-    tail_layer_base_adr_rd_init,
-    rank_layer_base_adr_rd_init,
+    bias_layer_base_buf_adr_rd_init,
+    tail_layer_base_buf_adr_rd_init,
+    rank_layer_base_buf_adr_rd_init,
 
     // args_tile_fin,
-
-    e_scale_bias_buf_adr_rd,
+    bias_buf_adr_rd,
     e_scale_tail_buf_adr_rd,
     e_scale_rank_buf_adr_rd,
-
-    e_scale_bias_buf_en_rd,
+    bias_buf_en_rd,
     e_scale_tail_buf_en_rd,
     e_scale_rank_buf_en_rd,
 
     bias_reg_start,
     bias_reg_size,
-
     tail_reg_start,
     tail_reg_size,
-
     rank_reg_start,
     rank_reg_size
   );
   // args buffer read control in the computation term
-
   parameter args_regs_num = 64;
   parameter row_num_in_mode0 = 64;
   parameter row_num_in_mode1 = 128;
-
   parameter bias_num_in_word_2pow = 6; //64, static num, cannot be changed
   parameter tail_num_in_word_2pow = 5; //32, static num, cannot be changed
   parameter rank_num_in_word_2pow = 6; //64, static num, cannot be changed
-
   parameter args_num_in_reg_2pow_mode0 = 0; //1
   parameter args_num_in_reg_2pow_mode1 = 1; //2
 
-  input mode_init, clk, reset;
+  input clk, reset;
   input args_refresh;
+  input mode_init;
   input [15:0] of_init;
-  input [15:0] bias_layer_base_adr_rd_init;
-  input [15:0] tail_layer_base_adr_rd_init;
-  input [15:0] rank_layer_base_adr_rd_init;
-
+  input [15:0] bias_layer_base_buf_adr_rd_init;
+  input [15:0] tail_layer_base_buf_adr_rd_init;
+  input [15:0] rank_layer_base_buf_adr_rd_init;
   // output args_tile_fin;
 
   //args  buf rd adr
-  output [15:0] e_scale_bias_buf_adr_rd;
+  output [15:0] bias_buf_adr_rd;
   output [15:0] e_scale_tail_buf_adr_rd;
   output [15:0] e_scale_rank_buf_adr_rd;
-
   output reg [7:0] bias_reg_start; // 0-63
   output [7:0] bias_reg_size; // 0-63
-
   output reg [7:0] tail_reg_start; // 0-63
   output [7:0] tail_reg_size; // 0-63
-
   output reg [7:0] rank_reg_start; // 0-63
   output [7:0] rank_reg_size; // 0-63
-
-  output e_scale_bias_buf_en_rd;
+  output bias_buf_en_rd;
   output e_scale_tail_buf_en_rd;
   output e_scale_rank_buf_en_rd;
 
   reg mode;
   reg [15:0] of;
-  reg [15:0] bias_layer_base_adr_rd, tail_layer_base_adr_rd, rank_layer_base_adr_rd;
+  reg [15:0] bias_layer_base_buf_adr_rd, tail_layer_base_buf_adr_rd, rank_layer_base_buf_adr_rd;
 
   //loop args word --> args regs
   reg bias_signal_add, tail_signal_add, rank_signal_add;
@@ -121,17 +110,17 @@ module conv_args_handler(
     begin //set
       of <= of_init;
       mode <= mode_init;
-      bias_layer_base_adr_rd <= bias_layer_base_adr_rd_init;
-      tail_layer_base_adr_rd <= tail_layer_base_adr_rd_init;
-      rank_layer_base_adr_rd <= rank_layer_base_adr_rd_init;
+      bias_layer_base_buf_adr_rd <= bias_layer_base_buf_adr_rd_init;
+      tail_layer_base_buf_adr_rd <= tail_layer_base_buf_adr_rd_init;
+      rank_layer_base_buf_adr_rd <= rank_layer_base_buf_adr_rd_init;
     end
     else
     begin
       of <= of;
       mode <= mode;
-      bias_layer_base_adr_rd <= bias_layer_base_adr_rd;
-      tail_layer_base_adr_rd <= tail_layer_base_adr_rd;
-      rank_layer_base_adr_rd <= rank_layer_base_adr_rd;
+      bias_layer_base_buf_adr_rd <= bias_layer_base_buf_adr_rd;
+      tail_layer_base_buf_adr_rd <= tail_layer_base_buf_adr_rd;
+      rank_layer_base_buf_adr_rd <= rank_layer_base_buf_adr_rd;
     end
   end
 
@@ -183,7 +172,6 @@ module conv_args_handler(
       bias_reg_start <= bias_reg_start;
     end
   end
-
   assign loop_bias_word_counter_add_begin = bias_signal_add;
   assign loop_bias_word_counter_add_end = loop_bias_word_counter_add_begin
          && ((bias_word_counter << bias_num_in_word_2pow ) >= tile_of_size);
@@ -193,8 +181,8 @@ module conv_args_handler(
   assign bias_reg_size = ((bias_word_counter << bias_num_in_word_2pow) > tile_of_size)?
          ((tile_of_size - ((bias_word_counter-1) << bias_num_in_word_2pow))>>args_num_in_reg_2pow):
          (1 << bias_num_in_word_2pow) >> args_num_in_reg_2pow;
-  assign e_scale_bias_buf_adr_rd = bias_layer_base_adr_rd + ((args_tof_start - 1) >> bias_num_in_word_2pow) + bias_word_counter - 1;
-  assign e_scale_bias_buf_en_rd = loop_bias_word_counter_add_begin;
+  assign bias_buf_adr_rd = bias_layer_base_buf_adr_rd + ((args_tof_start - 1) >> bias_num_in_word_2pow) + bias_word_counter - 1;
+  assign bias_buf_en_rd = loop_bias_word_counter_add_begin;
 
   always@(posedge clk)
   begin
@@ -215,7 +203,6 @@ module conv_args_handler(
       bias_word_fin <= bias_word_fin;
     end
   end
-
 
   //tail refresh  [args_tof_start, args_tof_start + tile_of_size)
   //a tail word(512 bit) contains 32 tail if pof>32 and F>32, otherwise min(pof, F) tail and 0s.
@@ -265,7 +252,6 @@ module conv_args_handler(
       tail_reg_start <= tail_reg_start;
     end
   end
-
   assign loop_tail_word_counter_add_begin = tail_signal_add;
   assign loop_tail_word_counter_add_end = loop_tail_word_counter_add_begin
          && ((tail_word_counter << tail_num_in_word_2pow ) >= tile_of_size);
@@ -275,7 +261,7 @@ module conv_args_handler(
   assign tail_reg_size = ((tail_word_counter << tail_num_in_word_2pow) > tile_of_size)?
          ((tile_of_size - ((tail_word_counter-1) << tail_num_in_word_2pow))>>args_num_in_reg_2pow):
          (1 << tail_num_in_word_2pow) >> args_num_in_reg_2pow;
-  assign e_scale_tail_buf_adr_rd = tail_layer_base_adr_rd + ((args_tof_start - 1) >> tail_num_in_word_2pow) + tail_word_counter - 1;
+  assign e_scale_tail_buf_adr_rd = tail_layer_base_buf_adr_rd + ((args_tof_start - 1) >> tail_num_in_word_2pow) + tail_word_counter - 1;
   assign e_scale_tail_buf_en_rd = loop_tail_word_counter_add_begin;
 
   always@(posedge clk)
@@ -297,7 +283,6 @@ module conv_args_handler(
       tail_word_fin <= tail_word_fin;
     end
   end
-
 
   // rank refresh [args_tof_start, args_tof_start + tile_of_size)
   //a bias word(512 bit) contains 64 bias if pof>64 and F>64, otherwise min(pof, F) bias and 0s.
@@ -357,10 +342,9 @@ module conv_args_handler(
   assign rank_reg_size = ((rank_word_counter << rank_num_in_word_2pow) > tile_of_size)?
          ((tile_of_size - ((rank_word_counter-1) << rank_num_in_word_2pow))>>args_num_in_reg_2pow):
          (1 << rank_num_in_word_2pow) >> args_num_in_reg_2pow;
-  assign e_scale_rank_buf_adr_rd = rank_layer_base_adr_rd + ((args_tof_start - 1) >> rank_num_in_word_2pow) + rank_word_counter - 1;
+  assign e_scale_rank_buf_adr_rd = rank_layer_base_buf_adr_rd + ((args_tof_start - 1) >> rank_num_in_word_2pow) + rank_word_counter - 1;
   //(args_tof_start - 1) is the of nums(the arg nums) before
   assign e_scale_rank_buf_en_rd = loop_rank_word_counter_add_begin;
-
 
   always@(posedge clk)
   begin
@@ -381,7 +365,6 @@ module conv_args_handler(
       rank_word_fin <= rank_word_fin;
     end
   end
-
 
   always@(posedge clk)
   begin
@@ -407,12 +390,9 @@ module conv_args_handler(
   end
 
   assign loop_args_tof_add_begin = bias_word_fin & tail_word_fin & rank_word_fin;
-
   assign loop_args_tof_add_end = (loop_args_tof_add_begin == 1'b1) && (args_tof_start + row_num > of);
 
   assign tile_of_size = (args_tof_start + row_num - 1 > of)? (of - args_tof_start + 1):
          row_num;
 
-
 endmodule
-

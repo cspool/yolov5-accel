@@ -174,7 +174,6 @@ module conv_load_input_controller(
   wire valid_adr;
   wire [15:0] row1_buf_adr_in_row;
   wire [15:0] iy_start;
-  wire conv_tiling_add_end;
 
   //conv tile module
   //address translation

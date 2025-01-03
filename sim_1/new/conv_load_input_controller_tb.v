@@ -23,18 +23,15 @@
 module conv_load_input_controller_tb(
 
   );
-
   parameter pixels_in_row = 32;
   parameter pixels_in_row_in_2pow = 5;
   parameter buffers_num = 3;
-
   parameter row_num_in_mode0 = 64; // 64 in 8 bit, 128 in 1 bit
   parameter row_num_in_mode1 = 128; // 64 in 8 bit, 128 in 1 bit
   parameter row_num_mode0_2pow = 6;
   parameter row_num_mode1_2pow = 7;
   parameter ifs_in_row_2pow = 1;
   parameter input_buffer_size_2pow = 12;//4096
-
   parameter ddr_load_ratio = 2;
 
   //conv_load_input_controller
@@ -44,10 +41,8 @@ module conv_load_input_controller_tb(
   reg mode_init;
   reg [3:0] k_init, s_init, p_init;
   reg [15:0] of_init, ox_init, oy_init, ix_init, iy_init, nif_init;
-
   reg [3:0] nif_in_2pow_init, ix_in_2pow_init;
   reg [15:0] input_ddr_layer_base_adr_init;
-
   reg [7:0] of_div_row_num_ceil_init;
   //tiley_first_tilex_first_split_size = ceil(tiley_first_iy_row_num * tilex_first_ix_word_num / of_div_row_num_ceil)
   reg [7:0] tiley_first_tilex_first_split_size_init;
@@ -188,7 +183,6 @@ module conv_load_input_controller_tb(
   wire buf1_en_wr;
   wire buf2_en_wr;
   wire buf3_en_wr;
-
 
   // load input info fifo
   wire input_word_load_info_fifo_en_rd;

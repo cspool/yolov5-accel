@@ -49,6 +49,7 @@ module conv_args_controller(
     rank_reg_start,
     rank_reg_size
   );
+  // args buffer read control in the computation term
 
   parameter args_regs_num = 64;
   parameter row_num_in_mode0 = 64;
