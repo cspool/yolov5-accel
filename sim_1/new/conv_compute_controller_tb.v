@@ -49,24 +49,19 @@ module conv_compute_controller_tb(
   parameter pixels_column_in_width = 16 * column_num_in_sa;
   parameter sa_column_in_width = 24 * column_num_in_sa;
   parameter pe_out_width =  (pixel_width_18) * pe_parallel_pixel_18 *  pe_parallel_weight_18; // width of 18 is bigger than 88
-
   parameter row_counter_width = ($clog2(row_num_in_sa+1));
-
   parameter out_width = pixel_width_18 * pe_parallel_pixel_18 * pe_parallel_weight_18 * column_num_in_sa;
   parameter out_width_88 = pixel_width_88 * pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa;
   parameter out_width_18 = pixel_width_18 * pe_parallel_pixel_18 * pe_parallel_weight_18 * column_num_in_sa;
-
   parameter bias_width = 8; //8 bit bias
   parameter bias_set_width = bias_width * pe_parallel_weight_18; //32; vconv pixel out_width
   parameter bias_set_4_channel_width = bias_set_width * sa_row_num; //4 * 16 bit
   parameter bias_sets_num_in_row = sa_row_num * row_num_in_sa; //64
   //   parameter bias_tile_length = bias_set_width * bias_sets_num_in_row; //64 * 16bit
   parameter bias_word_length = 512;
-
   parameter add_bias_row_width = pixel_width_18 * pe_parallel_pixel_18 * pe_parallel_weight_18 * column_num_in_sa;
   parameter add_bias_row_width_88 = pixel_width_88 * pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa;
   parameter add_bias_row_width_18_2 = pixel_width_18 * pe_parallel_pixel_18 * 1 * column_num_in_sa;
-
   parameter mult_A_width = 24;
   parameter mult_B_width = 16;
   parameter mult_P_width = 40;
@@ -77,7 +72,6 @@ module conv_compute_controller_tb(
   parameter vector_B_width = mult_array_length * mult_B_width;
   parameter vector_P_width = mult_array_length * mult_P_width;
   parameter mult_array_length_per_sa = mult_array_length / sa_row_num / sa_column_num; //48
-
   parameter E_scale_tail_width = 16; //16 bit E_scale tail
   parameter E_scale_tail_set_width = E_scale_tail_width * pe_parallel_weight_18; //32 bit
   parameter E_scale_tail_set_4_channel_width = E_scale_tail_set_width * sa_row_num; //4 * 32 bit
@@ -108,7 +102,6 @@ module conv_compute_controller_tb(
   parameter scaled_rank_row_width = (quantified_pixel_width+1) * pe_parallel_weight_18 * pe_parallel_pixel_18 * column_num_in_sa;
   //9 bit * 32 pixels * 2 channel
   parameter out_data_width = quantified_pixel_width * pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa;
-
   parameter ddr_load_ratio = 2;
 
   //conv initial
@@ -121,10 +114,10 @@ module conv_compute_controller_tb(
   reg [15:0] rank_layer_base_buf_adr_rd_init;
   reg [15:0] nif_mult_k_mult_k_init;
   reg [15:0] weights_layer_base_ddr_adr_rd_init;
-
   //conv compute ctrl
   reg clk, conv_compute, reset;
   wire [15:0] ox_start, oy_start, of_start, pox, poy, pof, if_idx;
+  wire [15:0] shadow_ox_start, shadow_oy_start, shadow_of_start, shadow_pox, shadow_poy, shadow_pof;
   wire west_pad, slab_num, east_pad;
   wire row1_idx, row2_idx, row3_idx;
   wire row_start_idx, row_end_idx;
@@ -146,7 +139,6 @@ module conv_compute_controller_tb(
   wire [15:0] row3_slab_adr;
   wire [1:0] row3_slab_idx;
   wire valid_row1_adr, valid_row2_adr, valid_row3_adr;
-
   wire conv_end;
   wire conv_pixels_add_end;
   wire conv_nif_add_end;
@@ -217,7 +209,6 @@ module conv_compute_controller_tb(
   wire buf1_en_wr;
   wire buf2_en_wr;
   wire buf3_en_wr;
-
   //last regs
   reg [3:0] last_west_pad, last_slab_num, last_east_pad;
   reg [15:0] last_row1_idx, last_row2_idx, last_row3_idx;
@@ -234,17 +225,27 @@ module conv_compute_controller_tb(
   reg [1:0] last_row1_slab_idx;
   reg [1:0] last_row2_slab_idx;
   reg [1:0] last_row3_slab_idx;
-
+  //last regs, state regs, to cache the info to wait for valid buffer data read
+  reg bias_reg_set;
+  reg [7:0] last_bias_reg_start;
+  reg [7:0] last_bias_reg_size;
+  reg tail_reg_set;
+  reg [7:0] last_e_scale_tail_reg_start;
+  reg [7:0] last_e_scale_tail_reg_size;
+  reg rank_reg_set;
+  reg [7:0] last_e_scale_rank_reg_start;
+  reg [7:0] last_e_scale_rank_reg_size;
+  wire [511:0] last_bias_word;
+  wire [511:0] last_e_scale_tail_word;
+  wire [511:0] last_e_scale_rank_word;   
   //row regs
   wire [shift_regs_num * 8 -1 : 0] row_regs_1;
   wire [shift_regs_num * 8 -1 : 0] row_regs_2;
   wire [shift_regs_num * 8 -1 : 0] row_regs_3;
   wire shift_start;
-
   //shift regs
   wire re_fm_en, re_fm_end;
   wire [pixels_in_row*8-1:0] re_rowi_pixels[sa_column_num-1 :0];
-
   //input buffer 1-3
   wire in_buf1_en_wr;
   wire [11 : 0] in_buf1_adr_wr;
@@ -264,26 +265,21 @@ module conv_compute_controller_tb(
   wire in_buf3_en_rd;
   wire [11 : 0] in_buf3_adr_rd;
   wire [511 : 0] in_buf3_rd;
-
   //load weights controller
   reg conv_load_weights; //begin weights loading
   reg ddr_en; //mig fifo can accept request
   reg valid_load_weights; //ddr words is loaded from ddr
-
   wire weights_word_ddr_en_rd = 0; //o: read ddr
   wire [15:0] weights_word_ddr_adr_rd = 0;//o
   wire weights_word_buf_en_wt = 0; //o: write buf
   wire [15:0] weights_word_buf_adr_wt = 0;//o
-
   //cv weights handler
   wire weights_word_buf_en_rd; //o: read buf
   wire [15:0] weights_word_buf_adr_rd;//o
   wire [weight_word_length-1 : 0] weights_vector; //o: weights vector to flush into PEs
-
   //ping pong control, buf write and read
   wire [weight_word_length-1 :0] weights_word_buf_wt = 0; //i: weights read from DDR, write into buf
   wire [weight_word_length-1 :0] weights_word_buf_rd; //o: ping pong buf out
-
   wire weights_word_buf_ping_en; //o
   wire weights_word_buf_ping_en_wr; //o
   wire [15:0] weights_word_buf_ping_adr; //o
@@ -292,11 +288,9 @@ module conv_compute_controller_tb(
   wire weights_word_buf_pong_en_wr; //o
   wire [15:0] weights_word_buf_pong_adr; //o
   wire [weight_word_length-1 :0] weights_word_buf_pong_in; //o
-
   //weights buf
   wire [weight_word_length-1 :0] weights_word_buf_ping_out; //o
   wire [weight_word_length-1 :0] weights_word_buf_pong_out; //o
-
   //args buf rd adr
   wire [15:0] bias_buf_adr_rd;
   wire [15:0] e_scale_tail_buf_adr_rd;
@@ -310,12 +304,10 @@ module conv_compute_controller_tb(
   wire bias_buf_en_rd;
   wire e_scale_tail_buf_en_rd;
   wire e_scale_rank_buf_en_rd;
-
   //wt ctrl space
   wire [15:0] bias_buf_adr_wr = 0;
   wire [15:0] e_scale_tail_buf_adr_wr = 0;
   wire [15:0] e_scale_rank_buf_adr_wr = 0;
-
   // bias buf
   wire bias_buf_en;
   wire bias_buf_en_wr = 0;
@@ -334,20 +326,84 @@ module conv_compute_controller_tb(
   wire [8:0] e_scale_rank_buf_adr;
   wire [511:0] e_scale_rank_buf_wr = 0;
   wire [511:0] e_scale_rank_buf_rd;
+  //delay regs pixels
+  //    wire [column_num_in_sa*16-1:0] delay_row1_pixels, delay_row2_pixels, delay_row3_pixels;
+  wire [pixels_column_in_width-1:0] delay_rowi_pixels[sa_column_num-1 :0];
+  //delay regs weights
+  //    wire [row_num_in_sa*8-1:0] delay_weights_1, delay_weights_2, delay_weights_3, delay_weights_4;
+  wire [weights_row_in_width -1:0] delay_weights_sets[sa_row_num-1 :0];
+  //sa
+  wire [sa_column_in_width -1:0] sa_columni_ins[sa_column_num-1 :0][sa_row_num-1 :0];
+  wire [sa_row_in_width -1:0] sa_rowi_ins[sa_column_num-1 :0][sa_row_num-1 :0];
+  wire [column_num_in_sa * mult_P_width -1:0] sa_row0_outs [sa_column_num-1 : 0][sa_row_num-1 : 0];
+  // sa control
+  wire sa_en, sa_reset;
+  wire channel_out_reset, channel_out_en; //need logic
+  wire add_bias_en, add_bias_reset;
+  wire [5:0] out_sa_row_idx; //output sa row idx [1,16]
+  wire mult_array_mode;
+  wire channel_out_add_end;
+  wire quantify_add_end;
+  wire [out_width - 1: 0] out_rowi_channel_seti[sa_column_num-1 :0][sa_row_num-1 :0]; // pox res per channel
+  wire conv_compute_tile_fin;
+  //bias regs
+  wire [bias_word_length-1 : 0] bias_word;
+  wire [bias_set_4_channel_width-1 :0] bias_4_channel_sets; //4 sets of 16bit(1 bias or 2 bias)
+  wire [add_bias_row_width - 1: 0] add_bias_rowi_channel_seti[sa_column_num-1 : 0][sa_row_num-1 : 0];
+  //quantify ctrl
+  wire e_tail_en, e_tail_reset;
+  wire quantify_en, quantify_reset;
+  //mult_array
+  wire [vector_A_width-1 :0] vector_A, e_scale_vector_A;
+  wire [vector_B_width-1 :0] vector_B, e_scale_vector_B;
+  wire [vector_P_width-1 :0] vector_P, e_scale_vector_P;
+  ///mult_sa
+  wire [column_num_in_sa * mult_A_width -1:0] extra_sa_vector_As[sa_column_num-1 : 0][sa_row_num-1 : 0];
+  wire [mult_B_width -1:0] extra_sa_vector_B [sa_column_num-1 : 0][sa_row_num-1 : 0];
+  wire [column_num_in_sa * mult_P_width -1:0] extra_sa_vector_Ps [sa_column_num-1 : 0][sa_row_num-1 : 0];
+  //e_scale regs
+  // tile e-scale, will be set at first of the tiling compute, maybe set in several cycles
+  wire [E_scale_tail_word_width -1 : 0] E_scale_tail_word;
+  wire [6:0] E_scale_tail_reg_start;
+  wire [6:0] E_scale_tail_reg_size;
+  wire [E_scale_rank_word_width -1 : 0] E_scale_rank_word;
+  wire [6:0] E_scale_rank_reg_start;
+  wire [6:0] E_scale_rank_reg_size;
+  wire [E_scale_tail_set_4_channel_width-1 :0] E_scale_tail_4_channel_sets;
+  wire [E_scale_rank_set_4_channel_width-1 :0] E_scale_rank_4_channel_sets;
+  //e_scale
+  //cycle 0
+  wire [add_bias_row_in_mult_A_width_width-1 : 0] add_bias_rowi_in_mult_A_width_channel_seti[sa_column_num-1 : 0][sa_row_num-1 : 0];
+  //24 bit * 32 pixels * 2 channel
+  wire [E_scale_tail_row_in_mult_B_width_width-1 : 0] E_scale_tail_rowi_in_mult_B_width_channel_seti[sa_column_num-1 : 0][sa_row_num-1 : 0];
+  //16 bit * 32 pixels * 2 channel
+  //cycle 1
+  wire [row_E_scale_tail_in_mult_P_width_width-1 : 0] rowi_E_scale_tail_in_mult_P_width_channel_seti[sa_column_num-1 : 0][sa_row_num-1 : 0];
+  //40 bit * 32 pixels * 2 channel
+  wire [quantified_row_width-1 :0] quantified_rowi_channel_seti[sa_column_num-1 : 0][sa_row_num-1 : 0];
+  //8 bit * 32 pixels * 2 channel
+  //conv fifo
+  wire fifo_rowi_channel_seti_rd_en[sa_column_num-1 : 0][sa_row_num-1 : 0];
+  wire [quantified_row_width-1 :0] fifo_rowi_channel_seti_dout[sa_column_num-1 : 0][sa_row_num-1 : 0];
+  wire fifo_rowi_channel_seti_full[sa_column_num-1 : 0][sa_row_num-1 : 0];
+  wire fifo_rowi_channel_seti_empty[sa_column_num-1 : 0][sa_row_num-1 : 0];
+  wire [8 : 0] data_counts[sa_column_num-1 : 0][sa_row_num-1 : 0];
 
-  //last regs, state regs, to cache the info to wait for valid buffer data read
-  reg bias_reg_set;
-  reg [7:0] last_bias_reg_start;
-  reg [7:0] last_bias_reg_size;
-  reg tail_reg_set;
-  reg [7:0] last_e_scale_tail_reg_start;
-  reg [7:0] last_e_scale_tail_reg_size;
-  reg rank_reg_set;
-  reg [7:0] last_e_scale_rank_reg_start;
-  reg [7:0] last_e_scale_rank_reg_size;
-  wire [511:0] last_bias_word;
-  wire [511:0] last_e_scale_tail_word;
-  wire [511:0] last_e_scale_rank_word;
+  //conv fifo out ctrl
+  //cycle 0 in
+  wire conv_store_start;
+  //cycle 1 in
+  wire [quantified_row_width-1 : 0] fifo_data;
+  //cycle 0 out
+  wire [sa_row_num * sa_column_num-1:0] fifo_rds;
+  //cycle 1 out
+  //    output reg [15:0] rowi_out_buf_adr;
+  wire [3:0] fifo_column_no, fifo_row_no;
+  wire valid_rowi_out_buf_adr;
+  wire [15:0] out_y_idx, out_x_idx, out_f_idx;
+  wire conv_fifo_out_tile_add_end;
+  wire [out_data_width-1 : 0] conv_out_data;
+  wire conv_store_tile_fin;
 
   conv_compute_controller cv_compute_controller( //conv_router_v2 // conv_router_flat
                             .clk(clk),
@@ -366,7 +422,6 @@ module conv_compute_controller_tb(
                             .p_init(p),
                             .nif_in_2pow_init(nif_in_2pow),
                             .ix_in_2pow_init(ix_in_2pow),
-
                             .ox_start(ox_start),
                             .oy_start(oy_start),
                             .of_start(of_start),
@@ -374,6 +429,12 @@ module conv_compute_controller_tb(
                             .poy(poy),
                             .pof(pof),
                             .if_idx(if_idx),
+                            .shadow_ox_start(shadow_ox_start),
+                            .shadow_oy_start(shadow_oy_start),
+                            .shadow_of_start(shadow_of_start),
+                            .shadow_pox(shadow_pox),
+                            .shadow_poy(shadow_poy),
+                            .shadow_pof(shadow_pof),
                             .west_pad(west_pad),
                             .slab_num(slab_num),
                             .east_pad(east_pad),
@@ -892,36 +953,209 @@ module conv_compute_controller_tb(
                );
 
   //last regs, state regs, to cache the info to wait for valid buffer data read
-  always@(posedge clk)
-  begin
-    if (reset == 1'b1)
-    begin
-      bias_reg_set <= 0;
-      last_bias_reg_start <= 0;
-      last_bias_reg_size <= 0;
-      tail_reg_set <= 0;
-      last_e_scale_tail_reg_start <= 0;
-      last_e_scale_tail_reg_size <= 0;
-      rank_reg_set <= 0;
-      last_e_scale_rank_reg_start <= 0;
-      last_e_scale_rank_reg_size <= 0;
-    end
-    else
-    begin
-      bias_reg_set <= bias_buf_en_rd;
-      last_bias_reg_start <= bias_reg_start;
-      last_bias_reg_size <= bias_reg_size;
-      tail_reg_set <= e_scale_tail_buf_en_rd;
-      last_e_scale_tail_reg_start <= tail_reg_start;
-      last_e_scale_tail_reg_size <= tail_reg_size;
-      rank_reg_set <= e_scale_rank_buf_en_rd;
-      last_e_scale_rank_reg_start <= rank_reg_start;
-      last_e_scale_rank_reg_size <= rank_reg_size;
-    end
-  end
   assign last_bias_word = bias_buf_rd;
   assign last_e_scale_tail_word = e_scale_tail_buf_rd;
   assign last_e_scale_rank_word = e_scale_rank_buf_rd;
+
+  //computation core
+  genvar i, j;
+  generate
+    for (i = 1; i <= sa_column_num; i = i + 1)
+    begin: delay_regs_column //poy, rows
+      Delay_Regs_Pixels delay_regs_pixels(
+                          .clk(clk),
+                          .reset(sa_reset | reset),
+                          .en(sa_en),
+                          .re_row_pixels(re_rowi_pixels[i-1]),
+                          .delay_row_pixels(delay_rowi_pixels[i-1])
+                        );
+      //            assign sa_columni_ins[i-1] = (mult_array_mode == 1'b0) ?
+      //            {{(sa_column_in_width-pixels_column_in_width){1'b0}}, delay_rowi_pixels[i-1]} :
+      //            extra_sa_vector_As[i-1][j-1];
+      for (j = 1; j <= sa_row_num; j = j + 1)
+      begin //output channel
+        assign sa_columni_ins[i-1][j-1] = (e_tail_en == 1'b0) ?
+               {{(sa_column_in_width-pixels_column_in_width){1'b0}}, delay_rowi_pixels[i-1]} :
+               extra_sa_vector_As[i-1][j-1];
+      end
+    end
+    for (j = 1; j <= sa_row_num; j = j + 1)
+    begin: delay_regs_row //output channel
+      Delay_Regs_Weights delay_regs_weights(
+                           .clk(clk),
+                           .reset(sa_reset | reset),
+                           .en(sa_en),
+                           .weights(weights_vector[(j-1)* row_num_in_sa * 8 +: (row_num_in_sa * 8)]),
+                           .delay_weights(delay_weights_sets[j-1])
+                         );
+      for (i = 1; i <= sa_column_num; i = i + 1)
+      begin //poy, rows
+        assign sa_rowi_ins[i-1][j-1] = (e_tail_en == 1'b0) ?
+               delay_weights_sets[j-1] :
+               {{(sa_row_in_width-mult_B_width){1'b0}},extra_sa_vector_B[i-1][j-1]};
+      end
+    end
+    for (i = 1; i <= sa_column_num; i = i + 1)
+    begin: sa_column //poy, rows
+      for (j = 1; j <= sa_row_num; j = j + 1)
+      begin: sa_row //output channel
+        SA_fin sa(
+                 .clk(clk),
+                 .reset(sa_reset | reset),
+                 .en(sa_en),
+                 .mode(mode),
+                 .channel_out_reset(channel_out_reset | reset),
+                 .channel_out_en(channel_out_en),
+                 .out_sa_row_idx(out_sa_row_idx),
+                 .row_in(sa_rowi_ins[i-1][j-1]), //weights or 16bit e_scale
+                 .column_in(sa_columni_ins[i-1][j-1]), //pixels or 24bit add_biases
+                 .mult_array_mode(mult_array_mode),
+                 .row0_out(sa_row0_outs[i-1][j-1]),
+                 .out(out_rowi_channel_seti[i-1][j-1])
+               );
+        assign extra_sa_vector_Ps[i-1][j-1]
+               = (quantify_en == 1'b1)? sa_row0_outs[i-1][j-1] : 0;
+        Add_Bias bias_adder(
+                   .clk(clk),
+                   .reset(add_bias_reset | reset),
+                   .en(add_bias_en),
+                   .mode(mode),
+                   .rowi_channel_seti(out_rowi_channel_seti[i-1][j-1]), // pox res per channel
+                   .bias_set(bias_4_channel_sets[(j-1)*bias_set_width +: bias_set_width]),
+                   .add_bias_row(add_bias_rowi_channel_seti[i-1][j-1]) // pox res per channel
+                 );
+        E_Scale E_scale(
+                  //cycle 0 in
+                  .clk(clk),
+                  .reset(reset),
+                  .e_tail_reset(e_tail_reset),
+                  .mode(mode),
+                  .E_scale_tail_set(E_scale_tail_4_channel_sets[(j-1)*E_scale_tail_set_width +: E_scale_tail_set_width]),
+                  .E_scale_rank_set(E_scale_rank_4_channel_sets[(j-1)*E_scale_rank_set_width +: E_scale_rank_set_width]),
+                  .add_bias_row(add_bias_rowi_channel_seti[i-1][j-1]),
+                  //cycle 0 out
+                  .add_bias_row_in_mult_A_width(add_bias_rowi_in_mult_A_width_channel_seti[i-1][j-1]),
+                  .E_scale_tail_row_in_mult_B_width(E_scale_tail_rowi_in_mult_B_width_channel_seti[i-1][j-1]),
+                  //cycle 1 in
+                  .row_E_scale_tail_in_mult_P_width(rowi_E_scale_tail_in_mult_P_width_channel_seti[i-1][j-1]),
+                  //cycle 1 out
+                  .quantified_row(quantified_rowi_channel_seti[i-1][j-1])
+                );
+        //1-48 -> mult_array[1,48]; 49-64 -> sa_row0; [1, 64] = add_bias_row_in_mult_A_width_width
+        assign e_scale_vector_A[((i-1)*sa_row_num+(j-1))*(mult_array_length_per_sa * mult_A_width)
+                                +: (mult_array_length_per_sa * mult_A_width)]
+               = (e_tail_en == 1'b1) ? add_bias_rowi_in_mult_A_width_channel_seti[i-1][j-1]
+               [0 +: (mult_array_length_per_sa * mult_A_width)] : 0;
+        assign extra_sa_vector_As[i-1][j-1]
+               = (e_tail_en == 1'b1) ? add_bias_rowi_in_mult_A_width_channel_seti[i-1][j-1]
+               [(mult_array_length_per_sa * mult_A_width)
+                +: (column_num_in_sa * mult_A_width)] : 0;
+        assign e_scale_vector_B[((i-1)*sa_row_num+(j-1))*(mult_array_length_per_sa * mult_B_width)
+                                +: (mult_array_length_per_sa * mult_B_width)]
+               = (e_tail_en == 1'b1) ? E_scale_tail_rowi_in_mult_B_width_channel_seti[i-1][j-1]
+               [0 +: (mult_array_length_per_sa * mult_B_width)] : 0;
+        assign extra_sa_vector_B[i-1][j-1]
+               = (e_tail_en == 1'b1) ? E_scale_tail_rowi_in_mult_B_width_channel_seti[i-1][j-1]
+               [(mult_array_length_per_sa * mult_B_width) +: mult_B_width] : 0;
+        assign rowi_E_scale_tail_in_mult_P_width_channel_seti[i-1][j-1]
+               [0 +: (mult_array_length_per_sa * mult_P_width)]
+               = e_scale_vector_P[((i-1)*sa_row_num+(j-1))*(mult_array_length_per_sa * mult_P_width)
+                                  +: (mult_array_length_per_sa * mult_P_width)];
+        assign rowi_E_scale_tail_in_mult_P_width_channel_seti[i-1][j-1]
+               [(mult_array_length_per_sa * mult_P_width) +: (column_num_in_sa * mult_P_width)]
+               = extra_sa_vector_Ps[i-1][j-1];
+
+        fifo_rowi_channel_seti fifo_rowi_channel_seti (
+                                 .clk(clk),      // input wire clk
+                                 .srst(reset),    // input wire srst
+                                 .din(quantified_rowi_channel_seti[i-1][j-1]),      // input wire [511 : 0] din
+                                 .wr_en(quantify_en),  // input wire wr_en
+                                 .rd_en(fifo_rowi_channel_seti_rd_en[i-1][j-1]),  // input wire rd_en
+                                 .dout(fifo_rowi_channel_seti_dout[i-1][j-1]),    // output wire [511 : 0] dout
+                                 .full(fifo_rowi_channel_seti_full[i-1][j-1]),    // output wire full
+                                 .empty(fifo_rowi_channel_seti_empty[i-1][j-1]),  // output wire empty
+                                 .data_count(data_counts[i-1][j-1])
+                               );
+        assign fifo_rowi_channel_seti_rd_en[i-1][j-1]
+               = fifo_rds[(((i-1) << 2) + j-1)];
+      end
+    end
+  endgenerate
+
+  // sa control
+  SA_Ctrl sa_ctrl(
+            .clk(clk),
+            .reset(reset), //next tile need clr
+            .re_fm_en(re_fm_en),
+            .mode(mode),
+            .nif_mult_k_mult_k(nif_mult_k_mult_k),
+
+            .sa_en(sa_en),
+            .sa_reset(sa_reset),
+            .channel_out_reset(channel_out_reset),
+            .channel_out_en(channel_out_en),
+            .add_bias_en(add_bias_en),
+            .add_bias_reset(add_bias_reset),
+            .e_tail_en(e_tail_en),
+            .e_tail_reset(e_tail_reset),
+            .quantify_en(quantify_en),
+            .quantify_reset(quantify_reset),
+            .mult_array_mode(mult_array_mode),
+            .out_sa_row_idx(out_sa_row_idx),
+            .channel_out_add_end(channel_out_add_end),
+            .quantify_add_end(quantify_add_end)
+          );
+  assign conv_compute_tile_fin = quantify_add_end;
+
+  Mult_Array mult_array(
+               .clk(clk),
+               .en(e_tail_en),
+               .vector_A(vector_A),
+               .vector_B(vector_B),
+               .vector_P(vector_P)
+             );
+  assign vector_A = e_scale_vector_A;
+  assign vector_B = e_scale_vector_B;
+  assign e_scale_vector_P = (quantify_en == 1'b1) ? vector_P : 0;
+
+  conv_fifo_out_controller cv_fifo_out_controller ( // conv_out_handler
+                          //cycle 0 in
+                          .clk(clk),
+                          .reset(reset),
+                          .cur_ox_start(shadow_ox_start),
+                          .cur_oy_start(shadow_oy_start),
+                          .cur_of_start(shadow_of_start),
+                          .cur_pox(shadow_pox),
+                          .cur_poy(shadow_poy),
+                          .cur_pof(shadow_pof),
+                          .conv_fifo_out_start(conv_fifo_out_start),
+                          .mode(mode),
+                          .of_in_2pow(of_in_2pow),
+                          .ox_in_2pow(ox_in_2pow),
+                          //cycle 0 out
+                          .fifo_rds(fifo_rds),
+                          //cycle 1 in
+                          .fifo_data(fifo_data),
+                          //cycle 1 out
+                          //rowi_out_buf_adr,
+                          .fifo_column_no(fifo_column_no),
+                          .fifo_row_no(fifo_row_no),
+                          .valid_rowi_out_buf_adr(valid_rowi_out_buf_adr),
+                          .out_y_idx(out_y_idx),
+                          .out_x_idx(out_x_idx),
+                          .out_f_idx(out_f_idx),
+                          .conv_out_data(conv_out_data),
+                          .conv_fifo_out_tile_add_end(conv_fifo_out_tile_add_end)
+                        );
+  assign fifo_data = fifo_rowi_channel_seti_dout[fifo_column_no][fifo_row_no];
+
+  assign conv_store_tile_fin = conv_fifo_out_tile_add_end;
+  assign conv_store_start = (conv_compute_tile_fin == 1'b1) && (load_tileN_fin == 1'b1);
+
+  assign conv_fin = conv_fifo_out_tile_add_end
+         && (shadow_oy_start + shadow_poy - 1 == oy)
+         && (shadow_ox_start + shadow_pox - 1 == ox)
+         && (shadow_of_start + shadow_pof - 1 == of); //xxx
 
   always
   begin
