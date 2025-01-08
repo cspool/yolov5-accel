@@ -26,7 +26,6 @@ clk, reset,
 conv_fifo_out_start,
 cur_ox_start, cur_oy_start, cur_of_start, cur_pox, cur_poy, cur_pof,
 mode,
-of_in_2pow, ox_in_2pow,
 //cycle 0 out
 fifo_rds,
 //cycle 1 in
@@ -42,20 +41,16 @@ conv_fifo_out_tile_add_end
 
 parameter pixels_in_row = 32;
 parameter pixels_in_row_in_2pow = 5;
-
 parameter sa_row_num = 4; //how many rows in conv core
 parameter sa_column_num = 3; //how many columns in conv core
 parameter row_num = 16; // how many rows in a sa
 parameter column_num = 16; // how many columns in a sa
-
 parameter pe_parallel_pixel_88 = 2;
 parameter pe_parallel_weight_88 = 1;
 parameter pe_parallel_pixel_18 = 2;
 parameter pe_parallel_weight_18 = 2;
-
 parameter quantified_pixel_width = 8;
 parameter quantified_row_width = (quantified_pixel_width) * pe_parallel_weight_18 * pe_parallel_pixel_18 * column_num;
-
 parameter conv_out_data_width = quantified_pixel_width * pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num;
 
 //cycle 0 in
@@ -63,7 +58,7 @@ input clk, reset;
 input [15:0] cur_ox_start, cur_oy_start, cur_of_start, cur_pox, cur_poy, cur_pof;
 input conv_fifo_out_start;
 input mode;
-input [3:0] of_in_2pow, ox_in_2pow;
+// input [3:0] of_in_2pow, ox_in_2pow;
 //cycle 1 in
 input [quantified_row_width-1 : 0] fifo_data;
 //cycle 0 out

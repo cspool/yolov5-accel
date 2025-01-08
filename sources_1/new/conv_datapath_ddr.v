@@ -408,10 +408,10 @@ module conv_datapath_ddr(
                    .instr_rd(instr_rd),
                    .instr_adr(instr_adr),
                    .state(state),
-                   .conv_start(conv_start)
+                   .conv_start(conv_start) //conv_decode
                  );
 
-  conv_initial_controller cv_initial_controller(
+  conv_initial_controller cv_initial_controller( //decode
                             .clk(clk),
                             .reset(reset),
                             .start(conv_start),

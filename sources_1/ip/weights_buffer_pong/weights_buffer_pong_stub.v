@@ -1,11 +1,11 @@
 // Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
 // Tool Version: Vivado v.2018.3 (win64) Build 2405991 Thu Dec  6 23:38:27 MST 2018
-// Date        : Tue Dec 24 10:41:24 2024
+// Date        : Wed Jan  8 14:41:18 2025
 // Host        : yang running 64-bit major release  (build 9200)
-// Command     : write_verilog -force -mode synth_stub
-//               e:/vivado_pros/yolov5_accel_2/yolov5_accel_2.srcs/sources_1/ip/weights_buffer_pong/weights_buffer_pong_stub.v
-// Design      : weights_buffer_pong
+// Command     : write_verilog -force -mode synth_stub -rename_top weights_buffer_pong -prefix
+//               weights_buffer_pong_ weights_buffer_ping_stub.v
+// Design      : weights_buffer_ping
 // Purpose     : Stub declaration of top-level module interface
 // Device      : xc7vx690tffg1761-2
 // --------------------------------------------------------------------------------

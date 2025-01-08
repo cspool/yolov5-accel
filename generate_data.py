@@ -9,7 +9,7 @@ output_channels = 128  # 输出通道数（卷积核的编号）1024
 kernel_height = 3  # 卷积核的高度
 kernel_width = 3  # 卷积核的宽度
 stride = 1  # 步长
-padding = 0  # 填充
+padding = 1  # 填充
 
 input_height = 128  # 输入的高度和宽度 128
 input_width = 128

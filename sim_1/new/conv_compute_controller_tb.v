@@ -104,18 +104,23 @@ module conv_compute_controller_tb(
   parameter out_data_width = quantified_pixel_width * pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa;
   parameter ddr_load_ratio = 2;
 
-  //conv initial
-  reg mode_init;
-  reg [3:0] k_init, s_init, p_init;
-  reg [15:0] of_init, ox_init, oy_init, ix_init, iy_init, nif_init;
-  reg [3:0] nif_in_2pow_init, ix_in_2pow_init;
-  reg [15:0] bias_layer_base_buf_adr_rd_init;
-  reg [15:0] tail_layer_base_buf_adr_rd_init;
-  reg [15:0] rank_layer_base_buf_adr_rd_init;
-  reg [15:0] nif_mult_k_mult_k_init;
-  reg [15:0] weights_layer_base_ddr_adr_rd_init;
+  reg clk, reset;
+  //conv decoder
+  reg conv_decode;
+  wire conv_start;
+  //conv initial val
+  wire mode;
+  wire [3:0] k, s, p;
+  wire [15:0] of, ox, oy, ix, iy, nif;
+  wire [3:0] nif_in_2pow, ix_in_2pow;
+  wire [15:0] nif_mult_k_mult_k;
+  wire [15:0] N_chunks;
+  wire [15:0] bias_layer_base_buf_adr_rd;
+  wire [15:0] tail_layer_base_buf_adr_rd;
+  wire [15:0] rank_layer_base_buf_adr_rd;
+  wire [15:0] weights_layer_base_ddr_adr_rd;
   //conv compute ctrl
-  reg clk, conv_compute, reset;
+  wire conv_compute;
   wire [15:0] ox_start, oy_start, of_start, pox, poy, pof, if_idx;
   wire [15:0] shadow_ox_start, shadow_oy_start, shadow_of_start, shadow_pox, shadow_poy, shadow_pof;
   wire west_pad, slab_num, east_pad;
@@ -142,22 +147,18 @@ module conv_compute_controller_tb(
   wire conv_end;
   wire conv_pixels_add_end;
   wire conv_nif_add_end;
-
   //conv buffer interface
   //cycle 0 in/ input rows rd info
-
   //cycle 1 in/ rows rd from buf
   wire [pixels_in_row * 8 - 1: 0] buf1_pixels_32;
   wire [pixels_in_row * 8 - 1: 0] buf2_pixels_32;
   wire [pixels_in_row * 8 - 1: 0] buf3_pixels_32;
   //cycle 0 in/ slab rows rd info
-
   //cycle 1 in/ slab data rd from slab
   wire [15:0] slab1_pixels_2;
   wire [15:0] slab2_pixels_2;
   wire [15:0] slab3_pixels_2;
   //cycle 0 in/ valid row adr
-
   //cycle 0 out/ buffer rd ctrl
   wire [15:0] buf1_adr_rd;
   wire [15:0] buf2_adr_rd;
@@ -237,7 +238,7 @@ module conv_compute_controller_tb(
   reg [7:0] last_e_scale_rank_reg_size;
   wire [511:0] last_bias_word;
   wire [511:0] last_e_scale_tail_word;
-  wire [511:0] last_e_scale_rank_word;   
+  wire [511:0] last_e_scale_rank_word;
   //row regs
   wire [shift_regs_num * 8 -1 : 0] row_regs_1;
   wire [shift_regs_num * 8 -1 : 0] row_regs_2;
@@ -266,9 +267,9 @@ module conv_compute_controller_tb(
   wire [11 : 0] in_buf3_adr_rd;
   wire [511 : 0] in_buf3_rd;
   //load weights controller
-  reg conv_load_weights; //begin weights loading
-  reg ddr_en; //mig fifo can accept request
-  reg valid_load_weights; //ddr words is loaded from ddr
+  wire conv_load_weights = 0; //begin weights loading
+  wire ddr_en = 1; //mig fifo can accept request
+  wire valid_load_weights = 0; //ddr words is loaded from ddr
   wire weights_word_ddr_en_rd = 0; //o: read ddr
   wire [15:0] weights_word_ddr_adr_rd = 0;//o
   wire weights_word_buf_en_wt = 0; //o: write buf
@@ -345,9 +346,8 @@ module conv_compute_controller_tb(
   wire channel_out_add_end;
   wire quantify_add_end;
   wire [out_width - 1: 0] out_rowi_channel_seti[sa_column_num-1 :0][sa_row_num-1 :0]; // pox res per channel
-  wire conv_compute_tile_fin;
+  wire conv_compute_fin;
   //bias regs
-  wire [bias_word_length-1 : 0] bias_word;
   wire [bias_set_4_channel_width-1 :0] bias_4_channel_sets; //4 sets of 16bit(1 bias or 2 bias)
   wire [add_bias_row_width - 1: 0] add_bias_rowi_channel_seti[sa_column_num-1 : 0][sa_row_num-1 : 0];
   //quantify ctrl
@@ -363,12 +363,6 @@ module conv_compute_controller_tb(
   wire [column_num_in_sa * mult_P_width -1:0] extra_sa_vector_Ps [sa_column_num-1 : 0][sa_row_num-1 : 0];
   //e_scale regs
   // tile e-scale, will be set at first of the tiling compute, maybe set in several cycles
-  wire [E_scale_tail_word_width -1 : 0] E_scale_tail_word;
-  wire [6:0] E_scale_tail_reg_start;
-  wire [6:0] E_scale_tail_reg_size;
-  wire [E_scale_rank_word_width -1 : 0] E_scale_rank_word;
-  wire [6:0] E_scale_rank_reg_start;
-  wire [6:0] E_scale_rank_reg_size;
   wire [E_scale_tail_set_4_channel_width-1 :0] E_scale_tail_4_channel_sets;
   wire [E_scale_rank_set_4_channel_width-1 :0] E_scale_rank_4_channel_sets;
   //e_scale
@@ -391,7 +385,7 @@ module conv_compute_controller_tb(
 
   //conv fifo out ctrl
   //cycle 0 in
-  wire conv_store_start;
+  wire conv_store;
   //cycle 1 in
   wire [quantified_row_width-1 : 0] fifo_data;
   //cycle 0 out
@@ -403,12 +397,48 @@ module conv_compute_controller_tb(
   wire [15:0] out_y_idx, out_x_idx, out_f_idx;
   wire conv_fifo_out_tile_add_end;
   wire [out_data_width-1 : 0] conv_out_data;
-  wire conv_store_tile_fin;
+  wire conv_store_fin;
 
+  conv_decoder cv_decoder(
+                 .clk(clk),
+                 .reset(reset),
+                 .conv_decode(conv_decode),
+                 .conv_start(conv_start),
+                 .mode(mode),
+                 .k(k),
+                 .s(s),
+                 .p(p),
+                 .of(of),
+                 .ox(ox),
+                 .oy(oy),
+                 .ix(ix),
+                 .iy(iy),
+                 .nif(nif),
+                 .nif_in_2pow(nif_in_2pow),
+                 .ix_in_2pow(ix_in_2pow),
+                 .nif_mult_k_mult_k(nif_mult_k_mult_k),
+                 .N_chunks(N_chunks),
+                 .bias_layer_base_buf_adr_rd(bias_layer_base_buf_adr_rd),
+                 .tail_layer_base_buf_adr_rd(tail_layer_base_buf_adr_rd),
+                 .rank_layer_base_buf_adr_rd(rank_layer_base_buf_adr_rd),
+                 .weights_layer_base_ddr_adr_rd(weights_layer_base_ddr_adr_rd)
+               );
+
+  conv_controller_demo cv_controller_demo(
+                         .clk(clk),
+                         .reset(reset),
+                         .N_chunks(N_chunks),
+                         .conv_start(conv_start),
+                         .conv_compute_fin(conv_compute_fin),
+                         .conv_store_fin(conv_store_fin),
+                         .conv_compute(conv_compute),
+                         .conv_store(conv_store),
+                         .conv_fin(conv_fin)
+                       );
   conv_compute_controller cv_compute_controller( //conv_router_v2 // conv_router_flat
                             .clk(clk),
                             .conv_compute(conv_compute),
-                            .reset(reset),
+                            .reset(reset | conv_start),
 
                             .mode_init(mode),
                             .of_init(of),
@@ -591,7 +621,7 @@ module conv_compute_controller_tb(
       last_row1_slab_idx <= 0;
       last_row2_slab_idx <= 0;
       last_row3_slab_idx <= 0;
-      //last regs, state regs, to cache the info to wait for valid buffer data readF
+      //last regs, state regs, to cache the info to wait for valid buffer data read
       bias_reg_set <= 0;
       last_bias_reg_start <= 0;
       last_bias_reg_size <= 0;
@@ -757,36 +787,36 @@ module conv_compute_controller_tb(
 
   slab_1 slab_1 (
            .clka(clk),    // input wire clka
-           .ena(valid_slab1_adr_wr),      // input wire ena
-           .wea(valid_slab1_adr_wr),      // input wire [0 : 0] wea
+           .ena(slab1_en_wr),      // input wire ena
+           .wea(slab1_en_wr),      // input wire [0 : 0] wea
            .addra(slab1_adr_wr[12 : 0]),  // input wire [12 : 0] addra
            .dina(slab1_pixels_2_wr),    // input wire [15 : 0] dina
            .clkb(clk),    // input wire clkb
-           .enb(valid_slab1_adr),      // input wire enb
+           .enb(slab1_en_rd),      // input wire enb
            .addrb(slab1_adr_rd[12 : 0]),  // input wire [12 : 0] addrb
            .doutb(slab1_pixels_2)  // output wire [15 : 0] doutb
          );
 
   slab_2 slab_2 (
            .clka(clk),    // input wire clka
-           .ena(valid_slab2_adr_wr),      // input wire ena
-           .wea(valid_slab2_adr_wr),      // input wire [0 : 0] wea
+           .ena(slab2_en_wr),      // input wire ena
+           .wea(slab2_en_wr),      // input wire [0 : 0] wea
            .addra(slab2_adr_wr[12 : 0]),  // input wire [12 : 0] addra
            .dina(slab2_pixels_2_wr),    // input wire [15 : 0] dina
            .clkb(clk),    // input wire clkb
-           .enb(valid_slab2_adr),      // input wire enb
+           .enb(slab2_en_rd),      // input wire enb
            .addrb(slab2_adr_rd[12 : 0]),  // input wire [12 : 0] addrb
            .doutb(slab2_pixels_2)  // output wire [15 : 0] doutb
          );
 
   slab_3 slab_3 (
            .clka(clk),    // input wire clka
-           .ena(valid_slab3_adr_wr),      // input wire ena
-           .wea(valid_slab3_adr_wr),      // input wire [0 : 0] wea
+           .ena(slab3_en_wr),      // input wire ena
+           .wea(slab3_en_wr),      // input wire [0 : 0] wea
            .addra(slab3_adr_wr[12 : 0]),  // input wire [14 : 0] addra
            .dina(slab3_pixels_2_wr),    // input wire [15 : 0] dina
            .clkb(clk),    // input wire clkb
-           .enb(valid_slab3_adr),      // input wire enb
+           .enb(slab3_en_rd),      // input wire enb
            .addrb(slab3_adr_rd[12 : 0]),  // input wire [14 : 0] addrb
            .doutb(slab3_pixels_2)  // output wire [15 : 0] doutb
          );
@@ -794,8 +824,8 @@ module conv_compute_controller_tb(
   //weight buf
   cv_weights_handler cv_weights_handler(
                        .clk(clk),
-                       .reset(reset),
-                       .mode_init(mode_init),
+                       .reset(reset | conv_start),
+                       .mode_init(mode),
                        //cycle 0 in
                        .re_fm_en(re_fm_en), //the first input is needed in next cycle
                        .re_fm_end(re_fm_end),//the last input is needed in cur cycle
@@ -854,14 +884,14 @@ module conv_compute_controller_tb(
                       );
 
   conv_args_handler cv_args_handler(
-                      .mode_init(mode_init),
                       .clk(clk),
-                      .reset(reset),
-                      .args_refresh(args_refresh),
-                      .of_init(of_init),
-                      .bias_layer_base_buf_adr_rd_init(bias_layer_base_buf_adr_rd_init),
-                      .tail_layer_base_buf_adr_rd_init(tail_layer_base_buf_adr_rd_init),
-                      .rank_layer_base_buf_adr_rd_init(rank_layer_base_buf_adr_rd_init),
+                      .reset(reset | conv_start),
+                      .args_refresh(conv_compute),
+                      .mode_init(mode),
+                      .of_init(of),
+                      .bias_layer_base_buf_adr_rd_init(bias_layer_base_buf_adr_rd),
+                      .tail_layer_base_buf_adr_rd_init(tail_layer_base_buf_adr_rd),
+                      .rank_layer_base_buf_adr_rd_init(rank_layer_base_buf_adr_rd),
 
                       //args buf rd adr
                       .bias_buf_adr_rd(bias_buf_adr_rd),
@@ -939,12 +969,12 @@ module conv_compute_controller_tb(
                  .clk(clk),
                  .tail_set(tail_reg_set), // next tile need clr
                  .rank_set(rank_reg_set),
-                 .E_scale_tail_word(last_E_scale_tail_word),
-                 .E_scale_tail_reg_start(last_E_scale_tail_reg_start),
-                 .E_scale_tail_reg_size(last_E_scale_tail_reg_size),
-                 .E_scale_rank_word(last_E_scale_rank_word),
-                 .E_scale_rank_reg_start(last_E_scale_rank_reg_start),
-                 .E_scale_rank_reg_size(last_E_scale_rank_reg_size),
+                 .E_scale_tail_word(last_e_scale_tail_word),
+                 .E_scale_tail_reg_start(last_e_scale_tail_reg_start),
+                 .E_scale_tail_reg_size(last_e_scale_tail_reg_size),
+                 .E_scale_rank_word(last_e_scale_rank_word),
+                 .E_scale_rank_reg_start(last_e_scale_rank_reg_start),
+                 .E_scale_rank_reg_size(last_e_scale_rank_reg_size),
 
                  .out_sa_row_idx(out_sa_row_idx),
 
@@ -1105,7 +1135,7 @@ module conv_compute_controller_tb(
             .channel_out_add_end(channel_out_add_end),
             .quantify_add_end(quantify_add_end)
           );
-  assign conv_compute_tile_fin = quantify_add_end;
+  assign conv_compute_fin = quantify_add_end;
 
   Mult_Array mult_array(
                .clk(clk),
@@ -1119,43 +1149,34 @@ module conv_compute_controller_tb(
   assign e_scale_vector_P = (quantify_en == 1'b1) ? vector_P : 0;
 
   conv_fifo_out_controller cv_fifo_out_controller ( // conv_out_handler
-                          //cycle 0 in
-                          .clk(clk),
-                          .reset(reset),
-                          .cur_ox_start(shadow_ox_start),
-                          .cur_oy_start(shadow_oy_start),
-                          .cur_of_start(shadow_of_start),
-                          .cur_pox(shadow_pox),
-                          .cur_poy(shadow_poy),
-                          .cur_pof(shadow_pof),
-                          .conv_fifo_out_start(conv_fifo_out_start),
-                          .mode(mode),
-                          .of_in_2pow(of_in_2pow),
-                          .ox_in_2pow(ox_in_2pow),
-                          //cycle 0 out
-                          .fifo_rds(fifo_rds),
-                          //cycle 1 in
-                          .fifo_data(fifo_data),
-                          //cycle 1 out
-                          //rowi_out_buf_adr,
-                          .fifo_column_no(fifo_column_no),
-                          .fifo_row_no(fifo_row_no),
-                          .valid_rowi_out_buf_adr(valid_rowi_out_buf_adr),
-                          .out_y_idx(out_y_idx),
-                          .out_x_idx(out_x_idx),
-                          .out_f_idx(out_f_idx),
-                          .conv_out_data(conv_out_data),
-                          .conv_fifo_out_tile_add_end(conv_fifo_out_tile_add_end)
-                        );
+                             //cycle 0 in
+                             .clk(clk),
+                             .reset(reset),
+                             .cur_ox_start(shadow_ox_start),
+                             .cur_oy_start(shadow_oy_start),
+                             .cur_of_start(shadow_of_start),
+                             .cur_pox(shadow_pox),
+                             .cur_poy(shadow_poy),
+                             .cur_pof(shadow_pof),
+                             .conv_fifo_out_start(conv_store),
+                             .mode(mode),
+                             //cycle 0 out
+                             .fifo_rds(fifo_rds),
+                             //cycle 1 in
+                             .fifo_data(fifo_data),
+                             //cycle 1 out
+                             //rowi_out_buf_adr,
+                             .fifo_column_no(fifo_column_no),
+                             .fifo_row_no(fifo_row_no),
+                             .valid_rowi_out_buf_adr(valid_rowi_out_buf_adr),
+                             .out_y_idx(out_y_idx),
+                             .out_x_idx(out_x_idx),
+                             .out_f_idx(out_f_idx),
+                             .conv_out_data(conv_out_data),
+                             .conv_fifo_out_tile_add_end(conv_fifo_out_tile_add_end)
+                           );
   assign fifo_data = fifo_rowi_channel_seti_dout[fifo_column_no][fifo_row_no];
-
-  assign conv_store_tile_fin = conv_fifo_out_tile_add_end;
-  assign conv_store_start = (conv_compute_tile_fin == 1'b1) && (load_tileN_fin == 1'b1);
-
-  assign conv_fin = conv_fifo_out_tile_add_end
-         && (shadow_oy_start + shadow_poy - 1 == oy)
-         && (shadow_ox_start + shadow_pox - 1 == ox)
-         && (shadow_of_start + shadow_pof - 1 == of); //xxx
+  assign conv_store_fin = conv_fifo_out_tile_add_end; //demo store ctrl
 
   always
   begin
@@ -1165,7 +1186,15 @@ module conv_compute_controller_tb(
 
   initial
   begin
+    clk = 0;
+    reset = 1;
 
+    #10;
+    reset = 0;
+    conv_decode = 1;
+
+    #10;
+    conv_decode = 0;
 
   end
 endmodule

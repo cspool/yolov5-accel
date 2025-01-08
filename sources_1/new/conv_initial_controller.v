@@ -22,27 +22,16 @@
 
 module conv_initial_controller(
 clk, reset, start,
-
 conv_inital_fin,
-
 k, s, p,
-    
 of, ox, oy, ix, iy, nif,
-    
 nif_in_2pow, ix_in_2pow, of_in_2pow, ox_in_2pow,
-    
 nif_mult_k_mult_k,
-
 buf_depth_in_row_2pow,
-    
 mode,
-    
 bias_tile_val,
-    
 E_scale_tail_tile_val,
-    
 E_scale_rank_tile_val,
-
 conv_load_start
     );
     

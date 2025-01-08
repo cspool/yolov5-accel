@@ -22,9 +22,7 @@
 
 module SA_Ctrl(
     reset,clk,
-
     mode,
-
     re_fm_en,
     nif_mult_k_mult_k,
 
@@ -32,21 +30,14 @@ module SA_Ctrl(
     sa_reset,
     channel_out_reset,
     channel_out_en,
-
     add_bias_en,
     add_bias_reset,
-
     e_tail_en, e_tail_reset,
     quantify_en, quantify_reset,
-
     mult_array_mode,
-
     out_sa_row_idx,
-
     channel_out_add_end,
-
     quantify_add_end
-
   );
   input mode;
   input reset,clk;
