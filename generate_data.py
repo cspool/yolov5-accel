@@ -41,9 +41,11 @@ bias_data = torch.randint(0, 256, size=(1, output_channels), dtype=torch.uint8)
 
 # e_scale_tail[F]
 e_scale_tail_data = torch.randint(0, 256*256, size=(output_channels,), dtype=torch.uint16)
+e_scale_tail_data = torch.ones_like(e_scale_tail_data)
 
 # e_scale_rank[F]
 e_scale_rank_data = torch.randint(0, 256, size=(output_channels,), dtype=torch.uint8)
+e_scale_rank_data = torch.zeros_like(e_scale_rank_data)
 
 ## reshape data in DDR word
 # reshape input tensor into ddr words

@@ -21,15 +21,14 @@
 
 
 module Bias_Regs(
+    clk,
+    reset,
+    bias_set,
     mode,
-    clk, set,
-
     bias_word,
     bias_reg_start,
     bias_reg_size,
-
     out_sa_row_idx,
-
     bias_4_channel_sets
   );
   parameter sa_row_num = 4; //how many rows in conv core
@@ -48,35 +47,50 @@ module Bias_Regs(
   parameter bias_regs_tile_mode0 = bias_word_length / bias_width;
   parameter bias_regs_tile_mode1 = bias_word_length / bias_set_width;
 
+  input clk, reset, bias_set;
   input mode;
-  input clk, set;
-
   input [bias_word_length-1 : 0] bias_word;
-  input [7:0] bias_reg_start; // 0-63
-  input [7:0] bias_reg_size; // 0-63
-
+  input [7:0] bias_reg_start; // 1-64
+  input [7:0] bias_reg_size; // 1-64
   input [5:0] out_sa_row_idx; //output sa row idx [1,16]
   output [bias_set_4_channel_width-1 :0] bias_4_channel_sets;
-
   reg [bias_set_width -1 : 0] bias_tile[sa_row_num * row_num-1 :0];
-  wire [7:0] bias_reg_end = bias_reg_start + bias_reg_size; //[reg_start, reg_end)
+  wire [7:0] bias_reg_end = bias_reg_start + bias_reg_size - 1; //[reg_start, reg_end]
   wire [bias_sets_num_in_row -1 : 0] bias_regs_ops;
+  assign bias_regs_ops = ({64'hffffffffffffffff} << (bias_reg_start - 1)) & ({64'hffffffffffffffff} >> (64 - bias_reg_end));
+  //64*8 / 512 = 1
+  //mode 0: 512 = bias(8 bit) * 64 -> bias_set({0, bias}) * 64 -> regs[1,64]
+  //128*8 / 512 = 2
+  //mode 1: 512 = bias_set(16bit) * 32 -> regs[start,start+31]
+  wire [sa_row_num*row_num*bias_set_width - 1 : 0] bias_word_val, bias_word_val_mode0, bias_word_val_mode1;
+  assign bias_word_val =
+         (mode == 0)? bias_word_val_mode0:
+         (mode == 1)?bias_word_val_mode1:
+         0;
 
-  assign bias_regs_ops = ({64'b1} << bias_reg_start) & ({64'b1} >> (64 - bias_reg_end));
+  genvar k;
+  for (k = 0; k < sa_row_num * row_num; k = k + 1) //64
+  begin
+    assign bias_word_val_mode0[k*bias_set_width +: bias_set_width]
+           = {{(bias_set_width - bias_width){1'b0}}, bias_word[k*bias_width +: bias_width]};
+  end
+  assign bias_word_val_mode1 = (bias_reg_start == 1)? {{(bias_word_length){1'b0}}, bias_word}:
+         (bias_reg_start == 33)? {bias_word, {(bias_word_length){1'b0}}}:
+         0;
 
   genvar i, j;
-
   generate
     for (i = 1; i <= sa_row_num * row_num; i = i + 1) //64
     begin
       always@(posedge clk)
       begin
-        if ((set == 1'b1) && (bias_regs_ops[i-1] == 1'b1))
+        if (reset)
         begin
-          bias_tile[i-1] <=
-                   (mode == 1'b0)? bias_word[(i-1)*bias_width +: bias_width]:
-                   (mode == 1'b1)? bias_word[(i-1)*bias_set_width +: bias_set_width]:
-                   0;
+          bias_tile[i-1] <= 0;
+        end
+        else if ((bias_set == 1'b1) && (bias_regs_ops[i-1] == 1'b1))
+        begin
+          bias_tile[i-1] <= bias_word_val[(i-1)*bias_set_width +: bias_set_width];
         end
         else
         begin

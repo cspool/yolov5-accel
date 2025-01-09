@@ -123,10 +123,10 @@ module conv_compute_controller_tb(
   wire conv_compute;
   wire [15:0] ox_start, oy_start, of_start, pox, poy, pof, if_idx;
   wire [15:0] shadow_ox_start, shadow_oy_start, shadow_of_start, shadow_pox, shadow_poy, shadow_pof;
-  wire west_pad, slab_num, east_pad;
-  wire row1_idx, row2_idx, row3_idx;
-  wire row_start_idx, row_end_idx;
-  wire reg_start_idx, reg_end_idx;
+  wire [3:0] west_pad, slab_num, east_pad;
+  wire [15:0] row1_idx, row2_idx, row3_idx;
+  wire [15:0] row_start_idx, row_end_idx;
+  wire [15:0] reg_start_idx, reg_end_idx;
   wire [15:0] row1_buf_adr;
   wire [1:0] row1_buf_idx;
   wire row1_buf_word_select;
@@ -437,9 +437,8 @@ module conv_compute_controller_tb(
                        );
   conv_compute_controller cv_compute_controller( //conv_router_v2 // conv_router_flat
                             .clk(clk),
-                            .conv_compute(conv_compute),
                             .reset(reset | conv_start),
-
+                            .conv_compute(conv_compute),
                             .mode_init(mode),
                             .of_init(of),
                             .ox_init(ox),
@@ -501,7 +500,7 @@ module conv_compute_controller_tb(
                           );
 
   conv_buffers_interface cv_buffers_interface(
-                           .reset(reset),
+                           .reset(reset | conv_start),
                            .clk(clk),
                            //cycle 0 in/ input rows rd info
                            .row1_buf_adr(row1_buf_adr),
@@ -596,7 +595,7 @@ module conv_compute_controller_tb(
   //last regs, state regs, to cache the info to wait for valid buffer data read
   always@(posedge clk)
   begin
-    if (reset == 1'b1)
+    if (reset | conv_start)
     begin
       state_conv_pixels_add_end <= 0;
       state_valid_row1_adr <= 0;
@@ -672,9 +671,8 @@ module conv_compute_controller_tb(
 
   //img2col
   Row_Regs row_regs(
-             .reset(reset),
+             .reset(reset | conv_start),
              .clk(clk),
-
              .k(k),
              .s(s),
              .state_valid_row1_adr(state_valid_row1_adr),
@@ -705,9 +703,8 @@ module conv_compute_controller_tb(
            );
 
   Shift_Regs shift_regs(
-               .reset(reset),
+               .reset(reset | conv_start),
                .clk(clk),
-
                .k(k),
                .s(s),
                .shift_start(shift_start),
@@ -825,7 +822,7 @@ module conv_compute_controller_tb(
   cv_weights_handler cv_weights_handler(
                        .clk(clk),
                        .reset(reset | conv_start),
-                       .mode_init(mode),
+                       .mode(mode),
                        //cycle 0 in
                        .re_fm_en(re_fm_en), //the first input is needed in next cycle
                        .re_fm_end(re_fm_end),//the last input is needed in cur cycle
@@ -839,7 +836,7 @@ module conv_compute_controller_tb(
                      );
 
   conv_weights_ping_pong_controller cv_weights_ping_pong_controller(
-                                      .reset(reset),
+                                      .reset(reset | conv_start),
                                       .clk(clk),
                                       .conv_load_weights(conv_load_weights), //change the ping-pong state
 
@@ -954,8 +951,9 @@ module conv_compute_controller_tb(
   //bias regs
   Bias_Regs bias_regs(
               .clk(clk),
-              .set(bias_reg_set), // next tile need clr
-              //   .bias_tile_val(bias_tile_val),
+              .reset(reset | conv_start),
+              .bias_set(bias_reg_set), // next tile need clr
+              .mode(mode),
               .bias_word(last_bias_word),
               .bias_reg_start(last_bias_reg_start),
               .bias_reg_size(last_bias_reg_size),
@@ -967,8 +965,10 @@ module conv_compute_controller_tb(
   //e_scale regs
   E_Scale_Regs E_scale_regs (
                  .clk(clk),
+                 .reset(reset | conv_start),
                  .tail_set(tail_reg_set), // next tile need clr
                  .rank_set(rank_reg_set),
+                 .mode(mode),
                  .E_scale_tail_word(last_e_scale_tail_word),
                  .E_scale_tail_reg_start(last_e_scale_tail_reg_start),
                  .E_scale_tail_reg_size(last_e_scale_tail_reg_size),
@@ -977,7 +977,6 @@ module conv_compute_controller_tb(
                  .E_scale_rank_reg_size(last_e_scale_rank_reg_size),
 
                  .out_sa_row_idx(out_sa_row_idx),
-
                  .E_scale_tail_4_channel_sets(E_scale_tail_4_channel_sets),
                  .E_scale_rank_4_channel_sets(E_scale_rank_4_channel_sets)
                );
@@ -994,7 +993,7 @@ module conv_compute_controller_tb(
     begin: delay_regs_column //poy, rows
       Delay_Regs_Pixels delay_regs_pixels(
                           .clk(clk),
-                          .reset(sa_reset | reset),
+                          .reset(sa_reset | reset | conv_start),
                           .en(sa_en),
                           .re_row_pixels(re_rowi_pixels[i-1]),
                           .delay_row_pixels(delay_rowi_pixels[i-1])
@@ -1013,7 +1012,7 @@ module conv_compute_controller_tb(
     begin: delay_regs_row //output channel
       Delay_Regs_Weights delay_regs_weights(
                            .clk(clk),
-                           .reset(sa_reset | reset),
+                           .reset(sa_reset | reset | conv_start),
                            .en(sa_en),
                            .weights(weights_vector[(j-1)* row_num_in_sa * 8 +: (row_num_in_sa * 8)]),
                            .delay_weights(delay_weights_sets[j-1])
@@ -1031,10 +1030,10 @@ module conv_compute_controller_tb(
       begin: sa_row //output channel
         SA_fin sa(
                  .clk(clk),
-                 .reset(sa_reset | reset),
+                 .reset(sa_reset | reset | conv_start),
                  .en(sa_en),
                  .mode(mode),
-                 .channel_out_reset(channel_out_reset | reset),
+                 .channel_out_reset(channel_out_reset | reset | conv_start),
                  .channel_out_en(channel_out_en),
                  .out_sa_row_idx(out_sa_row_idx),
                  .row_in(sa_rowi_ins[i-1][j-1]), //weights or 16bit e_scale
@@ -1047,7 +1046,7 @@ module conv_compute_controller_tb(
                = (quantify_en == 1'b1)? sa_row0_outs[i-1][j-1] : 0;
         Add_Bias bias_adder(
                    .clk(clk),
-                   .reset(add_bias_reset | reset),
+                   .reset(add_bias_reset | reset | conv_start),
                    .en(add_bias_en),
                    .mode(mode),
                    .rowi_channel_seti(out_rowi_channel_seti[i-1][j-1]), // pox res per channel
@@ -1057,7 +1056,7 @@ module conv_compute_controller_tb(
         E_Scale E_scale(
                   //cycle 0 in
                   .clk(clk),
-                  .reset(reset),
+                  .reset(reset | conv_start),
                   .e_tail_reset(e_tail_reset),
                   .mode(mode),
                   .E_scale_tail_set(E_scale_tail_4_channel_sets[(j-1)*E_scale_tail_set_width +: E_scale_tail_set_width]),
@@ -1097,7 +1096,7 @@ module conv_compute_controller_tb(
 
         fifo_rowi_channel_seti fifo_rowi_channel_seti (
                                  .clk(clk),      // input wire clk
-                                 .srst(reset),    // input wire srst
+                                 .srst(reset | conv_start),    // input wire srst
                                  .din(quantified_rowi_channel_seti[i-1][j-1]),      // input wire [511 : 0] din
                                  .wr_en(quantify_en),  // input wire wr_en
                                  .rd_en(fifo_rowi_channel_seti_rd_en[i-1][j-1]),  // input wire rd_en
@@ -1115,7 +1114,7 @@ module conv_compute_controller_tb(
   // sa control
   SA_Ctrl sa_ctrl(
             .clk(clk),
-            .reset(reset), //next tile need clr
+            .reset(reset | conv_start), //next tile need clr
             .re_fm_en(re_fm_en),
             .mode(mode),
             .nif_mult_k_mult_k(nif_mult_k_mult_k),
@@ -1151,7 +1150,7 @@ module conv_compute_controller_tb(
   conv_fifo_out_controller cv_fifo_out_controller ( // conv_out_handler
                              //cycle 0 in
                              .clk(clk),
-                             .reset(reset),
+                             .reset(reset | conv_start),
                              .cur_ox_start(shadow_ox_start),
                              .cur_oy_start(shadow_oy_start),
                              .cur_of_start(shadow_of_start),

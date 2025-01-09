@@ -19,14 +19,15 @@
 //
 //////////////////////////////////////////////////////////////////////////////////
 module conv_compute_controller(
-    clk, conv_compute, reset,
+    clk,  reset,
+    conv_compute,
 
     mode_init,
     of_init, ox_init, oy_init, ix_init, iy_init, nif_init,
     k_init, s_init, p_init,
     nif_in_2pow_init,
     ix_in_2pow_init,
-    
+
     shadow_ox_start, shadow_of_start, shadow_oy_start, shadow_pox, shadow_pof, shadow_poy,
     ox_start, oy_start, of_start, pox, poy, pof, if_idx,
     west_pad, slab_num, east_pad,
@@ -76,7 +77,7 @@ module conv_compute_controller(
   parameter slab_buffer_size_2pow = 13;//8192
 
   // conv tiling module
-  input clk, conv_compute, reset;
+  input clk, reset, conv_compute;
   input mode_init;
   input [3:0] k_init, s_init, p_init;
   input [15:0] of_init, ox_init, oy_init, ix_init, iy_init, nif_init;
@@ -89,7 +90,6 @@ module conv_compute_controller(
   output reg [15:0] shadow_pox, shadow_pof, shadow_poy;
   output reg [15:0] shadow_ox_start, shadow_of_start, shadow_oy_start;
   // wire [15:0] next_ox_start, next_oy_start;
-
   output [15:0] ox_start, oy_start, of_start, pox, poy, pof, if_idx;
   output [3:0] west_pad, slab_num, east_pad;
   output [15:0] row1_idx, row2_idx, row3_idx;

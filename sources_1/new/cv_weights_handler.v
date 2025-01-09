@@ -23,70 +23,40 @@
 module cv_weights_handler(
     clk, reset,
 
-    mode_init,
+    mode,
     //cycle 0 in
     re_fm_en, //the first input is needed in next cycle
     re_fm_end,//the last input is needed in cur cycle
-
     //cylce 1 in
     weights_dout,
-
     //cycle 0 out
     weights_word_buf_en_rd,
     weights_word_buf_adr_rd,
-
     //cycle 1 out
     weights_vector
   );
 // weight buffer read control in the computation term
-
   parameter weights_in_tile_mode0 = 64; // 8bit; //amount of weights needed in a computation tile
   parameter weights_in_tile_mode1 = 128; // 1bit
   parameter weight_word_length = weights_in_tile_mode0 * 8;
   parameter weights_in_word_mode0 = 64; //amount of weights read in a weight word
   parameter weights_in_word_mode1 = 128;
 
-
-  input mode_init;
-
   input reset,clk;
-
+  input mode;
   input re_fm_en, re_fm_end;
-
   output weights_word_buf_en_rd;
-
   output [15:0] weights_word_buf_adr_rd;
-
   input [weight_word_length-1 : 0] weights_dout;
-
   wire [weights_in_tile_mode0 * 8 -1 : 0] weights_vector_mode0;
-
   wire [weights_in_tile_mode1 * 1 -1 :0] weights_vector_mode1;
-
   wire [weight_word_length-1 :0] weights_vector_mode1_fin;
-
   output [weight_word_length-1 : 0] weights_vector;
 
   reg valid_weight;
-
-  reg mode;
-
   reg [31:0] weights_counter; //in nif*k*k
   wire loop_weights_counter_add_begin, loop_weights_counter_add_end;
-
-
-  always@(posedge clk)
-  begin
-    if (reset == 1'b1)
-    begin //set
-      mode <= mode_init;
-    end
-    else
-    begin
-      mode <= mode;
-    end
-  end
-
+  
   //read from weights buffer
 
   //re_pixels from re_fm_en to re_fm_end consist of nif channels of a input tile that its computing needed

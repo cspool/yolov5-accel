@@ -36,11 +36,16 @@ module conv_controller_demo(
   input conv_start;
   input conv_compute_fin;
   input conv_store_fin;
-  output conv_compute;
-  output conv_store;
-  output conv_fin;
-  reg [15:0] nc, next_nc;
-  reg [3:0] current_state, next_state;
+  output reg conv_compute;
+  reg next_conv_compute;
+  output reg conv_store;
+  reg next_conv_store;
+  output reg conv_fin;
+  reg next_conv_fin;
+  reg [15:0] nc;
+  reg [15:0] next_nc;
+  reg [3:0] current_state;
+  reg [3:0] next_state;
 
   // 定义状态
   parameter IDLE = 4'd0;
@@ -61,8 +66,54 @@ module conv_controller_demo(
       nc <= next_nc;
     end
   end
-
   //conv_com shoud be a cycle later than conv_start
+  always @(posedge clk)
+  begin
+    if (reset)
+    begin
+      conv_compute <= 0;
+    end
+    else if (conv_compute == 1)
+    begin
+      conv_compute <= 0;
+    end
+    else
+    begin
+      conv_compute <= next_conv_compute;
+    end
+  end
+  //conv_store
+  always @(posedge clk)
+  begin
+    if (reset)
+    begin
+      conv_store <= 0;
+    end
+    else if (conv_store == 1)
+    begin
+      conv_store <= 0;
+    end
+    else
+    begin
+      conv_store <= next_conv_store;
+    end
+  end
+  //conv_fin
+  always @(posedge clk)
+  begin
+    if (reset)
+    begin
+      conv_fin <= 0;
+    end
+    else if (conv_fin == 1)
+    begin
+      conv_fin <= 0;
+    end
+    else
+    begin
+      conv_fin <= next_conv_fin;
+    end
+  end
 
   // 下一个状态和输出的逻辑
   always @(*)
@@ -74,11 +125,17 @@ module conv_controller_demo(
         begin
           next_state = COM;
           next_nc = 1;
+          next_conv_compute = 1;
+          next_conv_store = 0;
+          next_conv_fin = 0;
         end
         else
         begin
           next_state = IDLE;
           next_nc = 0;
+          next_conv_compute = 0;
+          next_conv_store = 0;
+          next_conv_fin = 0;
         end
       end
       COM:
@@ -87,11 +144,17 @@ module conv_controller_demo(
         begin
           next_state = STR;
           next_nc = nc;
+          next_conv_compute = 0;
+          next_conv_store = 1;
+          next_conv_fin = 0;
         end
         else
         begin
           next_state = COM;
           next_nc = nc;
+          next_conv_compute = 0;
+          next_conv_store = 0;
+          next_conv_fin = 0;
         end
       end
       STR:
@@ -102,34 +165,45 @@ module conv_controller_demo(
           begin
             next_state = COM;
             next_nc = nc + 1;
+            next_conv_compute = 1;
+            next_conv_store = 0;
+            next_conv_fin = 0;
           end
           else
           begin
             next_state = FIN;
             next_nc = nc;
+            next_conv_compute = 0;
+            next_conv_store = 0;
+            next_conv_fin = 1;
           end
         end
         else
         begin
           next_state = STR;
           next_nc = nc;
+          next_conv_compute = 0;
+          next_conv_store = 0;
+          next_conv_fin = 0;
         end
       end
       FIN:
       begin
         next_state = IDLE;
         next_nc = 0;
+        next_conv_compute = 0;
+        next_conv_store = 0;
+        next_conv_fin = 0;
       end
       default:
       begin
         next_state = IDLE;
         next_nc = 0;
+        next_conv_compute = 0;
+        next_conv_store = 0;
+        next_conv_fin = 0;
       end
     endcase
   end
 
-  assign conv_compute = ((current_state == IDLE) && (conv_start == 1))
-         || ((current_state == STR) && (nc < N_chunks) && (conv_store_fin == 1));
-  assign conv_store = ((current_state == COM) && (conv_compute_fin == 1));
-  assign conv_fin = ((current_state == STR) && (nc >= N_chunks) && (conv_store_fin == 1));
 endmodule

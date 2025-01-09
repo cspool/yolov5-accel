@@ -29,7 +29,6 @@ module conv_args_handler(
     bias_layer_base_buf_adr_rd_init,
     tail_layer_base_buf_adr_rd_init,
     rank_layer_base_buf_adr_rd_init,
-
     // args_tile_fin,
     bias_buf_adr_rd,
     e_scale_tail_buf_adr_rd,
@@ -37,7 +36,6 @@ module conv_args_handler(
     bias_buf_en_rd,
     e_scale_tail_buf_en_rd,
     e_scale_rank_buf_en_rd,
-
     bias_reg_start,
     bias_reg_size,
     tail_reg_start,
@@ -81,10 +79,8 @@ module conv_args_handler(
   reg mode;
   reg [15:0] of;
   reg [15:0] bias_layer_base_buf_adr_rd, tail_layer_base_buf_adr_rd, rank_layer_base_buf_adr_rd;
-
   //loop args word --> args regs
   reg bias_signal_add, tail_signal_add, rank_signal_add;
-
   reg [15:0] bias_word_counter;
   wire loop_bias_word_counter_add_begin, loop_bias_word_counter_add_end;
   reg [15:0] tail_word_counter;
@@ -95,13 +91,10 @@ module conv_args_handler(
   //loop args_tof
   reg [15:0] args_tof_start;
   wire loop_args_tof_add_begin, loop_args_tof_add_end;
-
   wire [15:0] row_num = (mode == 1'b0)? row_num_in_mode0 :
        (mode == 1'b1)? row_num_in_mode1 : 0;
-
   wire [1:0] args_num_in_reg_2pow = (mode == 1'b0)? args_num_in_reg_2pow_mode0 :
        (mode == 1'b1)? args_num_in_reg_2pow_mode1 : 0;
-
   wire [15:0] tile_of_size; //arg nums need to load into regs
 
   always@(posedge clk)

@@ -42,36 +42,26 @@ module SA_Ctrl(
   input mode;
   input reset,clk;
   input re_fm_en;
-  input [31:0] nif_mult_k_mult_k;
-
+  input [15:0] nif_mult_k_mult_k;
   // reg mode;
   // reg [31:0] nif_mult_k_mult_k;
-
   reg pixels_counter_signal;
-  reg [31:0] pixels_counter;
+  reg [15:0] pixels_counter;
   wire loop_pixels_counter_add_begin;
   wire loop_pixels_counter_add_end; //the last word of all nif pixels in tile
-
   output reg sa_en, sa_reset;
   output reg channel_out_reset, channel_out_en;
-
   output add_bias_en;
   output reg add_bias_reset;
-
   output reg quantify_en, quantify_reset;
   output reg e_tail_en, e_tail_reset;
-
   output [5:0] out_sa_row_idx; //output channel idx
-
   output mult_array_mode;
-
   reg sa_counter_signal;
   reg [5:0] sa_counter;
   wire loop_sa_counter_add_begin;
   wire loop_sa_counter_add_end; // the last output channel of sa
-
   output channel_out_add_end; // the last output channel of sa
-
   wire add_bias_add_end;
   reg e_tail_add_end;
   output reg quantify_add_end;
