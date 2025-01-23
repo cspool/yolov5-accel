@@ -1,0 +1,74 @@
+{
+    "verilog.ctags.path": "D:\\software\\xilinx\\ctags||ctags.exe",
+    "workbench.sideBar.location": "left",
+    "cssrem.rootFontSize": 80,
+    "git.ignoreWindowsGit27Warning": true,
+    "eslint.codeAction.showDocumentation": {
+      "enable": true
+    },
+    //改变注释颜色
+    // "editor.tokenColorCustomizations": {
+    //   "comments": "#ff4f81" // 注释
+    // }, 
+      
+      //导入文件时是否携带文件的扩展名
+      "path-autocomplete.extensionOnlmport": true,
+      //配置@的路径提示
+      "path-autocomplete.pathMappings": {
+          "@": "${folder}/src"
+      },
+    //配置eslint
+    "eslint.validate": ["javascript", "javascriptreact", "html", "vue"],
+    // "eslint.run": "onSave",
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": "explicit"
+    },
+    "editor.mouseWheelZoom": true,
+    "editor.minimap.renderCharacters": false,
+    "debug.javascript.defaultRuntimeExecutable": {
+      "pwa-node": "node"
+    },
+    "open-in-browser.default": "{\"open-in-browser.default\":\"Chrome\"}",
+    "files.associations": {
+      "*.cjson": "jsonc",
+      "*.wxss": "css",
+      "*.wxs": "javascript"
+    },
+    "emmet.includeLanguages": {
+      "wxml": "html"
+    },
+    "minapp-vscode.disableAutoConfig": true,
+    "[python]": {
+      "editor.formatOnType": true
+    },
+    "editor.detectIndentation": false,
+    "explorer.compactFolders": false,
+    // html使用prettier格式化
+    "[html]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[vue]": {
+      // "editor.defaultFormatter": "Vue.volar"
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[javascript]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[typescript]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    // json使用prettier格式化
+    "[json]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[jsonc]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "editor.tabSize": 2,
+    "[scss]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "px2rem.rootFontSize": 64,
+    "px2rem.autoRemovePrefixZero": false,
+    "editor.formatOnSave": true // 保存时自动规范代码
+  }

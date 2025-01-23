@@ -46,6 +46,8 @@ module conv_load_input_controller(
     tiley_first_iy_row_num_init,
     tiley_last_iy_row_num_init,
     tiley_mid_iy_row_num_init,
+    ix_chunks_num_init,
+    iy_chunks_num_init,
 
     load_input_row_idx,
     load_input_row_start_idx,
@@ -55,7 +57,8 @@ module conv_load_input_controller(
     input_word_ddr_en_rd,
     input_word_ddr_adr_rd,
     input_word_load_info_fifo_en_wt,
-    input_word_load_info_fifo_wt
+    input_word_load_info_fifo_wt,
+    conv_load_input_fin
   );
   parameter pixels_in_row = 32;
   parameter pixels_in_row_mult_2 = pixels_in_row * 2;
@@ -83,10 +86,8 @@ module conv_load_input_controller(
   input mode_init;
   input [3:0] k_init, s_init, p_init;
   input [15:0] of_init, ox_init, oy_init, ix_init, iy_init, nif_init;
-
   input [3:0] nif_in_2pow_init, ix_in_2pow_init;
   input [15:0] input_ddr_layer_base_adr_init;
-
   //of_div_row_num_ceil = ceil(of / row_num)
   input [7:0] of_div_row_num_ceil_init;
   //tiley_first_tilex_first_split_size = ceil(tiley_first_iy_row_num * tilex_first_ix_word_num / of_div_row_num_ceil)
@@ -119,6 +120,9 @@ module conv_load_input_controller(
   input [7:0] tiley_last_iy_row_num_init;
   //tiley_mid_iy_row_num = buffers_num * s
   input [7:0] tiley_mid_iy_row_num_init;
+  //ix_chunks_num = ceil(ix/pixels_in_row)
+  //iy_chunks_num = ceil(iy/buffers_num)
+  input [15:0] ix_chunks_num_init, iy_chunks_num_init;
 
   reg mode;
   reg [3:0] k, s, p;
@@ -158,51 +162,20 @@ module conv_load_input_controller(
   reg [7:0] tiley_last_iy_row_num;
   //tiley_mid_iy_row_num = buffers_num * s
   reg [7:0] tiley_mid_iy_row_num;
+  //ix_chunks_num = ceil(ix/pixels_in_row)
+  //iy_chunks_num = ceil(iy/buffers_num)
+  reg [15:0] ix_chunks_num, iy_chunks_num;
 
   output [15:0] load_input_row_idx;
   output [15:0] load_input_row_start_idx;
   output [15:0] load_input_if_idx;
   output [15:0] load_input_row_buf_adr;
   output [1:0] load_input_row_buf_idx;
-
   output input_word_ddr_en_rd;
   output [15:0] input_word_ddr_adr_rd;
-
   output input_word_load_info_fifo_en_wt;
   output [31:0] input_word_load_info_fifo_wt;
-
-  wire valid_adr;
-  wire [15:0] row1_buf_adr_in_row;
-  wire [15:0] iy_start;
-
-  //conv tile module
-  //address translation
-  //    wire [15:0] row_base0_in_3s;
-  wire [15:0] row1_base_in_3;
-  wire [15:0] row1_base_in_3s;
-  wire [15:0] row1_bias0;
-  wire [15:0] row1_bias;
-  wire [3:0] s_mult_3;
-  wire leq3_1, leq6_1, leq9_1;
-  wire [15:0] row1_offset_s1;
-  wire [15:0] row1_buf_idx_s1;
-  wire loop_y_add_begin, loop_y_add_end;
-  wire loop_x_add_begin, loop_x_add_end;
-  wire loop_f_add_begin, loop_f_add_end;
-  wire loop_if_add_begin, loop_if_add_end;
-  reg [15:0] tile_y_start, tile_x_start, tile_f_start; // tile_f_start is the inner loop
-  reg [15:0] if_start;
-  reg [7:0] of_chunk_counter; //1, 2,..., of_div_row_num_ceil, a timer or recorder
-  wire [15:0] row_num;
-  // wire [3:0] row_num_2pow;
-  reg[15:0] row_base_in_3s;
-  wire [15:0] ix_start;
-
-  //adr mod mapping
-  wire [3:0] row_num_limit_input_buffer_2pow = input_buffer_size_2pow - (
-         nif_in_2pow - ifs_in_row_2pow + ix_in_2pow - pixels_in_row_in_2pow);
-
-  wire [15:0] row_num_limit_mask_input_buffer = 16'hffff >> (16 - row_num_limit_input_buffer_2pow);
+  output conv_load_input_fin;
 
   //ddr word counter
   reg input_ddr_word_signal;
@@ -210,23 +183,37 @@ module conv_load_input_controller(
   reg [15:0] input_ddr_word_tile_counter; //current input tile counter
   wire loop_input_ddr_word_chunk_counter_add_begin, loop_input_ddr_word_chunk_counter_add_end;
   wire loop_input_ddr_word_tile_counter_add_begin, loop_input_ddr_word_tile_counter_add_end;
-
-  reg state_load_input_tile_fin;
-
-  //ddr word stall
-  wire [7:0] input_tile_of_split_size; //ceil(ix_size * iy_size * row_num / of_ceil)
-  // wire [15:0] of_ceil;
-
-  //chunk_ix_counter
-  reg [7:0] chunk_ix_counter;
-  wire loop_chunk_ix_counter_add_begin, loop_chunk_ix_counter_add_end;
-
-  reg [7:0] chunk_iy_counter;
-  wire loop_chunk_iy_counter_add_begin, loop_chunk_iy_counter_add_end;
-
+  wire loop_if_add_begin, loop_if_add_end;
+  reg [15:0] if_start;
   wire [7:0] chunk_ix_size;
   wire [7:0] chunk_iy_size;
   wire [7:0] chunk_ix_size_mult_chunk_iy_size;//ix_size * iy_size
+  //amount of ddr word in a chunk
+  wire [7:0] input_tile_of_split_size; //ceil(ix_size * iy_size * row_num / of_ceil)
+  //ddr word counter in view of (iy,ix) chunk
+  wire [15:0] row_num;
+  reg [15:0] ix_load_index;
+  wire loop_ix_load_index_add_begin, loop_ix_load_index_add_end;
+  reg [15:0] iy_load_index, iy_load_index_mod_3, iy_load_index_in_3;
+  wire loop_iy_load_index_add_begin, loop_iy_load_index_add_end;
+
+  //cur input data of SP pos has been loaded
+  reg state_load_input_tile_fin;
+  reg load_for_com_tile_f_signal;
+  wire loop_load_for_com_tile_f_add_begin, loop_load_for_com_tile_f_add_end;
+  reg state_loop_load_for_com_tile_f_add_end;
+  reg [15:0] load_for_com_tile_f_start;
+  reg [7:0] of_chunk_counter; //1, 2,..., of_div_row_num_ceil. a timer or recorder
+
+  //load for computation of tile(y,x)
+  reg [15:0] load_for_com_tile_y_start, load_for_com_tile_x_start;
+  wire loop_load_for_com_tile_y_add_begin, loop_load_for_com_tile_y_add_end;
+  wire loop_load_for_com_tile_x_add_begin, loop_load_for_com_tile_x_add_end;
+  //adr mod mapping
+  wire [3:0] row_num_limit_input_buffer_2pow = input_buffer_size_2pow - (
+         nif_in_2pow - ifs_in_row_2pow + ix_in_2pow - pixels_in_row_in_2pow);
+  wire [15:0] row_num_limit_mask_input_buffer = 16'hffff >> (16 - row_num_limit_input_buffer_2pow);
+  wire [15:0] load_input_row_buf_adr_in_row;
 
   always@(posedge clk)
   begin
@@ -262,6 +249,8 @@ module conv_load_input_controller(
       tiley_first_iy_row_num  <= tiley_first_iy_row_num_init;
       tiley_last_iy_row_num  <= tiley_last_iy_row_num_init;
       tiley_mid_iy_row_num  <= tiley_mid_iy_row_num_init;
+      ix_chunks_num <= ix_chunks_num_init;
+      iy_chunks_num <= iy_chunks_num_init;
     end
     else
     begin
@@ -295,33 +284,99 @@ module conv_load_input_controller(
       tiley_first_iy_row_num  <= tiley_first_iy_row_num  ;
       tiley_last_iy_row_num  <= tiley_last_iy_row_num ;
       tiley_mid_iy_row_num  <= tiley_mid_iy_row_num ;
+      ix_chunks_num <= ix_chunks_num;
+      iy_chunks_num <= iy_chunks_num;
     end
   end
-
   assign row_num = (mode == 1'b0)? row_num_in_mode0 :
          (mode == 1'b1)? row_num_in_mode1 : 0;
-  // assign row_num_2pow = (mode == 1'b0)? row_num_mode0_2pow :
-  //        (mode == 1'b1)? row_num_mode1_2pow : 0;
 
-  //state of SP tile input load
-
+  //current SP*nif input has been loaded
   always@(posedge clk)
   begin
     if (reset == 1'b1)
     begin //set
       state_load_input_tile_fin <= 0;
     end
-    else if (input_ddr_word_tile_counter == chunk_ix_size_mult_chunk_iy_size)
+    else if ((loop_input_ddr_word_tile_counter_add_end == 1)
+             && ((loop_load_for_com_tile_f_add_end | state_loop_load_for_com_tile_f_add_end) == 0))
     begin
       state_load_input_tile_fin <= 1;
     end
-    else if (loop_f_add_end == 1)
+    else if (loop_load_for_com_tile_f_add_end == 1)
     begin
       state_load_input_tile_fin <= 0;
     end
     else
     begin
       state_load_input_tile_fin <= state_load_input_tile_fin;
+    end
+  end
+  always@(posedge clk)
+  begin
+    if(reset ==1'b1)
+    begin
+      load_for_com_tile_f_signal <= 0;
+    end
+    else if(conv_load_input == 1'b1)
+    begin
+      load_for_com_tile_f_signal <= 1;
+    end
+    else if(load_for_com_tile_f_signal == 1'b1)
+    begin
+      load_for_com_tile_f_signal <= 0;
+    end
+    else
+    begin
+      load_for_com_tile_f_signal <= load_for_com_tile_f_signal;
+    end
+  end
+  always@(posedge clk)
+  begin
+    if(reset ==1'b1)
+    begin
+      load_for_com_tile_f_start <= 1;
+      of_chunk_counter <= 1;
+    end
+    else if(loop_load_for_com_tile_f_add_begin == 1'b1)
+    begin
+      if(loop_load_for_com_tile_f_add_end == 1'b1)
+      begin // the last tile_f_start
+        load_for_com_tile_f_start <= 1;
+        of_chunk_counter <= 1;
+      end
+      else
+      begin
+        load_for_com_tile_f_start <= load_for_com_tile_f_start + row_num;
+        of_chunk_counter <= of_chunk_counter + 1;
+      end
+    end
+    else
+    begin
+      load_for_com_tile_f_start <= load_for_com_tile_f_start;
+      of_chunk_counter <= of_chunk_counter;
+    end
+  end
+  assign loop_load_for_com_tile_f_add_begin = (load_for_com_tile_f_signal == 1'b1);
+  assign loop_load_for_com_tile_f_add_end = loop_load_for_com_tile_f_add_begin && ((load_for_com_tile_f_start + row_num) > of);
+
+  always@(posedge clk)
+  begin
+    if(reset ==1'b1)
+    begin
+      state_loop_load_for_com_tile_f_add_end <= 0;
+    end
+    else if((input_ddr_word_signal == 1'b1) && (loop_load_for_com_tile_f_add_end == 1'b1))
+    begin
+      state_loop_load_for_com_tile_f_add_end <= 1;
+    end
+    else if(loop_input_ddr_word_chunk_counter_add_end == 1'b1)
+    begin
+      state_loop_load_for_com_tile_f_add_end <= 0;
+    end
+    else
+    begin
+      state_loop_load_for_com_tile_f_add_end <= state_loop_load_for_com_tile_f_add_end;
     end
   end
 
@@ -332,7 +387,9 @@ module conv_load_input_controller(
     begin
       input_ddr_word_signal <= 0;
     end
-    else if((conv_load_input == 1'b1) && (state_load_input_tile_fin == 0))
+    else if((conv_load_input == 1'b1)
+            && (state_load_input_tile_fin == 0)
+            && (chunk_ix_size_mult_chunk_iy_size > 0))
     begin
       input_ddr_word_signal <= 1;
     end
@@ -371,7 +428,6 @@ module conv_load_input_controller(
   end
   assign loop_if_add_begin = (input_ddr_word_signal == 1'b1) && (ddr_en == 1'b1);
   assign loop_if_add_end = loop_if_add_begin && ((if_start + 2) > nif);
-
   assign load_input_if_idx = if_start;
 
   //chunk counter is reset every computation term
@@ -403,8 +459,11 @@ module conv_load_input_controller(
            (input_ddr_word_chunk_counter == input_tile_of_split_size)
            || (input_ddr_word_tile_counter == chunk_ix_size_mult_chunk_iy_size)
          );
+  assign conv_load_input_fin = loop_input_ddr_word_chunk_counter_add_end
+         || ((conv_load_input == 1'b1)
+             && (chunk_ix_size_mult_chunk_iy_size == 0));
 
-  //tile counter is reset after the computation of nof channel in current SP position
+  //tile counter is reset after the loading of nif input channel in current SP position
   always@(posedge clk)
   begin
     if(reset ==1'b1)
@@ -430,46 +489,160 @@ module conv_load_input_controller(
   assign loop_input_ddr_word_tile_counter_add_begin = (loop_if_add_end == 1'b1);
   assign loop_input_ddr_word_tile_counter_add_end = loop_input_ddr_word_tile_counter_add_begin
          && (input_ddr_word_tile_counter == chunk_ix_size_mult_chunk_iy_size);
+  //the computation of tile(tile_y_start, tile_x_start) needed input[ix_start - p, ix_start - p + chunk_ix_size)
+  //but need loading input [ix_load_index, ix_load_index + chunk_ix_size)
+  always@(posedge clk)
+  begin
+    if(reset ==1'b1)
+    begin
+      ix_load_index <= 1;
+    end
+    else if(loop_ix_load_index_add_begin == 1'b1)
+    begin
+      if(loop_ix_load_index_add_end == 1'b1)
+      begin
+        ix_load_index <= 1;
+      end
+      else
+      begin
+        ix_load_index <= ix_load_index + 1;
+      end
+    end
+    else
+    begin
+      ix_load_index <= ix_load_index;
+    end
+  end
+  assign loop_ix_load_index_add_begin = (loop_if_add_end == 1'b1);
+  assign loop_ix_load_index_add_end = loop_ix_load_index_add_begin
+         && ((ix_load_index == ix_chunks_num));
 
-  //  assign chunk_ix_size = (tile_x_start == 1)? (
-  //   //tilex_first_ix_word_num = ceil(((pixels_in_row - 1) * s + k - p)/pixels_in_row)
-  //   tilex_first_ix_word_num
-  // ):
-  // (tile_x_start > 1)? (
-  //   (tile_x_start + pixels_in_row_minus_1 > ox)?
-  //   //tilex_last_ix_word_num = ceil((ox - tile_x_start + 1) * s /pixels_in_row)
-  //   // = ceil(((ox % pixels_in_row)*s+k-p)/pixels_in_row)
-  //   tilex_last_ix_word_num:
-  //   //tilex_mid_ix_word_num = s
-  //   tilex_mid_ix_word_num
-  // ): 0;
+  //the computation of tile(tile_y_start, tile_x_start) needed input[iy_start - p, iy_start - p + chunk_iy_size)
+  //but need loading input [iy_load_index, iy_load_index + chunk_iy_size)
+  always@(posedge clk)
+  begin
+    if(reset ==1'b1)
+    begin
+      iy_load_index <= 1;
+      iy_load_index_mod_3 <= 0;//0,1,2.
+      iy_load_index_in_3 <= 0;
+    end
+    else if(loop_iy_load_index_add_begin == 1'b1)
+    begin
+      if(loop_iy_load_index_add_end == 1'b1)
+      begin
+        iy_load_index <= 1;
+        iy_load_index_mod_3 <= 0;
+        iy_load_index_in_3 <= 0;
+      end
+      else
+      begin
+        iy_load_index <= iy_load_index + 1;
+        iy_load_index_mod_3 <= (iy_load_index_mod_3 == 2)? 0: (iy_load_index_mod_3 + 1);
+        iy_load_index_in_3 <= (iy_load_index_mod_3 == 2)? iy_load_index_in_3 + 1: iy_load_index_in_3;
+      end
+    end
+    else
+    begin
+      iy_load_index <= iy_load_index;
+      iy_load_index_mod_3 <= iy_load_index_mod_3;
+      iy_load_index_in_3 <= iy_load_index_in_3;
+    end
+  end
+  assign loop_iy_load_index_add_begin = (loop_ix_load_index_add_end == 1'b1);
+  assign loop_iy_load_index_add_end = loop_iy_load_index_add_begin
+         && ((iy_load_index == iy_chunks_num));
 
-  //  assign chunk_iy_size = (tile_y_start == 1)? (
-  //    //tiley_first_iy_row_num = (buffers_num - 1) * s + k - p
-  //    tiley_first_iy_row_num
-  //  ):
-  //  (tile_y_start > 1)? (
-  //    (tile_y_start + buffers_num_minus_1 > oy)?
-  //    // tiley_last_iy_row_num = (oy - tile_y_start + 1) * s
-  //    // (oy % buffers_num) * s
-  //    tiley_last_iy_row_num:
-  //    //tiley_mid_iy_row_num = buffers_num * s
-  //    tiley_mid_iy_row_num
-  //  ):
-  //  0;
+  //cal the val of tiley_***_iy_row_num, tilex_***_ix_row_num
+  //ox >= 32
+  assign chunk_ix_size = (load_for_com_tile_x_start == 1)? (
+           //tilex_first_ix_word_num = ceil(((pixels_in_row - 1) * s + k - p)/pixels_in_row)
+           tilex_first_ix_word_num
+         ):
+         (load_for_com_tile_x_start > 1)? (
+           (load_for_com_tile_x_start + pixels_in_row > ox)?
+           //tilex_last_ix_word_num = ceil((ox - tile_x_start + 1) * s /pixels_in_row) = ceil(((ox % pixels_in_row)*s+k-p)/pixels_in_row)
+           tilex_last_ix_word_num:
+           //tilex_mid_ix_word_num = s
+           tilex_mid_ix_word_num
+         ): 0;
+  //oy >= 3
+  assign chunk_iy_size = (load_for_com_tile_y_start == 1)? (
+           //tiley_first_iy_row_num = (buffers_num - 1) * s + k - p
+           tiley_first_iy_row_num
+         ):
+         (load_for_com_tile_y_start > 1)? (
+           (load_for_com_tile_y_start + buffers_num > oy)?
+           // tiley_last_iy_row_num = (oy - tile_y_start + 1) * s = (oy % buffers_num) * s
+           tiley_last_iy_row_num:
+           //tiley_mid_iy_row_num = buffers_num * s
+           tiley_mid_iy_row_num
+         ):
+         0;
+  always@(posedge clk)
+  begin
+    if(reset ==1'b1)
+    begin
+      load_for_com_tile_x_start <= 1;
+    end
+    else if(loop_load_for_com_tile_x_add_begin == 1'b1)
+    begin
+      if(loop_load_for_com_tile_x_add_end == 1'b1)
+      begin // the last tile_x_start
+        load_for_com_tile_x_start <= 1;
+      end
+      else
+      begin
+        load_for_com_tile_x_start <= load_for_com_tile_x_start + pixels_in_row;
+      end
+    end
+    else
+    begin
+      load_for_com_tile_x_start <= load_for_com_tile_x_start;
+    end
+  end
+  assign loop_load_for_com_tile_x_add_begin =
+         ((loop_input_ddr_word_tile_counter_add_end == 1'b1) && ((loop_load_for_com_tile_f_add_end | state_loop_load_for_com_tile_f_add_end) == 1'b1) && (chunk_ix_size_mult_chunk_iy_size > 0))
+         || ((state_load_input_tile_fin == 1'b1) && ((loop_load_for_com_tile_f_add_end | state_loop_load_for_com_tile_f_add_end) == 1'b1) && (chunk_ix_size_mult_chunk_iy_size > 0))
+         || (((loop_load_for_com_tile_f_add_end | state_loop_load_for_com_tile_f_add_end) == 1'b1) && (chunk_ix_size_mult_chunk_iy_size == 0));
+  // assign loop_x_add_begin = (loop_f_add_end == 1'b1);//error
+  assign loop_load_for_com_tile_x_add_end = loop_load_for_com_tile_x_add_begin && ((load_for_com_tile_x_start + pixels_in_row) > ox);
+  always@(posedge clk)
+  begin
+    if(reset ==1'b1)
+    begin
+      load_for_com_tile_y_start <= 1;
+    end
+    else if(loop_load_for_com_tile_y_add_begin == 1'b1)
+    begin
+      if(loop_load_for_com_tile_y_add_end == 1'b1)
+      begin //the last tile_y_start
+        load_for_com_tile_y_start <= 1;
+      end
+      else
+      begin
+        load_for_com_tile_y_start <= load_for_com_tile_y_start + buffers_num;
+      end
+    end
+    else
+    begin
+      load_for_com_tile_y_start <= load_for_com_tile_y_start;
+    end
+  end
+  assign loop_load_for_com_tile_y_add_begin = (loop_load_for_com_tile_x_add_end==1'b1);
+  assign loop_load_for_com_tile_y_add_end = loop_load_for_com_tile_y_add_begin && ((load_for_com_tile_y_start + buffers_num) > oy);
 
   // assign input_tile_of_split_size = ceil(chunk_ix_size * chunk_iy_size / of_div_row_num_ceil);
-
   assign input_tile_of_split_size =
-         (tile_y_start == 1)? (
+         (load_for_com_tile_y_start == 1)? (
            //tiley_first_iy_row_num = (buffers_num - 1) * s + k - p
-           (tile_x_start == 1)? (
+           (load_for_com_tile_x_start == 1)? (
              //tilex_first_ix_word_num = ceil(((pixels_in_row - 1) * s + k - p)/pixels_in_row)
              //tiley_first_tilex_first_split_size = ceil(tiley_first_iy_row_num * tilex_first_ix_word_num / of_div_row_num_ceil)
              tiley_first_tilex_first_split_size
            ):
-           (tile_x_start > 1)? (
-             (tile_x_start + pixels_in_row_minus_1 > ox)?
+           (load_for_com_tile_x_start > 1)? (
+             (load_for_com_tile_x_start + pixels_in_row > ox)?
              //tilex_last_ix_word_num = ceil((ox - tile_x_start + 1) * s /pixels_in_row) = ceil(((ox % pixels_in_row)*s+k-p)/pixels_in_row)
              // tiley_first_tilex_last_split_size = ceil(tiley_first_iy_row_num * tilex_last_ix_word_num / of_div_row_num_ceil)
              tiley_first_tilex_last_split_size:
@@ -478,17 +651,17 @@ module conv_load_input_controller(
              tiley_first_tilex_mid_split_size
            ): 0
          ):
-         (tile_y_start > 1)? (
-           (tile_y_start + buffers_num_minus_1 > oy)?
+         (load_for_com_tile_y_start > 1)? (
+           (load_for_com_tile_y_start + buffers_num > oy)?
            // tiley_last_iy_row_num = (oy - tile_y_start + 1) * s = (oy % buffers_num) * s
            (
-             (tile_x_start == 1)? (
+             (load_for_com_tile_x_start == 1)? (
                //tilex_first_ix_word_num = ceil(((pixels_in_row - 1) * s + k - p)/pixels_in_row)
                //tiley_last_tilex_first_split_size = ceil(tiley_last_iy_row_num * tilex_first_ix_word_num / of_div_row_num_ceil)
                tiley_last_tilex_first_split_size
              ):
-             (tile_x_start > 1)? (
-               (tile_x_start + pixels_in_row_minus_1 > ox)?
+             (load_for_com_tile_x_start > 1)? (
+               (load_for_com_tile_x_start + pixels_in_row > ox)?
                //tilex_last_ix_word_num = ceil((ox - tile_x_start + 1) * s /pixels_in_row) = ceil(((ox % pixels_in_row)*s+k-p)/pixels_in_row)
                //tiley_last_tilex_last_split_size = ceil(tiley_last_iy_row_num * tilex_last_ix_word_num / of_div_row_num_ceil)
                tiley_last_tilex_last_split_size:
@@ -499,13 +672,13 @@ module conv_load_input_controller(
            ):
            //tiley_mid_iy_row_num = buffers_num * s
            (
-             (tile_x_start == 1)? (
+             (load_for_com_tile_x_start == 1)? (
                //tilex_first_ix_word_num = ceil(((pixels_in_row - 1) * s + k - p)/pixels_in_row)
                //tiley_mid_tilex_first_split_size = ceil(tiley_mid_iy_row_num * tilex_first_ix_word_num / of_div_row_num_ceil)
                tiley_mid_tilex_first_split_size
              ):
-             (tile_x_start > 1)? (
-               (tile_x_start + pixels_in_row_minus_1 > ox)?
+             (load_for_com_tile_x_start > 1)? (
+               (load_for_com_tile_x_start + pixels_in_row > ox)?
                //tilex_last_ix_word_num = ceil((ox - tile_x_start + 1) * s /pixels_in_row) = ceil(((ox % pixels_in_row)*s+k-p)/pixels_in_row)
                //tiley_mid_tilex_last_split_size = ceil(tiley_mid_iy_row_num * tilex_last_ix_word_num / of_div_row_num_ceil)
                tiley_mid_tilex_last_split_size:
@@ -516,294 +689,36 @@ module conv_load_input_controller(
            )
          ):
          0;
-
-  // assign of_ceil = ceil(of / row_num) * row_num;
-
-  assign chunk_ix_size_mult_chunk_iy_size = (chunk_ix_size == 1)? chunk_iy_size:
+  assign chunk_ix_size_mult_chunk_iy_size =  (chunk_ix_size == 1)? 0:
+         (chunk_ix_size == 1)? chunk_iy_size:
          (chunk_ix_size == 2)? (chunk_iy_size << 1):
          (chunk_ix_size == 3)? (chunk_iy_size << 1) + chunk_iy_size: 0;
 
-  //loop [ix_start - p, ix_start - p + chunk_ix_size)
-  //chunk_ix_counter
-  always@(posedge clk)
-  begin
-    if(reset ==1'b1)
-    begin
-      chunk_ix_counter <= 1;
-    end
-    else if(loop_chunk_ix_counter_add_begin == 1'b1)
-    begin
-      if(loop_chunk_ix_counter_add_end == 1'b1)
-      begin
-        chunk_ix_counter <= 1;
-      end
-      else
-      begin
-        chunk_ix_counter <= chunk_ix_counter + 1;
-      end
-    end
-    else
-    begin
-      chunk_ix_counter <= chunk_ix_counter;
-    end
-  end
-  assign loop_chunk_ix_counter_add_begin = (loop_if_add_end == 1'b1);
-  assign loop_chunk_ix_counter_add_end = loop_chunk_ix_counter_add_begin
-         && ((chunk_ix_counter == chunk_ix_size));
-
-  // assign pox = (tile_x_start + pixels_in_row_minus_1 > ox)? (ox - tile_x_start + 1):
-  //        pixels_in_row;
-  // assign chunk_ix_size = (tile_x_start == 1)? ceil(((pox - 1) * s + k - p)/pixels_in_row) :
-  //        (tile_x_start > 1)? ceil(pox * s /pixels_in_row): 0;
-
-  // assign chunk_ix_size = (tile_x_start == 1)? (
-  //          (tile_x_start + pixels_in_row_minus_1 > ox)?
-  //          ceil(((ox - tile_x_start) * s + k - p)/pixels_in_row): //ceil(((ox % pixels_in_row - 1)*s+k-p)/pixels_in_row)
-  //          ceil(((pixels_in_row - 1) * s + k - p)/pixels_in_row)
-  //        ):
-  //        (tile_x_start > 1)? (
-  //          (tile_x_start + pixels_in_row_minus_1 > ox)?
-  //          ceil((ox - tile_x_start + 1) * s /pixels_in_row): //ceil(((ox % pixels_in_row)*s+k-p)/pixels_in_row)
-  //          s
-  //        ): 0;
-
-  //ox >= 32
-  assign chunk_ix_size = (tile_x_start == 1)? (
-           //tilex_first_ix_word_num = ceil(((pixels_in_row - 1) * s + k - p)/pixels_in_row)
-           tilex_first_ix_word_num
-         ):
-         (tile_x_start > 1)? (
-           (tile_x_start + pixels_in_row_minus_1 > ox)?
-           //tilex_last_ix_word_num = ceil((ox - tile_x_start + 1) * s /pixels_in_row) = ceil(((ox % pixels_in_row)*s+k-p)/pixels_in_row)
-           tilex_last_ix_word_num:
-           //tilex_mid_ix_word_num = s
-           tilex_mid_ix_word_num
-         ): 0;
-
-  //loop [iy_start - p, iy_start - p + chunk_iy_size)
-  //chunk_iy_counter
-  always@(posedge clk)
-  begin
-    if(reset ==1'b1)
-    begin
-      chunk_iy_counter <= 1;
-    end
-    else if(loop_chunk_iy_counter_add_begin == 1'b1)
-    begin
-      if(loop_chunk_iy_counter_add_end == 1'b1)
-      begin
-        chunk_iy_counter <= 1;
-      end
-      else
-      begin
-        chunk_iy_counter <= chunk_iy_counter + 1;
-      end
-    end
-    else
-    begin
-      chunk_iy_counter <= chunk_iy_counter;
-    end
-  end
-  assign loop_chunk_iy_counter_add_begin = (loop_chunk_ix_counter_add_end == 1'b1);
-  assign loop_chunk_iy_counter_add_end = loop_chunk_iy_counter_add_begin
-         && ((chunk_iy_counter == chunk_iy_size));
-
-  // assign poy = (tile_y_start + buffers_num_minus_1 > oy)? (oy - tile_y_start + 1):
-  //        buffers_num;
-  // assign chunk_iy_size = (tile_y_start == 1)? (poy - 1) * s + k - p :
-  //        (tile_y_start > 1)? poy * s: 0;
-
-  // assign chunk_iy_size = (tile_y_start == 1)? (
-  //          (tile_y_start + buffers_num_minus_1 > oy)?
-  //          (oy - tile_y_start) * s + k - p: // (oy % buffers_num - 1) * s + k - p
-  //          (buffers_num - 1) * s + k - p
-  //        ):
-  //        (tile_y_start > 1)? (
-  //          (tile_y_start + buffers_num_minus_1 > oy)?
-  //          (oy - tile_y_start + 1) * s: // (oy % buffers_num) * s
-  //          buffers_num * s
-  //        ):
-  //        0;
-
-  //oy >= 3
-  assign chunk_iy_size = (tile_y_start == 1)? (
-           //tiley_first_iy_row_num = (buffers_num - 1) * s + k - p
-           tiley_first_iy_row_num
-         ):
-         (tile_y_start > 1)? (
-           (tile_y_start + buffers_num_minus_1 > oy)?
-           // tiley_last_iy_row_num = (oy - tile_y_start + 1) * s = (oy % buffers_num) * s
-           tiley_last_iy_row_num:
-           //tiley_mid_iy_row_num = buffers_num * s
-           tiley_mid_iy_row_num
-         ):
-         0;
-
-  //output tersor tiling
-  //loop of
-  always@(posedge clk)
-  begin
-    if(reset ==1'b1)
-    begin
-      tile_f_start <= 1;
-      of_chunk_counter <= 1;
-    end
-    else if(loop_f_add_begin == 1'b1)
-    begin
-      if(loop_f_add_end == 1'b1)
-      begin // the last tile_f_start
-        tile_f_start <= 1;
-        of_chunk_counter <= 1;
-      end
-      else
-      begin
-        tile_f_start <= tile_f_start + row_num;
-        of_chunk_counter <= of_chunk_counter + 1;
-      end
-    end
-    else
-    begin
-      tile_f_start <= tile_f_start;
-      of_chunk_counter <= of_chunk_counter;
-    end
-  end
-
-  assign loop_f_add_begin = (conv_load_input == 1'b1);
-  assign loop_f_add_end = loop_f_add_begin && ((tile_f_start + row_num) > of);
-
-  //loop ox, seperate from loop of
-  always@(posedge clk)
-  begin
-    if(reset ==1'b1)
-    begin
-      tile_x_start <= 1;
-    end
-    else if(loop_x_add_begin == 1'b1)
-    begin
-      if(loop_x_add_end == 1'b1)
-      begin // the last tile_x_start
-        tile_x_start <= 1;
-      end
-      else
-      begin
-        tile_x_start <= tile_x_start + pixels_in_row;
-      end
-    end
-    else
-    begin
-      tile_x_start <= tile_x_start;
-    end
-  end
-  assign loop_x_add_begin = (loop_input_ddr_word_tile_counter_add_end == 1'b1);
-  assign loop_x_add_end = loop_x_add_begin && ((tile_x_start + pixels_in_row) > ox);
-
-  //loop oy, seperate from loop of
-  always@(posedge clk)
-  begin
-    if(reset ==1'b1)
-    begin
-      tile_y_start <= 1;
-      row_base_in_3s <= 0;
-    end
-    else if(loop_y_add_begin == 1'b1)
-    begin
-      if(loop_y_add_end == 1'b1)
-      begin //the last tile_y_start
-        tile_y_start <= 1;
-        row_base_in_3s <= 0;
-      end
-      else
-      begin
-        tile_y_start <= tile_y_start + buffers_num;
-        row_base_in_3s <= row_base_in_3s + 1; //tile_y_start in 3
-      end
-    end
-    else
-    begin
-      tile_y_start <= tile_y_start;
-      row_base_in_3s <= row_base_in_3s;
-    end
-  end
-
-  assign loop_y_add_begin = (loop_x_add_end==1'b1);
-  assign loop_y_add_end = loop_y_add_begin && ((tile_y_start + buffers_num) > oy);
-
-  // assign ox_start = tile_x_start;
-  // assign oy_start = tile_y_start;
-
-  assign pox = (tile_x_start + pixels_in_row_minus_1 > ox)? (ox - tile_x_start + 1):
-         pixels_in_row;
-
-  assign poy = (tile_y_start + buffers_num_minus_1 > oy)? (oy - tile_y_start + 1):
-         buffers_num;
-
-  assign conv_load_input_chunk_end = loop_input_ddr_word_chunk_counter_add_end;
-
-  assign row1_idx = (((chunk_iy_counter - 1 + iy_start) < (p + 1))
-                     || ((chunk_iy_counter - 1 + iy_start) > (p + 1)))?
-         16'hffff: ((chunk_iy_counter - 1 + iy_start) - {{12'b0},p});
-
-  assign load_input_row_idx = row1_idx;
-
-  assign iy_start = (s == 4'd1)? tile_y_start:
-         (s == 4'd2)? (tile_y_start << 1) - 1:
-         0;
-
-  // ix_start = (ox_start - 1) * s + 1;
-  assign ix_start = (s == 4'd1)? tile_x_start:
-         (s == 4'd2)? (tile_x_start << 1) - 1:
-         0;
-
-  assign row_start_idx = ((chunk_ix_counter - 1) << pixels_in_row_in_2pow) + ix_start;
-  assign load_input_row_start_idx = row_start_idx;
-
+  //cal DDR rd adr, buf wt index, adr
+  assign load_input_row_idx = iy_load_index;
+  assign load_input_row_start_idx = ((ix_load_index - 1) << pixels_in_row_in_2pow) + 1;
   //load ddr words instr generate
   assign input_word_ddr_adr_rd = input_ddr_layer_base_adr
-         + (((row1_idx - 1) << ((nif_in_2pow - ifs_in_row_2pow) + ix_in_2pow - pixels_in_row_in_2pow))
-            + (((row_start_idx - 1) << (nif_in_2pow - ifs_in_row_2pow)) >> pixels_in_row_in_2pow))
+         + (((load_input_row_idx - 1) << ((nif_in_2pow - ifs_in_row_2pow) + ix_in_2pow - pixels_in_row_in_2pow))
+            + (((load_input_row_start_idx - 1) << (nif_in_2pow - ifs_in_row_2pow)) >> pixels_in_row_in_2pow))
          + ((if_start - 1) >> ifs_in_row_2pow);
-
   assign input_word_ddr_en_rd = loop_if_add_begin;
 
   // ddr words of input row write into input buffer
   // consider the rows whose row_idx is in [p+1, p+iy], the rest of rows dont need address translation
-  assign row1_bias0 = chunk_iy_counter - {{12'b0},p};
-  assign row1_base_in_3s = ((row1_bias0[15] == 1'b1) || (row1_bias0 == 0))? (row_base_in_3s - 1) : row_base_in_3s;
-  assign row1_base_in_3 = (s == 4'd1)? row1_base_in_3s:
-         (s == 4'd2)? (row1_base_in_3s << 1):
-         0;
-  assign s_mult_3 = (s << 1) + s;
-  assign row1_bias = ((row1_bias0[15] == 1'b1) || (row1_bias0 == 0))? (row1_bias0 + {12'b0, {s_mult_3}}) : row1_bias0;
-  assign leq3_1 = (row1_bias <= 3)? 1 : 0;
-  assign leq6_1 = (row1_bias <= 6)? 1 : 0;
-  assign leq9_1 = (row1_bias <= 9)? 1 : 0;
-
   //row buf index
-  assign row1_buf_idx_s1 = (leq6_1 == 1'b1)?
-         ((leq3_1 == 1'b1)? row1_bias: (row1_bias - 3)) :
-         ((leq9_1 == 1'b1)? (row1_bias - 6): (row1_bias - 9));
-
-  assign load_input_row_buf_idx = row1_buf_idx_s1;
-
-  assign row1_offset_s1 = (leq6_1 == 1'b1)?
-         ((leq3_1 == 1'b1)? 0: 1) :
-         ((leq9_1 == 1'b1)? 2: 3);
-
+  assign load_input_row_buf_idx = iy_load_index_mod_3 + 1;
   //row buf adr of the row index
-  assign row1_buf_adr_in_row = (row1_idx == 16'hffff)? 16'hffff:
-         (row1_base_in_3 + row1_offset_s1);
-
-  assign input_word_buf_adr_wr = (row1_idx == 16'hffff)? 16'hffff:
-         (((row1_buf_adr_in_row & row_num_limit_mask_input_buffer) << ((nif_in_2pow - ifs_in_row_2pow) + ix_in_2pow - pixels_in_row_in_2pow))
-          + ((row_start_idx << (nif_in_2pow - ifs_in_row_2pow)) >> pixels_in_row_in_2pow))
+  assign load_input_row_buf_adr_in_row = iy_load_index_in_3;
+  assign load_input_row_buf_adr =
+         ((load_input_row_buf_adr_in_row & row_num_limit_mask_input_buffer) << ((nif_in_2pow - ifs_in_row_2pow) + ix_in_2pow - pixels_in_row_in_2pow))
+         + (((load_input_row_start_idx-1) << (nif_in_2pow - ifs_in_row_2pow)) >> pixels_in_row_in_2pow)
          + ((if_start - 1) >> ifs_in_row_2pow);
-
-  assign load_input_row_buf_adr = input_word_buf_adr_wr;
 
   //FIFO should be in the tb or top module
   //fifo
   assign input_word_load_info_fifo_en_wt = input_word_ddr_en_rd;
-  assign input_word_load_info_fifo_wt = {row1_buf_idx_s1,input_word_buf_adr_wr};
+  assign input_word_load_info_fifo_wt = {load_input_row_buf_idx,load_input_row_buf_adr};
 
 
 endmodule

@@ -132,9 +132,7 @@ begin
 end
 
 endgenerate
-
 assign conv_out_data_mode0 = fifo_data[conv_out_data_width-1 : 0];
-
 assign conv_out_data_mode1 = (channel_counter[0] == 1'b1) ? fifo_data[conv_out_data_width-1 : 0] :
      (channel_counter[0] == 1'b0) ? fifo_data[quantified_row_width-1 : conv_out_data_width] :
      0;
@@ -258,7 +256,6 @@ end
 end
 
 assign loop_oy_counter_add_begin = (loop_of_counter_add_end == 1'b1);
-
 assign loop_oy_counter_add_end = loop_oy_counter_add_begin
      && (oy_counter == cur_poy); 
 endmodule

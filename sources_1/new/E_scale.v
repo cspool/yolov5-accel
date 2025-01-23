@@ -23,7 +23,6 @@
 module E_Scale(
     //cycle 0 in
     clk,
-    reset,
     e_tail_reset,
     E_scale_tail_set,
     E_scale_rank_set,
@@ -88,7 +87,7 @@ module E_Scale(
   parameter scaled_rank_row_width = (mult_P_width) * pe_parallel_weight_18 * pe_parallel_pixel_18 * column_num;
   //9 bit * 32 pixels * 2 channel
 
-  input clk, reset, e_tail_reset;
+  input clk, e_tail_reset;
   //cycle -1
   input [E_scale_tail_set_width-1 :0] E_scale_tail_set;
   //16 bit * 2 channel

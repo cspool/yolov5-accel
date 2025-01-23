@@ -22,8 +22,8 @@
 
 module SA_Ctrl(
     reset,clk,
-    mode,
     re_fm_en,
+    mode,
     nif_mult_k_mult_k,
 
     sa_en,
@@ -36,12 +36,11 @@ module SA_Ctrl(
     quantify_en, quantify_reset,
     mult_array_mode,
     out_sa_row_idx,
-    channel_out_add_end,
     quantify_add_end
   );
-  input mode;
   input reset,clk;
   input re_fm_en;
+  input mode;
   input [15:0] nif_mult_k_mult_k;
   // reg mode;
   // reg [31:0] nif_mult_k_mult_k;
@@ -61,7 +60,7 @@ module SA_Ctrl(
   reg [5:0] sa_counter;
   wire loop_sa_counter_add_begin;
   wire loop_sa_counter_add_end; // the last output channel of sa
-  output channel_out_add_end; // the last output channel of sa
+  wire channel_out_add_end; // the last output channel of sa
   wire add_bias_add_end;
   reg e_tail_add_end;
   output reg quantify_add_end;

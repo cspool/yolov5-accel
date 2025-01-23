@@ -68,7 +68,14 @@ module conv_args_ctrl_tb(
   wire [511:0] e_scale_rank_buf_wr = 0;
   wire [511:0] e_scale_rank_buf_rd;
 
-  //last regs, state regs, to cache the info to wait for valid buffer data read           
+  //bias regs
+  wire [64-1 :0] bias_4_channel_sets; //4 sets of 16bit(1 bias or 2 bias)
+  //e_scale regs
+  // tile e-scale, will be set at first of the tiling compute, maybe set in several cycles
+  wire [128-1 :0] E_scale_tail_4_channel_sets;
+  wire [64-1 :0] E_scale_rank_4_channel_sets;
+
+  //last regs, state regs, to cache the info to wait for valid buffer data read
   reg bias_reg_set;
   reg [7:0] last_bias_reg_start;
   reg [7:0] last_bias_reg_size;
@@ -84,10 +91,10 @@ module conv_args_ctrl_tb(
   wire [511:0] last_e_scale_rank_word;
 
   conv_args_handler cv_args_handler(
-                      .mode_init(mode_init),
                       .clk(clk),
                       .reset(reset),
-                      .args_refresh(args_refresh),
+                      .args_refresh(args_refresh),//conv_compute
+                      .mode_init(mode_init),
                       .of_init(of_init),
                       .bias_layer_base_buf_adr_rd_init(bias_layer_base_buf_adr_rd_init),
                       .tail_layer_base_buf_adr_rd_init(tail_layer_base_buf_adr_rd_init),
@@ -154,35 +161,37 @@ module conv_args_ctrl_tb(
   //bias regs
   Bias_Regs bias_regs(
               .clk(clk),
-              .set(bias_reg_set), // next tile need clr
-              //   .bias_tile_val(bias_tile_val),
+              .reset(reset),
+              .bias_set(bias_reg_set), // next tile need clr
+              .mode(mode_init),
               .bias_word(last_bias_word),
               .bias_reg_start(last_bias_reg_start),
               .bias_reg_size(last_bias_reg_size),
 
-              .out_sa_row_idx(out_sa_row_idx),
+              .out_sa_row_idx(6'd0),
               .bias_4_channel_sets(bias_4_channel_sets)
             );
 
   //e_scale regs
   E_Scale_Regs E_scale_regs (
                  .clk(clk),
+                 .reset(reset),
                  .tail_set(tail_reg_set), // next tile need clr
                  .rank_set(rank_reg_set),
-                 .E_scale_tail_word(last_E_scale_tail_word),
-                 .E_scale_tail_reg_start(last_E_scale_tail_reg_start),
-                 .E_scale_tail_reg_size(last_E_scale_tail_reg_size),
-                 .E_scale_rank_word(last_E_scale_rank_word),
-                 .E_scale_rank_reg_start(last_E_scale_rank_reg_start),
-                 .E_scale_rank_reg_size(last_E_scale_rank_reg_size),
+                 .mode(mode_init),
+                 .E_scale_tail_word(last_e_scale_tail_word),
+                 .E_scale_tail_reg_start(last_e_scale_tail_reg_start),
+                 .E_scale_tail_reg_size(last_e_scale_tail_reg_size),
+                 .E_scale_rank_word(last_e_scale_rank_word),
+                 .E_scale_rank_reg_start(last_e_scale_rank_reg_start),
+                 .E_scale_rank_reg_size(last_e_scale_rank_reg_size),
 
-                 .out_sa_row_idx(out_sa_row_idx),
-
+                 .out_sa_row_idx(6'd0),
                  .E_scale_tail_4_channel_sets(E_scale_tail_4_channel_sets),
                  .E_scale_rank_4_channel_sets(E_scale_rank_4_channel_sets)
                );
 
-  //last regs, state regs, to cache the info to wait for valid buffer data read           
+  //last regs, state regs, to cache the info to wait for valid buffer data read
   always@(posedge clk)
   begin
     if (reset == 1'b1)
@@ -227,12 +236,12 @@ module conv_args_ctrl_tb(
     bias_layer_base_buf_adr_rd_init = 0;
     tail_layer_base_buf_adr_rd_init = 0;
     rank_layer_base_buf_adr_rd_init = 0;
-    mode_init = 0;
-    reset = 1;
+    mode_init = 1;
+    reset = 1;//conv_start
 
     #10;
     reset = 0;
-    args_refresh = 1;
+    args_refresh = 1;//conv_compute
 
     #10;
     args_refresh = 0;
