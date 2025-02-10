@@ -146,7 +146,7 @@ module convolution_tb ();
   wire [ 7:0] tiley_first_iy_row_num;
   wire [ 7:0] tiley_last_iy_row_num;
   wire [ 7:0] tiley_mid_iy_row_num;
-  wire [15:0] ix_chunks_num, iy_chunks_num;
+  wire [15:0] ix_index_num, iy_index_num;
   //conv controller
   wire conv_load_weights;
   wire conv_load_input;
@@ -568,8 +568,8 @@ module convolution_tb ();
       .tiley_first_iy_row_num            (tiley_first_iy_row_num),
       .tiley_last_iy_row_num             (tiley_last_iy_row_num),
       .tiley_mid_iy_row_num              (tiley_mid_iy_row_num),
-      .ix_chunks_num                     (ix_chunks_num),
-      .iy_chunks_num                     (iy_chunks_num)
+      .ix_index_num                     (ix_index_num),
+      .iy_index_num                     (iy_index_num)
   );
 //conv controller
   conv_controller cv_controller (
@@ -623,8 +623,8 @@ module convolution_tb ();
       .tiley_first_iy_row_num_init            (tiley_first_iy_row_num),
       .tiley_last_iy_row_num_init             (tiley_last_iy_row_num),
       .tiley_mid_iy_row_num_init              (tiley_mid_iy_row_num),
-      .ix_chunks_num_init                     (ix_chunks_num),
-      .iy_chunks_num_init                     (iy_chunks_num),
+      .ix_index_num_init                     (ix_index_num),
+      .iy_index_num_init                     (iy_index_num),
       .load_input_row_idx                     (load_input_row_idx),
       .load_input_row_start_idx               (load_input_row_start_idx),
       .load_input_if_idx                      (load_input_if_idx),
