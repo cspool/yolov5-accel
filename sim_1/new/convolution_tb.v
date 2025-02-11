@@ -475,8 +475,8 @@ module convolution_tb ();
       .clka (clk),                    // input wire clka
       .ena  (input_word_ddr_en_rd),   // input wire ena
       .wea  (0),                      // input wire [0 : 0] wea
-      .addra(input_word_ddr_adr_rd),  // input wire [12 : 0] addra
-      .dina (0),                      // input wire [511 : 0] dina
+      .addra(input_word_ddr_adr_rd[12:0]),  // input wire [12 : 0] addra
+      .dina (512'b0),                      // input wire [511 : 0] dina
       .douta(DDR_out)                 // output wire [511 : 0] douta
   );
   assign DDR_en          = input_word_ddr_en_rd | weights_word_ddr_en_rd;
@@ -1133,7 +1133,7 @@ module convolution_tb ();
       .clka (clk),                          // input wire clka
       .ena  (weights_word_buf_ping_en),     // input wire ena
       .wea  (weights_word_buf_ping_en_wr),  // input wire [0 : 0] wea
-      .addra(weights_word_buf_ping_adr),    // input wire [11 : 0] addra
+      .addra(weights_word_buf_ping_adr[11 : 0]),    // input wire [11 : 0] addra
       .dina (weights_word_buf_ping_in),     // input wire [511 : 0] dina
       .douta(weights_word_buf_ping_out)     // output wire [511 : 0] douta
   );
@@ -1142,7 +1142,7 @@ module convolution_tb ();
       .clka (clk),                          // input wire clka
       .ena  (weights_word_buf_pong_en),     // input wire ena
       .wea  (weights_word_buf_pong_en_wr),  // input wire [0 : 0] wea
-      .addra(weights_word_buf_pong_adr),    // input wire [11 : 0] addra
+      .addra(weights_word_buf_pong_adr[11 : 0]),    // input wire [11 : 0] addra
       .dina (weights_word_buf_pong_in),     // input wire [511 : 0] dina
       .douta(weights_word_buf_pong_out)     // output wire [511 : 0] douta
   );
@@ -1406,7 +1406,19 @@ module convolution_tb ();
     clk <= ~clk;
   end
 
+  integer file;
   initial begin
+    file = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/conv_result.txt", "w");
+    $display("Time\tvalid\tout_f_idx\tout_y_idx\tout_x_idx");
+    if (!file) begin
+            $display("Could not open file");
+            $stop;
+    end
+    // 写入文件头
+    $fdisplay(file, "Time\tvalid\tout_f_idx\tout_y_idx\tout_x_idx");
+    // 监控信号变化并写入文件
+    $fmonitor(file, "%t\t%b\t%b", $time, valid_rowi_out_buf_adr, out_f_idx, out_y_idx, out_x_idx);
+
     clk   = 0;
     reset = 1;
     ddr_en = 1;
@@ -1417,6 +1429,10 @@ module convolution_tb ();
 
     #10;
     conv_decode = 0;
+
+    #1000000;
+    $fclose(file); // 关闭文件
+    $stop; // 停止仿真
   end
 
 endmodule

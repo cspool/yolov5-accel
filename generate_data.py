@@ -192,8 +192,8 @@ with open('./DDR_data.txt', "w") as f:
     
     # weight
     weights_ddr_words_shape = weights_ddr_words.shape
+    #turn 2d tensor into 1d tensor array
     weights_ddr_words = weights_ddr_words.reshape(-1,).split(split_size=weights_ddr_words_shape[-1], dim=0)
-    
     for weight_ddr_word_index, weight_ddr_word in enumerate(weights_ddr_words):
     # iterate each weight word
         reverse_weight_ddr_word = torch.flip(weight_ddr_word, dims=[0])
