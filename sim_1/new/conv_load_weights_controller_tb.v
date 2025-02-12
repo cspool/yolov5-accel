@@ -30,7 +30,6 @@ module conv_load_weights_controller_tb ();
   reg         conv_load_weights;  //begin weights loading
   reg         ddr_en;  //mig fifo can accept request
   reg         valid_load_weights;  //ddr words is loaded from ddr
-  reg         last_valid_load_weights;
   reg         mode_init;
   reg  [15:0] nif_mult_k_mult_k_init;
   reg  [15:0] of_init;
@@ -81,7 +80,7 @@ module conv_load_weights_controller_tb ();
 
   assign DDR_en              = weights_word_ddr_en_rd;
   assign DDR_en_wr           = 0;
-  assign DDR_adr             = weights_word_ddr_adr_rd;
+  assign DDR_adr             = weights_word_ddr_adr_rd[12 : 0];
   assign DDR_in              = 0;
   assign weights_word_buf_wt = (valid_load_weights == 1'b1) ? DDR_out : 0;
 
@@ -175,30 +174,21 @@ module conv_load_weights_controller_tb ();
       valid_load_weights <= 0;
     end else begin
 
-      valid_load_weights <= last_valid_load_weights;  //DDR sim
+      valid_load_weights <= weights_word_ddr_en_rd;  //DDR sim
     end
   end
 
-  always @(posedge clk) begin
-    if (reset) begin
-      last_valid_load_weights <= 0;
-    end else begin
-
-      last_valid_load_weights <= weights_word_ddr_en_rd;  //DDR sim
-    end
-  end
-
-  always @(posedge clk) begin
-    if (reset) begin
-      ddr_en <= 0;
-    end else if (ddr_en == 1) begin
-      ddr_en <= 0;  //DDR sim
-    end else if (ddr_en == 0) begin
-      ddr_en <= 1;  //DDR sim
-    end else begin
-      ddr_en <= ddr_en;
-    end
-  end
+  // always @(posedge clk) begin
+  //   if (reset) begin
+  //     ddr_en <= 0;
+  //   end else if (ddr_en == 1) begin
+  //     ddr_en <= 0;  //DDR sim
+  //   end else if (ddr_en == 0) begin
+  //     ddr_en <= 1;  //DDR sim
+  //   end else begin
+  //     ddr_en <= ddr_en;
+  //   end
+  // end
 
   initial begin
     clk                                = 0;

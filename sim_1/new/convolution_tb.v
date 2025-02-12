@@ -164,7 +164,6 @@ module convolution_tb ();
   reg [511:0] last_load_input_word;
   reg state_valid_load_input;
   reg valid_load_weights; //ddr words is loaded from ddr
-  reg last_valid_load_weights;
   //conv compute ctrl
   wire [15:0] ox_start, oy_start, of_start, pox, poy, pof, if_idx;
   reg [15:0] shadow_ox_start, shadow_oy_start, shadow_of_start, shadow_pox, shadow_poy, shadow_pof;
@@ -473,16 +472,16 @@ module convolution_tb ();
 //DDR
   DDR DDR (
       .clka (clk),                    // input wire clka
-      .ena  (input_word_ddr_en_rd),   // input wire ena
+      .ena  (DDR_en),   // input wire ena
       .wea  (0),                      // input wire [0 : 0] wea
-      .addra(input_word_ddr_adr_rd[12:0]),  // input wire [12 : 0] addra
+      .addra(DDR_adr),  // input wire [12 : 0] addra
       .dina (512'b0),                      // input wire [511 : 0] dina
       .douta(DDR_out)                 // output wire [511 : 0] douta
   );
   assign DDR_en          = input_word_ddr_en_rd | weights_word_ddr_en_rd;
   assign DDR_en_wr       = 0;
-  assign DDR_adr         = (input_word_ddr_en_rd == 1)? input_word_ddr_adr_rd :
-   (weights_word_ddr_en_rd == 1)? weights_word_ddr_adr_rd : 0;
+  assign DDR_adr         = (input_word_ddr_en_rd == 1)? input_word_ddr_adr_rd[12 : 0] :
+   (weights_word_ddr_en_rd == 1)? weights_word_ddr_adr_rd[12 : 0] : 0;
   assign DDR_in          = 0;
   assign load_input_word = (valid_load_input == 1'b1) ? DDR_out : 0;
   assign weights_word_buf_wt = (valid_load_weights == 1'b1) ? DDR_out : 0;
@@ -517,14 +516,7 @@ module convolution_tb ();
     if (reset) begin
       valid_load_weights <= 0;
     end else begin
-      valid_load_weights <= last_valid_load_weights;  //DDR sim
-    end
-  end
-  always @(posedge clk) begin
-    if (reset) begin
-      last_valid_load_weights <= 0;
-    end else begin
-      last_valid_load_weights <= weights_word_ddr_en_rd;  //DDR sim
+      valid_load_weights <= weights_word_ddr_en_rd;  //DDR sim
     end
   end
   //conv decoder
@@ -1415,9 +1407,9 @@ module convolution_tb ();
             $stop;
     end
     // 写入文件头
-    $fdisplay(file, "Time\tvalid\tout_f_idx\tout_y_idx\tout_x_idx");
+    $fdisplay(file, "Time\tvalid\tout_f_idx\tout_y_idx\tout_x_idx\tresult_word");
     // 监控信号变化并写入文件
-    $fmonitor(file, "%t\t%b\t%b", $time, valid_rowi_out_buf_adr, out_f_idx, out_y_idx, out_x_idx);
+    $fmonitor(file, "%t\t%b\t%d\t%d\t%d\t%h", $time, valid_rowi_out_buf_adr, out_f_idx, out_y_idx, out_x_idx, conv_out_data);
 
     clk   = 0;
     reset = 1;

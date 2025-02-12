@@ -254,17 +254,17 @@ module conv_load_input_controller_tb ();
 
   //DDR
   DDR DDR (
-      .clka (clk),                    // input wire clka
-      .ena  (input_word_ddr_en_rd),   // input wire ena
-      .wea  (0),                      // input wire [0 : 0] wea
-      .addra(input_word_ddr_adr_rd),  // input wire [12 : 0] addra
-      .dina (0),                      // input wire [511 : 0] dina
-      .douta(DDR_out)                 // output wire [511 : 0] douta
+      .clka (clk),      // input wire clka
+      .ena  (DDR_en),   // input wire ena
+      .wea  (0),        // input wire [0 : 0] wea
+      .addra(DDR_adr),  // input wire [12 : 0] addra
+      .dina (0),        // input wire [511 : 0] dina
+      .douta(DDR_out)   // output wire [511 : 0] douta
   );
 
   assign DDR_en          = input_word_ddr_en_rd;
   assign DDR_en_wr       = 0;
-  assign DDR_adr         = input_word_ddr_adr_rd;
+  assign DDR_adr         = input_word_ddr_adr_rd[12 : 0];
   assign DDR_in          = 0;
   assign load_input_word = (valid_load_input == 1'b1) ? DDR_out : 0;
 

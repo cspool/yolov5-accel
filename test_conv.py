@@ -30,12 +30,16 @@ def generate_conv_tests():
   conv_test(conv_type, mode_type, quantify_type)
 
 def conv_test(conv_type, mode_type, quantify_type):
+    standard_conv(conv_type, mode_type, quantify_type)
+    # fpga_conv(conv_type, mode_type, quantify_type)
+
+def standard_conv(conv_type, mode_type, quantify_type):
   # def basic conv op
   mode = mode_type
   k,s,p = conv_type_mapping[conv_type]
   of = 128
   ox = 128
-  oy = 128
+  oy = 8
   ix = ox if s == 1 else ox*2
   iy = oy if s == 1 else oy*2
   nif = 4
@@ -66,14 +70,44 @@ def conv_test(conv_type, mode_type, quantify_type):
   # 将每个通道的值乘以对应的 tail[i]
   conv_out = conv_out * tail_data  # 使用广播机制
   # 对每个通道的值进行逻辑右移 rank[i] 位
-  output = torch.bitwise_right_shift(conv_out, rank_data)  # 使用广播机制
+  output_tensor = torch.bitwise_right_shift(conv_out, rank_data)  # 使用广播机制
+  # 将张量保存到txt文件
+  output_file = "output_tensor.txt"
+  with open(output_file, "w") as f:
+      # 第一行写入维度信息
+      f.write(" ".join(map(str, output_tensor.shape)) + "\n")
+      # 遍历张量的每个元素并写入文件
+      for i in range(output_tensor.size(0)):  # 遍历 batch 维度
+          for j in range(output_tensor.size(1)):  # 遍历通道维度
+              for k in range(output_tensor.size(2)):  # 遍历高度维度
+                  for value in output_tensor[i, j, k, :]:  # 遍历宽度维度
+                      f.write(f"{int(value.item())} ")  # 写入整数值
+                  f.write("\n")  # 每一行结束后换行
+              f.write("\n")  # 每个通道结束后换行
+          f.write("\n")  # 每个 batch 结束后换行
+  print(f"Output tensor saved to {output_file}")
+
+#fpga conv
+def fpga_conv(conv_type, mode_type, quantify_type):
+  # def basic conv op
+  mode = mode_type
+  k,s,p = conv_type_mapping[conv_type]
+  of = 128
+  ox = 128
+  oy = 8
+  ix = ox if s == 1 else ox*2
+  iy = oy if s == 1 else oy*2
+  nif = 4
+  #fpga conv results
+  collect_result(of, oy, ox)
+
 
 
 def generate_conv_weight_data(mode, of, nif, k):
   # generate and return conv weights, then reshape & split it and return it
   # weights[F, ID*K*K]
-  img2col_weight_data = torch.randint(0, 256, size=(of, nif*k * k), dtype=torch.uint8) \
-  if mode == 0 else torch.randint(0, 2, size=(of, nif*k * k), dtype=torch.uint8)
+  img2col_weight_data = torch.randint(-128, 128, size=(of, nif*k * k), dtype=torch.int8) \
+  if mode == 0 else torch.randint(0, 2, size=(of, nif*k * k), dtype=torch.int8)
   weight_data = img2col_weight_data.reshape(of, nif, k, k)
   ## reshape weight data
   # the amount of out channel of weights per complete ddr word
@@ -110,7 +144,7 @@ def generate_conv_input_data(nif, iy, ix):
   # input[ID, IH, IW]
   # input channel num should be an even num. 
   # if not, expand 3 channels -> 4 channels, last channel is 0
-  input_data = torch.randint(0, 256, size=(nif, iy, ix), dtype=torch.uint8)
+  input_data = torch.randint(-128, 128, size=(nif, iy, ix), dtype=torch.int8)
   # reshape input tensor into ddr words
   activation_x_num_in_ddr_word = 32
   activation_in_channel_num_in_ddr_word = 2 # ddr_word_width / activation_x_num_in_ddr_word / weight_word_width
@@ -134,7 +168,7 @@ def generate_conv_input_data(nif, iy, ix):
  
 def generate_conv_bias_data(mode, of):
   # bias[1, F]
-  bias_data = torch.randint(0, 256, size=(1, of), dtype=torch.uint8)
+  bias_data = torch.randint(-128, 128, size=(1, of), dtype=torch.int8)
   ## reshape bias data
   # the amount of out channel of bias per complete ddr word
   bias_width = 8
@@ -163,7 +197,7 @@ def generate_conv_bias_data(mode, of):
 def generate_conv_tail_data(quantify_type, mode, of):
   # e_scale_tail[F]
   e_scale_tail_data = torch.ones(of, dtype=torch.int) \
-  if quantify_type == 0 else torch.randint(0, 256*256, size=(of,), dtype=torch.int)
+  if quantify_type == 0 else torch.randint(0, 256*256, size=(of,), dtype=torch.uint16)
   ## reshape e_scale_tail data
   # the amount of out channel of tail per complete ddr word 
   e_scale_tail_width = 16
@@ -191,8 +225,8 @@ def generate_conv_tail_data(quantify_type, mode, of):
 
 def generate_conv_rank_data(quantify_type, mode, of):
   # e_scale_rank[F]
-  e_scale_rank_data = torch.randint(0, 256, size=(of,), dtype=torch.int) \
-  if quantify_type == 2 else torch.zeros(of, dtype=torch.int)
+  e_scale_rank_data = torch.randint(0, 256, size=(of,), dtype=torch.uint8) \
+  if quantify_type == 2 else torch.zeros(of, dtype=torch.uint8)
   ## reshape e_scale_rank data
   # the amount of out channel of tail per complete ddr word 
   e_scale_rank_width = 8
@@ -219,7 +253,8 @@ def generate_conv_rank_data(quantify_type, mode, of):
   return e_scale_rank_data, rank_ddr_words
 
 def generate_ddr_txt(mode, weights_ddr_words, bias_ddr_words, tail_ddr_words, rank_ddr_words, input_ddr_word_array):
-   ## write DDR words in txt file 
+  ## write num in complementary code into txt file. xxxxxxxxxxxxxxxxx 
+  ## write DDR words in txt file 
   with open('./DDR_data.txt', "w") as f:
       f.write("MEMORY_INITIALIZATION_RADIX = 16;\nMEMORY_INITIALIZATION_VECTOR = \n")
       # weight
@@ -437,9 +472,6 @@ def generate_instr_args_init(mode,k,s,p,of,ox,oy,ix,iy,nif):
       iy_integer,
       nif_integer,
       nif_in_2pow_integer,
-      row_num_real,
-      pixels_in_row_real,
-      buffers_num_real,
       nif_mult_k_mult_k_integer,
       N_chunks_integer,
       bias_layer_base_buf_adr_rd_integer,
@@ -474,9 +506,37 @@ def generate_instr_args_init(mode,k,s,p,of,ox,oy,ix,iy,nif):
 
 def collect_result(of, oy, ox):
     # collect the result from txt file
-    conv_result = torch.randint(0,127,size=(of, oy, ox), dtype=torch.int8)
+    fpga_output_tensors = torch.zeros(size=(of, oy, ox), dtype=torch.int8)
+    with open("conv_result.txt", "r") as f:
+        next(f)  # 跳过第一行表头
+        for line in f:
+            # 解析每一行的数据
+            time, valid, out_f_idx, out_y_idx, out_x_idx, result_word = line.strip().split()
+            if valid != "1": continue
+            out_f_idx, out_y_idx, out_x_idx = int(out_f_idx), int(out_y_idx), int(out_x_idx)
+            
+            # 将64位16进制数转换为32个2位16进制数，并进一步转换为10进制数
+            hex_values = [result_word[i:i+2] for i in range(0, len(result_word), 2)]
+            decimal_values = [int(value, 16) for value in hex_values]
+            
+            # 计算写入张量的起始和结束索引
+            start_idx = (out_f_idx - 1, out_y_idx - 1, (out_x_idx - 1))
+            end_idx = (out_f_idx - 1, out_y_idx -1 , out_x_idx - 1 + 32)
+            
+            # 将数据写入张量，编号小的数写入坐标大的位置
+            fpga_output_tensors[start_idx[0], start_idx[1], start_idx[2]:end_idx[2]] = torch.tensor(decimal_values[::-1], dtype=torch.uint8)
 
-    return conv_result
+    fpga_output_tensors = fpga_output_tensors.to(dtype=torch.uint8)
+    with open("fpga_output_tensors.txt", "w") as f:
+        # 写入张量的维度信息
+        f.write(" ".join(map(str, fpga_output_tensors.shape)) + "\n")
+        
+        # 遍历张量的每个元素并写入文件
+        for i in range(fpga_output_tensors.size(0)):  # 遍历第一个维度
+            for j in range(fpga_output_tensors.size(1)):  # 遍历第二个维度
+                for k in range(fpga_output_tensors.size(2)):  # 遍历第三个维度
+                    f.write(f"{fpga_output_tensors[i, j, k].item()} ")
+                f.write("\n")  # 每一行结束后换行
 
 if __name__ == "__main__":
     generate_conv_tests()

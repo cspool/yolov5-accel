@@ -546,7 +546,7 @@ module conv_load_input_controller (
       //tilex_mid_ix_word_num = s
       //tiley_mid_tilex_mid_split_size = ceil(tiley_mid_iy_row_num * tilex_mid_ix_word_num / of_div_row_num_ceil)
       tiley_mid_tilex_mid_split_size) : 0)) : 0;
-  assign chunk_ix_size_mult_chunk_iy_size = (chunk_ix_size == 1) ? 0 : (chunk_ix_size == 1) ? chunk_iy_size : (chunk_ix_size == 2) ? (chunk_iy_size << 1) : (chunk_ix_size == 3) ? (chunk_iy_size << 1) + chunk_iy_size : 0;
+  assign chunk_ix_size_mult_chunk_iy_size = (chunk_ix_size == 0) ? 0 : (chunk_ix_size == 1) ? chunk_iy_size : (chunk_ix_size == 2) ? (chunk_iy_size << 1) : (chunk_ix_size == 3) ? (chunk_iy_size << 1) + chunk_iy_size : 0;
 
   //cal DDR rd adr, buf wt index, adr
   assign load_input_row_idx = iy_load_index;

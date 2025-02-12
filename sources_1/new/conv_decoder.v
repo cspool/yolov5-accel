@@ -73,7 +73,7 @@ module conv_decoder (
   parameter ifs_in_row_2pow = 1;
   parameter input_buffer_size_2pow = 12;  //4096
   parameter buf_rd_ratio = 2;
-  parameter conv_instr_args_num = 40;
+  parameter conv_instr_args_num = 37;
 
   input clk, reset, conv_decode;
   output reg conv_start;
@@ -279,10 +279,10 @@ module conv_decoder (
     ox_reg                                 = instr_args_init[5];
     oy_reg                                 = instr_args_init[6];
     ix_reg                                 = instr_args_init[7];
-    iy_reg                                 = instr_args_init[8];
-    nif_reg                                = instr_args_init[9];
-    nif_in_2pow_reg                        = instr_args_init[10];
-    ix_in_2pow_reg                         = instr_args_init[11];
+    ix_in_2pow_reg                         = instr_args_init[8];
+    iy_reg                                 = instr_args_init[9];
+    nif_reg                                = instr_args_init[10];
+    nif_in_2pow_reg                        = instr_args_init[11];
     nif_mult_k_mult_k_reg                  = instr_args_init[12];
     N_chunks_reg                           = instr_args_init[13];
     bias_layer_base_buf_adr_rd_reg         = instr_args_init[14];
@@ -290,27 +290,24 @@ module conv_decoder (
     rank_layer_base_buf_adr_rd_reg         = instr_args_init[16];
     weights_layer_base_ddr_adr_rd_reg      = instr_args_init[17];
     input_ddr_layer_base_adr_reg           = instr_args_init[18];
-    row_num_reg                            = instr_args_init[19];
-    pixels_in_row_reg                      = instr_args_init[20];
-    buffers_num_reg                        = instr_args_init[21];
-    tilex_first_ix_word_num_reg            = instr_args_init[22];
-    tilex_last_ix_word_num_reg             = instr_args_init[23];
-    tilex_mid_ix_word_num_reg              = instr_args_init[24];
-    tiley_first_iy_row_num_reg             = instr_args_init[25];
-    tiley_last_iy_row_num_reg              = instr_args_init[26];
-    tiley_mid_iy_row_num_reg               = instr_args_init[27];
-    ix_index_num_reg                       = instr_args_init[28];
-    iy_index_num_reg                       = instr_args_init[29];
-    of_div_row_num_ceil_reg                = instr_args_init[30];
-    tiley_first_tilex_first_split_size_reg = instr_args_init[31];
-    tiley_first_tilex_last_split_size_reg  = instr_args_init[32];
-    tiley_first_tilex_mid_split_size_reg   = instr_args_init[33];
-    tiley_last_tilex_first_split_size_reg  = instr_args_init[34];
-    tiley_last_tilex_last_split_size_reg   = instr_args_init[35];
-    tiley_last_tilex_mid_split_size_reg    = instr_args_init[36];
-    tiley_mid_tilex_first_split_size_reg   = instr_args_init[37];
-    tiley_mid_tilex_last_split_size_reg    = instr_args_init[38];
-    tiley_mid_tilex_mid_split_size_reg     = instr_args_init[39];
+    tilex_first_ix_word_num_reg            = instr_args_init[19];
+    tilex_last_ix_word_num_reg             = instr_args_init[20];
+    tilex_mid_ix_word_num_reg              = instr_args_init[21];
+    tiley_first_iy_row_num_reg             = instr_args_init[22];
+    tiley_last_iy_row_num_reg              = instr_args_init[23];
+    tiley_mid_iy_row_num_reg               = instr_args_init[24];
+    ix_index_num_reg                       = instr_args_init[25];
+    iy_index_num_reg                       = instr_args_init[26];
+    of_div_row_num_ceil_reg                = instr_args_init[27];
+    tiley_first_tilex_first_split_size_reg = instr_args_init[28];
+    tiley_first_tilex_last_split_size_reg  = instr_args_init[29];
+    tiley_first_tilex_mid_split_size_reg   = instr_args_init[30];
+    tiley_last_tilex_first_split_size_reg  = instr_args_init[31];
+    tiley_last_tilex_last_split_size_reg   = instr_args_init[32];
+    tiley_last_tilex_mid_split_size_reg    = instr_args_init[33];
+    tiley_mid_tilex_first_split_size_reg   = instr_args_init[34];
+    tiley_mid_tilex_last_split_size_reg    = instr_args_init[35];
+    tiley_mid_tilex_mid_split_size_reg     = instr_args_init[36];
   end
 
   always @(posedge clk) begin
