@@ -13,6 +13,15 @@ conv_type_mapping = {
 # ddr arguments
 ddr_word_width = 512
 
+def int8_to_hex_complement(value):
+    """
+    将 int8 值转换为 2 位 16 进制补码形式
+    """
+    if value >= 0:
+        return f"{value:02x}"  # 正数直接转换为 16 进制
+    else:
+        return f"{256 + value:02x}"  # 负数转换为补码
+
 def generate_conv_tests():
     # (k,s,p)=(1,1,0)/(3,1,1)/(3,2,1)/(6,2,2)四种卷积各2组（w1a8和w8a8）用例,
     # 过程数值限制在[-(1<<19),(1<<19)-1]内。
@@ -30,8 +39,8 @@ def generate_conv_tests():
   conv_test(conv_type, mode_type, quantify_type)
 
 def conv_test(conv_type, mode_type, quantify_type):
-    standard_conv(conv_type, mode_type, quantify_type)
-    # fpga_conv(conv_type, mode_type, quantify_type)
+    # standard_conv(conv_type, mode_type, quantify_type)
+    fpga_conv(conv_type, mode_type, quantify_type)
 
 def standard_conv(conv_type, mode_type, quantify_type):
   # def basic conv op
@@ -52,10 +61,14 @@ def standard_conv(conv_type, mode_type, quantify_type):
   rank_data, rank_ddr_words = generate_conv_rank_data(quantify_type, mode, of)
   input_data, input_ddr_word_array = generate_conv_input_data(nif, iy, ix)
   generate_ddr_txt(mode, weights_ddr_words, bias_ddr_words, tail_ddr_words, rank_ddr_words, input_ddr_word_array)
+  generate_ddr_init(mode, weights_ddr_words, bias_ddr_words, tail_ddr_words, rank_ddr_words, input_ddr_word_array)
   generate_weight_buf_txt(mode, weights_ddr_words)
   generate_bias_buf_txt(bias_ddr_words)
+  generate_bias_buf_init(bias_ddr_words)
   generate_tail_buf_txt(tail_ddr_words)
+  generate_tail_buf_init(tail_ddr_words)
   generate_rank_buf_txt(rank_ddr_words)
+  generate_rank_buf_init(rank_ddr_words)
   generate_input_buf_txt(input_ddr_word_array)
 
   # standard conv
@@ -81,7 +94,7 @@ def standard_conv(conv_type, mode_type, quantify_type):
           for j in range(output_tensor.size(1)):  # 遍历通道维度
               for k in range(output_tensor.size(2)):  # 遍历高度维度
                   for value in output_tensor[i, j, k, :]:  # 遍历宽度维度
-                      f.write(f"{int(value.item())} ")  # 写入整数值
+                      f.write(f"{int(value.item()):3d} ")  # 写入整数值
                   f.write("\n")  # 每一行结束后换行
               f.write("\n")  # 每个通道结束后换行
           f.write("\n")  # 每个 batch 结束后换行
@@ -101,12 +114,10 @@ def fpga_conv(conv_type, mode_type, quantify_type):
   #fpga conv results
   collect_result(of, oy, ox)
 
-
-
 def generate_conv_weight_data(mode, of, nif, k):
   # generate and return conv weights, then reshape & split it and return it
   # weights[F, ID*K*K]
-  img2col_weight_data = torch.randint(-128, 128, size=(of, nif*k * k), dtype=torch.int8) \
+  img2col_weight_data = torch.randint(-5, 5, size=(of, nif*k * k), dtype=torch.int8) \
   if mode == 0 else torch.randint(0, 2, size=(of, nif*k * k), dtype=torch.int8)
   weight_data = img2col_weight_data.reshape(of, nif, k, k)
   ## reshape weight data
@@ -144,7 +155,7 @@ def generate_conv_input_data(nif, iy, ix):
   # input[ID, IH, IW]
   # input channel num should be an even num. 
   # if not, expand 3 channels -> 4 channels, last channel is 0
-  input_data = torch.randint(-128, 128, size=(nif, iy, ix), dtype=torch.int8)
+  input_data = torch.randint(-5, 5, size=(nif, iy, ix), dtype=torch.int8)
   # reshape input tensor into ddr words
   activation_x_num_in_ddr_word = 32
   activation_in_channel_num_in_ddr_word = 2 # ddr_word_width / activation_x_num_in_ddr_word / weight_word_width
@@ -168,7 +179,7 @@ def generate_conv_input_data(nif, iy, ix):
  
 def generate_conv_bias_data(mode, of):
   # bias[1, F]
-  bias_data = torch.randint(-128, 128, size=(1, of), dtype=torch.int8)
+  bias_data = torch.randint(-5, 5, size=(1, of), dtype=torch.int8)
   ## reshape bias data
   # the amount of out channel of bias per complete ddr word
   bias_width = 8
@@ -253,7 +264,7 @@ def generate_conv_rank_data(quantify_type, mode, of):
   return e_scale_rank_data, rank_ddr_words
 
 def generate_ddr_txt(mode, weights_ddr_words, bias_ddr_words, tail_ddr_words, rank_ddr_words, input_ddr_word_array):
-  ## write num in complementary code into txt file. xxxxxxxxxxxxxxxxx 
+  ## write num in complementary code into txt file.
   ## write DDR words in txt file 
   with open('./DDR_data.txt', "w") as f:
       f.write("MEMORY_INITIALIZATION_RADIX = 16;\nMEMORY_INITIALIZATION_VECTOR = \n")
@@ -264,7 +275,7 @@ def generate_ddr_txt(mode, weights_ddr_words, bias_ddr_words, tail_ddr_words, ra
       for weight_ddr_word_index, weight_ddr_word in enumerate(weights_ddr_word_array):
       # iterate each weight word
           reverse_weight_ddr_word = torch.flip(weight_ddr_word, dims=[0])
-          hex_str = ''.join([f'{weight_num:02x}' for weight_num in reverse_weight_ddr_word]) \
+          hex_str = ''.join([int8_to_hex_complement(weight_num.item()) for weight_num in reverse_weight_ddr_word]) \
               if mode == 0 else ''.join([f'{weight_num:01b}' for weight_num in reverse_weight_ddr_word])
           # print(hex_str + ',\n')
           f.write(hex_str + ',\n')
@@ -275,7 +286,7 @@ def generate_ddr_txt(mode, weights_ddr_words, bias_ddr_words, tail_ddr_words, ra
       for bias_ddr_word_index, bias_ddr_word in enumerate(bias_ddr_word_array):
       # iterate each bias word
           reverse_bias_ddr_word = torch.flip(bias_ddr_word, dims=[0])
-          hex_str = ''.join([f'{bias_num:02x}' for bias_num in reverse_bias_ddr_word])
+          hex_str = ''.join([int8_to_hex_complement(bias_num.item()) for bias_num in reverse_bias_ddr_word])
           # print(hex_str + ',\n')
           f.write(hex_str + ',\n')
       # f.write('\n')
@@ -307,11 +318,72 @@ def generate_ddr_txt(mode, weights_ddr_words, bias_ddr_words, tail_ddr_words, ra
       for input_ddr_word_index, input_ddr_word in enumerate(input_ddr_word_array):
           reverse_input_ddr_word = torch.flip(input_ddr_word, dims=[0])
           # concate each num in a word to a hex num
-          hex_str = ''.join([f'{input_num:02x}' for input_num in reverse_input_ddr_word])
+          hex_str = ''.join([int8_to_hex_complement(input_num.item()) for input_num in reverse_input_ddr_word])
           # print(f"{hex_str} \n")
           f.write(hex_str)
           if input_ddr_word_index < input_ddr_word_len - 1:
               f.write(',\n')
+      f.write(";")
+
+def generate_ddr_init(mode, weights_ddr_words, bias_ddr_words, tail_ddr_words, rank_ddr_words, input_ddr_word_array):
+  ## write num in complementary code into txt file.
+  ## write DDR words in txt file 
+  with open('./DDR_init.txt', "w") as f:
+      # weight
+      weights_ddr_words_shape = weights_ddr_words.shape
+      #turn 2d tensor into 1d tensor array
+      weights_ddr_word_array = weights_ddr_words.reshape(-1,).split(split_size=weights_ddr_words_shape[-1], dim=0)
+      for weight_ddr_word_index, weight_ddr_word in enumerate(weights_ddr_word_array):
+      # iterate each weight word
+          reverse_weight_ddr_word = torch.flip(weight_ddr_word, dims=[0])
+          hex_str = ''.join([int8_to_hex_complement(weight_num.item()) for weight_num in reverse_weight_ddr_word]) \
+              if mode == 0 else ''.join([f'{weight_num:01b}' for weight_num in reverse_weight_ddr_word])
+          # print(hex_str + ',\n')
+          f.write(hex_str + '\n')
+      # f.write('\n')
+      # bias
+      bias_ddr_words_shape = bias_ddr_words.shape
+      bias_ddr_word_array = bias_ddr_words.reshape(-1,).split(split_size=bias_ddr_words_shape[-1], dim=0)
+      for bias_ddr_word_index, bias_ddr_word in enumerate(bias_ddr_word_array):
+      # iterate each bias word
+          reverse_bias_ddr_word = torch.flip(bias_ddr_word, dims=[0])
+          hex_str = ''.join([int8_to_hex_complement(bias_num.item()) for bias_num in reverse_bias_ddr_word])
+          # print(hex_str + ',\n')
+          f.write(hex_str + '\n')
+      # f.write('\n')
+      # tail
+      tail_ddr_words_shape = tail_ddr_words.shape
+      tail_ddr_word_array = tail_ddr_words.reshape(-1,).split(split_size=tail_ddr_words_shape[-1], dim=0)
+      for tail_ddr_word_index, tail_ddr_word in enumerate(tail_ddr_word_array):
+      # iterate each tail word
+          for num_index in range(tail_ddr_words_shape[-1]-1, -1, -1):
+              tail_num = tail_ddr_word[num_index]
+              hex_str = ''.join(f'{tail_num:04x}')
+              # print(hex_str + ',\n')
+              f.write(hex_str)
+          f.write('\n')
+      # f.write('\n')
+      # rank
+      rank_ddr_words_shape = rank_ddr_words.shape
+      rank_ddr_word_array = rank_ddr_words.reshape(-1,).split(split_size=rank_ddr_words_shape[-1], dim=0)
+      for rank_ddr_word_index, rank_ddr_word in enumerate(rank_ddr_word_array):
+      # iterate each rank word
+          reverse_rank_ddr_word = torch.flip(rank_ddr_word, dims=[0])
+          hex_str = ''.join([f'{rank_num:02x}' for rank_num in reverse_rank_ddr_word])
+          # print(hex_str + ',\n')
+          f.write(hex_str + '\n')
+      # f.write('\n')    
+      # input
+      input_ddr_word_len = len(input_ddr_word_array)
+      # iterate each input word
+      for input_ddr_word_index, input_ddr_word in enumerate(input_ddr_word_array):
+          reverse_input_ddr_word = torch.flip(input_ddr_word, dims=[0])
+          # concate each num in a word to a hex num
+          hex_str = ''.join([int8_to_hex_complement(input_num.item()) for input_num in reverse_input_ddr_word])
+          # print(f"{hex_str} \n")
+          f.write(hex_str)
+          if input_ddr_word_index < input_ddr_word_len - 1:
+              f.write('\n')
       f.write(";")
 
 def generate_input_buf_txt(input_ddr_word_array):
@@ -324,7 +396,7 @@ def generate_input_buf_txt(input_ddr_word_array):
       for input_ddr_word_index, input_ddr_word in enumerate(input_ddr_word_array):
           reverse_input_ddr_word = torch.flip(input_ddr_word, dims=[0])
           # concate each num in a word to a hex num
-          hex_str = ''.join([f'{input_num:02x}' for input_num in reverse_input_ddr_word])
+          hex_str = ''.join([int8_to_hex_complement(input_num.item()) for input_num in reverse_input_ddr_word])
           # print(f"{hex_str} \n")
           f.write(hex_str)
           if input_ddr_word_index < input_ddr_word_len - 1:
@@ -343,8 +415,8 @@ def generate_weight_buf_txt(mode, weights_ddr_words):
       for weight_ddr_word_index, weight_ddr_word in enumerate(weights_ddr_word_array):
       # iterate each weight word
           reverse_weight_ddr_word = torch.flip(weight_ddr_word, dims=[0])
-          hex_str = ''.join([f'{weight_num:02x}' for weight_num in reverse_weight_ddr_word]) \
-              if mode == 1 else ''.join([f'{weight_num:01b}' for weight_num in reverse_weight_ddr_word])
+          hex_str = ''.join([int8_to_hex_complement(weight_num.item()) for weight_num in reverse_weight_ddr_word]) \
+              if mode == 0 else ''.join([f'{weight_num:01b}' for weight_num in reverse_weight_ddr_word])
           # print(hex_str + ',\n')
           f.write(hex_str)
           if weight_ddr_word_index < weights_ddr_word_len - 1:
@@ -362,12 +434,27 @@ def generate_bias_buf_txt(bias_ddr_words):
       for bias_ddr_word_index, bias_ddr_word in enumerate(bias_ddr_word_array):
       # iterate each bias word
           reverse_bias_ddr_word = torch.flip(bias_ddr_word, dims=[0])
-          hex_str = ''.join([f'{bias_num:02x}' for bias_num in reverse_bias_ddr_word])
+          hex_str = ''.join([int8_to_hex_complement(bias_num.item()) for bias_num in reverse_bias_ddr_word])
           # print(hex_str + ',\n')
           f.write(hex_str)
           if bias_ddr_word_index < bias_ddr_word_len - 1:
               f.write(',\n')
       f.write(';')
+
+def generate_bias_buf_init(bias_ddr_words):
+  with open('./bias_buffer_init.txt', "w") as f:
+      # bias
+      bias_ddr_words_shape = bias_ddr_words.shape
+      bias_ddr_word_array = bias_ddr_words.reshape(-1,).split(split_size=bias_ddr_words_shape[-1], dim=0)
+      bias_ddr_word_len = len(bias_ddr_word_array)
+      for bias_ddr_word_index, bias_ddr_word in enumerate(bias_ddr_word_array):
+      # iterate each bias word
+          reverse_bias_ddr_word = torch.flip(bias_ddr_word, dims=[0])
+          hex_str = ''.join([int8_to_hex_complement(bias_num.item()) for bias_num in reverse_bias_ddr_word])
+          # print(hex_str + ',\n')
+          f.write(hex_str)
+          if bias_ddr_word_index < bias_ddr_word_len - 1:
+              f.write('\n')
 
 def generate_tail_buf_txt(tail_ddr_words):
    # tail buffer data
@@ -388,6 +475,22 @@ def generate_tail_buf_txt(tail_ddr_words):
               f.write(',\n')
       f.write(';')
 
+def generate_tail_buf_init(tail_ddr_words):
+  with open('./tail_buffer_init.txt', "w") as f:
+      # tail
+      tail_ddr_words_shape = tail_ddr_words.shape
+      tail_ddr_word_array = tail_ddr_words.reshape(-1,).split(split_size=tail_ddr_words_shape[-1], dim=0)
+      tail_ddr_word_len = len(tail_ddr_word_array)
+      for tail_ddr_word_index, tail_ddr_word in enumerate(tail_ddr_word_array):
+      # iterate each tail word
+          for num_index in range(tail_ddr_words_shape[-1]-1, -1, -1):
+              tail_num = tail_ddr_word[num_index]
+              hex_str = ''.join(f'{tail_num:04x}')
+              # print(hex_str + ',\n')
+              f.write(hex_str)
+          if tail_ddr_word_index < tail_ddr_word_len - 1:
+              f.write('\n')
+
 def generate_rank_buf_txt(rank_ddr_words):
   # rank buffer data
   with open('./rank_buffer_data.txt', "w") as f:
@@ -405,6 +508,21 @@ def generate_rank_buf_txt(rank_ddr_words):
           if rank_ddr_word_index < rank_ddr_word_len - 1:
               f.write(',\n')
       f.write(';')
+  
+def generate_rank_buf_init(rank_ddr_words):
+  with open('./rank_buffer_init.txt', "w") as f:
+      # rank
+      rank_ddr_words_shape = rank_ddr_words.shape
+      rank_ddr_word_array = rank_ddr_words.reshape(-1,).split(split_size=rank_ddr_words_shape[-1], dim=0)
+      rank_ddr_word_len = len(rank_ddr_word_array)
+      for rank_ddr_word_index, rank_ddr_word in enumerate(rank_ddr_word_array):
+      # iterate each rank word
+          reverse_rank_ddr_word = torch.flip(rank_ddr_word, dims=[0])
+          hex_str = ''.join([f'{rank_num:02x}' for rank_num in reverse_rank_ddr_word])
+          # print(hex_str + ',\n')
+          f.write(hex_str)
+          if rank_ddr_word_index < rank_ddr_word_len - 1:
+              f.write('\n')
 
 def generate_instr_args_init(mode,k,s,p,of,ox,oy,ix,iy,nif):
   pixels_in_row = 32
@@ -439,16 +557,18 @@ def generate_instr_args_init(mode,k,s,p,of,ox,oy,ix,iy,nif):
   rank_layer_base_buf_adr_rd_integer = 0
   weights_layer_base_ddr_adr_rd_integer = 0
   input_ddr_layer_base_adr_integer = 16 #xxxx
-  # 假设 pixels_in_row 和 buffers_num 已经定义
+  ix_index_num_real = math.ceil(ix_integer / pixels_in_row_real)
+  iy_index_num_real = math.ceil(iy_integer)
   tilex_first_ix_word_num_real = math.ceil(((pixels_in_row - 1) * s_real + k_real - p_real) / pixels_in_row)
-  tilex_last_ix_word_num_real = 0 if (ox_integer % pixels_in_row == 0) else math.ceil(((ox_integer % pixels_in_row - 1) * s_real + k_real - p_real) / pixels_in_row)
+  # tilex mid rectified
+  tilex_last_ix_word_num_real = s_real if (((ix_index_num_real - tilex_first_ix_word_num_real) % s_real) == 0) \
+  else ((ix_index_num_real - tilex_first_ix_word_num_real) % s_real)
   tilex_mid_ix_word_num_real = s_real
   tiley_first_iy_row_num_real = (buffers_num - 1) * s_real + k_real - p_real
-  tiley_last_iy_row_num_real = (oy_integer % buffers_num) * s_real
+  # tiley mid rectified
+  tiley_last_iy_row_num_real = (buffers_num * s_real) if ((iy_index_num_real - tiley_first_iy_row_num_real) % (buffers_num * s_real) == 0) \
+  else ((iy_index_num_real - tiley_first_iy_row_num_real) % (buffers_num * s_real))
   tiley_mid_iy_row_num_real = buffers_num * s_real
-  ix_index_num_real = math.ceil(ix_integer / pixels_in_row_real)
-  # iy_index_num_real = math.ceil(iy_integer / buffers_num_real)
-  iy_index_num_real = math.ceil(iy_integer)
   of_div_row_num_ceil_real = math.ceil(of_integer / row_num_real)
   tiley_first_tilex_first_split_size_real = math.ceil(tiley_first_iy_row_num_real * tilex_first_ix_word_num_real / of_div_row_num_ceil_real)
   tiley_first_tilex_last_split_size_real = math.ceil(tiley_first_iy_row_num_real * tilex_last_ix_word_num_real / of_div_row_num_ceil_real)
@@ -535,8 +655,9 @@ def collect_result(of, oy, ox):
         for i in range(fpga_output_tensors.size(0)):  # 遍历第一个维度
             for j in range(fpga_output_tensors.size(1)):  # 遍历第二个维度
                 for k in range(fpga_output_tensors.size(2)):  # 遍历第三个维度
-                    f.write(f"{fpga_output_tensors[i, j, k].item()} ")
+                    f.write(f"{fpga_output_tensors[i, j, k].item():3d} ")
                 f.write("\n")  # 每一行结束后换行
+            f.write("\n")  # 每一输出行结束后换行
 
 if __name__ == "__main__":
     generate_conv_tests()

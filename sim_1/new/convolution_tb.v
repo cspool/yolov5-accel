@@ -152,6 +152,7 @@ module convolution_tb ();
   wire conv_load_input;
   wire conv_compute;
   wire conv_store;
+  wire last_conv_store;
   //DDR
   wire DDR_en;
   wire DDR_en_wr;
@@ -469,22 +470,44 @@ module convolution_tb ();
   wire [out_data_width-1 : 0] conv_out_data;
   wire conv_store_fin;
 
-//DDR
-  DDR DDR (
-      .clka (clk),                    // input wire clka
-      .ena  (DDR_en),   // input wire ena
-      .wea  (0),                      // input wire [0 : 0] wea
-      .addra(DDR_adr),  // input wire [12 : 0] addra
-      .dina (512'b0),                      // input wire [511 : 0] dina
-      .douta(DDR_out)                 // output wire [511 : 0] douta
-  );
-  assign DDR_en          = input_word_ddr_en_rd | weights_word_ddr_en_rd;
+// //DDR
+//   DDR DDR (
+//       .clka (clk),                    // input wire clka
+//       .ena  (DDR_en),   // input wire ena
+//       .wea  (0),                      // input wire [0 : 0] wea
+//       .addra(DDR_adr),  // input wire [12 : 0] addra
+//       .dina (512'b0),                      // input wire [511 : 0] dina
+//       .douta(DDR_out)                 // output wire [511 : 0] douta
+//   );
+//   assign DDR_en          = input_word_ddr_en_rd | weights_word_ddr_en_rd;
+//   assign DDR_en_wr       = 0;
+//   assign DDR_adr         = (input_word_ddr_en_rd == 1)? input_word_ddr_adr_rd[12 : 0] :
+//    (weights_word_ddr_en_rd == 1)? weights_word_ddr_adr_rd[12 : 0] : 0;
+//   assign DDR_in          = 0;
+//   assign load_input_word = (valid_load_input == 1'b1) ? DDR_out : 0;
+//   assign weights_word_buf_wt = (valid_load_weights == 1'b1) ? DDR_out : 0;
+  //DDR reg mem
+  parameter DDR_mem_limit = 4096;
+  reg[511:0] DDR_mem [DDR_mem_limit - 1:0];
+  reg [511:0] DDR_mem_out;
+  always @(posedge clk) begin
+    if (reset) begin
+      DDR_mem_out <= 0;
+    end
+    else if (DDR_en == 1'b1) begin
+      DDR_mem_out <= DDR_mem[DDR_adr];
+    end
+    else begin
+      DDR_mem_out <= DDR_mem_out;
+    end
+  end
+  assign DDR_en          = ((input_word_ddr_en_rd == 1'b1) || (weights_word_ddr_en_rd == 1'b1)) ? 1'b1 : 1'b0;
   assign DDR_en_wr       = 0;
   assign DDR_adr         = (input_word_ddr_en_rd == 1)? input_word_ddr_adr_rd[12 : 0] :
    (weights_word_ddr_en_rd == 1)? weights_word_ddr_adr_rd[12 : 0] : 0;
   assign DDR_in          = 0;
-  assign load_input_word = (valid_load_input == 1'b1) ? DDR_out : 0;
-  assign weights_word_buf_wt = (valid_load_weights == 1'b1) ? DDR_out : 0;
+  assign load_input_word = (valid_load_input == 1'b1) ? DDR_mem_out : 0;
+  assign weights_word_buf_wt = (valid_load_weights == 1'b1) ? DDR_mem_out : 0;
 //DDR input load
   always @(posedge clk) begin
     if (reset) begin
@@ -578,7 +601,8 @@ module convolution_tb ();
       .conv_load_weights(conv_load_weights),
       .conv_load_input  (conv_load_input),
       .conv_compute     (conv_compute),
-      .conv_store       (conv_store)
+      .conv_store       (conv_store),
+      .last_conv_store(last_conv_store)
   );
 //conv load input ctrl
   conv_load_input_controller cv_load_input_ctrl (
@@ -586,6 +610,7 @@ module convolution_tb ();
       .conv_load_input                        (conv_load_input),
       .reset                                  (reset | conv_start),
       .ddr_en                                 (ddr_en),
+      .load_input_info_fifo_empty(load_input_info_fifo_empty),
       .mode_init                              (mode),
       .of_init                                (of),
       .ox_init                                (ox),
@@ -641,8 +666,8 @@ module convolution_tb ();
       .data_count(load_input_info_fifo_data_count)   // output wire [8 : 0] data_count
   );
   assign input_word_load_info_fifo_en_rd = valid_load_input;
-  assign input_word_buf_idx_wr           = (state_valid_load_input == 1) ? input_word_load_info_fifo_rd[0+:16] : 0;
-  assign input_word_buf_adr_wr           = (state_valid_load_input == 1) ? input_word_load_info_fifo_rd[16+:16] : 0;
+  assign input_word_buf_idx_wr           = (state_valid_load_input == 1) ? input_word_load_info_fifo_rd[16+:16] : 0;
+  assign input_word_buf_adr_wr           = (state_valid_load_input == 1) ? input_word_load_info_fifo_rd[0+:16] : 0;
 //conv load weights ctrl
   conv_load_weights_controller cv_load_weights_controller (
       .clk               (clk),
@@ -750,7 +775,7 @@ module convolution_tb ();
       store_pox      <= 0;
       store_poy      <= 0;
       store_pof      <= 0;
-    end else if (conv_compute == 1'b1) begin
+    end else if ((conv_compute == 1'b1) || (last_conv_store == 1'b1)) begin
       store_ox_start <= shadow_ox_start;
       store_oy_start <= shadow_oy_start;
       store_of_start <= shadow_of_start;
@@ -1162,45 +1187,117 @@ module convolution_tb ();
       .e_scale_tail_buf_en_rd(e_scale_tail_buf_en_rd),
       .e_scale_rank_buf_en_rd(e_scale_rank_buf_en_rd)
   );
-//bias buf
-  bias_buffer bias_buffer (
-      .clka (clk),             // input wire clka
-      .ena  (bias_buf_en),     // input wire ena
-      .wea  (bias_buf_en_wr),  // input wire [0 : 0] wea
-      .addra(bias_buf_adr),    // input wire [8 : 0] addra
-      .dina (bias_buf_wr),     // input wire [511 : 0] dina
-      .douta(bias_buf_rd)      // output wire [511 : 0] douta
-  );
+// //bias buf
+//   bias_buffer bias_buffer (
+//       .clka (clk),             // input wire clka
+//       .ena  (bias_buf_en),     // input wire ena
+//       .wea  (bias_buf_en_wr),  // input wire [0 : 0] wea
+//       .addra(bias_buf_adr),    // input wire [8 : 0] addra
+//       .dina (bias_buf_wr),     // input wire [511 : 0] dina
+//       .douta(bias_buf_rd)      // output wire [511 : 0] douta
+//   );
+//   assign bias_buf_adr = 
+//   ((bias_buf_en_rd == 1'b0) && (bias_buf_en_wr == 1'b1)) ?bias_buf_adr_wr : //wt bias buf
+//   ((bias_buf_en_rd == 1'b1) && (bias_buf_en_wr == 1'b0)) ?bias_buf_adr_rd : 0; //rd bias buf
+//   assign bias_buf_en  = ((bias_buf_en_rd == 1'b1) || (bias_buf_en_wr == 1'b1)) ? 1 : 0;
+//   assign bias_buf_en_wr = 0;
+//   assign bias_buf_wr = 512'b0;
+  //bias buf reg mem
+  parameter bias_buffer_mem_limit = 512;
+  reg [511:0] bias_buffer_mem [bias_buffer_mem_limit-1:0];
+  reg [511:0] bias_buffer_mem_out;
+  always @(posedge clk) begin
+    if (reset) begin
+      bias_buffer_mem_out <= 0;
+    end
+    else if (bias_buf_en == 1'b1) begin
+      bias_buffer_mem_out <= bias_buffer_mem[bias_buf_adr];
+    end
+    else begin
+      bias_buffer_mem_out <= bias_buffer_mem_out;
+    end
+  end
   assign bias_buf_adr = 
   ((bias_buf_en_rd == 1'b0) && (bias_buf_en_wr == 1'b1)) ?bias_buf_adr_wr : //wt bias buf
   ((bias_buf_en_rd == 1'b1) && (bias_buf_en_wr == 1'b0)) ?bias_buf_adr_rd : 0; //rd bias buf
   assign bias_buf_en  = ((bias_buf_en_rd == 1'b1) || (bias_buf_en_wr == 1'b1)) ? 1 : 0;
-//tail buf
-  tail_buffer tail_buffer (
-      .clka (clk),                     // input wire clka
-      .ena  (e_scale_tail_buf_en),     // input wire ena
-      .wea  (e_scale_tail_buf_en_wr),  // input wire [0 : 0] wea
-      .addra(e_scale_tail_buf_adr),    // input wire [8 : 0] addra
-      .dina (e_scale_tail_buf_wr),     // input wire [511 : 0] dina
-      .douta(e_scale_tail_buf_rd)      // output wire [511 : 0] douta
-  );
+  assign bias_buf_en_wr = 0;
+  assign bias_buf_wr = 512'b0;
+  assign bias_buf_rd = bias_buffer_mem_out;
+  //tail buf
+  // tail_buffer tail_buffer (
+  //     .clka (clk),                     // input wire clka
+  //     .ena  (e_scale_tail_buf_en),     // input wire ena
+  //     .wea  (e_scale_tail_buf_en_wr),  // input wire [0 : 0] wea
+  //     .addra(e_scale_tail_buf_adr),    // input wire [8 : 0] addra
+  //     .dina (e_scale_tail_buf_wr),     // input wire [511 : 0] dina
+  //     .douta(e_scale_tail_buf_rd)      // output wire [511 : 0] douta
+  // );
+  // assign e_scale_tail_buf_adr = 
+  // ((e_scale_tail_buf_en_rd == 1'b0) && (e_scale_tail_buf_en_wr == 1'b1)) ? e_scale_tail_buf_adr_wr : //wt bias buf
+  // ((e_scale_tail_buf_en_rd == 1'b1) && (e_scale_tail_buf_en_wr == 1'b0)) ? e_scale_tail_buf_adr_rd : 0; //rd bias buf
+  // assign e_scale_tail_buf_en  = ((e_scale_tail_buf_en_rd == 1'b1) || (e_scale_tail_buf_en_wr == 1'b1)) ? 1 : 0;
+  // assign e_scale_tail_buf_en_wr = 1'b0;
+  // assign e_scale_tail_buf_wr = 512'b0;
+  //tail buf mem
+  parameter tail_buffer_mem_limit = 512;
+  reg [511:0] tail_buffer_mem [tail_buffer_mem_limit-1:0];
+  reg [511:0] tail_buffer_mem_out;
+  always @(posedge clk) begin
+    if (reset) begin
+      tail_buffer_mem_out <= 0;
+    end
+    else if (e_scale_tail_buf_en == 1'b1) begin
+      tail_buffer_mem_out <= tail_buffer_mem[e_scale_tail_buf_adr];
+    end
+    else begin
+      tail_buffer_mem_out <= tail_buffer_mem_out;
+    end
+  end
   assign e_scale_tail_buf_adr = 
   ((e_scale_tail_buf_en_rd == 1'b0) && (e_scale_tail_buf_en_wr == 1'b1)) ? e_scale_tail_buf_adr_wr : //wt tail buf
-  ((e_scale_tail_buf_en_rd == 1'b1) && (e_scale_tail_buf_en_wr == 1'b0)) ? e_scale_tail_buf_adr_rd : 0; //rd bias buf
+  ((e_scale_tail_buf_en_rd == 1'b1) && (e_scale_tail_buf_en_wr == 1'b0)) ? e_scale_tail_buf_adr_rd : 0; //rd tail buf
   assign e_scale_tail_buf_en  = ((e_scale_tail_buf_en_rd == 1'b1) || (e_scale_tail_buf_en_wr == 1'b1)) ? 1 : 0;
-//rank buf
-  rank_buffer rank_buffer (
-      .clka (clk),                     // input wire clka
-      .ena  (e_scale_rank_buf_en),     // input wire ena
-      .wea  (e_scale_rank_buf_en_wr),  // input wire [0 : 0] wea
-      .addra(e_scale_rank_buf_adr),    // input wire [8 : 0] addra
-      .dina (e_scale_rank_buf_wr),     // input wire [511 : 0] dina
-      .douta(e_scale_rank_buf_rd)      // output wire [511 : 0] douta
-  );
+  assign e_scale_tail_buf_en_wr = 1'b0;
+  assign e_scale_tail_buf_wr = 512'b0;
+  assign e_scale_tail_buf_rd = tail_buffer_mem_out;
+  // //rank buf
+  // rank_buffer rank_buffer (
+  //     .clka (clk),                     // input wire clka
+  //     .ena  (e_scale_rank_buf_en),     // input wire ena
+  //     .wea  (e_scale_rank_buf_en_wr),  // input wire [0 : 0] wea
+  //     .addra(e_scale_rank_buf_adr),    // input wire [8 : 0] addra
+  //     .dina (e_scale_rank_buf_wr),     // input wire [511 : 0] dina
+  //     .douta(e_scale_rank_buf_rd)      // output wire [511 : 0] douta
+  // );
+  // assign e_scale_rank_buf_adr = 
+  // ((e_scale_rank_buf_en_rd == 1'b0) && (e_scale_rank_buf_en_wr == 1'b1)) ? e_scale_rank_buf_adr_wr : //wt rank buf
+  // ((e_scale_rank_buf_en_rd == 1'b1) && (e_scale_rank_buf_en_wr == 1'b0)) ? e_scale_rank_buf_adr_rd : 0; //rd rank buf
+  // assign e_scale_rank_buf_en  = ((e_scale_rank_buf_en_rd == 1'b1) || (e_scale_rank_buf_en_wr == 1'b1)) ? 1 : 0;
+  // assign e_scale_rank_buf_en_wr = 1'b0;
+  // assign e_scale_rank_buf_wr = 512'b0;
+  //rank buf mem
+  parameter rank_buffer_mem_limit = 512;
+  reg [511:0] rank_buffer_mem [rank_buffer_mem_limit-1:0];
+  reg [511:0] rank_buffer_mem_out;
+  always @(posedge clk) begin
+    if (reset) begin
+      rank_buffer_mem_out <= 0;
+    end
+    else if (e_scale_rank_buf_en == 1'b1) begin
+      rank_buffer_mem_out <= rank_buffer_mem[e_scale_rank_buf_adr];
+    end
+    else begin
+      rank_buffer_mem_out <= rank_buffer_mem_out;
+    end
+  end
   assign e_scale_rank_buf_adr = 
   ((e_scale_rank_buf_en_rd == 1'b0) && (e_scale_rank_buf_en_wr == 1'b1)) ? e_scale_rank_buf_adr_wr : //wt rank buf
   ((e_scale_rank_buf_en_rd == 1'b1) && (e_scale_rank_buf_en_wr == 1'b0)) ? e_scale_rank_buf_adr_rd : 0; //rd rank buf
   assign e_scale_rank_buf_en  = ((e_scale_rank_buf_en_rd == 1'b1) || (e_scale_rank_buf_en_wr == 1'b1)) ? 1 : 0;
+  assign e_scale_rank_buf_en_wr = 1'b0;
+  assign e_scale_rank_buf_wr = 512'b0;
+  assign e_scale_rank_buf_rd = rank_buffer_mem_out;
   //bias regs
   Bias_Regs bias_regs (
       .clk           (clk),
@@ -1368,13 +1465,15 @@ module convolution_tb ();
       .clk                       (clk),
       .reset                     (reset | conv_start),
       .conv_fifo_out_start       (conv_store),
+      .ddr_en(ddr_en),
+      .mode                      (mode),
       .cur_ox_start              (store_ox_start),
       .cur_oy_start              (store_oy_start),
       .cur_of_start              (store_of_start),
       .cur_pox                   (store_pox),
       .cur_poy                   (store_poy),
       .cur_pof                   (store_pof),
-      .mode                      (mode),
+      
       //cycle 0 out
       .fifo_rds                  (fifo_rds),
       //cycle 1 in
@@ -1399,7 +1498,28 @@ module convolution_tb ();
   end
 
   integer file;
+  integer file2;
+  integer file3;
+  integer n;
   initial begin
+    // initial data
+    for (n = 0; n < DDR_mem_limit; n = n + 1) begin
+      DDR_mem[n] = 512'b0;
+    end
+    for (n = 0; n < bias_buffer_mem_limit; n = n + 1) begin
+      bias_buffer_mem[n] = 512'b0;
+    end
+    for (n = 0; n < tail_buffer_mem_limit; n = n + 1) begin
+      tail_buffer_mem[n] = 512'b0;
+    end
+    for (n = 0; n < rank_buffer_mem_limit; n = n + 1) begin
+      rank_buffer_mem[n] = 512'b0;
+    end
+    $readmemh("D:\\project\\Vivado\\yolov5_accel\\yolov5_accel.srcs\\DDR_init.txt", DDR_mem);
+    $readmemh("D:\\project\\Vivado\\yolov5_accel\\yolov5_accel.srcs\\bias_buffer_init.txt", bias_buffer_mem);
+    $readmemh("D:\\project\\Vivado\\yolov5_accel\\yolov5_accel.srcs\\tail_buffer_init.txt", tail_buffer_mem);
+    $readmemh("D:\\project\\Vivado\\yolov5_accel\\yolov5_accel.srcs\\rank_buffer_init.txt", rank_buffer_mem);
+    // collect conv res file
     file = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/conv_result.txt", "w");
     $display("Time\tvalid\tout_f_idx\tout_y_idx\tout_x_idx");
     if (!file) begin
@@ -1411,6 +1531,25 @@ module convolution_tb ();
     // 监控信号变化并写入文件
     $fmonitor(file, "%t\t%b\t%d\t%d\t%d\t%h", $time, valid_rowi_out_buf_adr, out_f_idx, out_y_idx, out_x_idx, conv_out_data);
 
+    //sum + bias
+    file2 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_bias_0_0.txt", "w");
+    if (!file) begin
+            $display("Could not open file");
+            $stop;
+    end
+    // 监控信号变化并写入文件
+    $fmonitor(file2, "%t\t%h", $time, add_bias_rowi_channel_seti[0][0]);
+
+    //sum
+    file3 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_0_0.txt", "w");
+    if (!file) begin
+            $display("Could not open file");
+            $stop;
+    end
+    // 监控信号变化并写入文件
+    $fmonitor(file3, "%t\t%h", $time, out_rowi_channel_seti[0][0]);
+
+    //begin simulation
     clk   = 0;
     reset = 1;
     ddr_en = 1;

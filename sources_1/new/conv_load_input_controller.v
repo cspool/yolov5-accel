@@ -25,6 +25,7 @@ module conv_load_input_controller (
     conv_load_input,
     reset,
     ddr_en,
+    load_input_info_fifo_empty,
 
     mode_init,
     of_init,
@@ -91,6 +92,7 @@ module conv_load_input_controller (
   // conv tiling module
   input clk, conv_load_input, reset;  //load input means fin of the last execuation term
   input ddr_en;
+  input load_input_info_fifo_empty;
 
   input mode_init;
   input [3:0] k_init, s_init, p_init;
@@ -174,6 +176,8 @@ module conv_load_input_controller (
   //ix_index_num = ceil(ix/pixels_in_row)
   //iy_index_num = ceil(iy/buffers_num)
   reg [15:0] ix_index_num, iy_index_num;
+  wire [15:0] tilex_mid_ix_word_num_rectified;
+  wire [15:0] tiley_mid_iy_row_num_rectified;
 
   output [15:0] load_input_row_idx;
   output [15:0] load_input_row_start_idx;
@@ -185,6 +189,7 @@ module conv_load_input_controller (
   output input_word_load_info_fifo_en_wt;
   output [31:0] input_word_load_info_fifo_wt;
   output conv_load_input_fin;
+  reg        instr_load_input_fin;
 
   //ddr word counter
   reg        input_ddr_word_signal;
@@ -201,10 +206,16 @@ module conv_load_input_controller (
   wire [ 7:0] input_tile_of_split_size;  //ceil(ix_size * iy_size * row_num / of_ceil)
   //ddr word counter in view of (iy,ix) chunk
   wire [15:0] row_num;
-  reg  [15:0] ix_load_index;
-  wire loop_ix_load_index_add_begin, loop_ix_load_index_add_end;
-  reg [15:0] iy_load_index, iy_load_index_mod_3, iy_load_index_in_3;
-  wire loop_iy_load_index_add_begin, loop_iy_load_index_add_end;
+  reg  [15:0] ix_load_index_counter;
+  wire loop_ix_load_index_counter_add_begin, loop_ix_load_index_counter_add_end;
+  reg [15:0] ix_load_index_base;
+  wire loop_ix_load_index_base_add_begin, loop_ix_load_index_base_add_end;
+  reg [15:0] iy_load_index_counter;
+  wire loop_iy_load_index_counter_add_begin, loop_iy_load_index_counter_add_end;
+  reg [15:0] iy_load_index_base, iy_load_index_base_minus_1_mod_3, iy_load_index_base_minus_1_in_3;
+  wire loop_iy_load_index_base_add_begin, loop_iy_load_index_base_add_end;
+  wire [15:0] ix_load_index;
+  wire [15:0] iy_load_index, iy_load_index_minus_1_mod_3, iy_load_index_minus_1_in_3;
 
   //cur input data of SP pos has been loaded
   reg state_load_input_tile_fin;
@@ -397,7 +408,25 @@ module conv_load_input_controller (
   end
   assign loop_input_ddr_word_chunk_counter_add_begin = (loop_if_add_end == 1'b1);
   assign loop_input_ddr_word_chunk_counter_add_end   = loop_input_ddr_word_chunk_counter_add_begin && ((input_ddr_word_chunk_counter == input_tile_of_split_size) || (input_ddr_word_tile_counter == chunk_ix_size_mult_chunk_iy_size));
-  assign conv_load_input_fin                         = loop_input_ddr_word_chunk_counter_add_end || ((conv_load_input == 1'b1) && (chunk_ix_size_mult_chunk_iy_size == 0));
+
+  //load instr of the chunk has finished
+  always @(posedge clk) begin
+    if (reset == 1'b1) begin
+      instr_load_input_fin <= 0;
+    end else if (
+        //instr generate finished
+        loop_input_ddr_word_chunk_counter_add_end
+        //no need to generate
+        || ((conv_load_input == 1'b1) && (chunk_ix_size_mult_chunk_iy_size == 0))) begin
+      instr_load_input_fin <= 1;
+    end else if (conv_load_input_fin == 1'b1) begin
+      instr_load_input_fin <= 0;
+    end else begin
+      instr_load_input_fin <= instr_load_input_fin;
+    end
+  end
+  //should wait for the inbuf writing finished
+  assign conv_load_input_fin = (instr_load_input_fin == 1'b1) && (load_input_info_fifo_empty == 1'b1);
 
   //tile counter is reset after the loading of nif input channel in current SP position
   always @(posedge clk) begin
@@ -416,66 +445,281 @@ module conv_load_input_controller (
   assign loop_input_ddr_word_tile_counter_add_begin = (loop_if_add_end == 1'b1);
   assign loop_input_ddr_word_tile_counter_add_end   = loop_input_ddr_word_tile_counter_add_begin && (input_ddr_word_tile_counter == chunk_ix_size_mult_chunk_iy_size);
   //the computation of tile(tile_y_start, tile_x_start) needed input[ix_start - p, ix_start - p + chunk_ix_size)
-  //but need loading input [ix_load_index, ix_load_index + chunk_ix_size)
+  //but need loading input [ix_load_index_base, ix_load_index_base + chunk_ix_size)
+  //index_base + index_counter is in [ix_load_index_base, ix_load_index_base + chunk_ix_size)
   always @(posedge clk) begin
     if (reset == 1'b1) begin
-      ix_load_index <= 1;
-    end else if (loop_ix_load_index_add_begin == 1'b1) begin
-      if (loop_ix_load_index_add_end == 1'b1) begin
-        ix_load_index <= 1;
+      ix_load_index_counter <= 1;
+    end else if (loop_ix_load_index_counter_add_begin == 1'b1) begin
+      if (loop_ix_load_index_counter_add_end == 1'b1) begin
+        ix_load_index_counter <= 1;
       end else begin
-        ix_load_index <= ix_load_index + 1;
+        ix_load_index_counter <= ix_load_index_counter + 1;
       end
     end else begin
-      ix_load_index <= ix_load_index;
+      ix_load_index_counter <= ix_load_index_counter;
     end
   end
-  assign loop_ix_load_index_add_begin = (loop_if_add_end == 1'b1);
-  assign loop_ix_load_index_add_end   = loop_ix_load_index_add_begin && ((ix_load_index == ix_index_num));
+  assign loop_ix_load_index_counter_add_begin = (loop_if_add_end == 1'b1);
+  assign loop_ix_load_index_counter_add_end   = loop_ix_load_index_counter_add_begin && (ix_load_index_counter == chunk_ix_size);
 
+  always @(posedge clk) begin
+    if (reset == 1'b1) begin
+      ix_load_index_base <= 1;
+    end else if (loop_ix_load_index_base_add_begin == 1'b1) begin
+      if (loop_ix_load_index_base_add_end == 1'b1) begin
+        ix_load_index_base <= 1;
+      end else begin
+        ix_load_index_base <= ix_load_index_base + chunk_ix_size;
+      end
+    end else begin
+      ix_load_index_base <= ix_load_index_base;
+    end
+  end
+  assign loop_ix_load_index_base_add_begin = (loop_input_ddr_word_tile_counter_add_end == 1'b1);
+  assign loop_ix_load_index_base_add_end   = loop_ix_load_index_base_add_begin && (ix_load_index_base + chunk_ix_size - 1 == ix_index_num);
   //the computation of tile(tile_y_start, tile_x_start) needed input[iy_start - p, iy_start - p + chunk_iy_size)
   //but need loading input [iy_load_index, iy_load_index + chunk_iy_size)
   always @(posedge clk) begin
     if (reset == 1'b1) begin
-      iy_load_index       <= 1;
-      iy_load_index_mod_3 <= 0;  //0,1,2.
-      iy_load_index_in_3  <= 0;
-    end else if (loop_iy_load_index_add_begin == 1'b1) begin
-      if (loop_iy_load_index_add_end == 1'b1) begin
-        iy_load_index       <= 1;
-        iy_load_index_mod_3 <= 0;
-        iy_load_index_in_3  <= 0;
+      iy_load_index_counter <= 1;
+    end else if (loop_iy_load_index_counter_add_begin == 1'b1) begin
+      if (loop_iy_load_index_counter_add_end == 1'b1) begin
+        iy_load_index_counter <= 1;
       end else begin
-        iy_load_index       <= iy_load_index + 1;
-        iy_load_index_mod_3 <= (iy_load_index_mod_3 == 2) ? 0 : (iy_load_index_mod_3 + 1);
-        iy_load_index_in_3  <= (iy_load_index_mod_3 == 2) ? iy_load_index_in_3 + 1 : iy_load_index_in_3;
+        iy_load_index_counter <= iy_load_index_counter + 1;
       end
     end else begin
-      iy_load_index       <= iy_load_index;
-      iy_load_index_mod_3 <= iy_load_index_mod_3;
-      iy_load_index_in_3  <= iy_load_index_in_3;
+      iy_load_index_counter <= iy_load_index_counter;
     end
   end
-  assign loop_iy_load_index_add_begin = (loop_ix_load_index_add_end == 1'b1);
-  assign loop_iy_load_index_add_end = loop_iy_load_index_add_begin && ((iy_load_index == iy_index_num));
+  assign loop_iy_load_index_counter_add_begin = (loop_ix_load_index_counter_add_end == 1'b1);
+  assign loop_iy_load_index_counter_add_end   = loop_iy_load_index_counter_add_begin && (iy_load_index_counter == chunk_iy_size);
+
+  always @(posedge clk) begin
+    if (reset == 1'b1) begin
+      iy_load_index_base               <= 1;
+      iy_load_index_base_minus_1_mod_3 <= 0;  //0,1,2.
+      iy_load_index_base_minus_1_in_3  <= 0;
+    end else if (loop_iy_load_index_base_add_begin == 1'b1) begin
+      if (loop_iy_load_index_base_add_end == 1'b1) begin
+        iy_load_index_base               <= 1;
+        iy_load_index_base_minus_1_mod_3 <= 0;  //0,1,2.
+        iy_load_index_base_minus_1_in_3  <= 0;
+      end else begin
+        iy_load_index_base <= iy_load_index_base + chunk_iy_size;
+        iy_load_index_base_minus_1_mod_3 <= ((iy_load_index_base_minus_1_mod_3 == 0) ?  // 0 + ...
+        ((chunk_iy_size == 0) ? (0) :  // 0 + 0
+        (chunk_iy_size == 1) ? (1) :  // 0 + 1
+        (chunk_iy_size == 2) ? (2) :  // 0 + 2
+        (chunk_iy_size == 3) ? (0) :  // 0 + 3
+        (chunk_iy_size == 4) ? (1) :  // 0 + 4
+        (chunk_iy_size == 5) ? (2) :  // 0 + 5
+        (chunk_iy_size == 6) ? (0) :  // 0 + 6
+        (chunk_iy_size == 7) ? (1) :  // 0 + 7
+        (chunk_iy_size == 8) ? (2) :  // 0 + 8
+        (chunk_iy_size == 9) ? (0) :  // 0 + 9
+        (chunk_iy_size == 10) ? (1) :  // 0 + 10
+        0) : (iy_load_index_base_minus_1_mod_3 == 1) ?  // 1 + ...
+        ((chunk_iy_size == 0) ? (1) :  // 1 + 0
+        (chunk_iy_size == 1) ? (2) :  // 1 + 1
+        (chunk_iy_size == 2) ? (0) :  // 1 + 2
+        (chunk_iy_size == 3) ? (1) :  // 1 + 3
+        (chunk_iy_size == 4) ? (2) :  // 1 + 4
+        (chunk_iy_size == 5) ? (0) :  // 1 + 5
+        (chunk_iy_size == 6) ? (1) :  // 1 + 6
+        (chunk_iy_size == 7) ? (2) :  // 1 + 7
+        (chunk_iy_size == 8) ? (0) :  // 1 + 8
+        (chunk_iy_size == 9) ? (1) :  // 1 + 9
+        (chunk_iy_size == 10) ? (2) :  // 1 + 10
+        0) : (iy_load_index_base_minus_1_mod_3 == 2) ? (
+        // 2 + ...
+        (chunk_iy_size == 0) ? (2) :  // 2 + 0
+        (chunk_iy_size == 1) ? (0) :  // 2 + 1
+        (chunk_iy_size == 2) ? (1) :  // 2 + 2
+        (chunk_iy_size == 3) ? (2) :  // 2 + 3
+        (chunk_iy_size == 4) ? (0) :  // 2 + 4
+        (chunk_iy_size == 5) ? (1) :  // 2 + 5
+        (chunk_iy_size == 6) ? (2) :  // 2 + 6
+        (chunk_iy_size == 7) ? (0) :  // 2 + 7
+        (chunk_iy_size == 8) ? (1) :  // 2 + 8
+        (chunk_iy_size == 9) ? (2) :  // 2 + 9
+        (chunk_iy_size == 10) ? (0) :  // 2 + 10
+        0) : 0);
+        iy_load_index_base_minus_1_in_3 <= ((iy_load_index_base_minus_1_mod_3 == 0) ? (
+        //0/3/6/9 + ...
+        (chunk_iy_size == 0) ? (iy_load_index_base_minus_1_in_3) :  // 0/3/6/9 + 0
+        (chunk_iy_size == 1) ? (iy_load_index_base_minus_1_in_3) :  // 0/3/6/9 + 1
+        (chunk_iy_size == 2) ? (iy_load_index_base_minus_1_in_3) :  // 0/3/6/9 + 2
+        (chunk_iy_size == 3) ? (iy_load_index_base_minus_1_in_3 + 1) :  // 0/3/6/9 + 3
+        (chunk_iy_size == 4) ? (iy_load_index_base_minus_1_in_3 + 1) :  // 0/3/6/9 + 4
+        (chunk_iy_size == 5) ? (iy_load_index_base_minus_1_in_3 + 1) :  // 0/3/6/9 + 5
+        (chunk_iy_size == 6) ? (iy_load_index_base_minus_1_in_3 + 2) :  // 0/3/6/9 + 6
+        (chunk_iy_size == 7) ? (iy_load_index_base_minus_1_in_3 + 2) :  // 0/3/6/9 + 7
+        (chunk_iy_size == 8) ? (iy_load_index_base_minus_1_in_3 + 2) :  // 0/3/6/9 + 8
+        (chunk_iy_size == 9) ? (iy_load_index_base_minus_1_in_3 + 3) :  // 0/3/6/9 + 9
+        (chunk_iy_size == 10) ? (iy_load_index_base_minus_1_in_3 + 3) :  // 0/3/6/9 + 10
+        0) : (iy_load_index_base_minus_1_mod_3 == 1) ? (
+        //1/4/7/10 + ...
+        (chunk_iy_size == 0) ? (iy_load_index_base_minus_1_in_3) :  // 1/4/7/10 + 0
+        (chunk_iy_size == 1) ? (iy_load_index_base_minus_1_in_3) :  // 1/4/7/10 + 1
+        (chunk_iy_size == 2) ? (iy_load_index_base_minus_1_in_3 + 1) :  // 1/4/7/10 + 2
+        (chunk_iy_size == 3) ? (iy_load_index_base_minus_1_in_3 + 1) :  // 1/4/7/10 + 3
+        (chunk_iy_size == 4) ? (iy_load_index_base_minus_1_in_3 + 1) :  // 1/4/7/10 + 4
+        (chunk_iy_size == 5) ? (iy_load_index_base_minus_1_in_3 + 2) :  // 1/4/7/10 + 5
+        (chunk_iy_size == 6) ? (iy_load_index_base_minus_1_in_3 + 2) :  // 1/4/7/10 + 6
+        (chunk_iy_size == 7) ? (iy_load_index_base_minus_1_in_3 + 2) :  // 1/4/7/10 + 7
+        (chunk_iy_size == 8) ? (iy_load_index_base_minus_1_in_3 + 3) :  // 1/4/7/10 + 8
+        (chunk_iy_size == 9) ? (iy_load_index_base_minus_1_in_3 + 3) :  // 1/4/7/10 + 9
+        (chunk_iy_size == 10) ? (iy_load_index_base_minus_1_in_3 + 3) :  // 1/4/7/10 + 10
+        0) : (iy_load_index_base_minus_1_mod_3 == 2) ? (
+        //2/5/8/11 + ...
+        (chunk_iy_size == 0) ? (iy_load_index_base_minus_1_in_3) :  // 2/5/8/11 + 0
+        (chunk_iy_size == 1) ? (iy_load_index_base_minus_1_in_3 + 1) :  // 2/5/8/11 + 1
+        (chunk_iy_size == 2) ? (iy_load_index_base_minus_1_in_3 + 1) :  // 2/5/8/11 + 2
+        (chunk_iy_size == 3) ? (iy_load_index_base_minus_1_in_3 + 1) :  // 2/5/8/11 + 3
+        (chunk_iy_size == 4) ? (iy_load_index_base_minus_1_in_3 + 2) :  // 2/5/8/11 + 4
+        (chunk_iy_size == 5) ? (iy_load_index_base_minus_1_in_3 + 2) :  // 2/5/8/11 + 5
+        (chunk_iy_size == 6) ? (iy_load_index_base_minus_1_in_3 + 2) :  // 2/5/8/11 + 6
+        (chunk_iy_size == 7) ? (iy_load_index_base_minus_1_in_3 + 3) :  // 2/5/8/11 + 7
+        (chunk_iy_size == 8) ? (iy_load_index_base_minus_1_in_3 + 3) :  // 2/5/8/11 + 8
+        (chunk_iy_size == 9) ? (iy_load_index_base_minus_1_in_3 + 3) :  // 2/5/8/11 + 9
+        (chunk_iy_size == 10) ? (iy_load_index_base_minus_1_in_3 + 4) :  // 2/5/8/11 + 10
+        0) : 0);
+      end
+    end else begin
+      iy_load_index_base               <= iy_load_index_base;
+      iy_load_index_base_minus_1_mod_3 <= iy_load_index_base_minus_1_mod_3;
+      iy_load_index_base_minus_1_in_3  <= iy_load_index_base_minus_1_in_3;
+    end
+  end
+  assign loop_iy_load_index_base_add_begin = (loop_ix_load_index_base_add_end == 1'b1);
+  assign loop_iy_load_index_base_add_end = loop_iy_load_index_base_add_begin && (iy_load_index_base + chunk_iy_size - 1 == iy_index_num);
+
+  assign ix_load_index = ix_load_index_base + ix_load_index_counter - 1;
+  assign iy_load_index = iy_load_index_base + iy_load_index_counter - 1;
+  //iy_load_index_minus_1 = iy_load_index_base - 1 + iy_load_index_counter - 1;
+  assign iy_load_index_minus_1_mod_3 = (iy_load_index_base_minus_1_mod_3 == 0) ? (
+      //0/3/6/9
+      ((iy_load_index_counter - 1) == 0) ? (0) :  //0/3/6/9 + 0
+      ((iy_load_index_counter - 1) == 1) ? (1) :  //0/3/6/9 + 1
+      ((iy_load_index_counter - 1) == 2) ? (2) :  //0/3/6/9 + 2
+      ((iy_load_index_counter - 1) == 3) ? (0) :  //0/3/6/9 + 3
+      ((iy_load_index_counter - 1) == 4) ? (1) :  //0/3/6/9 + 4
+      ((iy_load_index_counter - 1) == 5) ? (2) :  //0/3/6/9 + 5
+      ((iy_load_index_counter - 1) == 6) ? (0) :  //0/3/6/9 + 6
+      ((iy_load_index_counter - 1) == 7) ? (1) :  //0/3/6/9 + 7
+      ((iy_load_index_counter - 1) == 8) ? (2) :  //0/3/6/9 + 8
+      ((iy_load_index_counter - 1) == 9) ? (0) :  //0/3/6/9 + 9
+      ((iy_load_index_counter - 1) == 10) ? (1) :  //0/3/6/9 + 10
+      0) : (iy_load_index_base_minus_1_mod_3 == 1) ? (
+      //1/4/7/10
+      ((iy_load_index_counter - 1) == 0) ? (1) :  //1/4/7/10 + 0
+      ((iy_load_index_counter - 1) == 1) ? (2) :  //1/4/7/10 + 1
+      ((iy_load_index_counter - 1) == 2) ? (0) :  //1/4/7/10 + 2
+      ((iy_load_index_counter - 1) == 3) ? (1) :  //1/4/7/10 + 3
+      ((iy_load_index_counter - 1) == 4) ? (2) :  //1/4/7/10 + 4
+      ((iy_load_index_counter - 1) == 5) ? (0) :  //1/4/7/10 + 5
+      ((iy_load_index_counter - 1) == 6) ? (1) :  //1/4/7/10 + 6
+      ((iy_load_index_counter - 1) == 7) ? (2) :  //1/4/7/10 + 7
+      ((iy_load_index_counter - 1) == 8) ? (0) :  //1/4/7/10 + 8
+      ((iy_load_index_counter - 1) == 9) ? (1) :  //1/4/7/10 + 9
+      ((iy_load_index_counter - 1) == 10) ? (2) :  //1/4/7/10 + 10
+      0) : (iy_load_index_base_minus_1_mod_3 == 2) ? (
+      //2/5/8/11
+      ((iy_load_index_counter - 1) == 0) ? (2) :  //2/5/8/11 + 0
+      ((iy_load_index_counter - 1) == 1) ? (0) :  //2/5/8/11 + 1
+      ((iy_load_index_counter - 1) == 2) ? (1) :  //2/5/8/11 + 2
+      ((iy_load_index_counter - 1) == 3) ? (2) :  //2/5/8/11 + 3
+      ((iy_load_index_counter - 1) == 4) ? (0) :  //2/5/8/11 + 4
+      ((iy_load_index_counter - 1) == 5) ? (1) :  //2/5/8/11 + 5
+      ((iy_load_index_counter - 1) == 6) ? (2) :  //2/5/8/11 + 6
+      ((iy_load_index_counter - 1) == 7) ? (0) :  //2/5/8/11 + 7
+      ((iy_load_index_counter - 1) == 8) ? (1) :  //2/5/8/11 + 8
+      ((iy_load_index_counter - 1) == 9) ? (2) :  //2/5/8/11 + 9
+      ((iy_load_index_counter - 1) == 10) ? (0) :  //2/5/8/11 + 10
+      0) : 0;
+  assign iy_load_index_minus_1_in_3 = (iy_load_index_base_minus_1_mod_3 == 0) ? (
+      //0/3/6/9
+      ((iy_load_index_counter - 1) == 0) ? (iy_load_index_base_minus_1_in_3 + 0) :  //0/3/6/9 + 0
+      ((iy_load_index_counter - 1) == 1) ? (iy_load_index_base_minus_1_in_3 + 0) :  //0/3/6/9 + 1
+      ((iy_load_index_counter - 1) == 2) ? (iy_load_index_base_minus_1_in_3 + 0) :  //0/3/6/9 + 2
+      ((iy_load_index_counter - 1) == 3) ? (iy_load_index_base_minus_1_in_3 + 1) :  //0/3/6/9 + 3
+      ((iy_load_index_counter - 1) == 4) ? (iy_load_index_base_minus_1_in_3 + 1) :  //0/3/6/9 + 4
+      ((iy_load_index_counter - 1) == 5) ? (iy_load_index_base_minus_1_in_3 + 1) :  //0/3/6/9 + 5
+      ((iy_load_index_counter - 1) == 6) ? (iy_load_index_base_minus_1_in_3 + 2) :  //0/3/6/9 + 6
+      ((iy_load_index_counter - 1) == 7) ? (iy_load_index_base_minus_1_in_3 + 2) :  //0/3/6/9 + 7
+      ((iy_load_index_counter - 1) == 8) ? (iy_load_index_base_minus_1_in_3 + 2) :  //0/3/6/9 + 8
+      ((iy_load_index_counter - 1) == 9) ? (iy_load_index_base_minus_1_in_3 + 3) :  //0/3/6/9 + 9
+      ((iy_load_index_counter - 1) == 10) ? (iy_load_index_base_minus_1_in_3 + 3) :  //0/3/6/9 + 10
+      0) : (iy_load_index_base_minus_1_mod_3 == 1) ? (
+      //1/4/7/10
+      ((iy_load_index_counter - 1) == 0) ? (iy_load_index_base_minus_1_in_3 + 0) :  //1/4/7/10 + 0
+      ((iy_load_index_counter - 1) == 1) ? (iy_load_index_base_minus_1_in_3 + 0) :  //1/4/7/10 + 1
+      ((iy_load_index_counter - 1) == 2) ? (iy_load_index_base_minus_1_in_3 + 1) :  //1/4/7/10 + 2
+      ((iy_load_index_counter - 1) == 3) ? (iy_load_index_base_minus_1_in_3 + 1) :  //1/4/7/10 + 3
+      ((iy_load_index_counter - 1) == 4) ? (iy_load_index_base_minus_1_in_3 + 1) :  //1/4/7/10 + 4
+      ((iy_load_index_counter - 1) == 5) ? (iy_load_index_base_minus_1_in_3 + 2) :  //1/4/7/10 + 5
+      ((iy_load_index_counter - 1) == 6) ? (iy_load_index_base_minus_1_in_3 + 2) :  //1/4/7/10 + 6
+      ((iy_load_index_counter - 1) == 7) ? (iy_load_index_base_minus_1_in_3 + 2) :  //1/4/7/10 + 7
+      ((iy_load_index_counter - 1) == 8) ? (iy_load_index_base_minus_1_in_3 + 3) :  //1/4/7/10 + 8
+      ((iy_load_index_counter - 1) == 9) ? (iy_load_index_base_minus_1_in_3 + 3) :  //1/4/7/10 + 9
+      ((iy_load_index_counter - 1) == 10) ? (iy_load_index_base_minus_1_in_3 + 3) :  //1/4/7/10 + 10
+      0) : (iy_load_index_base_minus_1_mod_3 == 2) ? (
+      //2/5/8/11
+      ((iy_load_index_counter - 1) == 0) ? (iy_load_index_base_minus_1_in_3 + 0) :  //2/5/8/11 + 0
+      ((iy_load_index_counter - 1) == 1) ? (iy_load_index_base_minus_1_in_3 + 1) :  //2/5/8/11 + 1
+      ((iy_load_index_counter - 1) == 2) ? (iy_load_index_base_minus_1_in_3 + 1) :  //2/5/8/11 + 2
+      ((iy_load_index_counter - 1) == 3) ? (iy_load_index_base_minus_1_in_3 + 1) :  //2/5/8/11 + 3
+      ((iy_load_index_counter - 1) == 4) ? (iy_load_index_base_minus_1_in_3 + 2) :  //2/5/8/11 + 4
+      ((iy_load_index_counter - 1) == 5) ? (iy_load_index_base_minus_1_in_3 + 2) :  //2/5/8/11 + 5
+      ((iy_load_index_counter - 1) == 6) ? (iy_load_index_base_minus_1_in_3 + 2) :  //2/5/8/11 + 6
+      ((iy_load_index_counter - 1) == 7) ? (iy_load_index_base_minus_1_in_3 + 3) :  //2/5/8/11 + 7
+      ((iy_load_index_counter - 1) == 8) ? (iy_load_index_base_minus_1_in_3 + 3) :  //2/5/8/11 + 8
+      ((iy_load_index_counter - 1) == 9) ? (iy_load_index_base_minus_1_in_3 + 3) :  //2/5/8/11 + 9
+      ((iy_load_index_counter - 1) == 10) ? (iy_load_index_base_minus_1_in_3 + 4) :  //2/5/8/11 + 10
+      0) : 0;
 
   //cal the val of tiley_***_iy_row_num, tilex_***_ix_row_num
   //ox >= 32
+  // assign chunk_ix_size = (load_for_com_tile_x_start == 1) ? (
+  //     //tilex_first_ix_word_num = ceil(((pixels_in_row - 1) * s + k - p)/pixels_in_row)
+  //     tilex_first_ix_word_num) : (load_for_com_tile_x_start > 1) ? ((load_for_com_tile_x_start + pixels_in_row > ox) ?
+  //     //tilex_last_ix_word_num = ceil((ox - tile_x_start + 1) * s /pixels_in_row) = ceil(((ox % pixels_in_row)*s+k-p)/pixels_in_row)
+  //     tilex_last_ix_word_num :
+  //     //tilex_mid_ix_word_num = s
+  //     tilex_mid_ix_word_num) : 0;
+  assign tilex_mid_ix_word_num_rectified =
+      //the last ix word num is not s
+      (ix_load_index_base + tilex_mid_ix_word_num - 1 > ix_index_num) ? tilex_last_ix_word_num :
+      //s
+      tilex_mid_ix_word_num;
   assign chunk_ix_size = (load_for_com_tile_x_start == 1) ? (
       //tilex_first_ix_word_num = ceil(((pixels_in_row - 1) * s + k - p)/pixels_in_row)
-      tilex_first_ix_word_num) : (load_for_com_tile_x_start > 1) ? ((load_for_com_tile_x_start + pixels_in_row > ox) ?
-      //tilex_last_ix_word_num = ceil((ox - tile_x_start + 1) * s /pixels_in_row) = ceil(((ox % pixels_in_row)*s+k-p)/pixels_in_row)
-      tilex_last_ix_word_num :
-      //tilex_mid_ix_word_num = s
-      tilex_mid_ix_word_num) : 0;
+      tilex_first_ix_word_num) : (load_for_com_tile_x_start > 1) ?
+      //a entile row already loaded
+      ((ix_load_index_base == 1) ? 0 :
+      //tilex_mid_ix_word_num = s or less than s
+      tilex_mid_ix_word_num_rectified) : 0;
   //oy >= 3
+  // assign chunk_iy_size = (load_for_com_tile_y_start == 1) ? (
+  //     //tiley_first_iy_row_num = (buffers_num - 1) * s + k - p
+  //     tiley_first_iy_row_num) : (load_for_com_tile_y_start > 1) ? ((load_for_com_tile_y_start + buffers_num > oy) ?
+  //     // tiley_last_iy_row_num = (oy - tile_y_start + 1) * s = (oy % buffers_num) * s
+  //     tiley_last_iy_row_num :
+  //     //tiley_mid_iy_row_num = buffers_num * s
+  //     tiley_mid_iy_row_num) : 0;
+  assign tiley_mid_iy_row_num_rectified =
+      //the last iy rows num is not s*buffer_num
+      (iy_load_index_base + tiley_mid_iy_row_num - 1 > iy_index_num) ? tiley_last_iy_row_num :
+      //s*buffer_num
+      tiley_mid_iy_row_num;
   assign chunk_iy_size = (load_for_com_tile_y_start == 1) ? (
       //tiley_first_iy_row_num = (buffers_num - 1) * s + k - p
-      tiley_first_iy_row_num) : (load_for_com_tile_y_start > 1) ? ((load_for_com_tile_y_start + buffers_num > oy) ?
-      // tiley_last_iy_row_num = (oy - tile_y_start + 1) * s = (oy % buffers_num) * s
-      tiley_last_iy_row_num :
+      tiley_first_iy_row_num) : (load_for_com_tile_y_start > 1) ?
       //tiley_mid_iy_row_num = buffers_num * s
-      tiley_mid_iy_row_num) : 0;
+      tiley_mid_iy_row_num_rectified : 0;
+
   always @(posedge clk) begin
     if (reset == 1'b1) begin
       load_for_com_tile_x_start <= 1;
@@ -490,9 +734,9 @@ module conv_load_input_controller (
     end
   end
   assign loop_load_for_com_tile_x_add_begin =
-         ((loop_input_ddr_word_tile_counter_add_end == 1'b1) && ((loop_load_for_com_tile_f_add_end | state_loop_load_for_com_tile_f_add_end) == 1'b1) && (chunk_ix_size_mult_chunk_iy_size > 0))
-         || ((state_load_input_tile_fin == 1'b1) && ((loop_load_for_com_tile_f_add_end | state_loop_load_for_com_tile_f_add_end) == 1'b1) && (chunk_ix_size_mult_chunk_iy_size > 0))
-         || (((loop_load_for_com_tile_f_add_end | state_loop_load_for_com_tile_f_add_end) == 1'b1) && (chunk_ix_size_mult_chunk_iy_size == 0));
+         ((loop_input_ddr_word_tile_counter_add_end == 1'b1) && ((loop_load_for_com_tile_f_add_end == 1'b1) || (state_loop_load_for_com_tile_f_add_end == 1'b1)) && (chunk_ix_size_mult_chunk_iy_size > 0))
+         || ((state_load_input_tile_fin == 1'b1) && ((loop_load_for_com_tile_f_add_end == 1'b1) || (state_loop_load_for_com_tile_f_add_end == 1'b1)) && (chunk_ix_size_mult_chunk_iy_size > 0))
+         || (((loop_load_for_com_tile_f_add_end == 1'b1) || (state_loop_load_for_com_tile_f_add_end == 1'b1)) && (chunk_ix_size_mult_chunk_iy_size == 0));
   // assign loop_x_add_begin = (loop_f_add_end == 1'b1);//error
   assign loop_load_for_com_tile_x_add_end = loop_load_for_com_tile_x_add_begin && ((load_for_com_tile_x_start + pixels_in_row) > ox);
   always @(posedge clk) begin
@@ -512,64 +756,110 @@ module conv_load_input_controller (
   assign loop_load_for_com_tile_y_add_end = loop_load_for_com_tile_y_add_begin && ((load_for_com_tile_y_start + buffers_num) > oy);
 
   // assign input_tile_of_split_size = ceil(chunk_ix_size * chunk_iy_size / of_div_row_num_ceil);
+  // assign input_tile_of_split_size = (load_for_com_tile_y_start == 1) ? (
+  //     //tiley_first_iy_row_num = (buffers_num - 1) * s + k - p
+  //     (load_for_com_tile_x_start == 1) ? (
+  //     //tilex_first_ix_word_num = ceil(((pixels_in_row - 1) * s + k - p)/pixels_in_row)
+  //     //tiley_first_tilex_first_split_size = ceil(tiley_first_iy_row_num * tilex_first_ix_word_num / of_div_row_num_ceil)
+  //     tiley_first_tilex_first_split_size) : (load_for_com_tile_x_start > 1) ? ((load_for_com_tile_x_start + pixels_in_row > ox) ?
+  //     //tilex_last_ix_word_num = ceil((ox - tile_x_start + 1) * s /pixels_in_row) = ceil(((ox % pixels_in_row)*s+k-p)/pixels_in_row)
+  //     // tiley_first_tilex_last_split_size = ceil(tiley_first_iy_row_num * tilex_last_ix_word_num / of_div_row_num_ceil)
+  //     tiley_first_tilex_last_split_size :
+  //     //tilex_mid_ix_word_num = s
+  //     //tiley_first_tilex_mid_split_size = ceil(tiley_first_iy_row_num * tilex_mid_ix_word_num / of_div_row_num_ceil)
+  //     tiley_first_tilex_mid_split_size) : 0) : (load_for_com_tile_y_start > 1) ? ((load_for_com_tile_y_start + buffers_num > oy) ?
+  //     // tiley_last_iy_row_num = (oy - tile_y_start + 1) * s = (oy % buffers_num) * s
+  //     ((load_for_com_tile_x_start == 1) ? (
+  //     //tilex_first_ix_word_num = ceil(((pixels_in_row - 1) * s + k - p)/pixels_in_row)
+  //     //tiley_last_tilex_first_split_size = ceil(tiley_last_iy_row_num * tilex_first_ix_word_num / of_div_row_num_ceil)
+  //     tiley_last_tilex_first_split_size) : (load_for_com_tile_x_start > 1) ? ((load_for_com_tile_x_start + pixels_in_row > ox) ?
+  //     //tilex_last_ix_word_num = ceil((ox - tile_x_start + 1) * s /pixels_in_row) = ceil(((ox % pixels_in_row)*s+k-p)/pixels_in_row)
+  //     //tiley_last_tilex_last_split_size = ceil(tiley_last_iy_row_num * tilex_last_ix_word_num / of_div_row_num_ceil)
+  //     tiley_last_tilex_last_split_size :
+  //     //tilex_mid_ix_word_num = s
+  //     //tiley_last_tilex_mid_split_size = ceil(tiley_last_iy_row_num * tilex_mid_ix_word_num / of_div_row_num_ceil)
+  //     tiley_last_tilex_mid_split_size) : 0) :
+  //     //tiley_mid_iy_row_num = buffers_num * s
+  //     ((load_for_com_tile_x_start == 1) ? (
+  //     //tilex_first_ix_word_num = ceil(((pixels_in_row - 1) * s + k - p)/pixels_in_row)
+  //     //tiley_mid_tilex_first_split_size = ceil(tiley_mid_iy_row_num * tilex_first_ix_word_num / of_div_row_num_ceil)
+  //     tiley_mid_tilex_first_split_size) : (load_for_com_tile_x_start > 1) ? ((load_for_com_tile_x_start + pixels_in_row > ox) ?
+  //     //tilex_last_ix_word_num = ceil((ox - tile_x_start + 1) * s /pixels_in_row) = ceil(((ox % pixels_in_row)*s+k-p)/pixels_in_row)
+  //     //tiley_mid_tilex_last_split_size = ceil(tiley_mid_iy_row_num * tilex_last_ix_word_num / of_div_row_num_ceil)
+  //     tiley_mid_tilex_last_split_size :
+  //     //tilex_mid_ix_word_num = s
+  //     //tiley_mid_tilex_mid_split_size = ceil(tiley_mid_iy_row_num * tilex_mid_ix_word_num / of_div_row_num_ceil)
+  //     tiley_mid_tilex_mid_split_size) : 0)) : 0;
   assign input_tile_of_split_size = (load_for_com_tile_y_start == 1) ? (
       //tiley_first_iy_row_num = (buffers_num - 1) * s + k - p
       (load_for_com_tile_x_start == 1) ? (
-      //tilex_first_ix_word_num = ceil(((pixels_in_row - 1) * s + k - p)/pixels_in_row)
       //tiley_first_tilex_first_split_size = ceil(tiley_first_iy_row_num * tilex_first_ix_word_num / of_div_row_num_ceil)
-      tiley_first_tilex_first_split_size) : (load_for_com_tile_x_start > 1) ? ((load_for_com_tile_x_start + pixels_in_row > ox) ?
-      //tilex_last_ix_word_num = ceil((ox - tile_x_start + 1) * s /pixels_in_row) = ceil(((ox % pixels_in_row)*s+k-p)/pixels_in_row)
-      // tiley_first_tilex_last_split_size = ceil(tiley_first_iy_row_num * tilex_last_ix_word_num / of_div_row_num_ceil)
-      tiley_first_tilex_last_split_size :
-      //tilex_mid_ix_word_num = s
+      tiley_first_tilex_first_split_size) :
+      //2,3,...
+      (load_for_com_tile_x_start > 1) ? (
+      //already loaded
+      (ix_load_index_base == 1) ? 0 : (
       //tiley_first_tilex_mid_split_size = ceil(tiley_first_iy_row_num * tilex_mid_ix_word_num / of_div_row_num_ceil)
-      tiley_first_tilex_mid_split_size) : 0) : (load_for_com_tile_y_start > 1) ? ((load_for_com_tile_y_start + buffers_num > oy) ?
-      // tiley_last_iy_row_num = (oy - tile_y_start + 1) * s = (oy % buffers_num) * s
-      ((load_for_com_tile_x_start == 1) ? (
-      //tilex_first_ix_word_num = ceil(((pixels_in_row - 1) * s + k - p)/pixels_in_row)
-      //tiley_last_tilex_first_split_size = ceil(tiley_last_iy_row_num * tilex_first_ix_word_num / of_div_row_num_ceil)
-      tiley_last_tilex_first_split_size) : (load_for_com_tile_x_start > 1) ? ((load_for_com_tile_x_start + pixels_in_row > ox) ?
-      //tilex_last_ix_word_num = ceil((ox - tile_x_start + 1) * s /pixels_in_row) = ceil(((ox % pixels_in_row)*s+k-p)/pixels_in_row)
-      //tiley_last_tilex_last_split_size = ceil(tiley_last_iy_row_num * tilex_last_ix_word_num / of_div_row_num_ceil)
-      tiley_last_tilex_last_split_size :
-      //tilex_mid_ix_word_num = s
-      //tiley_last_tilex_mid_split_size = ceil(tiley_last_iy_row_num * tilex_mid_ix_word_num / of_div_row_num_ceil)
-      tiley_last_tilex_mid_split_size) : 0) :
+      (ix_load_index_base + tilex_mid_ix_word_num - 1 > ix_index_num) ?
+      //the last ix word num is not s(last)
+      tiley_first_tilex_last_split_size :
+      //s
+      tiley_first_tilex_mid_split_size)) : 0) :
+      //2,3,...
+      (load_for_com_tile_y_start > 1) ? (
       //tiley_mid_iy_row_num = buffers_num * s
-      ((load_for_com_tile_x_start == 1) ? (
-      //tilex_first_ix_word_num = ceil(((pixels_in_row - 1) * s + k - p)/pixels_in_row)
+      (load_for_com_tile_x_start == 1) ? (
       //tiley_mid_tilex_first_split_size = ceil(tiley_mid_iy_row_num * tilex_first_ix_word_num / of_div_row_num_ceil)
-      tiley_mid_tilex_first_split_size) : (load_for_com_tile_x_start > 1) ? ((load_for_com_tile_x_start + pixels_in_row > ox) ?
-      //tilex_last_ix_word_num = ceil((ox - tile_x_start + 1) * s /pixels_in_row) = ceil(((ox % pixels_in_row)*s+k-p)/pixels_in_row)
-      //tiley_mid_tilex_last_split_size = ceil(tiley_mid_iy_row_num * tilex_last_ix_word_num / of_div_row_num_ceil)
-      tiley_mid_tilex_last_split_size :
-      //tilex_mid_ix_word_num = s
+      ((iy_load_index_base + tiley_mid_iy_row_num - 1 > iy_index_num) ?
+      //the last iy rows num is not s*buffer_num
+      tiley_last_tilex_first_split_size :
+      //s*buffer_num
+      tiley_mid_tilex_first_split_size)) :
+      //2,3,...
+      (load_for_com_tile_x_start > 1) ? (
+      //alaready loaded
+      (ix_load_index_base == 1) ? 0 :
       //tiley_mid_tilex_mid_split_size = ceil(tiley_mid_iy_row_num * tilex_mid_ix_word_num / of_div_row_num_ceil)
-      tiley_mid_tilex_mid_split_size) : 0)) : 0;
+      ((iy_load_index_base + tiley_mid_iy_row_num - 1 > iy_index_num) ?
+      //the last iy rows num is not s*buffer_num
+      ((ix_load_index_base + tilex_mid_ix_word_num - 1 > ix_index_num) ?
+      //the last ix word num is not s(last)
+      tiley_last_tilex_last_split_size :
+      //s
+      tiley_last_tilex_mid_split_size) :
+      //s*buffer_num
+      ((ix_load_index_base + tilex_mid_ix_word_num - 1 > ix_index_num) ?
+      //the last ix word num is not s(last)
+      tiley_mid_tilex_last_split_size :
+      //s
+      tiley_mid_tilex_mid_split_size))) : 0) : 0;
+
   assign chunk_ix_size_mult_chunk_iy_size = (chunk_ix_size == 0) ? 0 : (chunk_ix_size == 1) ? chunk_iy_size : (chunk_ix_size == 2) ? (chunk_iy_size << 1) : (chunk_ix_size == 3) ? (chunk_iy_size << 1) + chunk_iy_size : 0;
 
   //cal DDR rd adr, buf wt index, adr
-  assign load_input_row_idx = iy_load_index;
-  assign load_input_row_start_idx = ((ix_load_index - 1) << pixels_in_row_in_2pow) + 1;
+  assign load_input_row_idx = ((iy_load_index > iy_index_num) || (ix_load_index > ix_index_num)) ? 0 : iy_load_index;
+  assign load_input_row_start_idx = ((iy_load_index > iy_index_num) || (ix_load_index > ix_index_num)) ? 0 : ((ix_load_index - 1) << pixels_in_row_in_2pow) + 1;
   //load ddr words instr generate
-  assign input_word_ddr_adr_rd = input_ddr_layer_base_adr + (((load_input_row_idx - 1) << ((nif_in_2pow - ifs_in_row_2pow) + ix_in_2pow - pixels_in_row_in_2pow)) + (((load_input_row_start_idx - 1) << (nif_in_2pow - ifs_in_row_2pow)) >> pixels_in_row_in_2pow)) + ((if_start - 1) >> ifs_in_row_2pow);
-  assign input_word_ddr_en_rd = loop_if_add_begin;
+  assign input_word_ddr_adr_rd = ((iy_load_index > iy_index_num) || (ix_load_index > ix_index_num))? 0
+  :(input_ddr_layer_base_adr + (((load_input_row_idx - 1) << ((nif_in_2pow - ifs_in_row_2pow) + ix_in_2pow - pixels_in_row_in_2pow)) + (((load_input_row_start_idx - 1) << (nif_in_2pow - ifs_in_row_2pow)) >> pixels_in_row_in_2pow)) + ((if_start - 1) >> ifs_in_row_2pow));
+  assign input_word_ddr_en_rd = ((iy_load_index > iy_index_num) || (ix_load_index > ix_index_num)) ? 0 : loop_if_add_begin;
 
   // ddr words of input row write into input buffer
   // consider the rows whose row_idx is in [p+1, p+iy], the rest of rows dont need address translation
   //row buf index
-  assign load_input_row_buf_idx = iy_load_index_mod_3 + 1;
+  assign load_input_row_buf_idx = ((iy_load_index > iy_index_num) || (ix_load_index > ix_index_num)) ? 0 : iy_load_index_minus_1_mod_3 + 1;
   //row buf adr of the row index
-  assign load_input_row_buf_adr_in_row = iy_load_index_in_3;
+  assign load_input_row_buf_adr_in_row = ((iy_load_index > iy_index_num) || (ix_load_index > ix_index_num)) ? 0 : iy_load_index_minus_1_in_3;
   assign load_input_row_buf_adr =
-         ((load_input_row_buf_adr_in_row & row_num_limit_mask_input_buffer) << ((nif_in_2pow - ifs_in_row_2pow) + ix_in_2pow - pixels_in_row_in_2pow))
+  ((iy_load_index > iy_index_num) || (ix_load_index > ix_index_num))? 0:
+         (((load_input_row_buf_adr_in_row & row_num_limit_mask_input_buffer) << ((nif_in_2pow - ifs_in_row_2pow) + ix_in_2pow - pixels_in_row_in_2pow))
          + (((load_input_row_start_idx-1) << (nif_in_2pow - ifs_in_row_2pow)) >> pixels_in_row_in_2pow)
-         + ((if_start - 1) >> ifs_in_row_2pow);
+         + ((if_start - 1) >> ifs_in_row_2pow));
 
   //FIFO should be in the tb or top module
   //fifo
   assign input_word_load_info_fifo_en_wt = input_word_ddr_en_rd;
-  assign input_word_load_info_fifo_wt = {load_input_row_buf_idx, load_input_row_buf_adr};
+  assign input_word_load_info_fifo_wt = {14'b0, load_input_row_buf_idx, load_input_row_buf_adr};
 
 
 endmodule

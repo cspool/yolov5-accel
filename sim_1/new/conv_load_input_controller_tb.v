@@ -73,7 +73,7 @@ module conv_load_input_controller_tb ();
   reg [ 7:0] tiley_mid_iy_row_num_init;
   //ix_chunks_num = ceil(ix/pixels_in_row)
   //iy_chunks_num = ceil(iy/buffers_num)
-  reg [15:0] ix_chunks_num_init, iy_chunks_num_init;
+  reg [15:0] ix_index_num_init, iy_index_num_init;
   //   conv_load_input_controller
   wire                                                             [                   15:0]                         load_input_row_idx;
   wire                                                             [                   15:0]                         load_input_row_start_idx;
@@ -191,10 +191,11 @@ module conv_load_input_controller_tb ();
   wire [  8:0] load_input_info_fifo_data_count;
 
   conv_load_input_controller cv_load_input_ctrl (
-      .clk            (clk),
-      .conv_load_input(conv_load_input),
-      .reset          (reset),
-      .ddr_en         (ddr_en),
+      .clk                       (clk),
+      .conv_load_input           (conv_load_input),
+      .reset                     (reset),
+      .ddr_en                    (ddr_en),
+      .load_input_info_fifo_empty(load_input_info_fifo_empty),
 
       .mode_init                              (mode_init),
       .of_init                                (of_init),
@@ -225,8 +226,8 @@ module conv_load_input_controller_tb ();
       .tiley_first_iy_row_num_init            (tiley_first_iy_row_num_init),
       .tiley_last_iy_row_num_init             (tiley_last_iy_row_num_init),
       .tiley_mid_iy_row_num_init              (tiley_mid_iy_row_num_init),
-      .ix_chunks_num_init                     (ix_chunks_num_init),
-      .iy_chunks_num_init                     (iy_chunks_num_init),
+      .ix_index_num_init                      (ix_index_num_init),
+      .iy_index_num_init                      (iy_index_num_init),
 
       .load_input_row_idx      (load_input_row_idx),
       .load_input_row_start_idx(load_input_row_start_idx),
@@ -310,8 +311,8 @@ module conv_load_input_controller_tb ();
   );
 
   assign input_word_load_info_fifo_en_rd = valid_load_input;
-  assign input_word_buf_idx_wr           = (state_valid_load_input == 1) ? input_word_load_info_fifo_rd[0+:16] : 0;
-  assign input_word_buf_adr_wr           = (state_valid_load_input == 1) ? input_word_load_info_fifo_rd[16+:16] : 0;
+  assign input_word_buf_idx_wr           = (state_valid_load_input == 1) ? input_word_load_info_fifo_rd[16+:16] : 0;
+  assign input_word_buf_adr_wr           = (state_valid_load_input == 1) ? input_word_load_info_fifo_rd[0+:16] : 0;
 
   conv_buffers_interface cv_buffers_interface (
       .reset                (reset),
@@ -509,8 +510,8 @@ module conv_load_input_controller_tb ();
   real    tiley_first_iy_row_num_real;
   real    tiley_last_iy_row_num_real;
   real    tiley_mid_iy_row_num_real;
-  real    ix_chunks_num_real;
-  real    iy_chunks_num_real;
+  real    ix_index_num_real;
+  real    iy_index_num_real;
   real    of_div_row_num_ceil_real;
   real    tiley_first_tilex_first_split_size_real;
   real    tiley_first_tilex_last_split_size_real;
@@ -548,8 +549,8 @@ module conv_load_input_controller_tb ();
     tiley_first_iy_row_num_real             = (buffers_num - 1) * s_real + k_real - p_real;
     tiley_last_iy_row_num_real              = (oy_integer % buffers_num) * s_real;
     tiley_mid_iy_row_num_real               = buffers_num * s_real;
-    ix_chunks_num_real                      = $ceil(ix_integer / pixels_in_row_real);
-    iy_chunks_num_real                      = $ceil(iy_integer / buffers_num_real);
+    ix_index_num_real                       = $ceil(ix_integer / pixels_in_row_real);
+    iy_index_num_real                       = $ceil(iy_integer / buffers_num_real);
     of_div_row_num_ceil_real                = $ceil(of_integer / row_num_real);
     tiley_first_tilex_first_split_size_real = $ceil(tiley_first_iy_row_num_real * tilex_first_ix_word_num_real / of_div_row_num_ceil_real);
     tiley_first_tilex_last_split_size_real  = $ceil(tiley_first_iy_row_num_real * tilex_last_ix_word_num_real / of_div_row_num_ceil_real);
@@ -580,8 +581,8 @@ module conv_load_input_controller_tb ();
     tiley_first_iy_row_num_init             = tiley_first_iy_row_num_real;
     tiley_last_iy_row_num_init              = tiley_last_iy_row_num_real;
     tiley_mid_iy_row_num_init               = tiley_mid_iy_row_num_real;
-    ix_chunks_num_init                      = ix_chunks_num_real;
-    iy_chunks_num_init                      = iy_chunks_num_real;
+    ix_index_num_init                       = ix_index_num_real;
+    iy_index_num_init                       = iy_index_num_real;
     of_div_row_num_ceil_init                = of_div_row_num_ceil_real;
     tiley_first_tilex_first_split_size_init = tiley_first_tilex_first_split_size_real;
     tiley_first_tilex_last_split_size_init  = tiley_first_tilex_last_split_size_real;

@@ -103,6 +103,7 @@ module conv_compute_controller_tb ();
   parameter ddr_load_ratio = 2;
 
   reg clk, reset;
+  reg ddr_en;
   //conv decoder
   reg  conv_decode;
   wire conv_start;
@@ -267,7 +268,7 @@ module conv_compute_controller_tb ();
   wire                                                         [                             511 : 0]                                                                      in_buf3_rd;
   //load weights controller
   wire conv_load_weights = 0;  //begin weights loading
-  wire ddr_en = 1;  //mig fifo can accept request
+  // wire ddr_en = 1;  //mig fifo can accept request
   wire valid_load_weights = 0;  //ddr words is loaded from ddr
   wire weights_word_ddr_en_rd = 0;  //o: read ddr
   wire                                                         [                                15:0] weights_word_ddr_adr_rd = 0;  //o
@@ -1143,6 +1144,7 @@ module conv_compute_controller_tb ();
       .clk                       (clk),
       .reset                     (reset | conv_start),
       .conv_fifo_out_start       (conv_store),
+      .ddr_en(ddr_en),
       .cur_ox_start              (shadow_ox_start),
       .cur_oy_start              (shadow_oy_start),
       .cur_of_start              (shadow_of_start),
@@ -1176,6 +1178,7 @@ module conv_compute_controller_tb ();
   initial begin
     clk   = 0;
     reset = 1;
+    ddr_en = 1;
 
     #10;
     reset       = 0;
