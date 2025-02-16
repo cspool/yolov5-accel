@@ -384,7 +384,6 @@ def generate_ddr_init(mode, weights_ddr_words, bias_ddr_words, tail_ddr_words, r
           f.write(hex_str)
           if input_ddr_word_index < input_ddr_word_len - 1:
               f.write('\n')
-      f.write(";")
 
 def generate_input_buf_txt(input_ddr_word_array):
   # input buffer data

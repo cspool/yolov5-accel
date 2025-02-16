@@ -153,6 +153,7 @@ module convolution_tb ();
   wire conv_compute;
   wire conv_store;
   wire last_conv_store;
+  wire last_conv_compute;
   //DDR
   wire DDR_en;
   wire DDR_en_wr;
@@ -602,7 +603,8 @@ module convolution_tb ();
       .conv_load_input  (conv_load_input),
       .conv_compute     (conv_compute),
       .conv_store       (conv_store),
-      .last_conv_store(last_conv_store)
+      .last_conv_store(last_conv_store),
+      .last_conv_compute(last_conv_compute)
   );
 //conv load input ctrl
   conv_load_input_controller cv_load_input_ctrl (
@@ -1124,6 +1126,7 @@ module convolution_tb ();
       .reset            (reset | conv_start),
       .clk              (clk),
       .conv_load_weights(conv_load_weights),   //change the ping-pong state
+      .last_conv_compute(last_conv_compute),
       //weights need reading from buf
       .weights_word_buf_en_rd     (weights_word_buf_en_rd),       //i:weight_en_rd
       .weights_word_buf_adr_rd    (weights_word_buf_adr_rd),      //i:weight_adr_rd
@@ -1516,6 +1519,10 @@ module convolution_tb ();
       rank_buffer_mem[n] = 512'b0;
     end
     $readmemh("D:\\project\\Vivado\\yolov5_accel\\yolov5_accel.srcs\\DDR_init.txt", DDR_mem);
+    // 可选：打印读取的数据以验证
+    for (n = 0; n < DDR_mem_limit; n = n + 1) begin
+      $display("DDR_mem[%d] = %h", n, DDR_mem[n]);
+    end
     $readmemh("D:\\project\\Vivado\\yolov5_accel\\yolov5_accel.srcs\\bias_buffer_init.txt", bias_buffer_mem);
     $readmemh("D:\\project\\Vivado\\yolov5_accel\\yolov5_accel.srcs\\tail_buffer_init.txt", tail_buffer_mem);
     $readmemh("D:\\project\\Vivado\\yolov5_accel\\yolov5_accel.srcs\\rank_buffer_init.txt", rank_buffer_mem);
