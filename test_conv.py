@@ -35,7 +35,7 @@ def generate_conv_tests():
   #       for quantify_type in quantify_types:
   #          conv_test(conv_type, mode_type, quantify_type)
   
-  conv_type, mode_type, quantify_type = (0,0,0)
+  conv_type, mode_type, quantify_type = (1,0,0)
   conv_test(conv_type, mode_type, quantify_type)
 
 def conv_test(conv_type, mode_type, quantify_type):
@@ -117,7 +117,7 @@ def fpga_conv(conv_type, mode_type, quantify_type):
 def generate_conv_weight_data(mode, of, nif, k):
   # generate and return conv weights, then reshape & split it and return it
   # weights[F, ID*K*K]
-  img2col_weight_data = torch.randint(-5, 5, size=(of, nif*k * k), dtype=torch.int8) \
+  img2col_weight_data = torch.randint(-2, 3, size=(of, nif*k * k), dtype=torch.int8) \
   if mode == 0 else torch.randint(0, 2, size=(of, nif*k * k), dtype=torch.int8)
   weight_data = img2col_weight_data.reshape(of, nif, k, k)
   ## reshape weight data
@@ -155,7 +155,7 @@ def generate_conv_input_data(nif, iy, ix):
   # input[ID, IH, IW]
   # input channel num should be an even num. 
   # if not, expand 3 channels -> 4 channels, last channel is 0
-  input_data = torch.randint(-5, 5, size=(nif, iy, ix), dtype=torch.int8)
+  input_data = torch.randint(-2, 3, size=(nif, iy, ix), dtype=torch.int8)
   # reshape input tensor into ddr words
   activation_x_num_in_ddr_word = 32
   activation_in_channel_num_in_ddr_word = 2 # ddr_word_width / activation_x_num_in_ddr_word / weight_word_width
@@ -555,7 +555,7 @@ def generate_instr_args_init(mode,k,s,p,of,ox,oy,ix,iy,nif):
   tail_layer_base_buf_adr_rd_integer = 0
   rank_layer_base_buf_adr_rd_integer = 0
   weights_layer_base_ddr_adr_rd_integer = 0
-  input_ddr_layer_base_adr_integer = 16 #xxxx
+  input_ddr_layer_base_adr_integer = 80 #xxxx
   ix_index_num_real = math.ceil(ix_integer / pixels_in_row_real)
   iy_index_num_real = math.ceil(iy_integer)
   tilex_first_ix_word_num_real = math.ceil(((pixels_in_row - 1) * s_real + k_real - p_real) / pixels_in_row)

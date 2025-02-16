@@ -310,7 +310,10 @@ module conv_load_input_controller (
   always @(posedge clk) begin
     if (reset == 1'b1) begin  //set
       state_load_input_tile_fin <= 0;
-    end else if ((loop_input_ddr_word_tile_counter_add_end == 1) && ((loop_load_for_com_tile_f_add_end | state_loop_load_for_com_tile_f_add_end) == 0)) begin
+    end else if ((loop_input_ddr_word_tile_counter_add_end == 1)
+        //cur tile loading finished
+        //before the last chunk in tile
+        && ((loop_load_for_com_tile_f_add_end == 0) && (state_loop_load_for_com_tile_f_add_end == 0))) begin
       state_load_input_tile_fin <= 1;
     end else if (loop_load_for_com_tile_f_add_end == 1) begin
       state_load_input_tile_fin <= 0;
@@ -353,6 +356,9 @@ module conv_load_input_controller (
     if (reset == 1'b1) begin
       state_loop_load_for_com_tile_f_add_end <= 0;
     end else if ((input_ddr_word_signal == 1'b1) && (loop_load_for_com_tile_f_add_end == 1'b1)) begin
+      // expand the tile_f_end signal til the end of the load instr generation in cur chunk
+      // because tile_f_end can not last long,
+      // but tile_x_begin need waiting for the instr generation finished.
       state_loop_load_for_com_tile_f_add_end <= 1;
     end else if (loop_input_ddr_word_chunk_counter_add_end == 1'b1) begin
       state_loop_load_for_com_tile_f_add_end <= 0;
@@ -416,8 +422,11 @@ module conv_load_input_controller (
     end else if (
         //instr generate finished
         loop_input_ddr_word_chunk_counter_add_end
-        //no need to generate
-        || ((conv_load_input == 1'b1) && (chunk_ix_size_mult_chunk_iy_size == 0))) begin
+        //no need to generate in current tile loading
+        || ((conv_load_input == 1'b1) && (chunk_ix_size_mult_chunk_iy_size == 0))
+        //no need to generate 2: before last chunk in ofs, loading of cur tile completed,
+        //so chunk_ix_size_mult_chunk_iy_size(f(tile_x,tile_y) is the loading in the next tile  
+        || ((conv_load_input == 1'b1) && (state_load_input_tile_fin == 1'b1) && (chunk_ix_size_mult_chunk_iy_size > 0))) begin
       instr_load_input_fin <= 1;
     end else if (conv_load_input_fin == 1'b1) begin
       instr_load_input_fin <= 0;
@@ -734,8 +743,10 @@ module conv_load_input_controller (
     end
   end
   assign loop_load_for_com_tile_x_add_begin =
-         ((loop_input_ddr_word_tile_counter_add_end == 1'b1) && ((loop_load_for_com_tile_f_add_end == 1'b1) || (state_loop_load_for_com_tile_f_add_end == 1'b1)) && (chunk_ix_size_mult_chunk_iy_size > 0))
-         || ((state_load_input_tile_fin == 1'b1) && ((loop_load_for_com_tile_f_add_end == 1'b1) || (state_loop_load_for_com_tile_f_add_end == 1'b1)) && (chunk_ix_size_mult_chunk_iy_size > 0))
+      //cur tile loading finished in just the last chunk of tile chunks
+      ((loop_input_ddr_word_tile_counter_add_end == 1'b1) && ((loop_load_for_com_tile_f_add_end == 1'b1) || (state_loop_load_for_com_tile_f_add_end == 1'b1)) && (chunk_ix_size_mult_chunk_iy_size > 0))
+      //cur tile loading finished before the last chunk of tile chunks
+      || ((state_load_input_tile_fin == 1'b1) && ((loop_load_for_com_tile_f_add_end == 1'b1) || (state_loop_load_for_com_tile_f_add_end == 1'b1)) && (chunk_ix_size_mult_chunk_iy_size > 0))
          || (((loop_load_for_com_tile_f_add_end == 1'b1) || (state_loop_load_for_com_tile_f_add_end == 1'b1)) && (chunk_ix_size_mult_chunk_iy_size == 0));
   // assign loop_x_add_begin = (loop_f_add_end == 1'b1);//error
   assign loop_load_for_com_tile_x_add_end = loop_load_for_com_tile_x_add_begin && ((load_for_com_tile_x_start + pixels_in_row) > ox);

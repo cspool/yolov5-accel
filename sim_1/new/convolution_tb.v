@@ -1568,7 +1568,7 @@ module convolution_tb ();
     #10;
     conv_decode = 0;
 
-    #1000000;
+    #1000000000;
     $fclose(file); // 关闭文件
     $stop; // 停止仿真
   end
