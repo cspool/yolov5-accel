@@ -190,6 +190,12 @@ module convolution_tb ();
   wire [1:0] row2_slab_idx;
   wire [15:0] row3_slab_adr;
   wire [1:0] row3_slab_idx;
+  wire [15:0] row1_slab_adr_to_wr;
+  wire [1:0] row1_slab_idx_to_wr;
+  wire [15:0] row2_slab_adr_to_wr;
+  wire [1:0] row2_slab_idx_to_wr;
+  wire [15:0] row3_slab_adr_to_wr;
+  wire [1:0] row3_slab_idx_to_wr;
   wire valid_row1_adr, valid_row2_adr, valid_row3_adr;
   wire conv_end;
   wire conv_pixels_add_end;
@@ -248,7 +254,7 @@ module convolution_tb ();
   wire [15:0] last_row1_slab_2;
   wire [15:0] last_row2_slab_2;
   wire [15:0] last_row3_slab_2;
-  //cycle 0 out/ slab wt ctrl
+  //cycle 1 out/ slab wt ctrl
   wire [15:0] slab1_adr_wr;
   wire [15:0] slab2_adr_wr;
   wire [15:0] slab3_adr_wr;
@@ -737,6 +743,12 @@ module convolution_tb ();
       .row2_slab_idx       (row2_slab_idx),
       .row3_slab_adr       (row3_slab_adr),
       .row3_slab_idx       (row3_slab_idx),
+      .row1_slab_adr_to_wr(row1_slab_adr_to_wr),
+      .row1_slab_idx_to_wr(row1_slab_idx_to_wr),
+      .row2_slab_adr_to_wr(row2_slab_adr_to_wr),
+      .row2_slab_idx_to_wr(row2_slab_idx_to_wr),
+      .row3_slab_adr_to_wr(row3_slab_adr_to_wr),
+      .row3_slab_idx_to_wr(row3_slab_idx_to_wr),
       .valid_row1_adr      (valid_row1_adr),
       .valid_row2_adr      (valid_row2_adr),
       .valid_row3_adr      (valid_row3_adr),
@@ -814,13 +826,19 @@ module convolution_tb ();
       .last_row1_buf_idx    (last_row1_buf_idx),
       .last_row2_buf_idx    (last_row2_buf_idx),
       .last_row3_buf_idx    (last_row3_buf_idx),
-      //cycle 0 in/ slab rows rd info
+      //cycle 0 in/ slab rows rd info, and to wt info
       .row1_slab_adr        (row1_slab_adr),
       .row1_slab_idx        (row1_slab_idx),
       .row2_slab_adr        (row2_slab_adr),
       .row2_slab_idx        (row2_slab_idx),
       .row3_slab_adr        (row3_slab_adr),
       .row3_slab_idx        (row3_slab_idx),
+      .row1_slab_adr_to_wr(row1_slab_adr_to_wr),
+      .row1_slab_idx_to_wr(row1_slab_idx_to_wr),
+      .row2_slab_adr_to_wr(row2_slab_adr_to_wr),
+      .row2_slab_idx_to_wr(row2_slab_idx_to_wr),
+      .row3_slab_adr_to_wr(row3_slab_adr_to_wr),
+      .row3_slab_idx_to_wr(row3_slab_idx_to_wr),
       //cycle 1 in/ slab data rd from slab
       .slab1_pixels_2       (slab1_pixels_2),
       .slab2_pixels_2       (slab2_pixels_2),
@@ -857,7 +875,7 @@ module convolution_tb ();
       .last_row1_slab_2     (last_row1_slab_2),
       .last_row2_slab_2     (last_row2_slab_2),
       .last_row3_slab_2     (last_row3_slab_2),
-      //cycle 0 out/ slab wt ctrl
+      //cycle 1 out/ slab wt ctrl
       .slab1_adr_wr         (slab1_adr_wr),
       .slab2_adr_wr         (slab2_adr_wr),
       .slab3_adr_wr         (slab3_adr_wr),

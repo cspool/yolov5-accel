@@ -35,7 +35,7 @@ def generate_conv_tests():
   #       for quantify_type in quantify_types:
   #          conv_test(conv_type, mode_type, quantify_type)
   
-  conv_type, mode_type, quantify_type = (1,0,0)
+  conv_type, mode_type, quantify_type = (3,0,0)
   conv_test(conv_type, mode_type, quantify_type)
 
 def conv_test(conv_type, mode_type, quantify_type):
@@ -113,11 +113,34 @@ def fpga_conv(conv_type, mode_type, quantify_type):
   nif = 4
   #fpga conv results
   collect_result(of, oy, ox)
+  #compare the fpga result with std conv
+  compare_files("D:\\project\\Vivado\\yolov5_accel\\yolov5_accel.srcs\\fpga_output_tensors.txt", 
+                "D:\\project\\Vivado\\yolov5_accel\\yolov5_accel.srcs\\output_tensor.txt")
+
+def compare_files(file1_path, file2_path):
+    with open(file1_path, 'r', encoding='utf-8') as file1, \
+         open(file2_path, 'r', encoding='utf-8') as file2:
+        lines1 = file1.readlines()
+        lines2 = file2.readlines()
+
+    if len(lines1) != len(lines2):
+        print("两个文件的行数不同。")
+        return False
+
+    for i, (line1, line2) in enumerate(zip(lines1, lines2), start=1):
+        if line1 != line2:
+            print(f"第 {i} 行不同：")
+            print(f"文件1: {line1.strip()}")
+            print(f"文件2: {line2.strip()}")
+            return False
+
+    print("两个文件完全相同。")
+    return True
 
 def generate_conv_weight_data(mode, of, nif, k):
   # generate and return conv weights, then reshape & split it and return it
   # weights[F, ID*K*K]
-  img2col_weight_data = torch.randint(-2, 3, size=(of, nif*k * k), dtype=torch.int8) \
+  img2col_weight_data = torch.randint(-1, 2, size=(of, nif*k * k), dtype=torch.int8) \
   if mode == 0 else torch.randint(0, 2, size=(of, nif*k * k), dtype=torch.int8)
   weight_data = img2col_weight_data.reshape(of, nif, k, k)
   ## reshape weight data
@@ -155,7 +178,7 @@ def generate_conv_input_data(nif, iy, ix):
   # input[ID, IH, IW]
   # input channel num should be an even num. 
   # if not, expand 3 channels -> 4 channels, last channel is 0
-  input_data = torch.randint(-2, 3, size=(nif, iy, ix), dtype=torch.int8)
+  input_data = torch.randint(-1, 2, size=(nif, iy, ix), dtype=torch.int8)
   # reshape input tensor into ddr words
   activation_x_num_in_ddr_word = 32
   activation_in_channel_num_in_ddr_word = 2 # ddr_word_width / activation_x_num_in_ddr_word / weight_word_width
@@ -555,7 +578,12 @@ def generate_instr_args_init(mode,k,s,p,of,ox,oy,ix,iy,nif):
   tail_layer_base_buf_adr_rd_integer = 0
   rank_layer_base_buf_adr_rd_integer = 0
   weights_layer_base_ddr_adr_rd_integer = 0
-  input_ddr_layer_base_adr_integer = 80 #xxxx
+  input_ddr_layer_base_adr_integers_mapping = {
+      1:16,
+      3:80,
+      6:296
+      } #xxxx
+  input_ddr_layer_base_adr_integer = input_ddr_layer_base_adr_integers_mapping[k] #xxxxx
   ix_index_num_real = math.ceil(ix_integer / pixels_in_row_real)
   iy_index_num_real = math.ceil(iy_integer)
   tilex_first_ix_word_num_real = math.ceil(((pixels_in_row - 1) * s_real + k_real - p_real) / pixels_in_row)
@@ -625,7 +653,7 @@ def generate_instr_args_init(mode,k,s,p,of,ox,oy,ix,iy,nif):
 
 def collect_result(of, oy, ox):
     # collect the result from txt file
-    fpga_output_tensors = torch.zeros(size=(of, oy, ox), dtype=torch.int8)
+    fpga_output_tensors = torch.zeros(size=(1, of, oy, ox), dtype=torch.int8)
     with open("conv_result.txt", "r") as f:
         next(f)  # 跳过第一行表头
         for line in f:
@@ -643,7 +671,7 @@ def collect_result(of, oy, ox):
             end_idx = (out_f_idx - 1, out_y_idx -1 , out_x_idx - 1 + 32)
             
             # 将数据写入张量，编号小的数写入坐标大的位置
-            fpga_output_tensors[start_idx[0], start_idx[1], start_idx[2]:end_idx[2]] = torch.tensor(decimal_values[::-1], dtype=torch.uint8)
+            fpga_output_tensors[0, start_idx[0], start_idx[1], start_idx[2]:end_idx[2]] = torch.tensor(decimal_values[::-1], dtype=torch.uint8)
 
     fpga_output_tensors = fpga_output_tensors.to(dtype=torch.uint8)
     with open("fpga_output_tensors.txt", "w") as f:
@@ -651,12 +679,14 @@ def collect_result(of, oy, ox):
         f.write(" ".join(map(str, fpga_output_tensors.shape)) + "\n")
         
         # 遍历张量的每个元素并写入文件
-        for i in range(fpga_output_tensors.size(0)):  # 遍历第一个维度
-            for j in range(fpga_output_tensors.size(1)):  # 遍历第二个维度
-                for k in range(fpga_output_tensors.size(2)):  # 遍历第三个维度
-                    f.write(f"{fpga_output_tensors[i, j, k].item():3d} ")
-                f.write("\n")  # 每一行结束后换行
-            f.write("\n")  # 每一输出行结束后换行
+        for b in range(fpga_output_tensors.size(0)):  # 遍历第0个维度
+          for i in range(fpga_output_tensors.size(1)):  # 遍历第一个维度
+              for j in range(fpga_output_tensors.size(2)):  # 遍历第二个维度
+                  for k in range(fpga_output_tensors.size(3)):  # 遍历第三个维度
+                      f.write(f"{fpga_output_tensors[b, i, j, k].item():3d} ")
+                  f.write("\n")  # 每一行结束后换行
+              f.write("\n")  # 每一输出行结束后换行
+          f.write("\n")  # 每一batch结束后换行
 
 if __name__ == "__main__":
     generate_conv_tests()
