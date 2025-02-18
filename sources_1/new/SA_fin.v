@@ -60,9 +60,9 @@ parameter pe_out_width =  (pixel_width_18) * pe_parallel_pixel_18 *  pe_parallel
 
 parameter row_counter_width = ($clog2(row_num+1));
 
-parameter out_width = pixel_width_18 * pe_parallel_pixel_18 * pe_parallel_weight_18 * column_num;
-parameter out_width_88 = pixel_width_88 * pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num;
-parameter out_width_18 = pixel_width_18 * pe_parallel_pixel_18 * pe_parallel_weight_18 * column_num;
+parameter sa_out_width = pixel_width_18 * pe_parallel_pixel_18 * pe_parallel_weight_18 * column_num;
+parameter sa_out_width_88 = pixel_width_88 * pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num;
+parameter sa_out_width_18 = pixel_width_18 * pe_parallel_pixel_18 * pe_parallel_weight_18 * column_num;
 
 parameter mult_A_width = 24;
 parameter mult_B_width = 16;
@@ -82,7 +82,7 @@ input [5:0] out_sa_row_idx; //output sa row idx [1,16]
 
 output [column_num * mult_P_width -1:0] row0_out;
 
-output [out_width - 1: 0] out; // pox res per channel
+output [sa_out_width - 1: 0] out; // pox res per channel
 //pe_parallel_pixel_88 = pe_parallel_pixel_18
 
 // reg mode;
@@ -92,8 +92,8 @@ wire [pe_out_width-1 : 0] all_out [row_num - 1: 0][column_num - 1 : 0]; // all r
 wire [41 : 0] row0_mult_out [column_num - 1 : 0];
 
 wire [pe_out_width * column_num - 1 : 0] row_output;//row results
-wire [out_width_88 - 1 : 0] row_output_88;//row results
-wire [out_width_18 - 1 : 0] row_output_18;//column results
+wire [sa_out_width_88 - 1 : 0] row_output_88;//row results
+wire [sa_out_width_18 - 1 : 0] row_output_18;//column results
 
 
 genvar i, j;
@@ -129,8 +129,14 @@ assign row_en = {(row_num){en}} << (out_sa_row_idx);
 
 generate
     for (i = 0; i < column_num; i = i + 1) begin
-        assign I_As[i] = (mode == 1'b0)?   ({column_in[(i * 16 + 8) +: 8], 16'b0} + {{16{column_in[(i * 16 + 7)]}}, column_in[(i * 16) +: 8]}) :
-                                   (mode == 1'b1)?  ({{8{column_in[(i * 16 + 15)]}}, column_in[(i * 16 + 8) +: 8], 8'b0} +
+        assign I_As[i] = (mode == 1'b0)?   
+                                   //
+        ({column_in[(i * 16 + 8) +: 8], 16'b0} + {{16{column_in[(i * 16 + 7)]}}, column_in[(i * 16) +: 8]}) :
+                                   //
+                                   (mode == 1'b1)? 
+                                   //
+                                    ({{8{column_in[(i * 16 + 15)]}}, column_in[(i * 16 + 8) +: 8], 8'b0} +
+                                   //
                                     {{16{column_in[(i * 16 + 7)]}}, column_in[(i * 16) +: 8]}):
                                    24'b0;
     end
@@ -139,6 +145,7 @@ endgenerate
 generate
     for (i = 0; i < row_num; i = i + 1) begin
         assign I_Bs[i] = (mode == 1'b0)?  ({{10{row_in[i * 8 + 7]}}, row_in[(i * 8) +: 8]}) :
+                                  //
                                    (mode == 1'b1)?  ({{row_in[i * 8 +1]},1'b1, 16'b0} + {{17{row_in[i * 8]}},1'b1}):
                                    18'b0;
     end
@@ -206,29 +213,39 @@ assign loop_row_counter_add_end = loop_row_counter_add_begin && (row_counter == 
 
 generate
     for (j = 0; j < column_num; j = j + 1) begin
-        assign row_output[j * pe_out_width +:pe_out_width] = (loop_row_counter_add_begin == 1'b0)? 0: all_out[row_counter][j];
+        assign row_output[j * pe_out_width +:pe_out_width] = 
+        //
+        (loop_row_counter_add_begin == 1'b0)? 0: all_out[row_counter][j];
     end
 endgenerate
 
 
 assign  out = (loop_row_counter_add_begin == 1'b0)? 0: 
-                     (mode == 0)? {{(out_width - out_width_88){1'b0}},row_output_88} :
-                    (mode == 1)? {{(out_width - out_width_18){1'b0}},row_output_18}:
+                    //mode 0
+                     (mode == 0)? {{(sa_out_width - sa_out_width_88){1'b0}},row_output_88} :
+                     // mode 1
+                    (mode == 1)? {{(sa_out_width - sa_out_width_18){1'b0}},row_output_18}:
                     0;
 
 generate
     for (j = 0; j < column_num; j = j+1) begin
-        assign row_output_88[((2 * j) * pixel_width_88) +: (2 * pixel_width_88)]
-        = {{all_out[row_counter][j][(0+pixel_width_88)+: (pixel_width_88)]},
+        assign row_output_88[((2 * j) * pixel_width_88) +: (2 * pixel_width_88)] = 
+        //
+        {{all_out[row_counter][j][(0+pixel_width_88)+: (pixel_width_88)]},
+        //
         {all_out[row_counter][j][(0)+: (pixel_width_88)]}};
         
-        assign row_output_18[0 + ((2 * j) * pixel_width_18)+: (2*pixel_width_18)]
-        = {{all_out[row_counter][j][(0+(pixel_width_18)) +: (pixel_width_18)]},
+        assign row_output_18[0 + ((2 * j) * pixel_width_18)+: (2*pixel_width_18)] = 
+        //
+        {{all_out[row_counter][j][(0+(pixel_width_18)) +: (pixel_width_18)]},
+        //
         {all_out[row_counter][j][(0) +: (pixel_width_18)]}};
        
         
         assign row_output_18[pixel_width_18 * pe_parallel_pixel_18 * column_num + ((2 * j) * pixel_width_18)+: (2* pixel_width_18)]
+        //
         ={{all_out[row_counter][j][(0+(3*pixel_width_18)) +: (pixel_width_18)]},
+        //
         {all_out[row_counter][j][(0+(2*pixel_width_18))+: (pixel_width_18)]}};
         
         assign row0_out[j*mult_P_width +: mult_P_width] = row0_mult_out[j][mult_P_width-1 :0]; 

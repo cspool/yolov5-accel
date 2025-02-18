@@ -54,12 +54,12 @@ module convolution_tb ();
   parameter bias_width = 8;  //8 bit bias
   parameter bias_set_width = bias_width * pe_parallel_weight_18;  //32; vconv pixel out_width
   parameter bias_set_4_channel_width = bias_set_width * sa_row_num;  //4 * 16 bit
-  parameter bias_sets_num_in_row = sa_row_num * row_num_in_sa;  //64
+  // parameter bias_sets_num_in_row = sa_row_num * row_num_in_sa;  //64
   //   parameter bias_tile_length = bias_set_width * bias_sets_num_in_row; //64 * 16bit
   parameter bias_word_length = 512;
   parameter add_bias_row_width = pixel_width_18 * pe_parallel_pixel_18 * pe_parallel_weight_18 * column_num_in_sa;
-  parameter add_bias_row_width_88 = pixel_width_88 * pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa;
-  parameter add_bias_row_width_18_2 = pixel_width_18 * pe_parallel_pixel_18 * 1 * column_num_in_sa;
+  // parameter add_bias_row_width_88 = pixel_width_88 * pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa;
+  // parameter add_bias_row_width_18_2 = pixel_width_18 * pe_parallel_pixel_18 * 1 * column_num_in_sa;
   parameter mult_A_width = 24;
   parameter mult_B_width = 16;
   parameter mult_P_width = 40;
@@ -73,20 +73,20 @@ module convolution_tb ();
   parameter E_scale_tail_width = 16;  //16 bit E_scale tail
   parameter E_scale_tail_set_width = E_scale_tail_width * pe_parallel_weight_18;  //32 bit
   parameter E_scale_tail_set_4_channel_width = E_scale_tail_set_width * sa_row_num;  //4 * 32 bit
-  parameter E_scale_tail_sets_num_in_row = sa_row_num * row_num_in_sa;  //64
-  parameter E_scale_tail_tile_length = E_scale_tail_set_width * E_scale_tail_sets_num_in_row;  //64 * 32bit regs to str
+  // parameter E_scale_tail_sets_num_in_row = sa_row_num * row_num_in_sa;  //64
+  // parameter E_scale_tail_tile_length = E_scale_tail_set_width * E_scale_tail_sets_num_in_row;  //64 * 32bit regs to str
   parameter E_scale_tail_word_width = 512;
   parameter E_scale_rank_width = 8;  //8 bit E_scale rank
   parameter E_scale_rank_set_width = E_scale_rank_width * pe_parallel_weight_18;  //16 bit
   parameter E_scale_rank_set_4_channel_width = E_scale_rank_set_width * sa_row_num;  //4 * 16 bit
-  parameter E_scale_rank_sets_num_in_row = sa_row_num * row_num_in_sa;  //64
-  parameter E_scale_rank_tile_length = E_scale_rank_set_width * E_scale_rank_sets_num_in_row;  //64 * 16bit regs to str
+  // parameter E_scale_rank_sets_num_in_row = sa_row_num * row_num_in_sa;  //64
+  // parameter E_scale_rank_tile_length = E_scale_rank_set_width * E_scale_rank_sets_num_in_row;  //64 * 16bit regs to str
   parameter E_scale_rank_word_width = 512;
-  parameter pixel_E_scale_tail_width_88 = pixel_width_88 + E_scale_tail_width;  //40 bit
-  parameter pixel_E_scale_tail_width_18 = pixel_width_18 + E_scale_tail_width;  //32 bit
-  parameter row_E_scale_tail_width_88 = pixel_E_scale_tail_width_88 * pe_parallel_weight_88 * pe_parallel_pixel_88 * column_num_in_sa;
+  // parameter pixel_E_scale_tail_width_88 = pixel_width_88 + E_scale_tail_width;  //40 bit
+  // parameter pixel_E_scale_tail_width_18 = pixel_width_18 + E_scale_tail_width;  //32 bit
+  // parameter row_E_scale_tail_width_88 = pixel_E_scale_tail_width_88 * pe_parallel_weight_88 * pe_parallel_pixel_88 * column_num_in_sa;
   //40 bit * 32 pixels * 1 channel
-  parameter row_E_scale_tail_width_18_2 = pixel_E_scale_tail_width_18 * 1 * pe_parallel_pixel_18 * column_num_in_sa;
+  // parameter row_E_scale_tail_width_18_2 = pixel_E_scale_tail_width_18 * 1 * pe_parallel_pixel_18 * column_num_in_sa;
   //32 bit * 32 pixels * 1 channel
   parameter add_bias_row_in_mult_A_width_width = mult_A_width * pe_parallel_weight_18 * pe_parallel_pixel_18 * column_num_in_sa;
   //24 bit * 32 pixels * 2 channel
@@ -97,8 +97,6 @@ module convolution_tb ();
   parameter quantified_pixel_width = 8;
   parameter quantified_row_width = (quantified_pixel_width) * pe_parallel_weight_18 * pe_parallel_pixel_18 * column_num_in_sa;
   //8 bit * 32 pixels * 2 channel
-  parameter scaled_rank_row_width = (quantified_pixel_width + 1) * pe_parallel_weight_18 * pe_parallel_pixel_18 * column_num_in_sa;
-  //9 bit * 32 pixels * 2 channel
   parameter out_data_width = quantified_pixel_width * pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa;
   //load input
   parameter row_num_in_mode0 = 64;  // 64 in 8 bit, 128 in 1 bit

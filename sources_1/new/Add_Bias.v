@@ -34,8 +34,8 @@ module Add_Bias (
 );
   parameter row_num = 16;
   parameter column_num = 16;
-  parameter pixels_in_row = 32;
-  parameter pixels_in_row_in_2pow = 5;
+  // parameter pixels_in_row = 32;
+  // parameter pixels_in_row_in_2pow = 5;
 
   parameter headroom = 8;
 
@@ -48,7 +48,7 @@ module Add_Bias (
   parameter pe_parallel_pixel_18 = 2;
   parameter pe_parallel_weight_18 = 2;
 
-  parameter pe_out_width = (pixel_width_18) * pe_parallel_pixel_18 * pe_parallel_weight_18;  // width of 18 is bigger than 88
+  // parameter pe_out_width = (pixel_width_18) * pe_parallel_pixel_18 * pe_parallel_weight_18;  // width of 18 is bigger than 88
 
   parameter out_width = pixel_width_18 * pe_parallel_pixel_18 * pe_parallel_weight_18 * column_num;
   parameter out_width_88 = pixel_width_88 * pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num;
@@ -59,11 +59,9 @@ module Add_Bias (
 
   parameter bias_width = 8;  //8 bit bias
   parameter bias_set_width = bias_width * pe_parallel_weight_18;  //16 bit
-  parameter bias_set_4_channel_width = bias_set_width * sa_row_num;  //4 * 16 bit
-
-  parameter bias_sets_num_in_row = sa_row_num * row_num;  //64
-
-  parameter bias_tile_length = bias_set_width * bias_sets_num_in_row;  //64 * 16bit
+  // parameter bias_set_4_channel_width = bias_set_width * sa_row_num;  //4 * 16 bit
+  // parameter bias_sets_num_in_row = sa_row_num * row_num;  //64
+  // parameter bias_tile_length = bias_set_width * bias_sets_num_in_row;  //64 * 16bit
 
   parameter add_bias_row_width = pixel_width_18 * pe_parallel_pixel_18 * pe_parallel_weight_18 * column_num;
   parameter add_bias_row_width_88 = pixel_width_88 * pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num;
