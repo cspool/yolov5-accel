@@ -35,12 +35,12 @@ def generate_conv_E_quantify_tests():
   #       for quantify_type in quantify_types:
   #          conv_test(conv_type, mode_type, quantify_type)
   
-  conv_type, mode_type, quantify_type = (3,0,0)
+  conv_type, mode_type, quantify_type = (0,1,0)
   conv_E_quantify_test(conv_type, mode_type, quantify_type)
 
 def conv_E_quantify_test(conv_type, mode_type, quantify_type):
-    # standard_conv_E_quantify(conv_type, mode_type, quantify_type)
-    fpga_conv_E_quantify(conv_type, mode_type, quantify_type)
+    standard_conv_E_quantify(conv_type, mode_type, quantify_type)
+    # fpga_conv_E_quantify(conv_type, mode_type, quantify_type)
 
 def standard_conv_E_quantify(conv_type, mode_type, quantify_type):
   # def basic conv op
@@ -265,7 +265,8 @@ def generate_conv_E_data(quantify_type, mode, of):
 
 def generate_conv_scale_data(quantify_type, mode, of, k):
   # scale[F]
-  scale_scalar = 10 if (k == 1) else (13 if (k == 3) else 15)
+  scale_scalar = (10 if (k == 1) else (13 if (k == 3) else 15)) if (mode == 0) \
+    else (3 if (k == 1) else (6 if (k == 3) else 8))
   # uint8 [0,256]
   scale_data = torch.randint(0, 256, size=(of,), dtype=torch.int) \
   if quantify_type == 2 else (torch.ones(of, dtype=torch.int) * torch.tensor([scale_scalar], dtype=int))
@@ -303,14 +304,30 @@ def generate_ddr_txt(mode, weights_ddr_words, bias_ddr_words, E_ddr_words, scale
       weights_ddr_words_shape = weights_ddr_words.shape
       #turn 2d tensor into 1d tensor array
       weights_ddr_word_array = weights_ddr_words.reshape(-1,).split(split_size=weights_ddr_words_shape[-1], dim=0)
+      
       for weight_ddr_word_index, weight_ddr_word in enumerate(weights_ddr_word_array):
       # iterate each weight word
           reverse_weight_ddr_word = torch.flip(weight_ddr_word, dims=[0])
-          hex_str = ''.join([int8_to_hex_complement(weight_num.item()) for weight_num in reverse_weight_ddr_word]) \
-              if mode == 0 else ''.join([f'{weight_num:01b}' for weight_num in reverse_weight_ddr_word])
-          # print(hex_str + ',\n')
-          f.write(hex_str + ',\n')
-      # f.write('\n')
+          if mode == 0:
+              hex_str = ''.join([int8_to_hex_complement(weight_num.item()) for weight_num in reverse_weight_ddr_word])
+              # print(hex_str + ',\n')
+              f.write(hex_str + ',\n')
+          else:
+              hex_array = []
+              reverse_weight_ddr_word_length = reverse_weight_ddr_word.shape[-1]
+              assert reverse_weight_ddr_word_length == 512
+              for weight_num_index in range(0, reverse_weight_ddr_word_length, 4):
+                  # 0,1,2,3,... --> high of index, low of index
+                  weight_bit1 = reverse_weight_ddr_word[weight_num_index]
+                  weight_bit2 = reverse_weight_ddr_word[weight_num_index+1]
+                  weight_bit3 = reverse_weight_ddr_word[weight_num_index+2]
+                  weight_bit4 = reverse_weight_ddr_word[weight_num_index+3]
+                  weight_str = ''.join([f'{weight_bit1:01b}', f'{weight_bit2:01b}',  f'{weight_bit3:01b}',  f'{weight_bit4:01b}'])
+                  weight = int(weight_str, base=2)
+                  hex_array.append(f'{weight:01x}')
+              hex_str = ''.join(hex_array)
+              f.write(hex_str + ',\n')
+      # f.write('\n')              
       
       # bias
       bias_ddr_words_shape = bias_ddr_words.shape
@@ -371,11 +388,26 @@ def generate_ddr_init(mode, weights_ddr_words, bias_ddr_words, E_ddr_words, scal
       for weight_ddr_word_index, weight_ddr_word in enumerate(weights_ddr_word_array):
       # iterate each weight word
           reverse_weight_ddr_word = torch.flip(weight_ddr_word, dims=[0])
-          hex_str = ''.join([int8_to_hex_complement(weight_num.item()) for weight_num in reverse_weight_ddr_word]) \
-              if mode == 0 else ''.join([f'{weight_num:01b}' for weight_num in reverse_weight_ddr_word])
-          # print(hex_str + ',\n')
-          f.write(hex_str + '\n')
-      # f.write('\n')
+          if mode == 0:
+              hex_str = ''.join([int8_to_hex_complement(weight_num.item()) for weight_num in reverse_weight_ddr_word])
+              # print(hex_str + ',\n')
+              f.write(hex_str + '\n')
+          else:
+              hex_array = []
+              reverse_weight_ddr_word_length = reverse_weight_ddr_word.shape[-1]
+              assert reverse_weight_ddr_word_length == 512
+              for weight_num_index in range(0, reverse_weight_ddr_word_length, 4):
+                  # 0,1,2,3,... --> high of index, low of index
+                  weight_bit1 = reverse_weight_ddr_word[weight_num_index]
+                  weight_bit2 = reverse_weight_ddr_word[weight_num_index+1]
+                  weight_bit3 = reverse_weight_ddr_word[weight_num_index+2]
+                  weight_bit4 = reverse_weight_ddr_word[weight_num_index+3]
+                  weight_str = ''.join([f'{weight_bit1:01b}', f'{weight_bit2:01b}',  f'{weight_bit3:01b}',  f'{weight_bit4:01b}'])
+                  weight = int(weight_str, base=2)
+                  hex_array.append(f'{weight:01x}')
+              hex_str = ''.join(hex_array)
+              f.write(hex_str + '\n')
+      # f.write('\n')   
       
       # bias
       bias_ddr_words_shape = bias_ddr_words.shape
@@ -450,16 +482,45 @@ def generate_weight_buf_txt(mode, weights_ddr_words):
       #turn 2d tensor into 1d tensor array
       weights_ddr_word_array = weights_ddr_words.reshape(-1,).split(split_size=weights_ddr_words_shape[-1], dim=0)
       weights_ddr_word_len = len(weights_ddr_word_array)
+
+
       for weight_ddr_word_index, weight_ddr_word in enumerate(weights_ddr_word_array):
       # iterate each weight word
           reverse_weight_ddr_word = torch.flip(weight_ddr_word, dims=[0])
-          hex_str = ''.join([int8_to_hex_complement(weight_num.item()) for weight_num in reverse_weight_ddr_word]) \
-              if mode == 0 else ''.join([f'{weight_num:01b}' for weight_num in reverse_weight_ddr_word])
-          # print(hex_str + ',\n')
-          f.write(hex_str)
-          if weight_ddr_word_index < weights_ddr_word_len - 1:
-              f.write(',\n')
+          if mode == 0:
+              hex_str = ''.join([int8_to_hex_complement(weight_num.item()) for weight_num in reverse_weight_ddr_word])
+              f.write(hex_str)
+              if weight_ddr_word_index < weights_ddr_word_len - 1:
+                  f.write(',\n')
+          else:
+              hex_array = []
+              reverse_weight_ddr_word_length = reverse_weight_ddr_word.shape[-1]
+              assert reverse_weight_ddr_word_length == 512
+              for weight_num_index in range(0, reverse_weight_ddr_word_length, 4):
+                  # 0,1,2,3,... --> high of index, low of index
+                  weight_bit1 = reverse_weight_ddr_word[weight_num_index]
+                  weight_bit2 = reverse_weight_ddr_word[weight_num_index+1]
+                  weight_bit3 = reverse_weight_ddr_word[weight_num_index+2]
+                  weight_bit4 = reverse_weight_ddr_word[weight_num_index+3]
+                  weight_str = ''.join([f'{weight_bit1:01b}', f'{weight_bit2:01b}',  f'{weight_bit3:01b}',  f'{weight_bit4:01b}'])
+                  weight = int(weight_str, base=2)
+                  hex_array.append(f'{weight:01x}')
+              hex_str = ''.join(hex_array)
+              f.write(hex_str)
+              if weight_ddr_word_index < weights_ddr_word_len - 1:
+                  f.write(',\n')
       f.write(';')
+
+      # for weight_ddr_word_index, weight_ddr_word in enumerate(weights_ddr_word_array):
+      # # iterate each weight word
+      #     reverse_weight_ddr_word = torch.flip(weight_ddr_word, dims=[0])
+      #     hex_str = ''.join([int8_to_hex_complement(weight_num.item()) for weight_num in reverse_weight_ddr_word]) \
+      #         if mode == 0 else ''.join([f'{weight_num:01b}' for weight_num in reverse_weight_ddr_word])
+      #     # print(hex_str + ',\n')
+      #     f.write(hex_str)
+      #     if weight_ddr_word_index < weights_ddr_word_len - 1:
+      #         f.write(',\n')
+      # f.write(';')
 
 def generate_bias_buf_txt(bias_ddr_words):
    # bias buffer data
