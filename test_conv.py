@@ -39,8 +39,8 @@ def generate_conv_tests():
   conv_test(conv_type, mode_type, quantify_type)
 
 def conv_test(conv_type, mode_type, quantify_type):
-    # standard_conv(conv_type, mode_type, quantify_type)
-    fpga_conv(conv_type, mode_type, quantify_type)
+    standard_conv(conv_type, mode_type, quantify_type)
+    # fpga_conv(conv_type, mode_type, quantify_type)
 
 def standard_conv(conv_type, mode_type, quantify_type):
   # def basic conv op

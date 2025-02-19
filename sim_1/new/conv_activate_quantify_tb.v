@@ -64,7 +64,7 @@ module conv_activate_quantify_tb ();
   parameter E_sets_num_in_row = sa_row_num * row_num_in_sa;  //64
   // parameter E_tile_length = E_set_width * E_sets_num_in_row;  //64 * 32bit regs to str
   parameter E_word_width = 512;
-  parameter scale_width = 8;  //8 bit E_scale rank
+  parameter scale_width = 8;  //8 bit scale
   parameter scale_set_width = scale_width * pe_parallel_weight_18;  //16 bit
   parameter scale_set_4_channel_width = scale_set_width * sa_row_num;  //4 * 16 bit
   parameter scale_sets_num_in_row = sa_row_num * row_num_in_sa;  //64
@@ -1337,8 +1337,8 @@ module conv_activate_quantify_tb ();
     end
   end
   assign scale_buf_adr = 
-  ((scale_buf_en_rd == 1'b0) && (scale_buf_en_wr == 1'b1)) ? scale_buf_adr_wr : //wt rank buf
-  ((scale_buf_en_rd == 1'b1) && (scale_buf_en_wr == 1'b0)) ? scale_buf_adr_rd : 0; //rd rank buf
+  ((scale_buf_en_rd == 1'b0) && (scale_buf_en_wr == 1'b1)) ? scale_buf_adr_wr : //wt scale buf
+  ((scale_buf_en_rd == 1'b1) && (scale_buf_en_wr == 1'b0)) ? scale_buf_adr_rd : 0; //rd scale buf
   assign scale_buf_en  = ((scale_buf_en_rd == 1'b1) || (scale_buf_en_wr == 1'b1)) ? 1 : 0;
   assign scale_buf_en_wr = 1'b0;
   assign scale_buf_wr = 512'b0;
@@ -1372,7 +1372,7 @@ module conv_activate_quantify_tb ();
   Scale_Regs scale_regs (
       .clk                   (clk),
       .reset                 ((reset == 1) || (conv_start == 1)),
-      .rank_set              (rank_reg_set),
+      .scale_set              (scale_reg_set),
       .mode                  (mode),
       .scale_word     (last_scale_word),
       .scale_reg_start(last_scale_reg_start),
@@ -1491,7 +1491,7 @@ module conv_activate_quantify_tb ();
             .product_add_bias_vector(product_add_bias_vector_rowi_channel_setj[i-1][j-1])  // pox res per channel
         );
 
-        relu_scale_vecOp (
+        relu_scale_vecOp relu_scale_vecop(
             .clk                             (clk),
             .mode                            (mode),
             .scale_set(scale_4_channel_sets[(j-1)*scale_set_width+:scale_set_width]),
@@ -1583,20 +1583,18 @@ module conv_activate_quantify_tb ();
     clk <= ~clk;
   end
 
-  integer file;
-  integer file2;
-  integer file3;
+  integer file, file2, file3, file4;
   integer n;
   initial begin
     // initial data
     for (n = 0; n < DDR_mem_limit; n = n + 1) begin
       DDR_mem[n] = 512'b0;
     end
-    for (n = 0; n < E_buffer_mem_limit; n = n + 1) begin
-      E_buffer_mem[n] = 512'b0;
-    end
     for (n = 0; n < bias_buffer_mem_limit; n = n + 1) begin
       bias_buffer_mem[n] = 512'b0;
+    end
+    for (n = 0; n < E_buffer_mem_limit; n = n + 1) begin
+      E_buffer_mem[n] = 512'b0;
     end
     for (n = 0; n < scale_buffer_mem_limit; n = n + 1) begin
       scale_buffer_mem[n] = 512'b0;
@@ -1606,8 +1604,8 @@ module conv_activate_quantify_tb ();
     for (n = 0; n < DDR_mem_limit; n = n + 1) begin
       $display("DDR_mem[%d] = %h", n, DDR_mem[n]);
     end
-    $readmemh("D:\\project\\Vivado\\yolov5_accel\\yolov5_accel.srcs\\E_buffer_init.txt", E_buffer_mem);
     $readmemh("D:\\project\\Vivado\\yolov5_accel\\yolov5_accel.srcs\\bias_buffer_init.txt", bias_buffer_mem);
+    $readmemh("D:\\project\\Vivado\\yolov5_accel\\yolov5_accel.srcs\\E_buffer_init.txt", E_buffer_mem);
     $readmemh("D:\\project\\Vivado\\yolov5_accel\\yolov5_accel.srcs\\scale_buffer_init.txt", scale_buffer_mem);
     // collect conv res file
     file = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/conv_result.txt", "w");
@@ -1620,6 +1618,14 @@ module conv_activate_quantify_tb ();
     $fdisplay(file, "Time\tvalid\tout_f_idx\tout_y_idx\tout_x_idx\tresult_word");
     // 监控信号变化并写入文件
     $fmonitor(file, "%t\t%b\t%d\t%d\t%d\t%h", $time, valid_rowi_out_buf_adr, out_f_idx, out_y_idx, out_x_idx, conv_out_data);
+
+    // collect product add bias file
+    file2 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum.txt", "w");
+    $fmonitor(file2, "%h", sum_vector_in_mult_A_width_rowi_channel_setj[0][0]);
+    file3 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_mult_E.txt", "w");
+    $fmonitor(file3, "%h", sum_mult_E_vector_in_mult_P_width_rowi_channel_setj[0][0]);
+    file4 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/product_add_bias.txt", "w");
+    $fmonitor(file4, "%h", product_add_bias_vector_rowi_channel_setj[0][0]);
 
     //begin simulation
     clk   = 0;

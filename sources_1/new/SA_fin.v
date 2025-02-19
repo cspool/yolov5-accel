@@ -124,20 +124,32 @@ wire [row_num-1 :0] row_en;
 //     end
 //   end
 
-
 assign row_en = {(row_num){en}} << (out_sa_row_idx);
 
 generate
     for (i = 0; i < column_num; i = i + 1) begin
+        // //int8 input * int8 weight, signed input int8
+        // assign I_As[i] = (mode == 1'b0)?   
+        //                            //
+        // ({column_in[(i * 16 + 8) +: 8], 16'b0} + {{16{column_in[(i * 16 + 7)]}}, column_in[(i * 16) +: 8]}) :
+        //                            //
+        //                            (mode == 1'b1)? 
+        //                            //
+        //                             ({{8{column_in[(i * 16 + 15)]}}, column_in[(i * 16 + 8) +: 8], 8'b0} +
+        //                            //
+        //                             {{16{column_in[(i * 16 + 7)]}}, column_in[(i * 16) +: 8]}):
+        //                            24'b0;
+
+        //uint8 input * int8 weight, unsigned input int8
         assign I_As[i] = (mode == 1'b0)?   
                                    //
-        ({column_in[(i * 16 + 8) +: 8], 16'b0} + {{16{column_in[(i * 16 + 7)]}}, column_in[(i * 16) +: 8]}) :
+        ({column_in[(i * 16 + 8) +: 8], 16'b0} + {{16'b0}, column_in[(i * 16) +: 8]}) :
                                    //
                                    (mode == 1'b1)? 
                                    //
-                                    ({{8{column_in[(i * 16 + 15)]}}, column_in[(i * 16 + 8) +: 8], 8'b0} +
+                                    ({{8'b0}, column_in[(i * 16 + 8) +: 8], 8'b0} +
                                    //
-                                    {{16{column_in[(i * 16 + 7)]}}, column_in[(i * 16) +: 8]}):
+                                    {{16'b0}, column_in[(i * 16) +: 8]}):
                                    24'b0;
     end
 endgenerate
