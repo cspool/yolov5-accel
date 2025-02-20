@@ -87,6 +87,7 @@ module conv_fifo_out_controller (
   reg  [15:0] of_counter;
   reg  [ 3:0] oy_counter;
   reg  [15:0] channel_counter;  //0-16 in mode 0, 0-31 in mode 1
+  reg  [15:0] last_channel_counter;  //last channel_counter 
   wire        row_fifo_rd_en;
   wire [15:0] channel_num;
   wire [ 3:0] log_channel_num;
@@ -136,7 +137,9 @@ module conv_fifo_out_controller (
 
   endgenerate
   assign conv_out_data_mode0 = fifo_data[conv_out_data_width-1 : 0];
-  assign conv_out_data_mode1 = (channel_counter[0] == 1'b1) ? fifo_data[conv_out_data_width-1 : 0] : (channel_counter[0] == 1'b0) ? fifo_data[quantified_row_width-1 : conv_out_data_width] : 0;
+  assign conv_out_data_mode1 =  //last read channel counter is 1,3,5,7,9,...
+ (last_channel_counter[0] == 1'b1) ? fifo_data[conv_out_data_width-1 : 0] :  //last read channel counter is 2,4,6,8,10,...
+ (last_channel_counter[0] == 1'b0) ? fifo_data[quantified_row_width-1 : conv_out_data_width] : 0;
 
   assign conv_out_data       = (valid_rowi_out_buf_adr == 1'b0) ? 0 : (valid_rowi_out_buf_adr == 1'b1) ? ((mode == 1'b0) ? conv_out_data_mode0 : (mode == 1'b1) ? conv_out_data_mode1 : 0) : 0;
 
@@ -172,10 +175,16 @@ module conv_fifo_out_controller (
   end
 
   //fifo rd en in 1/1 cycle in mode 0, 1/2 cycle in mode 1.
-
   assign loop_channel_counter_add_begin = (signal_add == 1'b1) && (ddr_en == 1'b1);
-
   assign loop_channel_counter_add_end   = loop_channel_counter_add_begin && ((of_counter - 1 + channel_counter == cur_pof) || (channel_counter == channel_num));
+
+  always @(posedge clk) begin
+    if (reset == 1'b1) begin
+      last_channel_counter <= 0;
+    end else begin
+      last_channel_counter <= channel_counter;
+    end
+  end
 
   //loop row no
   always @(posedge clk) begin
@@ -193,7 +202,6 @@ module conv_fifo_out_controller (
   end
 
   assign loop_of_counter_add_begin = (loop_channel_counter_add_end == 1'b1);
-
   assign loop_of_counter_add_end   = loop_of_counter_add_begin && (of_counter - 1 + channel_counter == cur_pof);
 
   //loop column no

@@ -55,13 +55,14 @@ module Mult_Array (
       //   .B(vector_B[(i * mult_B_width) +: mult_B_width]),      // input wire [15 : 0] B
       //   .P(vector_P[(i * mult_P_width) +: mult_P_width])      // output wire [39 : 0] P
       // );
-      // sum s24 * E u16
-      mult_dsp_s24_u16 mult_dsp_s24_u16 (
-          .CLK(clk),                                       // input wire CLK
+      // sum s24 * E s18
+      mult_dsp_s24_s18 mult_dsp_s24_s18 (
+          .CLK(clk),                                                                                                                        // input wire CLK
           .CE (en),
-          .A  (vector_A[(i*mult_A_width)+:mult_A_width]),  // input wire [23 : 0] A
-          .B  (vector_B[(i*mult_B_width)+:mult_B_width]),  // input wire [15 : 0] B
-          .P  (vector_P[(i*mult_P_width)+:mult_P_width])   // output wire [39 : 0] P
+          .A  (vector_A[(i*mult_A_width)+:mult_A_width]),                                                                                   // input wire [23 : 0] A
+          .B  ({{(18 - mult_B_width) {vector_B[(i*mult_B_width)+mult_B_width-1]}},  //signed E
+ vector_B[(i*mult_B_width)+:mult_B_width]}),  // input wire [17 : 0] B
+          .P  (vector_P[(i*mult_P_width)+:mult_P_width])                                                                                    // output wire [41 : 0] P
       );
     end
 
@@ -74,13 +75,14 @@ module Mult_Array (
       //   .B(vector_B[((mult_dsp_array_length + i) * mult_B_width) +: mult_B_width]),      // input wire [15 : 0] B
       //   .P(vector_P[((mult_dsp_array_length + i) * mult_P_width) +: mult_P_width])      // output wire [39 : 0] P
       // );
-      // sum s24 * E u16
-      mult_lut_s24_u16 mult_lut_s24_u16 (
-          .CLK(clk),                                                               // input wire CLK
+      // sum s24 * E s18
+      mult_lut_s24_s18 mult_lut_s24_s18 (
+          .CLK(clk),                                                                                                                                                                        // input wire CLK
           .CE (en),
-          .A  (vector_A[((mult_dsp_array_length+i)*mult_A_width)+:mult_A_width]),  // input wire [23 : 0] A
-          .B  (vector_B[((mult_dsp_array_length+i)*mult_B_width)+:mult_B_width]),  // input wire [15 : 0] B
-          .P  (vector_P[((mult_dsp_array_length+i)*mult_P_width)+:mult_P_width])   // output wire [39 : 0] P
+          .A  (vector_A[((mult_dsp_array_length+i)*mult_A_width)+:mult_A_width]),                                                                                                           // input wire [23 : 0] A
+          .B  ({{(18 - mult_B_width) {vector_B[((mult_dsp_array_length+i)*mult_B_width)+mult_B_width-1]}},  //signed E
+ vector_B[((mult_dsp_array_length+i)*mult_B_width)+:mult_B_width]}),  // input wire [17 : 0] B
+          .P  (vector_P[((mult_dsp_array_length+i)*mult_P_width)+:mult_P_width])                                                                                                            // output wire [41 : 0] P
       );
     end
   endgenerate

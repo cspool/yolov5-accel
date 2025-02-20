@@ -35,12 +35,12 @@ def generate_conv_E_quantify_tests():
   #       for quantify_type in quantify_types:
   #          conv_test(conv_type, mode_type, quantify_type)
   
-  conv_type, mode_type, quantify_type = (0,1,0)
+  conv_type, mode_type, quantify_type = (0,0,0)
   conv_E_quantify_test(conv_type, mode_type, quantify_type)
 
 def conv_E_quantify_test(conv_type, mode_type, quantify_type):
-    standard_conv_E_quantify(conv_type, mode_type, quantify_type)
-    # fpga_conv_E_quantify(conv_type, mode_type, quantify_type)
+    # standard_conv_E_quantify(conv_type, mode_type, quantify_type)
+    fpga_conv_E_quantify(conv_type, mode_type, quantify_type)
 
 def standard_conv_E_quantify(conv_type, mode_type, quantify_type):
   # def basic conv op
@@ -73,7 +73,12 @@ def standard_conv_E_quantify(conv_type, mode_type, quantify_type):
 
   # standard conv
   input_data = input_data.view(1, nif, iy, ix)
-  conv_out = F.conv2d(input_data, weight_data, torch.zeros(size=(of,), dtype=torch.int), stride=s, padding=p)
+  weight_data_mode0 = weight_data
+  # 0 --> 1, 1 --> -1
+  weight_data_mode1 = torch.tensor([1], dtype=torch.int).view(1, 1, 1, 1) \
+    - weight_data * torch.tensor([2], dtype=torch.int).view(1, 1, 1, 1)
+  weight_data_mode = weight_data_mode0 if mode == 0 else weight_data_mode1
+  conv_out = F.conv2d(input_data, weight_data_mode, torch.zeros(size=(of,), dtype=torch.int), stride=s, padding=p)
   # 调整 E 和 scale 的形状以匹配输出张量
   E_data = E_data.view(1, of, 1, 1)  # 调整为 (1, of, 1, 1)
   bias_data = bias_data.view(1, of, 1, 1)
@@ -88,7 +93,7 @@ def standard_conv_E_quantify(conv_type, mode_type, quantify_type):
   output_tensor = torch.clamp(torch.bitwise_right_shift(conv_out, scale_data), 0, 255)  # 使用广播机制
   # 将张量保存到txt文件
   output_file = "output_tensor.txt"
-  with open(output_file, "w") as f:
+  with open(output_file, "w") as f: 
       # 第一行写入维度信息
       f.write(" ".join(map(str, output_tensor.shape)) + "\n")
       # 遍历张量的每个元素并写入文件
@@ -236,8 +241,9 @@ def generate_conv_bias_data(mode, of):
 def generate_conv_E_data(quantify_type, mode, of):
   # E[F]
   # uint16 [0,256*256-1]
+  # 1
   E_data = (torch.ones(of, dtype=torch.int) * (torch.tensor([2], dtype=int))) \
-  if ((quantify_type == 0) or (mode == 0)) else torch.randint(0, 256*256, size=(of,), dtype=torch.int)
+    if ((quantify_type == 0) or (mode == 0)) else torch.randint(0, 256*256, size=(of,), dtype=torch.int)
   ## reshape e_scale_tail data
   # the amount of out channel of tail per complete ddr word 
   E_width = 16
@@ -267,7 +273,7 @@ def generate_conv_scale_data(quantify_type, mode, of, k):
   # scale[F]
   scale_scalar = (10 if (k == 1) else (13 if (k == 3) else 15)) if (mode == 0) \
     else (3 if (k == 1) else (6 if (k == 3) else 8))
-  # uint8 [0,256]
+  # uint8 [0,256] scale_scalar
   scale_data = torch.randint(0, 256, size=(of,), dtype=torch.int) \
   if quantify_type == 2 else (torch.ones(of, dtype=torch.int) * torch.tensor([scale_scalar], dtype=int))
   ## reshape scale data
@@ -655,12 +661,18 @@ def generate_instr_args_init(mode,k,s,p,of,ox,oy,ix,iy,nif):
   E_layer_base_buf_adr_rd_integer = 0
   scale_layer_base_buf_adr_rd_integer = 0
   weights_layer_base_ddr_adr_rd_integer = 0
-  input_ddr_layer_base_adr_integers_mapping = {
+  input_ddr_layer_base_adr_integers_mapping_mode0 = {
       1:16,
       3:80,
       6:296
       } #xxxx
-  input_ddr_layer_base_adr_integer = input_ddr_layer_base_adr_integers_mapping[k] #xxxxx
+  input_ddr_layer_base_adr_integers_mapping_mode1 = {
+      1:12,
+      3:80,
+      6:296
+      } #xxxx
+  input_ddr_layer_base_adr_integer = (input_ddr_layer_base_adr_integers_mapping_mode0[k]) if (mode == 0) \
+     else (input_ddr_layer_base_adr_integers_mapping_mode1[k]) #xxxxx
   ix_index_num_real = math.ceil(ix_integer / pixels_in_row_real)
   iy_index_num_real = math.ceil(iy_integer)
   tilex_first_ix_word_num_real = math.ceil(((pixels_in_row - 1) * s_real + k_real - p_real) / pixels_in_row)

@@ -52,13 +52,13 @@
 -- The following code must appear in the VHDL architecture header.
 
 ------------- Begin Cut here for COMPONENT Declaration ------ COMP_TAG
-COMPONENT mult_dsp_s24_u16
+COMPONENT mult_lut_s24_s18
   PORT (
     CLK : IN STD_LOGIC;
     A : IN STD_LOGIC_VECTOR(23 DOWNTO 0);
-    B : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
+    B : IN STD_LOGIC_VECTOR(17 DOWNTO 0);
     CE : IN STD_LOGIC;
-    P : OUT STD_LOGIC_VECTOR(39 DOWNTO 0)
+    P : OUT STD_LOGIC_VECTOR(41 DOWNTO 0)
   );
 END COMPONENT;
 -- COMP_TAG_END ------ End COMPONENT Declaration ------------
@@ -67,7 +67,7 @@ END COMPONENT;
 -- body. Substitute your own instance name and net names.
 
 ------------- Begin Cut here for INSTANTIATION Template ----- INST_TAG
-your_instance_name : mult_dsp_s24_u16
+your_instance_name : mult_lut_s24_s18
   PORT MAP (
     CLK => CLK,
     A => A,
@@ -77,7 +77,7 @@ your_instance_name : mult_dsp_s24_u16
   );
 -- INST_TAG_END ------ End INSTANTIATION Template ---------
 
--- You must compile the wrapper file mult_dsp_s24_u16.vhd when simulating
--- the core, mult_dsp_s24_u16. When compiling the wrapper file, be sure to
+-- You must compile the wrapper file mult_lut_s24_s18.vhd when simulating
+-- the core, mult_lut_s24_s18. When compiling the wrapper file, be sure to
 -- reference the VHDL simulation library.
 

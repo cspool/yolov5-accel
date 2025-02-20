@@ -143,14 +143,17 @@ module E_Scale (
     // add_bias_row_in_24[24 * pe_parallel_pixel_88 * column_num -1 : 0]
     //24 bit * 32 pixels * 1 channel or 16 bit * 32 pixels * 2 channel
     for (i = 0; i < pe_parallel_pixel_88 * column_num; i = i + 1) begin
-      assign add_bias_row_in_mult_A_width[i*mult_A_width +: mult_A_width] =
-             (mode == 1'b0)? {{(mult_A_width-pixel_width_88){1'b0}},add_bias_row_88[i*pixel_width_88 +: pixel_width_88]}:
-             (mode == 1'b1)? {{(mult_A_width-pixel_width_18){1'b0}},add_bias_row_18_1[i*pixel_width_18 +: pixel_width_18]}:
-             0;
+      assign add_bias_row_in_mult_A_width[i*mult_A_width+:mult_A_width] = (mode == 1'b0) ?
+          // 0{sign},add_bias_row_88
+          {add_bias_row_88[i*pixel_width_88+:pixel_width_88]} : (mode == 1'b1) ?
+          // 8{sign},add_bias_row_18_1
+          {{8{add_bias_row_18_1[i*pixel_width_18+pixel_width_18-1]}}, add_bias_row_18_1[i*pixel_width_18+:pixel_width_18]} : 0;
     end
     // add_bias_row_in_24[add_bias_row_in_24_width-1 : 24 * pe_parallel_pixel_18 * column_num]
     for (i = 0; i < pe_parallel_pixel_18 * column_num; i = i + 1) begin
-      assign add_bias_row_in_mult_A_width[(pe_parallel_pixel_18*column_num+i)*mult_A_width+:mult_A_width] = (mode == 1'b1) ? {{(mult_A_width - pixel_width_18) {1'b0}}, add_bias_row_18_2[i*pixel_width_18+:pixel_width_18]} : 0;
+      assign add_bias_row_in_mult_A_width[(pe_parallel_pixel_18*column_num+i)*mult_A_width+:mult_A_width] = (mode == 1'b1) ?
+          // 8{sign},add_bias_row_18_2
+          {{8{add_bias_row_18_2[i*pixel_width_18+pixel_width_18-1]}}, add_bias_row_18_2[i*pixel_width_18+:pixel_width_18]} : 0;
     end
     // E_scale_tail_row_in_16[18 * pe_parallel_pixel_18 * column_num -1 : 0]
     //16 bit * 32 pixels * 2 channel

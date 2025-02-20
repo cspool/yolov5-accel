@@ -3,9 +3,9 @@
 // Company: 
 // Engineer: 
 // 
-// Create Date: 07/22/2024 06:46:55 PM
+// Create Date: 2025/02/20 23:30:39
 // Design Name: 
-// Module Name: SA_fin
+// Module Name: SA_sum_E
 // Project Name: 
 // Target Devices: 
 // Tool Versions: 
@@ -20,17 +20,16 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module SA_fin(
+module SA_sum_E(
 clk, reset, en,
-
-out_sa_row_idx,
-
-mode, channel_out_reset,channel_out_en, 
-
+mode, 
 row_in, column_in,
 
-mult_array_mode,
+out_sa_row_idx,
+channel_out_reset,channel_out_en, 
 
+sa_E_ins,sa_sum_in,
+mult_array_mode,
 row0_out,
 
 out
@@ -77,6 +76,9 @@ input mult_array_mode;
 
 input [sa_row_in_width - 1:0] row_in; //weight
 input [sa_column_in_width - 1:0] column_in;  //feature map
+
+input [row_num_in_sa * mult_B_width -1:0] sa_E_ins; //the first row of SAs is used to mult, multer B
+input [column_num_in_sa * mult_A_width - 1:0] sa_sum_in;
 
 input [5:0] out_sa_row_idx; //output sa row idx [1,16]
 
@@ -180,12 +182,12 @@ generate
            
        assign up[0][j] = (mult_array_mode == 1'b1) ? 
        //mult sum
-       column_in[j*mult_A_width +: mult_A_width] : 
+       sa_sum_in[j*mult_A_width +: mult_A_width] : 
        //x
        I_As[j];
        assign left[0][j] = (mult_array_mode == 1'b1) ? 
-       //mult E //wrong
-       {{(18-mult_B_width){row_in[mult_B_width-1]}},row_in[0+:mult_B_width]}:
+       //mult E
+       {{(18-mult_B_width){sa_E_ins[j*mult_B_width+mult_B_width-1]}},sa_E_ins[j*mult_B_width+:mult_B_width]}:
        //w
                            ((j == 0) ? I_Bs[0] : right[0][j - 1]);
     end
@@ -272,6 +274,5 @@ generate
     end
 
 endgenerate
-
 
 endmodule

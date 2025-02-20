@@ -56,19 +56,19 @@ USE ieee.numeric_std.ALL;
 LIBRARY mult_gen_v12_0_14;
 USE mult_gen_v12_0_14.mult_gen_v12_0_14;
 
-ENTITY mult_lut_s24_u16 IS
+ENTITY mult_lut_s24_s18 IS
   PORT (
     CLK : IN STD_LOGIC;
     A : IN STD_LOGIC_VECTOR(23 DOWNTO 0);
-    B : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
+    B : IN STD_LOGIC_VECTOR(17 DOWNTO 0);
     CE : IN STD_LOGIC;
-    P : OUT STD_LOGIC_VECTOR(39 DOWNTO 0)
+    P : OUT STD_LOGIC_VECTOR(41 DOWNTO 0)
   );
-END mult_lut_s24_u16;
+END mult_lut_s24_s18;
 
-ARCHITECTURE mult_lut_s24_u16_arch OF mult_lut_s24_u16 IS
+ARCHITECTURE mult_lut_s24_s18_arch OF mult_lut_s24_s18 IS
   ATTRIBUTE DowngradeIPIdentifiedWarnings : STRING;
-  ATTRIBUTE DowngradeIPIdentifiedWarnings OF mult_lut_s24_u16_arch: ARCHITECTURE IS "yes";
+  ATTRIBUTE DowngradeIPIdentifiedWarnings OF mult_lut_s24_s18_arch: ARCHITECTURE IS "yes";
   COMPONENT mult_gen_v12_0_14 IS
     GENERIC (
       C_VERBOSITY : INTEGER;
@@ -95,10 +95,10 @@ ARCHITECTURE mult_lut_s24_u16_arch OF mult_lut_s24_u16 IS
     PORT (
       CLK : IN STD_LOGIC;
       A : IN STD_LOGIC_VECTOR(23 DOWNTO 0);
-      B : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
+      B : IN STD_LOGIC_VECTOR(17 DOWNTO 0);
       CE : IN STD_LOGIC;
       SCLR : IN STD_LOGIC;
-      P : OUT STD_LOGIC_VECTOR(39 DOWNTO 0)
+      P : OUT STD_LOGIC_VECTOR(41 DOWNTO 0)
     );
   END COMPONENT mult_gen_v12_0_14;
   ATTRIBUTE X_INTERFACE_INFO : STRING;
@@ -125,9 +125,9 @@ BEGIN
       C_LATENCY => 1,
       C_A_WIDTH => 24,
       C_A_TYPE => 0,
-      C_B_WIDTH => 16,
-      C_B_TYPE => 1,
-      C_OUT_HIGH => 39,
+      C_B_WIDTH => 18,
+      C_B_TYPE => 0,
+      C_OUT_HIGH => 41,
       C_OUT_LOW => 0,
       C_MULT_TYPE => 0,
       C_CE_OVERRIDES_SCLR => 0,
@@ -145,4 +145,4 @@ BEGIN
       SCLR => '0',
       P => P
     );
-END mult_lut_s24_u16_arch;
+END mult_lut_s24_s18_arch;
