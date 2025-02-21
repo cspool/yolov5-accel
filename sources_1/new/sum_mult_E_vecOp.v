@@ -25,8 +25,8 @@ module sum_mult_E_vecOp (
     mode,
     E_set,
     sum_vector,
-    minus_sum_vector_in_mult_A_width,
-    minus_E_vector_in_mult_B_width
+    sum_vector_in_mult_A_width,
+    E_vector_in_mult_B_width
 );
 
   parameter column_num_in_sa = 16;  // how many columns in a sa
@@ -66,17 +66,17 @@ module sum_mult_E_vecOp (
   //16 bit * 2 channel
   input [sum_vector_width - 1:0] sum_vector;
   //16 bit * 32 pixels * 2 channel
-  output [sum_vector_in_mult_A_width_width-1 : 0] minus_sum_vector_in_mult_A_width;  //pixels
-  //24 bit * 32 pixels * 2 channel; sum = sum * (-1)
-  output [E_vector_in_mult_B_width_width-1 : 0] minus_E_vector_in_mult_B_width;  //E_tile
-  //16 bit * 32 pixels * 2 channel; E = E * (-1)
+  // output [sum_vector_in_mult_A_width_width-1 : 0] minus_sum_vector_in_mult_A_width;  //pixels
+  // //24 bit * 32 pixels * 2 channel; sum = sum * (-1)
+  // output [E_vector_in_mult_B_width_width-1 : 0] minus_E_vector_in_mult_B_width;  //E_tile
+  // //16 bit * 32 pixels * 2 channel; E = E * (-1)
 
-  wire [sum_vector_in_mult_A_width_width-1 : 0] sum_vector_in_mult_A_width;
+  output [sum_vector_in_mult_A_width_width-1 : 0] sum_vector_in_mult_A_width;
   //24 bit * 32 pixels * 2 channel; 
-  wire [  E_vector_in_mult_B_width_width-1 : 0] E_vector_in_mult_B_width;
+  output [E_vector_in_mult_B_width_width-1 : 0] E_vector_in_mult_B_width;
   //16 bit * 32 pixels * 2 channel; 
 
-  wire [                         E_width-1 : 0] E_88;
+  wire [E_width-1 : 0] E_88;
   wire [E_width-1 : 0] E_18_1, E_18_2;
   wire [sum_vector_width_88 - 1 : 0] sum_vector_88;
   //24 bit * 32 pixels * 1 channel
@@ -130,35 +130,33 @@ module sum_mult_E_vecOp (
           (mode == 1'b1) ? {{(mult_B_width - E_width) {1'b0}}, E_18_2} : 0;
     end
 
-    //minus sum vector
-    // sum_vector_in_24[24 * pe_parallel_pixel_18 * pe_parallel_weight_18 * column_num -1 : 0]
-    // 24 bit * 32 pixels * 2 channel
-    for (i = 0; i < pe_parallel_pixel_18 * pe_parallel_weight_18 * column_num_in_sa; i = i + 1) begin
-      assign minus_sum_vector_in_mult_A_width[i*mult_A_width+:mult_A_width] =
-          //sum >= 0
-          (sum_vector_in_mult_A_width[i*mult_A_width+mult_A_width-1] == 0) ?
-          //sum
-          (sum_vector_in_mult_A_width[i*mult_A_width+:mult_A_width]) :
-          //-sum > 0
-          ({(mult_A_width) {1'b0}} -
-          //-sum
-          sum_vector_in_mult_A_width[i*mult_A_width+:mult_A_width]);
-    end
+    // //minus sum vector
+    // // sum_vector_in_24[24 * pe_parallel_pixel_18 * pe_parallel_weight_18 * column_num -1 : 0]
+    // // 24 bit * 32 pixels * 2 channel
+    // for (i = 0; i < pe_parallel_pixel_18 * pe_parallel_weight_18 * column_num_in_sa; i = i + 1) begin
+    //   assign minus_sum_vector_in_mult_A_width[i*mult_A_width+:mult_A_width] =
+    //       //sum >= 0
+    //       (sum_vector_in_mult_A_width[i*mult_A_width+mult_A_width-1] == 0) ?
+    //       //sum
+    //       (sum_vector_in_mult_A_width[i*mult_A_width+:mult_A_width]) :
+    //       //-sum > 0
+    //       ({(mult_A_width) {1'b0}} -
+    //       //-sum
+    //       sum_vector_in_mult_A_width[i*mult_A_width+:mult_A_width]);
+    // end
 
-    // E_vector_in_16[16 * pe_parallel_pixel_18 * pe_parallel_weight_18 * column_num -1 : 0]
-    for (i = 0; i < pe_parallel_pixel_18 * pe_parallel_weight_18 * column_num_in_sa; i = i + 1) begin
-      assign minus_E_vector_in_mult_B_width[i*mult_B_width+:mult_B_width] =
-          //sum >= 0
-          (sum_vector_in_mult_A_width[i*mult_A_width+mult_A_width-1] == 0) ?
-          //E
-          (E_vector_in_mult_B_width[i*mult_B_width+:mult_B_width]) :
-          //-sum > 0
-          ({(mult_B_width) {1'b0}} -
-          //-E
-          E_vector_in_mult_B_width[i*mult_B_width+:mult_B_width]);
-    end
-
-
+    // // E_vector_in_16[16 * pe_parallel_pixel_18 * pe_parallel_weight_18 * column_num -1 : 0]
+    // for (i = 0; i < pe_parallel_pixel_18 * pe_parallel_weight_18 * column_num_in_sa; i = i + 1) begin
+    //   assign minus_E_vector_in_mult_B_width[i*mult_B_width+:mult_B_width] =
+    //       //sum >= 0
+    //       (sum_vector_in_mult_A_width[i*mult_A_width+mult_A_width-1] == 0) ?
+    //       //E
+    //       (E_vector_in_mult_B_width[i*mult_B_width+:mult_B_width]) :
+    //       //-sum > 0
+    //       ({(mult_B_width) {1'b0}} -
+    //       //-E
+    //       E_vector_in_mult_B_width[i*mult_B_width+:mult_B_width]);
+    // end
   endgenerate
 
 endmodule

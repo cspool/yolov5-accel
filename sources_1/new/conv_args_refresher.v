@@ -251,7 +251,7 @@ module conv_args_refresher (
         scale_reg_start    <= 1;
       end else begin
         scale_word_counter <= scale_word_counter + 1;
-        scale_reg_start    <= scale_reg_start + scale_reg_start;
+        scale_reg_start    <= scale_reg_start + scale_reg_size;
       end
     end else begin
       scale_word_counter <= scale_word_counter;

@@ -35,7 +35,7 @@ def generate_conv_E_quantify_tests():
   #       for quantify_type in quantify_types:
   #          conv_test(conv_type, mode_type, quantify_type)
   
-  conv_type, mode_type, quantify_type = (0,0,0)
+  conv_type, mode_type, quantify_type = (3,0,0)
   conv_E_quantify_test(conv_type, mode_type, quantify_type)
 
 def conv_E_quantify_test(conv_type, mode_type, quantify_type):
@@ -668,8 +668,8 @@ def generate_instr_args_init(mode,k,s,p,of,ox,oy,ix,iy,nif):
       } #xxxx
   input_ddr_layer_base_adr_integers_mapping_mode1 = {
       1:12,
-      3:80,
-      6:296
+      3:44,
+      6:152
       } #xxxx
   input_ddr_layer_base_adr_integer = (input_ddr_layer_base_adr_integers_mapping_mode0[k]) if (mode == 0) \
      else (input_ddr_layer_base_adr_integers_mapping_mode1[k]) #xxxxx

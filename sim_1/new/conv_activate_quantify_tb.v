@@ -47,7 +47,7 @@ module conv_activate_quantify_tb ();
   parameter weights_row_in_width = 8 * row_num_in_sa;
   parameter sa_row_in_width = weights_row_in_width;
   parameter pixels_column_in_width = 16 * column_num_in_sa;
-  parameter sa_column_in_width = 24 * column_num_in_sa;
+  parameter sa_column_in_width = pixels_column_in_width; //24 * column_num_in_sa
   parameter pe_out_width = (pixel_width_18) * pe_parallel_pixel_18 * pe_parallel_weight_18;  // width of 18 is bigger than 88
   parameter row_counter_width = ($clog2(row_num_in_sa + 1));
   parameter sa_out_width = pixel_width_18 * pe_parallel_pixel_18 * pe_parallel_weight_18 * column_num_in_sa;
@@ -422,8 +422,6 @@ module conv_activate_quantify_tb ();
   sa_rowi_ins[sa_column_num-1 : 0][sa_row_num-1 : 0];
   wire [column_num_in_sa * mult_P_width -1:0] //sa rows sum vector
   sa_row0_outs[sa_column_num-1 : 0][sa_row_num-1 : 0];
-  wire [row_num_in_sa * mult_B_width -1:0] sa_E_ins //the first row of SAs is used to mult, multer B
-  [sa_column_num-1 : 0][sa_row_num-1 : 0];
 
   //mult_array
   wire [vector_A_width-1 : 0] vector_A, sum_mult_E_vector_A;
@@ -456,9 +454,9 @@ module conv_activate_quantify_tb ();
 
   //sum_mult_E_vecOp
   wire [sum_vector_in_mult_A_width_width-1 : 0] //24 bit * 32 pixels * 2 channel
-  minus_sum_vector_in_mult_A_width_rowi_channel_setj[sa_column_num-1 : 0][sa_row_num-1 : 0];
+  sum_vector_in_mult_A_width_rowi_channel_setj[sa_column_num-1 : 0][sa_row_num-1 : 0];
   wire [E_vector_in_mult_B_width_width-1 : 0] //16 bit * 32 pixels * 2 channel
-  minus_E_vector_in_mult_B_width_rowi_channel_setj[sa_column_num-1 : 0][sa_row_num-1 : 0];
+  E_vector_in_mult_B_width_rowi_channel_setj[sa_column_num-1 : 0][sa_row_num-1 : 0];
   wire [sum_mult_E_vector_in_mult_P_width_width-1 :0] //40 bit * 32 pixels * 2 channel
   sum_mult_E_vector_in_mult_P_width_rowi_channel_setj[sa_column_num-1 : 0][sa_row_num-1 : 0];
   //product add bias
@@ -1408,7 +1406,8 @@ module conv_activate_quantify_tb ();
         // : extra_sa_vector_As[i-1][j-1];
           assign sa_columni_ins[i-1][j-1] = 
           //input
-          {{(sa_column_in_width - pixels_column_in_width) {1'b0}}, delay_rowi_pixels[i-1]};
+          // {{(sa_column_in_width - pixels_column_in_width) {1'b0}}, delay_rowi_pixels[i-1]};
+          delay_rowi_pixels[i-1];
       end
     end
     for (j = 1; j <= sa_row_num; j = j + 1) begin : delay_regs_row  //output channel
@@ -1438,9 +1437,9 @@ module conv_activate_quantify_tb ();
             .channel_out_reset((channel_out_reset == 1) || (reset == 1) || (conv_start == 1)),
             .channel_out_en   (channel_out_en),
             .out_sa_row_idx   (out_sa_row_idx),
-            .row_in           (sa_rowi_ins[i-1][j-1]),                   //weights or 16bit e_scale
-            .column_in        (sa_columni_ins[i-1][j-1]),                //pixels or 24bit add_biases
-            .sa_E_ins(extra_sa_vector_Bs[i-1][j-1]),
+            .row_in           (sa_rowi_ins[i-1][j-1]),                   //weights
+            .column_in        (sa_columni_ins[i-1][j-1]),                //pixels
+            .sa_E_in(extra_sa_vector_Bs[i-1][j-1]),
             .sa_sum_in(extra_sa_vector_As[i-1][j-1]),
             .mult_array_mode  (mult_array_mode),
             .row0_out         (sa_row0_outs[i-1][j-1]),
@@ -1453,21 +1452,21 @@ module conv_activate_quantify_tb ();
             .mode(mode),
             .E_set(E_4_channel_sets[(j-1)*E_set_width+:E_set_width]),
             .sum_vector(out_rowi_channel_seti[i-1][j-1]),
-            .minus_sum_vector_in_mult_A_width(minus_sum_vector_in_mult_A_width_rowi_channel_setj[i-1][j-1]),
-            .minus_E_vector_in_mult_B_width(minus_E_vector_in_mult_B_width_rowi_channel_setj[i-1][j-1])
+            .sum_vector_in_mult_A_width(sum_vector_in_mult_A_width_rowi_channel_setj[i-1][j-1]),
+            .E_vector_in_mult_B_width(E_vector_in_mult_B_width_rowi_channel_setj[i-1][j-1])
         );
         //1-48 -> mult_array[1,48]; 49-64 -> sa_row0; [1, 64] = add_bias_row_in_mult_A_width_width
         assign sum_mult_E_vector_A
         //mult array
         [((i-1)*sa_row_num+(j-1))*(mult_array_length_per_sa*mult_A_width)+:(mult_array_length_per_sa*mult_A_width)] = 
         //sum vector
-        (sum_mult_E_en == 1'b1) ? minus_sum_vector_in_mult_A_width_rowi_channel_setj[i-1][j-1]
+        (sum_mult_E_en == 1'b1) ? sum_vector_in_mult_A_width_rowi_channel_setj[i-1][j-1]
         //0+:
         [0+:(mult_array_length_per_sa*mult_A_width)] : 0;
 
         assign extra_sa_vector_As[i-1][j-1] = 
         //sa mult
-        (sum_mult_E_en == 1'b1) ? minus_sum_vector_in_mult_A_width_rowi_channel_setj[i-1][j-1]
+        (sum_mult_E_en == 1'b1) ? sum_vector_in_mult_A_width_rowi_channel_setj[i-1][j-1]
         //48*24+:
         [(mult_array_length_per_sa*mult_A_width)+:(column_num_in_sa*mult_A_width)] : 0;
         
@@ -1475,13 +1474,13 @@ module conv_activate_quantify_tb ();
         //mult array
         [((i-1)*sa_row_num+(j-1))*(mult_array_length_per_sa*mult_B_width)+:(mult_array_length_per_sa*mult_B_width)] = 
         //E vector
-        (sum_mult_E_en == 1'b1) ? minus_E_vector_in_mult_B_width_rowi_channel_setj[i-1][j-1]
+        (sum_mult_E_en == 1'b1) ? E_vector_in_mult_B_width_rowi_channel_setj[i-1][j-1]
         //0+
         [0+:(mult_array_length_per_sa*mult_B_width)] : 0;
 
         assign extra_sa_vector_Bs[i-1][j-1] = 
         //sa mult
-        (sum_mult_E_en == 1'b1) ? minus_E_vector_in_mult_B_width_rowi_channel_setj[i-1][j-1]
+        (sum_mult_E_en == 1'b1) ? E_vector_in_mult_B_width_rowi_channel_setj[i-1][j-1]
         //48*16+:
         [(mult_array_length_per_sa*mult_B_width)+:row_num_in_sa*mult_B_width] : 0;
         
@@ -1639,7 +1638,7 @@ module conv_activate_quantify_tb ();
     file1 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum.txt", "w");
     $fmonitor(file1, "%h", out_rowi_channel_seti[0][0]);
     file2 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_in_A.txt", "w");
-    $fmonitor(file2, "%h", minus_sum_vector_in_mult_A_width_rowi_channel_setj[0][0]);
+    $fmonitor(file2, "%h", sum_vector_in_mult_A_width_rowi_channel_setj[0][0]);
     file3 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_mult_E.txt", "w");
     $fmonitor(file3, "%h", sum_mult_E_vector_in_mult_P_width_rowi_channel_setj[0][0]);
     file4 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/product_add_bias.txt", "w");
@@ -1647,7 +1646,7 @@ module conv_activate_quantify_tb ();
     file5 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/quantified_row.txt", "w");
     $fmonitor(file5, "%h", quantified_rowi_channel_setj[0][0]);
     file6 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/E_in_B.txt", "w");
-    $fmonitor(file6, "%h", minus_E_vector_in_mult_B_width_rowi_channel_setj[0][0]);
+    $fmonitor(file6, "%h", E_vector_in_mult_B_width_rowi_channel_setj[0][0]);
 
     //begin simulation
     clk   = 0;

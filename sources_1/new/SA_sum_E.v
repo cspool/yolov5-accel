@@ -28,7 +28,7 @@ row_in, column_in,
 out_sa_row_idx,
 channel_out_reset,channel_out_en, 
 
-sa_E_ins,sa_sum_in,
+sa_E_in,sa_sum_in,
 mult_array_mode,
 row0_out,
 
@@ -53,7 +53,7 @@ parameter weights_row_in_width = 8 * row_num_in_sa;
 parameter sa_row_in_width = weights_row_in_width;
 
 parameter pixels_column_in_width = 16 * column_num_in_sa;
-parameter sa_column_in_width = 24 * column_num_in_sa;
+parameter sa_column_in_width = pixels_column_in_width; // 24 * column_num_in_sa 
 
 parameter pe_out_width =  (pixel_width_18) * pe_parallel_pixel_18 *  pe_parallel_weight_18; // width of 18 is bigger than 88
 
@@ -77,7 +77,7 @@ input mult_array_mode;
 input [sa_row_in_width - 1:0] row_in; //weight
 input [sa_column_in_width - 1:0] column_in;  //feature map
 
-input [row_num_in_sa * mult_B_width -1:0] sa_E_ins; //the first row of SAs is used to mult, multer B
+input [row_num_in_sa * mult_B_width -1:0] sa_E_in; //the first row of SAs is used to mult, multer B
 input [column_num_in_sa * mult_A_width - 1:0] sa_sum_in;
 
 input [5:0] out_sa_row_idx; //output sa row idx [1,16]
@@ -91,7 +91,7 @@ output [sa_out_width - 1: 0] out; // pox res per channel
 
 wire [pe_out_width-1 : 0] all_out [row_num_in_sa - 1: 0][column_num_in_sa - 1 : 0]; // all results
 
-wire [41 : 0] row0_mult_out [column_num_in_sa - 1 : 0];
+wire [42 : 0] row0_mult_out [column_num_in_sa - 1 : 0];
 
 wire [pe_out_width * column_num_in_sa - 1 : 0] row_output;//row results
 wire [sa_out_width_88 - 1 : 0] row_output_88;//row results
@@ -100,15 +100,15 @@ wire [sa_out_width_18 - 1 : 0] row_output_18;//column results
 
 genvar i, j;
 
-wire [23:0] up[row_num_in_sa - 1 : 0][column_num_in_sa - 1 : 0];
-wire [23:0] bottom[row_num_in_sa - 1 : 0][column_num_in_sa - 1 : 0];
-wire [17:0] left[row_num_in_sa - 1 : 0][column_num_in_sa - 1 : 0];
-wire [17:0] right[row_num_in_sa - 1 : 0][column_num_in_sa - 1 : 0];
+wire [24:0] up[row_num_in_sa - 1 : 0][column_num_in_sa - 1 : 0];
+wire [24:0] bottom[row_num_in_sa - 1 : 0][column_num_in_sa - 1 : 0];
+wire [24:0] left[row_num_in_sa - 1 : 0][column_num_in_sa - 1 : 0];
+wire [24:0] right[row_num_in_sa - 1 : 0][column_num_in_sa - 1 : 0];
 
 reg [row_counter_width-1 : 0] row_counter; 
 
-wire [23:0] I_As[column_num_in_sa - 1 : 0];
-wire [17:0] I_Bs[row_num_in_sa - 1 : 0];
+wire [24:0] I_As[column_num_in_sa - 1 : 0];
+wire [24:0] I_Bs[row_num_in_sa - 1 : 0];
 
 wire loop_row_counter_add_begin, loop_row_counter_add_end;
 
@@ -130,44 +130,32 @@ assign row_en = {(row_num_in_sa){en}} << (out_sa_row_idx);
 
 generate
     for (i = 0; i < column_num_in_sa; i = i + 1) begin
-        // //int8 input * int8 weight, signed input int8
-        // assign I_As[i] = (mode == 1'b0)?   
-        //                            //
-        // ({column_in[(i * 16 + 8) +: 8], 16'b0} + {{16{column_in[(i * 16 + 7)]}}, column_in[(i * 16) +: 8]}) :
-        //                            //
-        //                            (mode == 1'b1)? 
-        //                            //
-        //                             ({{8{column_in[(i * 16 + 15)]}}, column_in[(i * 16 + 8) +: 8], 8'b0} +
-        //                            //
-        //                             {{16{column_in[(i * 16 + 7)]}}, column_in[(i * 16) +: 8]}):
-        //                            24'b0;
-
         //uint8 input * int8 weight, unsigned input int8
         assign I_As[i] = (mode == 1'b0)?   
-                                   //
-        ({column_in[(i * 16 + 8) +: 8], 16'b0} + {{16'b0}, column_in[(i * 16) +: 8]}) :
-                                   //
+                                   //unsigned input --> I_A. s25 port
+        ({1'b0,column_in[(i * 16 + 8) +: 8], 16'b0} + {{17'b0}, column_in[(i * 16) +: 8]}) :
+                                   //unsigned input --> I_B, s18 port
                                    (mode == 1'b1)? 
-                                   //
-                                    ({{8'b0}, column_in[(i * 16 + 8) +: 8], 8'b0} +
-                                   //
-                                    {{16'b0}, column_in[(i * 16) +: 8]}):
-                                   24'b0;
+                                   {{8'b0}, column_in[(i * 16 + 8) +: 8], 9'b0} + {{17'b0}, column_in[(i * 16) +: 8]}:
+                                   25'b0;
     end
 endgenerate
 
 generate
     for (i = 0; i < row_num_in_sa; i = i + 1) begin
-        assign I_Bs[i] = (mode == 1'b0)?  ({{10{row_in[i * 8 + 7]}}, row_in[(i * 8) +: 8]}) :
-                                  //
-                                   (mode == 1'b1)?  ({{row_in[i*8+1]},1'b1, 16'b0} + {{17{row_in[i*8]}},1'b1}):
-                                   18'b0;
+        assign I_Bs[i] = (mode == 1'b0)?  
+                                  //signed weights --> I_B, s18 port
+        ({{17{row_in[i * 8 + 7]}}, row_in[(i * 8) +: 8]}) :
+                                  //signed weights --> I_A, s25 port
+                                  (mode == 1'b1)? 
+                                  ({{6{row_in[i*8+1]}},1'b1, 18'b0} + {{24{row_in[i*8]}},1'b1}):
+                                  25'b0;
     end
 endgenerate
 
 generate
     for (j = 0; j < column_num_in_sa; j = j + 1) begin: row_0_column        
-            PE_fin_row0 pe_fin_row0 (
+            PE_sum_E_row0 pe_sum_E_row0 (
                 .clk(clk),
                 .reset(reset),
                 .mode(mode),
@@ -182,18 +170,18 @@ generate
            
        assign up[0][j] = (mult_array_mode == 1'b1) ? 
        //mult sum
-       sa_sum_in[j*mult_A_width +: mult_A_width] : 
+       {{(25-mult_A_width){sa_sum_in[j*mult_A_width+mult_A_width-1]}},sa_sum_in[j*mult_A_width +: mult_A_width]} : 
        //x
        I_As[j];
        assign left[0][j] = (mult_array_mode == 1'b1) ? 
        //mult E
-       {{(18-mult_B_width){sa_E_ins[j*mult_B_width+mult_B_width-1]}},sa_E_ins[j*mult_B_width+:mult_B_width]}:
+       {{(25-mult_B_width){sa_E_in[j*mult_B_width+mult_B_width-1]}},sa_E_in[j*mult_B_width+:mult_B_width]}:
        //w
                            ((j == 0) ? I_Bs[0] : right[0][j - 1]);
     end
     for (i = 1; i < row_num_in_sa; i = i + 1) begin: row
         for (j = 0; j < column_num_in_sa; j = j + 1) begin: column        
-            PE_fin pe_fin (
+            PE_sum_E pe_sum_E (
                 .clk(clk),
                 .reset(reset),
                 .mode(mode),

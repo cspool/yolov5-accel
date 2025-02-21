@@ -3,9 +3,9 @@
 // Company: 
 // Engineer: 
 // 
-// Create Date: 09/09/2024 06:57:16 PM
+// Create Date: 2025/02/21 15:33:24
 // Design Name: 
-// Module Name: signed_mac_dsp_88_18_fin_row0
+// Module Name: mac_u24_s18_row0
 // Project Name: 
 // Target Devices: 
 // Tool Versions: 
@@ -20,7 +20,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module signed_mac_dsp_88_18_fin_row0 (
+module mac_u24_s18_row0 (
     clk,
     reset,
     en,
@@ -52,7 +52,7 @@ module signed_mac_dsp_88_18_fin_row0 (
   input en;
 
   input [23:0] I_A;
-  input [17:0] I_B;
+  input [23:0] I_B;
   input mode;
 
   output [41:0] mult_out;
@@ -72,20 +72,20 @@ module signed_mac_dsp_88_18_fin_row0 (
 
   assign mult_out           = mult_O;
 
-  assign adder_88_18_1      = (mode == 1'b0) ? {{(pixel_width_88 - 16) {mult_O[15]}}, mult_O[15:0]} : (mode == 1'b1) ? {{(pixel_width_88 - 8) {mult_O[7]}}, mult_O[7:0]} : 1'b0;
+  assign adder_88_18_1      = (mode == 1'b0) ? {{(pixel_width_88 - 16) {mult_O[15]}}, mult_O[15:0]} : (mode == 1'b1) ? {{(pixel_width_88 - 10) {mult_O[9]}}, mult_O[9:0]} : 1'b0;
 
-  assign adder_88_18_2      = (mode == 1'b0) ? {{(pixel_width_88 - 16) {mult_O[31]}}, mult_O[31:16]} : (mode == 1'b1) ? {{(pixel_width_88 - 8) {mult_O[15]}}, mult_O[15:8]} : 1'b0;
+  assign adder_88_18_2      = (mode == 1'b0) ? {{(pixel_width_88 - 16) {mult_O[31]}}, mult_O[31:16]} : (mode == 1'b1) ? {{(pixel_width_88 - 10) {mult_O[19]}}, mult_O[19:10]} : 1'b0;
 
-  assign adder_88_18_2_sign = (mode == 1'b0) ? mult_O[15] : (mode == 1'b1) ? mult_O[7] : 1'b0;
+  assign adder_88_18_2_sign = (mode == 1'b0) ? mult_O[15] : (mode == 1'b1) ? mult_O[9] : 1'b0;
 
 
   assign res_88_18_1        = ((mode == 1'b0) ? O[pixel_width_88-1 : 0] : (mode == 1'b1) ? ({{((pixel_width_88 - 16)) {O[pixel_width_18-1]}}, O[0+:(pixel_width_18)]}) : 0) + adder_88_18_1;
 
   assign res_88_18_2        = ((mode == 1'b0) ? O[2*pixel_width_88-1 : pixel_width_88] : (mode == 1'b1) ? ({{((pixel_width_88 - 16)) {O[2*pixel_width_18-1]}}, O[(pixel_width_18)+:(pixel_width_18)]}) : 0) + adder_88_18_2 + adder_88_18_2_sign;
 
-  assign res_18_3           = O[(2*pixel_width_18)+:(pixel_width_18)] + {{(pixel_width_18 - 8) {mult_O[23]}}, mult_O[23-:8]} + mult_O[15];
+  assign res_18_3           = O[(2*pixel_width_18)+:(pixel_width_18)] + {{(pixel_width_18 - 10) {mult_O[29]}}, mult_O[29-:10]} + mult_O[19];
 
-  assign res_18_4           = O[(3*pixel_width_18)+:(pixel_width_18)] + {{(pixel_width_18 - 8) {mult_O[31]}}, mult_O[31-:8]} + mult_O[23];
+  assign res_18_4           = O[(3*pixel_width_18)+:(pixel_width_18)] + {{(pixel_width_18 - 10) {mult_O[39]}}, mult_O[39-:10]} + mult_O[29];
   // // s24 * s18
   // signed_mult_dsp mult_s24_s18 (
   //   .CLK(clk),  // input wire CLK
@@ -94,12 +94,12 @@ module signed_mac_dsp_88_18_fin_row0 (
   //   .P(mult_O)      // output wire [41 : 0] P
   // );
 
-  // u24 * s18
-  mult_dsp_u24_s18 mult_u24_s18 (
-      .CLK(clk),    // input wire CLK
-      .A  (I_A),    // input wire [23 : 0] A
-      .B  (I_B),    // input wire [17 : 0] B
-      .P  (mult_O)  // output wire [41 : 0] P
+  // s25 * s18
+  mult_dsp_s25_s18 mult_s25_s18 (
+      .CLK(clk),                                  // input wire CLK
+      .A  ((mode == 0) ? I_A : I_B),              // input wire [24 : 0] A
+      .B  ((mode == 0) ? I_B[17:0] : I_A[17:0]),  // input wire [17 : 0] B
+      .P  (mult_O)                                // output wire [42 : 0] P
   );
 
   always @(posedge clk) begin

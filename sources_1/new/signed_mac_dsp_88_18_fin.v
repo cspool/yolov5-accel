@@ -73,9 +73,9 @@ module signed_mac_dsp_88_18_fin (
   assign adder_88_18_2_sign = (mode == 1'b0) ? mult_O[15] : (mode == 1'b1) ? mult_O[7] : 1'b0;
 
 
-  assign res_88_18_1        = ((mode == 1'b0) ? O[pixel_width_88-1 : 0] : (mode == 1'b1) ? ({{((pixel_width_88 - 8)) {O[pixel_width_18-1]}}, O[0+:(pixel_width_18)]}) : 0) + adder_88_18_1;
+  assign res_88_18_1        = ((mode == 1'b0) ? O[pixel_width_88-1 : 0] : (mode == 1'b1) ? ({{((pixel_width_88 - 16)) {O[pixel_width_18-1]}}, O[0+:(pixel_width_18)]}) : 0) + adder_88_18_1;
 
-  assign res_88_18_2        = ((mode == 1'b0) ? O[2*pixel_width_88-1 : pixel_width_88] : (mode == 1'b1) ? ({{((pixel_width_88 - 8)) {O[2*pixel_width_18-1]}}, O[(pixel_width_18)+:(pixel_width_18)]}) : 0) + adder_88_18_2 + adder_88_18_2_sign;
+  assign res_88_18_2        = ((mode == 1'b0) ? O[2*pixel_width_88-1 : pixel_width_88] : (mode == 1'b1) ? ({{((pixel_width_88 - 16)) {O[2*pixel_width_18-1]}}, O[(pixel_width_18)+:(pixel_width_18)]}) : 0) + adder_88_18_2 + adder_88_18_2_sign;
 
   assign res_18_3           = O[(2*pixel_width_18)+:(pixel_width_18)] + {{(pixel_width_18 - 8) {mult_O[23]}}, mult_O[23-:8]} + mult_O[15];
 
