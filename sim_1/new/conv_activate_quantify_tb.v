@@ -165,7 +165,7 @@ module conv_activate_quantify_tb ();
   wire DDR_en;
   wire DDR_en_wr;
   wire [511:0] DDR_in;
-  wire [ 12:0] DDR_adr;
+  wire [ 15:0] DDR_adr;
   wire [511:0] DDR_out;  //o
   //DDR data
   reg valid_load_input;
@@ -494,7 +494,7 @@ module conv_activate_quantify_tb ();
 //       .clka (clk),                    // input wire clka
 //       .ena  (DDR_en),   // input wire ena
 //       .wea  (0),                      // input wire [0 : 0] wea
-//       .addra(DDR_adr),  // input wire [12 : 0] addra
+//       .addra(DDR_adr),  // input wire [15 : 0] addra
 //       .dina (512'b0),                      // input wire [511 : 0] dina
 //       .douta(DDR_out)                 // output wire [511 : 0] douta
 //   );
@@ -506,7 +506,7 @@ module conv_activate_quantify_tb ();
 //   assign load_input_word = (valid_load_input == 1'b1) ? DDR_out : 0;
 //   assign weights_word_buf_wt = (valid_load_weights == 1'b1) ? DDR_out : 0;
   //DDR reg mem
-  parameter DDR_mem_limit = 4096;
+  parameter DDR_mem_limit = 65536; //4096*16
   reg[511:0] DDR_mem [DDR_mem_limit - 1:0];
   reg [511:0] DDR_mem_out;
   always @(posedge clk) begin
@@ -522,8 +522,8 @@ module conv_activate_quantify_tb ();
   end
   assign DDR_en          = ((input_word_ddr_en_rd == 1'b1) || (weights_word_ddr_en_rd == 1'b1)) ? 1'b1 : 1'b0;
   assign DDR_en_wr       = 0;
-  assign DDR_adr         = (input_word_ddr_en_rd == 1)? input_word_ddr_adr_rd[12 : 0] :
-   (weights_word_ddr_en_rd == 1)? weights_word_ddr_adr_rd[12 : 0] : 0;
+  assign DDR_adr         = (input_word_ddr_en_rd == 1)? input_word_ddr_adr_rd :
+   (weights_word_ddr_en_rd == 1)? weights_word_ddr_adr_rd : 0;
   assign DDR_in          = 0;
   assign load_input_word = (valid_load_input == 1'b1) ? DDR_mem_out : 0;
   assign weights_word_buf_wt = (valid_load_weights == 1'b1) ? DDR_mem_out : 0;

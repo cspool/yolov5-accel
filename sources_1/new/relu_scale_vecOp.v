@@ -67,24 +67,37 @@ module relu_scale_vecOp (
   generate
     for (i = 0; i < pe_parallel_pixel_18 * column_num_in_sa; i = i + 1) begin
       //relu && right shift and bound in 8 bit
-      assign quantified_vector[i*(quantified_pixel_width) +: (quantified_pixel_width)]
-             = (mode == 1'b0)? (
-               (product_add_bias_vector[i*mult_P_width + mult_P_width-1] == 1'b0)?
-               (product_add_bias_vector[i*mult_P_width +: mult_P_width]) >> (scale_88):
-               0):
-             (mode == 1'b1)? (
-               (product_add_bias_vector[i*mult_P_width + mult_P_width-1] == 1'b0)?
-               (product_add_bias_vector[i*mult_P_width +: mult_P_width]) >> (scale_18_1):
-               0):
-             0;
+      assign quantified_vector[i*(quantified_pixel_width)+:(quantified_pixel_width)] =
+          //mode 0
+          (mode == 1'b0) ? (
+          // >=0
+          (product_add_bias_vector[i*mult_P_width+mult_P_width-1] == 1'b0) ? (  //overflow
+          ((product_add_bias_vector[i*mult_P_width+:mult_P_width]) >> (scale_88)) > 255 ? 255 :
+          //0-255
+          ((product_add_bias_vector[i*mult_P_width+:mult_P_width]) >> (scale_88))) :
+          // < 0
+          0) :
+          //mode 1
+          (mode == 1'b1) ? (
+          // >= 0
+          (product_add_bias_vector[i*mult_P_width+mult_P_width-1] == 1'b0) ? (  //overflow
+          ((product_add_bias_vector[i*mult_P_width+:mult_P_width]) >> (scale_18_1)) > 255 ? 255 :
+          //0-255
+          ((product_add_bias_vector[i*mult_P_width+:mult_P_width]) >> (scale_18_1))) :
+          // < 0
+          0) : 0;
     end
     for (i = 0; i < pe_parallel_pixel_18 * column_num_in_sa; i = i + 1) begin
-      assign quantified_vector[(pe_parallel_pixel_18 * column_num_in_sa+i)*(quantified_pixel_width) +: (quantified_pixel_width)]
-             = (mode == 1'b1) ? (
-               (product_add_bias_vector[(pe_parallel_pixel_18 * column_num_in_sa + i)*mult_P_width + mult_P_width-1] == 1'b0)?
-               (product_add_bias_vector[(pe_parallel_pixel_18 * column_num_in_sa + i)*mult_P_width +: mult_P_width]) >> (scale_18_2):
-               0):
-             0;
+      assign quantified_vector[(pe_parallel_pixel_18*column_num_in_sa+i)*(quantified_pixel_width)+:(quantified_pixel_width)] =
+          // mode 1
+          (mode == 1'b1) ? (
+          // >= 0
+          (product_add_bias_vector[(pe_parallel_pixel_18*column_num_in_sa+i)*mult_P_width+mult_P_width-1] == 1'b0) ? (  //overflow
+          ((product_add_bias_vector[(pe_parallel_pixel_18*column_num_in_sa+i)*mult_P_width+:mult_P_width]) >> (scale_18_2)) > 255 ? 255 :
+          //0-255
+          ((product_add_bias_vector[(pe_parallel_pixel_18*column_num_in_sa+i)*mult_P_width+:mult_P_width]) >> (scale_18_2))) :
+          // < 0
+          0) : 0;
     end
   endgenerate
 
