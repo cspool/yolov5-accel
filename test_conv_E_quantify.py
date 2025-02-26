@@ -35,12 +35,12 @@ def generate_conv_E_quantify_tests():
   #       for quantify_type in quantify_types:
   #          conv_test(conv_type, mode_type, quantify_type)
   
-  conv_type, mode_type, quantify_type = (0,0,0)
+  conv_type, mode_type, quantify_type = (2,0,0)
   conv_E_quantify_test(conv_type, mode_type, quantify_type)
 
 def conv_E_quantify_test(conv_type, mode_type, quantify_type):
-    # standard_conv_E_quantify(conv_type, mode_type, quantify_type)
-    fpga_conv_E_quantify(conv_type, mode_type, quantify_type)
+    standard_conv_E_quantify(conv_type, mode_type, quantify_type)
+    # fpga_conv_E_quantify(conv_type, mode_type, quantify_type)
 
 def standard_conv_E_quantify(conv_type, mode_type, quantify_type):
   # def basic conv op
@@ -663,13 +663,13 @@ def generate_instr_args_init(mode,k,s,p,of,ox,oy,ix,iy,nif):
   weights_layer_base_ddr_adr_rd_integer = 0
   input_ddr_layer_base_adr_integers_mapping_mode0 = {
       1:264,
-      3:160,
-      6:592
+      3:2312,
+      6:9224
       } #xxxx
   input_ddr_layer_base_adr_integers_mapping_mode1 = {
-      1:24,
-      3:88,
-      6:304
+      1:136,
+      3:1160,
+      6:4616
       } #xxxx
   input_ddr_layer_base_adr_integer = (input_ddr_layer_base_adr_integers_mapping_mode0[k]) if (mode == 0) \
      else (input_ddr_layer_base_adr_integers_mapping_mode1[k]) #xxxxx

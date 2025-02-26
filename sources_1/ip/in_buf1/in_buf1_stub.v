@@ -1,13 +1,13 @@
 // Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
 // Tool Version: Vivado v.2018.3 (win64) Build 2405991 Thu Dec  6 23:38:27 MST 2018
-// Date        : Thu Dec 26 10:03:25 2024
-// Host        : yang running 64-bit major release  (build 9200)
-// Command     : write_verilog -force -mode synth_stub
-//               E:/vivado_pros/yolov5_accel_2/yolov5_accel_2.srcs/sources_1/ip/in_buf1/in_buf1_stub.v
-// Design      : in_buf1
+// Date        : Wed Feb 26 19:40:57 2025
+// Host        : zack running 64-bit major release  (build 9200)
+// Command     : write_verilog -force -mode synth_stub -rename_top in_buf1 -prefix
+//               in_buf1_ in_buf3_stub.v
+// Design      : in_buf3
 // Purpose     : Stub declaration of top-level module interface
-// Device      : xc7vx690tffg1761-2
+// Device      : xq7vx690trf1761-2I
 // --------------------------------------------------------------------------------
 
 // This empty module with port declaration file causes synthesis tools to infer a black box for IP.

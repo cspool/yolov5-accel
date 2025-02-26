@@ -1,14 +1,14 @@
 -- Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2018.3 (win64) Build 2405991 Thu Dec  6 23:38:27 MST 2018
--- Date        : Wed Dec 25 20:48:58 2024
--- Host        : yang running 64-bit major release  (build 9200)
+-- Date        : Wed Feb 26 19:39:02 2025
+-- Host        : zack running 64-bit major release  (build 9200)
 -- Command     : write_vhdl -force -mode funcsim
---               E:/vivado_pros/yolov5_accel_2/yolov5_accel_2.srcs/sources_1/ip/slab_3/slab_3_sim_netlist.vhdl
+--               D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sources_1/ip/slab_3/slab_3_sim_netlist.vhdl
 -- Design      : slab_3
 -- Purpose     : This VHDL netlist is a functional simulation representation of the design and should not be modified or
 --               synthesized. This netlist cannot be used for SDF annotated simulation.
--- Device      : xc7vx690tffg1761-2
+-- Device      : xq7vx690trf1761-2I
 -- --------------------------------------------------------------------------------
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
@@ -1858,7 +1858,7 @@ entity slab_3_blk_mem_gen_v8_4_2 is
   attribute C_WRITE_WIDTH_B : integer;
   attribute C_WRITE_WIDTH_B of slab_3_blk_mem_gen_v8_4_2 : entity is 16;
   attribute C_XDEVICEFAMILY : string;
-  attribute C_XDEVICEFAMILY of slab_3_blk_mem_gen_v8_4_2 : entity is "virtex7";
+  attribute C_XDEVICEFAMILY of slab_3_blk_mem_gen_v8_4_2 : entity is "qvirtex7";
   attribute ORIG_REF_NAME : string;
   attribute ORIG_REF_NAME of slab_3_blk_mem_gen_v8_4_2 : entity is "blk_mem_gen_v8_4_2";
   attribute downgradeipidentifiedwarnings : string;
@@ -2163,7 +2163,7 @@ architecture STRUCTURE of slab_3 is
   attribute C_WRITE_WIDTH_B : integer;
   attribute C_WRITE_WIDTH_B of U0 : label is 16;
   attribute C_XDEVICEFAMILY : string;
-  attribute C_XDEVICEFAMILY of U0 : label is "virtex7";
+  attribute C_XDEVICEFAMILY of U0 : label is "qvirtex7";
   attribute downgradeipidentifiedwarnings of U0 : label is "yes";
   attribute x_interface_info : string;
   attribute x_interface_info of clka : signal is "xilinx.com:interface:bram:1.0 BRAM_PORTA CLK";

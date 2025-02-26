@@ -1,4 +1,4 @@
-// (c) Copyright 1995-2024 Xilinx, Inc. All rights reserved.
+// (c) Copyright 1995-2025 Xilinx, Inc. All rights reserved.
 // 
 // This file contains confidential and proprietary information
 // of Xilinx, Inc. and is protected under U.S. and
@@ -88,7 +88,7 @@ output wire [511 : 0] doutb;
 
   blk_mem_gen_v8_4_2 #(
     .C_FAMILY("virtex7"),
-    .C_XDEVICEFAMILY("virtex7"),
+    .C_XDEVICEFAMILY("qvirtex7"),
     .C_ELABORATION_DIR("./"),
     .C_INTERFACE_TYPE(0),
     .C_AXI_TYPE(1),
@@ -102,8 +102,8 @@ output wire [511 : 0] doutb;
     .C_BYTE_SIZE(9),
     .C_ALGORITHM(1),
     .C_PRIM_TYPE(1),
-    .C_LOAD_INIT_FILE(1),
-    .C_INIT_FILE_NAME("in_buf3.mif"),
+    .C_LOAD_INIT_FILE(0),
+    .C_INIT_FILE_NAME("no_coe_file_loaded"),
     .C_INIT_FILE("in_buf3.mem"),
     .C_USE_DEFAULT_DATA(0),
     .C_DEFAULT_DATA("0"),

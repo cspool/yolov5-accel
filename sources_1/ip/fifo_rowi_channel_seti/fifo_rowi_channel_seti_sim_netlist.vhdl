@@ -1,14 +1,14 @@
 -- Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2018.3 (win64) Build 2405991 Thu Dec  6 23:38:27 MST 2018
--- Date        : Fri Sep 13 15:06:14 2024
--- Host        : yang running 64-bit major release  (build 9200)
+-- Date        : Wed Feb 26 19:35:41 2025
+-- Host        : zack running 64-bit major release  (build 9200)
 -- Command     : write_vhdl -force -mode funcsim
---               e:/vivado_pros/yolov5_accel_2/yolov5_accel_2.srcs/sources_1/ip/fifo_rowi_channel_seti/fifo_rowi_channel_seti_sim_netlist.vhdl
+--               D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sources_1/ip/fifo_rowi_channel_seti/fifo_rowi_channel_seti_sim_netlist.vhdl
 -- Design      : fifo_rowi_channel_seti
 -- Purpose     : This VHDL netlist is a functional simulation representation of the design and should not be modified or
 --               synthesized. This netlist cannot be used for SDF annotated simulation.
--- Device      : xc7vx690tffg1761-2
+-- Device      : xq7vx690trf1761-2I
 -- --------------------------------------------------------------------------------
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;

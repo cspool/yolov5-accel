@@ -1,13 +1,13 @@
 // Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
 // Tool Version: Vivado v.2018.3 (win64) Build 2405991 Thu Dec  6 23:38:27 MST 2018
-// Date        : Fri Sep 13 15:06:14 2024
-// Host        : yang running 64-bit major release  (build 9200)
+// Date        : Wed Feb 26 19:35:41 2025
+// Host        : zack running 64-bit major release  (build 9200)
 // Command     : write_verilog -force -mode synth_stub
-//               e:/vivado_pros/yolov5_accel_2/yolov5_accel_2.srcs/sources_1/ip/fifo_rowi_channel_seti/fifo_rowi_channel_seti_stub.v
+//               D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sources_1/ip/fifo_rowi_channel_seti/fifo_rowi_channel_seti_stub.v
 // Design      : fifo_rowi_channel_seti
 // Purpose     : Stub declaration of top-level module interface
-// Device      : xc7vx690tffg1761-2
+// Device      : xq7vx690trf1761-2I
 // --------------------------------------------------------------------------------
 
 // This empty module with port declaration file causes synthesis tools to infer a black box for IP.

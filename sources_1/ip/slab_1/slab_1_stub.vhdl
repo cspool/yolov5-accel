@@ -1,13 +1,13 @@
 -- Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2018.3 (win64) Build 2405991 Thu Dec  6 23:38:27 MST 2018
--- Date        : Wed Dec 25 20:47:20 2024
--- Host        : yang running 64-bit major release  (build 9200)
+-- Date        : Wed Feb 26 19:39:52 2025
+-- Host        : zack running 64-bit major release  (build 9200)
 -- Command     : write_vhdl -force -mode synth_stub
---               E:/vivado_pros/yolov5_accel_2/yolov5_accel_2.srcs/sources_1/ip/slab_1/slab_1_stub.vhdl
+--               D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sources_1/ip/slab_1/slab_1_stub.vhdl
 -- Design      : slab_1
 -- Purpose     : Stub declaration of top-level module interface
--- Device      : xc7vx690tffg1761-2
+-- Device      : xq7vx690trf1761-2I
 -- --------------------------------------------------------------------------------
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;

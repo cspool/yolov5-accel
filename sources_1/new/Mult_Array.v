@@ -43,6 +43,8 @@ module Mult_Array (
   input [vector_B_width-1 : 0] vector_B;
   output [vector_P_width-1 : 0] vector_P;
 
+  wire [mult_array_length * 42 -1 : 0] vector_P_in_42;
+
   genvar i;
 
   generate
@@ -62,8 +64,10 @@ module Mult_Array (
           .A  (vector_A[(i*mult_A_width)+:mult_A_width]),                                                                                   // input wire [23 : 0] A
           .B  ({{(18 - mult_B_width) {vector_B[(i*mult_B_width)+mult_B_width-1]}},  //signed E
  vector_B[(i*mult_B_width)+:mult_B_width]}),  // input wire [17 : 0] B
-          .P  (vector_P[(i*mult_P_width)+:mult_P_width])                                                                                    // output wire [41 : 0] P
+          .P  (vector_P_in_42[(i*42)+:42])                                                                                                  // output wire [41 : 0] P
       );
+
+      assign vector_P[(i*mult_P_width)+:mult_P_width] = vector_P_in_42[(i*42)+:42];
     end
 
     for (i = 0; i < mult_lut_array_length; i = i + 1) begin : mult_lut_array
@@ -82,8 +86,10 @@ module Mult_Array (
           .A  (vector_A[((mult_dsp_array_length+i)*mult_A_width)+:mult_A_width]),                                                                                                           // input wire [23 : 0] A
           .B  ({{(18 - mult_B_width) {vector_B[((mult_dsp_array_length+i)*mult_B_width)+mult_B_width-1]}},  //signed E
  vector_B[((mult_dsp_array_length+i)*mult_B_width)+:mult_B_width]}),  // input wire [17 : 0] B
-          .P  (vector_P[((mult_dsp_array_length+i)*mult_P_width)+:mult_P_width])                                                                                                            // output wire [41 : 0] P
+          .P  (vector_P_in_42[((mult_dsp_array_length+i)*42)+:42])                                                                                                                          // output wire [41 : 0] P
       );
+
+      assign vector_P[((mult_dsp_array_length+i)*mult_P_width)+:mult_P_width] = vector_P_in_42[((mult_dsp_array_length+i)*42)+:42];
     end
   endgenerate
 

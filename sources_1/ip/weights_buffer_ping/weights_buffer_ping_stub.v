@@ -1,13 +1,13 @@
 // Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
 // Tool Version: Vivado v.2018.3 (win64) Build 2405991 Thu Dec  6 23:38:27 MST 2018
-// Date        : Wed Jan  8 14:41:20 2025
-// Host        : yang running 64-bit major release  (build 9200)
-// Command     : write_verilog -force -mode synth_stub
-//               e:/vivado_pros/yolov5_accel_2/yolov5_accel_2.srcs/sources_1/ip/weights_buffer_ping/weights_buffer_ping_stub.v
-// Design      : weights_buffer_ping
+// Date        : Wed Feb 26 19:38:11 2025
+// Host        : zack running 64-bit major release  (build 9200)
+// Command     : write_verilog -force -mode synth_stub -rename_top weights_buffer_ping -prefix
+//               weights_buffer_ping_ weights_buffer_pong_stub.v
+// Design      : weights_buffer_pong
 // Purpose     : Stub declaration of top-level module interface
-// Device      : xc7vx690tffg1761-2
+// Device      : xq7vx690trf1761-2I
 // --------------------------------------------------------------------------------
 
 // This empty module with port declaration file causes synthesis tools to infer a black box for IP.

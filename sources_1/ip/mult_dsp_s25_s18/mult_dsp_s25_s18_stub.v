@@ -1,13 +1,13 @@
 // Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
 // Tool Version: Vivado v.2018.3 (win64) Build 2405991 Thu Dec  6 23:38:27 MST 2018
-// Date        : Fri Feb 21 17:11:18 2025
+// Date        : Wed Feb 26 19:36:07 2025
 // Host        : zack running 64-bit major release  (build 9200)
 // Command     : write_verilog -force -mode synth_stub
-//               d:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sources_1/ip/mult_dsp_s25_s18/mult_dsp_s25_s18_stub.v
+//               D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sources_1/ip/mult_dsp_s25_s18/mult_dsp_s25_s18_stub.v
 // Design      : mult_dsp_s25_s18
 // Purpose     : Stub declaration of top-level module interface
-// Device      : xc7vx690tffg1761-2
+// Device      : xq7vx690trf1761-2I
 // --------------------------------------------------------------------------------
 
 // This empty module with port declaration file causes synthesis tools to infer a black box for IP.
