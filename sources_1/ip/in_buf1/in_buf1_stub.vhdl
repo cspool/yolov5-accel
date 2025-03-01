@@ -1,13 +1,13 @@
 -- Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2018.3 (win64) Build 2405991 Thu Dec  6 23:38:27 MST 2018
--- Date        : Wed Feb 26 19:40:57 2025
+-- Date        : Fri Feb 28 20:31:14 2025
 -- Host        : zack running 64-bit major release  (build 9200)
--- Command     : write_vhdl -force -mode synth_stub -rename_top in_buf1 -prefix
---               in_buf1_ in_buf3_stub.vhdl
--- Design      : in_buf3
+-- Command     : write_vhdl -force -mode synth_stub
+--               D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sources_1/ip/in_buf1/in_buf1_stub.vhdl
+-- Design      : in_buf1
 -- Purpose     : Stub declaration of top-level module interface
--- Device      : xq7vx690trf1761-2I
+-- Device      : xc7vx690tffg1761-2
 -- --------------------------------------------------------------------------------
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;

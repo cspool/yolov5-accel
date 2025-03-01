@@ -82,13 +82,13 @@ module conv_activate_quantify_decoder (
   output reg [3:0] k, s, p;
   output reg [15:0] of, ox, oy, ix, iy, nif;
   output reg [3:0] nif_in_2pow, ix_in_2pow;
-  output reg [15:0] nif_mult_k_mult_k;
-  output reg [15:0] N_chunks;
+  output reg [31:0] nif_mult_k_mult_k;
+  output reg [31:0] N_chunks;
   output reg [15:0] E_layer_base_buf_adr_rd;
   output reg [15:0] bias_layer_base_buf_adr_rd;
   output reg [15:0] scale_layer_base_buf_adr_rd;
-  output reg [15:0] weights_layer_base_ddr_adr_rd;
-  output reg [15:0] input_ddr_layer_base_adr;
+  output reg [31:0] weights_layer_base_ddr_adr_rd;
+  output reg [31:0] input_ddr_layer_base_adr;
   output reg [7:0] of_div_row_num_ceil;
   //tiley_first_tilex_first_split_size = ceil(tiley_first_iy_row_num * tilex_first_ix_word_num / of_div_row_num_ceil)
   output reg [7:0] tiley_first_tilex_first_split_size;

@@ -98,7 +98,7 @@ module conv_load_input_controller (
   input [3:0] k_init, s_init, p_init;
   input [15:0] of_init, ox_init, oy_init, ix_init, iy_init, nif_init;
   input [3:0] nif_in_2pow_init, ix_in_2pow_init;
-  input [15:0] input_ddr_layer_base_adr_init;
+  input [31:0] input_ddr_layer_base_adr_init;
   //of_div_row_num_ceil = ceil(of / row_num)
   input [7:0] of_div_row_num_ceil_init;
   //tiley_first_tilex_first_split_size = ceil(tiley_first_iy_row_num * tilex_first_ix_word_num / of_div_row_num_ceil)
@@ -139,7 +139,7 @@ module conv_load_input_controller (
   reg [3:0] k, s, p;
   reg [15:0] of, ox, oy, ix, iy, nif;
   reg [3:0] nif_in_2pow, ix_in_2pow;
-  reg [15:0] input_ddr_layer_base_adr;
+  reg [31:0] input_ddr_layer_base_adr;
 
   //of_div_row_num_ceil = ceil(of / row_num)
   reg [ 7:0] of_div_row_num_ceil;
@@ -185,7 +185,7 @@ module conv_load_input_controller (
   output [15:0] load_input_row_buf_adr;
   output [1:0] load_input_row_buf_idx;
   output input_word_ddr_en_rd;
-  output [15:0] input_word_ddr_adr_rd;
+  output [31:0] input_word_ddr_adr_rd;
   output input_word_load_info_fifo_en_wt;
   output [31:0] input_word_load_info_fifo_wt;
   output conv_load_input_fin;

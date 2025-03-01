@@ -1,14 +1,14 @@
 // Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
 // Tool Version: Vivado v.2018.3 (win64) Build 2405991 Thu Dec  6 23:38:27 MST 2018
-// Date        : Wed Feb 26 19:39:52 2025
+// Date        : Thu Feb 27 20:16:35 2025
 // Host        : zack running 64-bit major release  (build 9200)
 // Command     : write_verilog -force -mode funcsim
 //               D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sources_1/ip/slab_1/slab_1_sim_netlist.v
 // Design      : slab_1
 // Purpose     : This verilog netlist is a functional simulation representation of the design and should not be modified
 //               or synthesized. This netlist cannot be used for SDF annotated simulation.
-// Device      : xq7vx690trf1761-2I
+// Device      : xc7vx690tffg1761-2
 // --------------------------------------------------------------------------------
 `timescale 1 ps / 1 ps
 
@@ -138,7 +138,7 @@ module slab_1
   (* C_WRITE_MODE_B = "WRITE_FIRST" *) 
   (* C_WRITE_WIDTH_A = "16" *) 
   (* C_WRITE_WIDTH_B = "16" *) 
-  (* C_XDEVICEFAMILY = "qvirtex7" *) 
+  (* C_XDEVICEFAMILY = "virtex7" *) 
   (* downgradeipidentifiedwarnings = "yes" *) 
   slab_1_blk_mem_gen_v8_4_2 U0
        (.addra(addra),
@@ -1771,7 +1771,7 @@ endmodule
 (* C_USE_ECC = "0" *) (* C_USE_SOFTECC = "0" *) (* C_USE_URAM = "0" *) 
 (* C_WEA_WIDTH = "1" *) (* C_WEB_WIDTH = "1" *) (* C_WRITE_DEPTH_A = "8192" *) 
 (* C_WRITE_DEPTH_B = "8192" *) (* C_WRITE_MODE_A = "WRITE_FIRST" *) (* C_WRITE_MODE_B = "WRITE_FIRST" *) 
-(* C_WRITE_WIDTH_A = "16" *) (* C_WRITE_WIDTH_B = "16" *) (* C_XDEVICEFAMILY = "qvirtex7" *) 
+(* C_WRITE_WIDTH_A = "16" *) (* C_WRITE_WIDTH_B = "16" *) (* C_XDEVICEFAMILY = "virtex7" *) 
 (* ORIG_REF_NAME = "blk_mem_gen_v8_4_2" *) (* downgradeipidentifiedwarnings = "yes" *) 
 module slab_1_blk_mem_gen_v8_4_2
    (clka,

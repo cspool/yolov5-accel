@@ -1,14 +1,14 @@
 -- Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2018.3 (win64) Build 2405991 Thu Dec  6 23:38:27 MST 2018
--- Date        : Wed Feb 26 19:40:57 2025
+-- Date        : Fri Feb 28 20:31:13 2025
 -- Host        : zack running 64-bit major release  (build 9200)
 -- Command     : write_vhdl -force -mode funcsim -rename_top in_buf2 -prefix
---               in_buf2_ in_buf3_sim_netlist.vhdl
--- Design      : in_buf3
+--               in_buf2_ in_buf1_sim_netlist.vhdl
+-- Design      : in_buf1
 -- Purpose     : This VHDL netlist is a functional simulation representation of the design and should not be modified or
 --               synthesized. This netlist cannot be used for SDF annotated simulation.
--- Device      : xq7vx690trf1761-2I
+-- Device      : xc7vx690tffg1761-2
 -- --------------------------------------------------------------------------------
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
@@ -17631,7 +17631,7 @@ entity in_buf2_blk_mem_gen_v8_4_2 is
   attribute C_INITB_VAL : string;
   attribute C_INITB_VAL of in_buf2_blk_mem_gen_v8_4_2 : entity is "0";
   attribute C_INIT_FILE : string;
-  attribute C_INIT_FILE of in_buf2_blk_mem_gen_v8_4_2 : entity is "in_buf3.mem";
+  attribute C_INIT_FILE of in_buf2_blk_mem_gen_v8_4_2 : entity is "in_buf1.mem";
   attribute C_INIT_FILE_NAME : string;
   attribute C_INIT_FILE_NAME of in_buf2_blk_mem_gen_v8_4_2 : entity is "no_coe_file_loaded";
   attribute C_INTERFACE_TYPE : integer;
@@ -17697,7 +17697,7 @@ entity in_buf2_blk_mem_gen_v8_4_2 is
   attribute C_WRITE_WIDTH_B : integer;
   attribute C_WRITE_WIDTH_B of in_buf2_blk_mem_gen_v8_4_2 : entity is 512;
   attribute C_XDEVICEFAMILY : string;
-  attribute C_XDEVICEFAMILY of in_buf2_blk_mem_gen_v8_4_2 : entity is "qvirtex7";
+  attribute C_XDEVICEFAMILY of in_buf2_blk_mem_gen_v8_4_2 : entity is "virtex7";
   attribute downgradeipidentifiedwarnings : string;
   attribute downgradeipidentifiedwarnings of in_buf2_blk_mem_gen_v8_4_2 : entity is "yes";
 end in_buf2_blk_mem_gen_v8_4_2;
@@ -18813,7 +18813,7 @@ entity in_buf2 is
   attribute NotValidForBitStream : boolean;
   attribute NotValidForBitStream of in_buf2 : entity is true;
   attribute CHECK_LICENSE_TYPE : string;
-  attribute CHECK_LICENSE_TYPE of in_buf2 : entity is "in_buf3,blk_mem_gen_v8_4_2,{}";
+  attribute CHECK_LICENSE_TYPE of in_buf2 : entity is "in_buf1,blk_mem_gen_v8_4_2,{}";
   attribute downgradeipidentifiedwarnings : string;
   attribute downgradeipidentifiedwarnings of in_buf2 : entity is "yes";
   attribute x_core_info : string;
@@ -18924,7 +18924,7 @@ architecture STRUCTURE of in_buf2 is
   attribute C_INITB_VAL : string;
   attribute C_INITB_VAL of U0 : label is "0";
   attribute C_INIT_FILE : string;
-  attribute C_INIT_FILE of U0 : label is "in_buf3.mem";
+  attribute C_INIT_FILE of U0 : label is "in_buf1.mem";
   attribute C_INIT_FILE_NAME : string;
   attribute C_INIT_FILE_NAME of U0 : label is "no_coe_file_loaded";
   attribute C_INTERFACE_TYPE : integer;
@@ -18990,7 +18990,7 @@ architecture STRUCTURE of in_buf2 is
   attribute C_WRITE_WIDTH_B : integer;
   attribute C_WRITE_WIDTH_B of U0 : label is 512;
   attribute C_XDEVICEFAMILY : string;
-  attribute C_XDEVICEFAMILY of U0 : label is "qvirtex7";
+  attribute C_XDEVICEFAMILY of U0 : label is "virtex7";
   attribute downgradeipidentifiedwarnings of U0 : label is "yes";
   attribute x_interface_info : string;
   attribute x_interface_info of clka : signal is "xilinx.com:interface:bram:1.0 BRAM_PORTA CLK";

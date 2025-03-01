@@ -1,14 +1,14 @@
 // Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
 // Tool Version: Vivado v.2018.3 (win64) Build 2405991 Thu Dec  6 23:38:27 MST 2018
-// Date        : Wed Feb 26 19:35:41 2025
+// Date        : Thu Feb 27 20:15:08 2025
 // Host        : zack running 64-bit major release  (build 9200)
 // Command     : write_verilog -force -mode funcsim
 //               D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sources_1/ip/fifo_rowi_channel_seti/fifo_rowi_channel_seti_sim_netlist.v
 // Design      : fifo_rowi_channel_seti
 // Purpose     : This verilog netlist is a functional simulation representation of the design and should not be modified
 //               or synthesized. This netlist cannot be used for SDF annotated simulation.
-// Device      : xq7vx690trf1761-2I
+// Device      : xc7vx690tffg1761-2
 // --------------------------------------------------------------------------------
 `timescale 1 ps / 1 ps
 

@@ -1,3 +1,0 @@
-Time	valid	out_f_idx	out_y_idx	out_x_idx	result_word
-                   0	x	    x	    x	    x	xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-                5000	0	    0	    0	    0	0000000000000000000000000000000000000000000000000000000000000000

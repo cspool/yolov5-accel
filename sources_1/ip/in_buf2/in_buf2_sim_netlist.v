@@ -1,18 +1,18 @@
 // Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
 // Tool Version: Vivado v.2018.3 (win64) Build 2405991 Thu Dec  6 23:38:27 MST 2018
-// Date        : Wed Feb 26 19:40:57 2025
+// Date        : Fri Feb 28 20:31:13 2025
 // Host        : zack running 64-bit major release  (build 9200)
 // Command     : write_verilog -force -mode funcsim -rename_top in_buf2 -prefix
-//               in_buf2_ in_buf3_sim_netlist.v
-// Design      : in_buf3
+//               in_buf2_ in_buf1_sim_netlist.v
+// Design      : in_buf1
 // Purpose     : This verilog netlist is a functional simulation representation of the design and should not be modified
 //               or synthesized. This netlist cannot be used for SDF annotated simulation.
-// Device      : xq7vx690trf1761-2I
+// Device      : xc7vx690tffg1761-2
 // --------------------------------------------------------------------------------
 `timescale 1 ps / 1 ps
 
-(* CHECK_LICENSE_TYPE = "in_buf3,blk_mem_gen_v8_4_2,{}" *) (* downgradeipidentifiedwarnings = "yes" *) (* x_core_info = "blk_mem_gen_v8_4_2,Vivado 2018.3" *) 
+(* CHECK_LICENSE_TYPE = "in_buf1,blk_mem_gen_v8_4_2,{}" *) (* downgradeipidentifiedwarnings = "yes" *) (* x_core_info = "blk_mem_gen_v8_4_2,Vivado 2018.3" *) 
 (* NotValidForBitStream *)
 module in_buf2
    (clka,
@@ -105,7 +105,7 @@ module in_buf2
   (* C_HAS_SOFTECC_OUTPUT_REGS_B = "0" *) 
   (* C_INITA_VAL = "0" *) 
   (* C_INITB_VAL = "0" *) 
-  (* C_INIT_FILE = "in_buf3.mem" *) 
+  (* C_INIT_FILE = "in_buf1.mem" *) 
   (* C_INIT_FILE_NAME = "no_coe_file_loaded" *) 
   (* C_INTERFACE_TYPE = "0" *) 
   (* C_LOAD_INIT_FILE = "0" *) 
@@ -138,7 +138,7 @@ module in_buf2
   (* C_WRITE_MODE_B = "WRITE_FIRST" *) 
   (* C_WRITE_WIDTH_A = "512" *) 
   (* C_WRITE_WIDTH_B = "512" *) 
-  (* C_XDEVICEFAMILY = "qvirtex7" *) 
+  (* C_XDEVICEFAMILY = "virtex7" *) 
   (* downgradeipidentifiedwarnings = "yes" *) 
   in_buf2_blk_mem_gen_v8_4_2 U0
        (.addra(addra),
@@ -17734,7 +17734,7 @@ endmodule
 (* C_HAS_MEM_OUTPUT_REGS_B = "0" *) (* C_HAS_MUX_OUTPUT_REGS_A = "0" *) (* C_HAS_MUX_OUTPUT_REGS_B = "0" *) 
 (* C_HAS_REGCEA = "0" *) (* C_HAS_REGCEB = "0" *) (* C_HAS_RSTA = "0" *) 
 (* C_HAS_RSTB = "0" *) (* C_HAS_SOFTECC_INPUT_REGS_A = "0" *) (* C_HAS_SOFTECC_OUTPUT_REGS_B = "0" *) 
-(* C_INITA_VAL = "0" *) (* C_INITB_VAL = "0" *) (* C_INIT_FILE = "in_buf3.mem" *) 
+(* C_INITA_VAL = "0" *) (* C_INITB_VAL = "0" *) (* C_INIT_FILE = "in_buf1.mem" *) 
 (* C_INIT_FILE_NAME = "no_coe_file_loaded" *) (* C_INTERFACE_TYPE = "0" *) (* C_LOAD_INIT_FILE = "0" *) 
 (* C_MEM_TYPE = "1" *) (* C_MUX_PIPELINE_STAGES = "0" *) (* C_PRIM_TYPE = "1" *) 
 (* C_READ_DEPTH_A = "4096" *) (* C_READ_DEPTH_B = "4096" *) (* C_READ_LATENCY_A = "1" *) 
@@ -17745,7 +17745,7 @@ endmodule
 (* C_USE_ECC = "0" *) (* C_USE_SOFTECC = "0" *) (* C_USE_URAM = "0" *) 
 (* C_WEA_WIDTH = "1" *) (* C_WEB_WIDTH = "1" *) (* C_WRITE_DEPTH_A = "4096" *) 
 (* C_WRITE_DEPTH_B = "4096" *) (* C_WRITE_MODE_A = "NO_CHANGE" *) (* C_WRITE_MODE_B = "WRITE_FIRST" *) 
-(* C_WRITE_WIDTH_A = "512" *) (* C_WRITE_WIDTH_B = "512" *) (* C_XDEVICEFAMILY = "qvirtex7" *) 
+(* C_WRITE_WIDTH_A = "512" *) (* C_WRITE_WIDTH_B = "512" *) (* C_XDEVICEFAMILY = "virtex7" *) 
 (* downgradeipidentifiedwarnings = "yes" *) 
 module in_buf2_blk_mem_gen_v8_4_2
    (clka,

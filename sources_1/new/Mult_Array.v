@@ -67,7 +67,7 @@ module Mult_Array (
           .P  (vector_P_in_42[(i*42)+:42])                                                                                                  // output wire [41 : 0] P
       );
 
-      assign vector_P[(i*mult_P_width)+:mult_P_width] = vector_P_in_42[(i*42)+:42];
+      assign vector_P[(i*mult_P_width)+:mult_P_width] = vector_P_in_42[(i*42)+:mult_P_width];
     end
 
     for (i = 0; i < mult_lut_array_length; i = i + 1) begin : mult_lut_array
@@ -89,7 +89,7 @@ module Mult_Array (
           .P  (vector_P_in_42[((mult_dsp_array_length+i)*42)+:42])                                                                                                                          // output wire [41 : 0] P
       );
 
-      assign vector_P[((mult_dsp_array_length+i)*mult_P_width)+:mult_P_width] = vector_P_in_42[((mult_dsp_array_length+i)*42)+:42];
+      assign vector_P[((mult_dsp_array_length+i)*mult_P_width)+:mult_P_width] = vector_P_in_42[((mult_dsp_array_length+i)*42)+:mult_P_width];
     end
   endgenerate
 

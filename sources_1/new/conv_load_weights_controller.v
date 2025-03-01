@@ -48,16 +48,16 @@ module conv_load_weights_controller (
   input valid_load_weights;  //ddr words is loaded from ddr
 
   input mode_init;
-  input [15:0] nif_mult_k_mult_k_init;
-  input [15:0] of_init;
-  input [15:0] weights_layer_base_ddr_adr_rd_init;
+  input [31:0] nif_mult_k_mult_k_init;
+  input [31:0] of_init;
+  input [31:0] weights_layer_base_ddr_adr_rd_init;
   reg        mode;
-  reg [15:0] nif_mult_k_mult_k;
-  reg [15:0] of;
-  reg [15:0] weights_layer_base_ddr_adr_rd;
+  reg [31:0] nif_mult_k_mult_k;
+  reg [31:0] of;
+  reg [31:0] weights_layer_base_ddr_adr_rd;
 
   output weights_word_ddr_en_rd;
-  output [15:0] weights_word_ddr_adr_rd;
+  output [31:0] weights_word_ddr_adr_rd;
   output weights_word_buf_en_wt;
   output [15:0] weights_word_buf_adr_wt;
   output conv_load_weights_fin;
@@ -65,17 +65,17 @@ module conv_load_weights_controller (
 
   // load weight adr
   reg        weights_ddr_signal_add;
-  reg [15:0] weights_ddr_word_counter;
+  reg [31:0] weights_ddr_word_counter;
   wire loop_weights_ddr_word_counter_add_begin, loop_weights_ddr_word_counter_add_end;
 
-  reg [15:0] weights_ddr_tof_start;
-  reg [15:0] weights_ddr_tof_base_adr;
+  reg [31:0] weights_ddr_tof_start;
+  reg [31:0] weights_ddr_tof_base_adr;
   wire loop_weights_ddr_tof_add_begin, loop_weights_ddr_tof_add_end;
 
-  wire [15:0] row_num = (mode == 1'b0) ? row_num_in_mode0 : (mode == 1'b1) ? row_num_in_mode1 : 0;
+  wire [31:0] row_num = (mode == 1'b0) ? row_num_in_mode0 : (mode == 1'b1) ? row_num_in_mode1 : 0;
 
   // weights word into buf
-  reg  [15:0]                                                                                      weights_buf_word_counter;
+  reg  [31:0]                                                                                      weights_buf_word_counter;
   wire loop_weights_buf_word_counter_add_begin, loop_weights_buf_word_counter_add_end;
 
   always @(posedge clk) begin

@@ -1,4 +1,4 @@
-`timescale 1ns / 1ps
+`timescale 1ns / 1ns
 //////////////////////////////////////////////////////////////////////////////////
 // Company: 
 // Engineer: 
@@ -130,13 +130,13 @@ module conv_activate_quantify_tb ();
   wire [3:0] k, s, p;
   wire [15:0] of, ox, oy, ix, iy, nif;
   wire [3:0] nif_in_2pow, ix_in_2pow;
-  wire [15:0] nif_mult_k_mult_k;
-  wire [15:0] N_chunks;
+  wire [31:0] nif_mult_k_mult_k;
+  wire [31:0] N_chunks;
   wire [15:0] E_layer_base_buf_adr_rd;
   wire [15:0] bias_layer_base_buf_adr_rd;
   wire [15:0] scale_layer_base_buf_adr_rd;
-  wire [15:0] weights_layer_base_ddr_adr_rd;
-  wire [15:0] input_ddr_layer_base_adr;
+  wire [31:0] weights_layer_base_ddr_adr_rd;
+  wire [31:0] input_ddr_layer_base_adr;
   wire [ 7:0] of_div_row_num_ceil;
   wire [ 7:0] tiley_first_tilex_first_split_size;
   wire [ 7:0] tiley_first_tilex_last_split_size;
@@ -165,7 +165,7 @@ module conv_activate_quantify_tb ();
   wire DDR_en;
   wire DDR_en_wr;
   wire [511:0] DDR_in;
-  wire [ 15:0] DDR_adr;
+  wire [ 31:0] DDR_adr;
   wire [511:0] DDR_out;  //o
   //DDR data
   reg valid_load_input;
@@ -214,7 +214,7 @@ module conv_activate_quantify_tb ();
   wire [15:0] load_input_row_buf_adr;
   wire [1:0] load_input_row_buf_idx;
   wire input_word_ddr_en_rd;
-  wire [15:0] input_word_ddr_adr_rd;
+  wire [31:0] input_word_ddr_adr_rd;
   wire input_word_load_info_fifo_en_wt;
   wire [31:0] input_word_load_info_fifo_wt;
   wire conv_load_input_fin;
@@ -345,7 +345,7 @@ module conv_activate_quantify_tb ();
   wire [511 : 0] in_buf3_rd;
   //load weights controller
   wire weights_word_ddr_en_rd; //o: read ddr
-  wire [15:0] weights_word_ddr_adr_rd;//o
+  wire [31:0] weights_word_ddr_adr_rd;//o
   wire weights_word_buf_en_wt; //o: write buf
   wire [15:0] weights_word_buf_adr_wt;//o
   wire conv_load_weights_fin;
@@ -494,19 +494,19 @@ module conv_activate_quantify_tb ();
 //       .clka (clk),                    // input wire clka
 //       .ena  (DDR_en),   // input wire ena
 //       .wea  (0),                      // input wire [0 : 0] wea
-//       .addra(DDR_adr),  // input wire [15 : 0] addra
+//       .addra(DDR_adr),  // input wire [31 : 0] addra
 //       .dina (512'b0),                      // input wire [511 : 0] dina
 //       .douta(DDR_out)                 // output wire [511 : 0] douta
 //   );
 //   assign DDR_en          = input_word_ddr_en_rd | weights_word_ddr_en_rd;
 //   assign DDR_en_wr       = 0;
-//   assign DDR_adr         = (input_word_ddr_en_rd == 1)? input_word_ddr_adr_rd[12 : 0] :
-//    (weights_word_ddr_en_rd == 1)? weights_word_ddr_adr_rd[12 : 0] : 0;
+//   assign DDR_adr         = (input_word_ddr_en_rd == 1)? input_word_ddr_adr_rd :
+//    (weights_word_ddr_en_rd == 1)? weights_word_ddr_adr_rd : 0;
 //   assign DDR_in          = 0;
 //   assign load_input_word = (valid_load_input == 1'b1) ? DDR_out : 0;
 //   assign weights_word_buf_wt = (valid_load_weights == 1'b1) ? DDR_out : 0;
   //DDR reg mem
-  parameter DDR_mem_limit = 65536; //4096*16
+  parameter DDR_mem_limit = 1000000; //4096*16
   reg[511:0] DDR_mem [DDR_mem_limit - 1:0];
   reg [511:0] DDR_mem_out;
   always @(posedge clk) begin
@@ -1598,11 +1598,14 @@ module conv_activate_quantify_tb ();
     clk <= ~clk;
   end
 
-  integer file, file1, file2, file3, file4, file5, file6;
+  integer file; 
+  integer file01, file02, file03, file04, file05, file06;
+  integer file11, file12, file13, file14, file15, file16;
+  integer file21, file22, file23, file24, file25, file26;
   integer n;
   initial begin
     // initial data
-    for (n = 0; n < DDR_mem_limit; n = n + 1) begin
+    for (n = 0; n < 1000000; n = n + 1) begin //DDR_mem_limit
       DDR_mem[n] = 512'b0;
     end
     for (n = 0; n < bias_buffer_mem_limit; n = n + 1) begin
@@ -1615,8 +1618,8 @@ module conv_activate_quantify_tb ();
       scale_buffer_mem[n] = 512'b0;
     end
     $readmemh("D:\\project\\Vivado\\yolov5_accel\\yolov5_accel.srcs\\DDR_init.txt", DDR_mem);
-    // 可选：打印读取的数据以验证
-    for (n = 0; n < DDR_mem_limit; n = n + 1) begin
+    // 可�?�：打印读取的数据以验证
+    for (n = 0; n < 1000000; n = n + 1) begin //DDR_mem_limit
       $display("DDR_mem[%d] = %h", n, DDR_mem[n]);
     end
     $readmemh("D:\\project\\Vivado\\yolov5_accel\\yolov5_accel.srcs\\bias_buffer_init.txt", bias_buffer_mem);
@@ -1629,25 +1632,50 @@ module conv_activate_quantify_tb ();
             $display("Could not open file");
             $stop;
     end
-    // 写入文件头
+    // 写入文件�?
     $fdisplay(file, "Time\tvalid\tout_f_idx\tout_y_idx\tout_x_idx\tresult_word");
-    // 监控信号变化并写入文件
+    // 监控信号变化并写入文�?
     $fmonitor(file, "%t\t%b\t%d\t%d\t%d\t%h", $time, valid_rowi_out_buf_adr, out_f_idx, out_y_idx, out_x_idx, conv_out_data);
 
     // collect product add bias file
-    file1 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum.txt", "w");
-    $fmonitor(file1, "%h", out_rowi_channel_seti[0][0]);
-    file2 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_in_A.txt", "w");
-    $fmonitor(file2, "%h", sum_vector_in_mult_A_width_rowi_channel_setj[0][0]);
-    file3 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_mult_E.txt", "w");
-    $fmonitor(file3, "%h", sum_mult_E_vector_in_mult_P_width_rowi_channel_setj[0][0]);
-    file4 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/product_add_bias.txt", "w");
-    $fmonitor(file4, "%h", product_add_bias_vector_rowi_channel_setj[0][0]);
-    file5 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/quantified_row.txt", "w");
-    $fmonitor(file5, "%h", quantified_rowi_channel_setj[0][0]);
-    file6 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/E_in_B.txt", "w");
-    $fmonitor(file6, "%h", E_vector_in_mult_B_width_rowi_channel_setj[0][0]);
+    file01 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_00.txt", "w");
+    $fmonitor(file01, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, out_rowi_channel_seti[0][0]);
+    file02 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_in_A_00.txt", "w");
+    $fmonitor(file02, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, sum_vector_in_mult_A_width_rowi_channel_setj[0][0]);
+    file03 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_mult_E_00.txt", "w");
+    $fmonitor(file03, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, sum_mult_E_vector_in_mult_P_width_rowi_channel_setj[0][0]);
+    file04 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/product_add_bias_00.txt", "w");
+    $fmonitor(file04, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, product_add_bias_vector_rowi_channel_setj[0][0]);
+    file05 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/quantified_row_00.txt", "w");
+    $fmonitor(file05, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, quantified_rowi_channel_setj[0][0]);
+    file06 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/E_in_B_00.txt", "w");
+    $fmonitor(file06, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, E_vector_in_mult_B_width_rowi_channel_setj[0][0]);
 
+    file11 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_10.txt", "w");
+    $fmonitor(file11, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, out_rowi_channel_seti[1][0]);
+    file12 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_in_A_10.txt", "w");
+    $fmonitor(file12, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, sum_vector_in_mult_A_width_rowi_channel_setj[1][0]);
+    file13 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_mult_E_10.txt", "w");
+    $fmonitor(file13, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, sum_mult_E_vector_in_mult_P_width_rowi_channel_setj[1][0]);
+    file14 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/product_add_bias_10.txt", "w");
+    $fmonitor(file14, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, product_add_bias_vector_rowi_channel_setj[1][0]);
+    file15 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/quantified_row_10.txt", "w");
+    $fmonitor(file15, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, quantified_rowi_channel_setj[1][0]);
+    file16 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/E_in_B_10.txt", "w");
+    $fmonitor(file16, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, E_vector_in_mult_B_width_rowi_channel_setj[1][0]);
+
+    file21 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_20.txt", "w");
+    $fmonitor(file21, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, out_rowi_channel_seti[2][0]);
+    file22 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_in_A_20.txt", "w");
+    $fmonitor(file22, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, sum_vector_in_mult_A_width_rowi_channel_setj[2][0]);
+    file23 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_mult_E_20.txt", "w");
+    $fmonitor(file23, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, sum_mult_E_vector_in_mult_P_width_rowi_channel_setj[2][0]);
+    file24 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/product_add_bias_20.txt", "w");
+    $fmonitor(file24, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, product_add_bias_vector_rowi_channel_setj[2][0]);
+    file25 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/quantified_row_20.txt", "w");
+    $fmonitor(file25, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, quantified_rowi_channel_setj[2][0]);
+    file26 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/E_in_B_20.txt", "w");
+    $fmonitor(file26, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, E_vector_in_mult_B_width_rowi_channel_setj[2][0]);
     //begin simulation
     clk   = 0;
     reset = 1;
@@ -1660,9 +1688,9 @@ module conv_activate_quantify_tb ();
     #10;
     conv_decode = 0;
 
-    #1000000000;
-    $fclose(file); // 关闭文件
-    $stop; // 停止仿真
+    // #1316134912;
+    // $fclose(file); // 关闭文件
+    // $stop; // 停止仿真
   end
 
 endmodule

@@ -119,7 +119,7 @@ BEGIN
       C_VERBOSITY => 0,
       C_MODEL_TYPE => 0,
       C_OPTIMIZE_GOAL => 1,
-      C_XDEVICEFAMILY => "qvirtex7",
+      C_XDEVICEFAMILY => "virtex7",
       C_HAS_CE => 1,
       C_HAS_SCLR => 0,
       C_LATENCY => 1,

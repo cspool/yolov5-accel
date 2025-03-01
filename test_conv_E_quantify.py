@@ -39,8 +39,8 @@ def generate_conv_E_quantify_tests():
   conv_E_quantify_test(conv_type, mode_type, quantify_type)
 
 def conv_E_quantify_test(conv_type, mode_type, quantify_type):
-    standard_conv_E_quantify(conv_type, mode_type, quantify_type)
-    # fpga_conv_E_quantify(conv_type, mode_type, quantify_type)
+    # standard_conv_E_quantify(conv_type, mode_type, quantify_type)
+    fpga_conv_E_quantify(conv_type, mode_type, quantify_type)
 
 def standard_conv_E_quantify(conv_type, mode_type, quantify_type):
   # def basic conv op
@@ -79,14 +79,55 @@ def standard_conv_E_quantify(conv_type, mode_type, quantify_type):
     - weight_data * torch.tensor([2], dtype=torch.int).view(1, 1, 1, 1)
   weight_data_mode = weight_data_mode0 if mode == 0 else weight_data_mode1
   conv_out = F.conv2d(input_data, weight_data_mode, torch.zeros(size=(of,), dtype=torch.int), stride=s, padding=p)
+  
+  output_file = "conv_out_tensor.txt"
+  with open(output_file, "w") as f: 
+      # 第一行写入维度信息
+      f.write(" ".join(map(str, conv_out.shape)) + "\n")
+      # 遍历张量的每个元素并写入文件
+      for i in range(conv_out.size(0)):  # 遍历 batch 维度
+          for j in range(conv_out.size(1)):  # 遍历通道维度
+              for k in range(conv_out.size(2)):  # 遍历高度维度
+                  f.write(f"channel {j:4d} - height {k:4d} : ")
+                  for value in conv_out[i, j, k, :]:  # 遍历宽度维度
+                      f.write(f"{int(value.item()):3d} ")  # 写入整数值
+                  f.write("\n")  # 每一行结束后换行
+  print(f"conv_out tensor saved to {output_file}")
+  
   # 调整 E 和 scale 的形状以匹配输出张量
   E_data = E_data.view(1, of, 1, 1)  # 调整为 (1, of, 1, 1)
   bias_data = bias_data.view(1, of, 1, 1)
   scale_data = scale_data.view(1, of, 1, 1)  # 调整为 (1, of, 1, 1)
   # 将每个通道的值乘以对应的 E[i]
   conv_out = conv_out * E_data  # 使用广播机制
+  output_file = "conv_out_mult_E_tensor.txt"
+  with open(output_file, "w") as f: 
+      # 第一行写入维度信息
+      f.write(" ".join(map(str, conv_out.shape)) + "\n")
+      # 遍历张量的每个元素并写入文件
+      for i in range(conv_out.size(0)):  # 遍历 batch 维度
+          for j in range(conv_out.size(1)):  # 遍历通道维度
+              for k in range(conv_out.size(2)):  # 遍历高度维度
+                  f.write(f"channel {j:4d} - height {k:4d} : ")
+                  for value in conv_out[i, j, k, :]:  # 遍历宽度维度
+                      f.write(f"{int(value.item()):3d} ")  # 写入整数值
+                  f.write("\n")  # 每一行结束后换行
+  print(f"conv_out mult E tensor saved to {output_file}")
   # 将每个通道的值add对应的 bias[i]
   conv_out = conv_out + bias_data  # 使用广播机制
+  output_file = "conv_out_mult_E_add_bias_tensor.txt"
+  with open(output_file, "w") as f: 
+      # 第一行写入维度信息
+      f.write(" ".join(map(str, conv_out.shape)) + "\n")
+      # 遍历张量的每个元素并写入文件
+      for i in range(conv_out.size(0)):  # 遍历 batch 维度
+          for j in range(conv_out.size(1)):  # 遍历通道维度
+              for k in range(conv_out.size(2)):  # 遍历高度维度
+                  f.write(f"channel {j:4d} - height {k:4d} : ")
+                  for value in conv_out[i, j, k, :]:  # 遍历宽度维度
+                      f.write(f"{int(value.item()):3d} ")  # 写入整数值
+                  f.write("\n")  # 每一行结束后换行
+  print(f"conv_out tensor saved to {output_file}")
   # 对每个输出通道的值应用 ReLU 激活函数
   conv_out = F.relu(conv_out)
   # 对每个通道的值进行逻辑右移 rank[i] 位
@@ -100,11 +141,10 @@ def standard_conv_E_quantify(conv_type, mode_type, quantify_type):
       for i in range(output_tensor.size(0)):  # 遍历 batch 维度
           for j in range(output_tensor.size(1)):  # 遍历通道维度
               for k in range(output_tensor.size(2)):  # 遍历高度维度
+                  f.write(f"channel {j:4d} - height {k:4d} : ")
                   for value in output_tensor[i, j, k, :]:  # 遍历宽度维度
                       f.write(f"{int(value.item()):3d} ")  # 写入整数值
                   f.write("\n")  # 每一行结束后换行
-              f.write("\n")  # 每个通道结束后换行
-          f.write("\n")  # 每个 batch 结束后换行
   print(f"Output tensor saved to {output_file}")
 
 #fpga conv
@@ -123,6 +163,46 @@ def fpga_conv_E_quantify(conv_type, mode_type, quantify_type):
   #compare the fpga result with std conv
   compare_files("D:\\project\\Vivado\\yolov5_accel\\yolov5_accel.srcs\\fpga_output_tensors.txt", 
                 "D:\\project\\Vivado\\yolov5_accel\\yolov5_accel.srcs\\output_tensor.txt")
+
+def collect_result(of, oy, ox):
+    # collect the result from txt file
+    fpga_output_tensors = torch.zeros(size=(1, of, oy, ox), dtype=torch.int8)
+    with open("conv_result.txt", "r") as f:
+        next(f)  # 跳过第一行表头
+        for line in f:
+            if line is None: continue
+            # 解析每一行的数据
+            line_spilt = line.strip().split()
+            if len(line_spilt) < 6: continue
+            time, valid, out_f_idx, out_y_idx, out_x_idx, result_word = line_spilt
+            if len(result_word) < 64: continue
+            if valid != "1": continue
+            out_f_idx, out_y_idx, out_x_idx = int(out_f_idx), int(out_y_idx), int(out_x_idx)
+            
+            # 将64位16进制数转换为32个2位16进制数，并进一步转换为10进制数
+            hex_values = [result_word[i:i+2] for i in range(0, len(result_word), 2)]
+            decimal_values = [int(value, 16) for value in hex_values]
+            
+            # 计算写入张量的起始和结束索引
+            start_idx = (out_f_idx - 1, out_y_idx - 1, (out_x_idx - 1))
+            end_idx = (out_f_idx - 1, out_y_idx -1 , out_x_idx - 1 + 32)
+            
+            # 将数据写入张量，编号小的数写入坐标大的位置
+            fpga_output_tensors[0, start_idx[0], start_idx[1], start_idx[2]:end_idx[2]] = torch.tensor(decimal_values[::-1], dtype=torch.uint8)
+
+    fpga_output_tensors = fpga_output_tensors.to(dtype=torch.uint8)
+    with open("fpga_output_tensors.txt", "w") as f:
+        # 写入张量的维度信息
+        f.write(" ".join(map(str, fpga_output_tensors.shape)) + "\n")
+        
+        # 遍历张量的每个元素并写入文件
+        for b in range(fpga_output_tensors.size(0)):  # 遍历第0个维度
+          for i in range(fpga_output_tensors.size(1)):  # 遍历第一个维度
+              for j in range(fpga_output_tensors.size(2)):  # 遍历第二个维度
+                  f.write(f"channel {i:4d} - height {j:4d} : ")
+                  for k in range(fpga_output_tensors.size(3)):  # 遍历第三个维度
+                      f.write(f"{fpga_output_tensors[b, i, j, k].item():3d} ")
+                  f.write("\n")  # 每一行结束后换行
 
 def compare_files(file1_path, file2_path):
     with open(file1_path, 'r', encoding='utf-8') as file1, \
@@ -739,43 +819,6 @@ def generate_instr_args_init(mode,k,s,p,of,ox,oy,ix,iy,nif):
       for value in instr_args_init_mem:
           hex_value = format(value, '08X')  # 转换为 8 位 16 进制数，不足 8 位时前面补零
           file.write(f"{hex_value}\n")
-
-def collect_result(of, oy, ox):
-    # collect the result from txt file
-    fpga_output_tensors = torch.zeros(size=(1, of, oy, ox), dtype=torch.int8)
-    with open("conv_result.txt", "r") as f:
-        next(f)  # 跳过第一行表头
-        for line in f:
-            # 解析每一行的数据
-            time, valid, out_f_idx, out_y_idx, out_x_idx, result_word = line.strip().split()
-            if valid != "1": continue
-            out_f_idx, out_y_idx, out_x_idx = int(out_f_idx), int(out_y_idx), int(out_x_idx)
-            
-            # 将64位16进制数转换为32个2位16进制数，并进一步转换为10进制数
-            hex_values = [result_word[i:i+2] for i in range(0, len(result_word), 2)]
-            decimal_values = [int(value, 16) for value in hex_values]
-            
-            # 计算写入张量的起始和结束索引
-            start_idx = (out_f_idx - 1, out_y_idx - 1, (out_x_idx - 1))
-            end_idx = (out_f_idx - 1, out_y_idx -1 , out_x_idx - 1 + 32)
-            
-            # 将数据写入张量，编号小的数写入坐标大的位置
-            fpga_output_tensors[0, start_idx[0], start_idx[1], start_idx[2]:end_idx[2]] = torch.tensor(decimal_values[::-1], dtype=torch.uint8)
-
-    fpga_output_tensors = fpga_output_tensors.to(dtype=torch.uint8)
-    with open("fpga_output_tensors.txt", "w") as f:
-        # 写入张量的维度信息
-        f.write(" ".join(map(str, fpga_output_tensors.shape)) + "\n")
-        
-        # 遍历张量的每个元素并写入文件
-        for b in range(fpga_output_tensors.size(0)):  # 遍历第0个维度
-          for i in range(fpga_output_tensors.size(1)):  # 遍历第一个维度
-              for j in range(fpga_output_tensors.size(2)):  # 遍历第二个维度
-                  for k in range(fpga_output_tensors.size(3)):  # 遍历第三个维度
-                      f.write(f"{fpga_output_tensors[b, i, j, k].item():3d} ")
-                  f.write("\n")  # 每一行结束后换行
-              f.write("\n")  # 每一输出行结束后换行
-          f.write("\n")  # 每一batch结束后换行
 
 if __name__ == "__main__":
     generate_conv_E_quantify_tests()
