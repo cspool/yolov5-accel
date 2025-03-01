@@ -42,7 +42,7 @@ module SA_E_ReLU_Quantify_Ctrl (
   input reset, clk;
   input re_fm_en;
   input mode;
-  input [15:0] nif_mult_k_mult_k;
+  input [31:0] nif_mult_k_mult_k;
   // reg mode;
   // reg [31:0] nif_mult_k_mult_k;
   reg         pixels_counter_signal;

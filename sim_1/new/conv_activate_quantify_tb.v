@@ -1618,10 +1618,10 @@ module conv_activate_quantify_tb ();
       scale_buffer_mem[n] = 512'b0;
     end
     $readmemh("D:\\project\\Vivado\\yolov5_accel\\yolov5_accel.srcs\\DDR_init.txt", DDR_mem);
-    // 可�?�：打印读取的数据以验证
-    for (n = 0; n < 1000000; n = n + 1) begin //DDR_mem_limit
-      $display("DDR_mem[%d] = %h", n, DDR_mem[n]);
-    end
+    // // 打印读取的数据以验证
+    // for (n = 0; n < 1000000; n = n + 1) begin //DDR_mem_limit
+    //   $display("DDR_mem[%d] = %h", n, DDR_mem[n]);
+    // end
     $readmemh("D:\\project\\Vivado\\yolov5_accel\\yolov5_accel.srcs\\bias_buffer_init.txt", bias_buffer_mem);
     $readmemh("D:\\project\\Vivado\\yolov5_accel\\yolov5_accel.srcs\\E_buffer_init.txt", E_buffer_mem);
     $readmemh("D:\\project\\Vivado\\yolov5_accel\\yolov5_accel.srcs\\scale_buffer_init.txt", scale_buffer_mem);

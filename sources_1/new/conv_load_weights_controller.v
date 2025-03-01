@@ -49,11 +49,11 @@ module conv_load_weights_controller (
 
   input mode_init;
   input [31:0] nif_mult_k_mult_k_init;
-  input [31:0] of_init;
+  input [15:0] of_init;
   input [31:0] weights_layer_base_ddr_adr_rd_init;
   reg        mode;
   reg [31:0] nif_mult_k_mult_k;
-  reg [31:0] of;
+  reg [15:0] of;
   reg [31:0] weights_layer_base_ddr_adr_rd;
 
   output weights_word_ddr_en_rd;

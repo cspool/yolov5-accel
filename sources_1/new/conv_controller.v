@@ -38,7 +38,7 @@ module conv_controller (
     last_conv_compute
 );
   input clk, reset;
-  input [15:0] N_chunks;
+  input [31:0] N_chunks;
   input conv_start;
   input [7:0] of_div_row_num_ceil;
   input conv_load_weights_fin;
@@ -81,23 +81,23 @@ module conv_controller (
   //pre fsm
   reg [ 3:0] pre_state;
   reg [ 3:0] next_pre_state;
-  reg [15:0] pc;
-  reg [15:0] next_pc;
+  reg [31:0] pc;
+  reg [31:0] next_pc;
   //com fsm
   reg [ 3:0] com_state;
   reg [ 3:0] next_com_state;
-  reg [15:0] nc;
-  reg [15:0] next_nc;
+  reg [31:0] nc;
+  reg [31:0] next_nc;
   //ld fsm
   reg [ 3:0] ld_state;
   reg [ 3:0] next_ld_state;
-  reg [15:0] nl;
-  reg [15:0] next_nl;
+  reg [31:0] nl;
+  reg [31:0] next_nl;
   //str fsm
   reg [ 3:0] str_state;
   reg [ 3:0] next_str_state;
-  reg [15:0] ns;
-  reg [15:0] next_ns;
+  reg [31:0] ns;
+  reg [31:0] next_ns;
 
   //pre FSM
   always @(posedge clk) begin
