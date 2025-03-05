@@ -1,10 +1,10 @@
 -- Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2018.3 (win64) Build 2405991 Thu Dec  6 23:38:27 MST 2018
--- Date        : Wed Oct  9 17:18:40 2024
--- Host        : yang running 64-bit major release  (build 9200)
+-- Date        : Mon Mar  3 14:16:46 2025
+-- Host        : zack running 64-bit major release  (build 9200)
 -- Command     : write_vhdl -force -mode funcsim
---               E:/vivado_pros/yolov5_accel_2/yolov5_accel_2.srcs/sources_1/ip/instr_rom/instr_rom_sim_netlist.vhdl
+--               D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sources_1/ip/instr_rom/instr_rom_sim_netlist.vhdl
 -- Design      : instr_rom
 -- Purpose     : This VHDL netlist is a functional simulation representation of the design and should not be modified or
 --               synthesized. This netlist cannot be used for SDF annotated simulation.
@@ -45,7 +45,7 @@ begin
       INITP_05 => X"0000000000000000000000000000000000000000000000000000000000000000",
       INITP_06 => X"0000000000000000000000000000000000000000000000000000000000000000",
       INITP_07 => X"0000000000000000000000000000000000000000000000000000000000000000",
-      INIT_00 => X"00000000000000000000000000000000000000000000000000000000000F0001",
+      INIT_00 => X"0000000000000000000000000000000000000000000000000000000000000000",
       INIT_01 => X"0000000000000000000000000000000000000000000000000000000000000000",
       INIT_02 => X"0000000000000000000000000000000000000000000000000000000000000000",
       INIT_03 => X"0000000000000000000000000000000000000000000000000000000000000000",
@@ -417,11 +417,11 @@ entity instr_rom_blk_mem_gen_v8_4_2 is
   attribute C_INIT_FILE : string;
   attribute C_INIT_FILE of instr_rom_blk_mem_gen_v8_4_2 : entity is "instr_rom.mem";
   attribute C_INIT_FILE_NAME : string;
-  attribute C_INIT_FILE_NAME of instr_rom_blk_mem_gen_v8_4_2 : entity is "instr_rom.mif";
+  attribute C_INIT_FILE_NAME of instr_rom_blk_mem_gen_v8_4_2 : entity is "no_coe_file_loaded";
   attribute C_INTERFACE_TYPE : integer;
   attribute C_INTERFACE_TYPE of instr_rom_blk_mem_gen_v8_4_2 : entity is 0;
   attribute C_LOAD_INIT_FILE : integer;
-  attribute C_LOAD_INIT_FILE of instr_rom_blk_mem_gen_v8_4_2 : entity is 1;
+  attribute C_LOAD_INIT_FILE of instr_rom_blk_mem_gen_v8_4_2 : entity is 0;
   attribute C_MEM_TYPE : integer;
   attribute C_MEM_TYPE of instr_rom_blk_mem_gen_v8_4_2 : entity is 3;
   attribute C_MUX_PIPELINE_STAGES : integer;
@@ -706,11 +706,11 @@ architecture STRUCTURE of instr_rom is
   attribute C_INIT_FILE : string;
   attribute C_INIT_FILE of U0 : label is "instr_rom.mem";
   attribute C_INIT_FILE_NAME : string;
-  attribute C_INIT_FILE_NAME of U0 : label is "instr_rom.mif";
+  attribute C_INIT_FILE_NAME of U0 : label is "no_coe_file_loaded";
   attribute C_INTERFACE_TYPE : integer;
   attribute C_INTERFACE_TYPE of U0 : label is 0;
   attribute C_LOAD_INIT_FILE : integer;
-  attribute C_LOAD_INIT_FILE of U0 : label is 1;
+  attribute C_LOAD_INIT_FILE of U0 : label is 0;
   attribute C_MEM_TYPE : integer;
   attribute C_MEM_TYPE of U0 : label is 3;
   attribute C_MUX_PIPELINE_STAGES : integer;

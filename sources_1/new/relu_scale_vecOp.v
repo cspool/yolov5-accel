@@ -25,7 +25,7 @@ module relu_scale_vecOp (
     mode,
     scale_set,
     product_add_bias_vector,
-    quantified_vector
+    quantize_vector
 );
   parameter column_num_in_sa = 16;  // how many columns in a sa
   parameter headroom = 8;
@@ -42,12 +42,12 @@ module relu_scale_vecOp (
   parameter mult_P_width = 40;
   parameter product_add_bias_vector_width = mult_P_width * pe_parallel_pixel_18 * pe_parallel_weight_18 * column_num_in_sa;
 
-  parameter quantified_pixel_width = 8;
-  parameter quantified_vector_width = (quantified_pixel_width) * pe_parallel_weight_18 * pe_parallel_pixel_18 * column_num_in_sa;
+  parameter quantize_pixel_width = 8;
+  parameter quantize_vector_width = (quantize_pixel_width) * pe_parallel_weight_18 * pe_parallel_pixel_18 * column_num_in_sa;
   //8 bit * 32 pixels * 2 channel
 
   input clk;
-  input mode;
+  input [3:0] mode;
   input [scale_set_width-1 : 0] scale_set;
   //8 bit * 2 channel
   wire [scale_width-1 : 0] scale_88;
@@ -56,7 +56,7 @@ module relu_scale_vecOp (
   input [product_add_bias_vector_width - 1:0] product_add_bias_vector;
   //40 bit * 32 pixels * 2 channel
 
-  output [quantified_vector_width-1 : 0] quantified_vector;
+  output [quantize_vector_width-1 : 0] quantize_vector;
   //8 bit * 32 pixels * 2 channel
 
   assign scale_88   = scale_set[scale_width-1 : 0];
@@ -67,9 +67,9 @@ module relu_scale_vecOp (
   generate
     for (i = 0; i < pe_parallel_pixel_18 * column_num_in_sa; i = i + 1) begin
       //relu && right shift and bound in 8 bit
-      assign quantified_vector[i*(quantified_pixel_width)+:(quantified_pixel_width)] =
+      assign quantize_vector[i*(quantize_pixel_width)+:(quantize_pixel_width)] =
           //mode 0
-          (mode == 1'b0) ? (
+          (mode == 0) ? (
           // >=0
           (product_add_bias_vector[i*mult_P_width+mult_P_width-1] == 1'b0) ? (  //overflow
           ((product_add_bias_vector[i*mult_P_width+:mult_P_width]) >> (scale_88)) > 255 ? 255 :
@@ -78,7 +78,7 @@ module relu_scale_vecOp (
           // < 0
           0) :
           //mode 1
-          (mode == 1'b1) ? (
+          (mode == 1) ? (
           // >= 0
           (product_add_bias_vector[i*mult_P_width+mult_P_width-1] == 1'b0) ? (  //overflow
           ((product_add_bias_vector[i*mult_P_width+:mult_P_width]) >> (scale_18_1)) > 255 ? 255 :
@@ -88,9 +88,9 @@ module relu_scale_vecOp (
           0) : 0;
     end
     for (i = 0; i < pe_parallel_pixel_18 * column_num_in_sa; i = i + 1) begin
-      assign quantified_vector[(pe_parallel_pixel_18*column_num_in_sa+i)*(quantified_pixel_width)+:(quantified_pixel_width)] =
+      assign quantize_vector[(pe_parallel_pixel_18*column_num_in_sa+i)*(quantize_pixel_width)+:(quantize_pixel_width)] =
           // mode 1
-          (mode == 1'b1) ? (
+          (mode == 1) ? (
           // >= 0
           (product_add_bias_vector[(pe_parallel_pixel_18*column_num_in_sa+i)*mult_P_width+mult_P_width-1] == 1'b0) ? (  //overflow
           ((product_add_bias_vector[(pe_parallel_pixel_18*column_num_in_sa+i)*mult_P_width+:mult_P_width]) >> (scale_18_2)) > 255 ? 255 :

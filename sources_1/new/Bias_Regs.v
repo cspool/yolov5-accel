@@ -46,7 +46,7 @@ module Bias_Regs (
   parameter bias_word_length = 512;
 
   input clk, reset, bias_set;
-  input mode;
+  input [3:0] mode;
   input [bias_word_length-1 : 0] bias_word;
   input [7:0] bias_reg_start;  // 1-64
   input [7:0] bias_reg_size;  // 1-64

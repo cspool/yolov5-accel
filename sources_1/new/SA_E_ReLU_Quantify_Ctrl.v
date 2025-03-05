@@ -41,9 +41,9 @@ module SA_E_ReLU_Quantify_Ctrl (
 );
   input reset, clk;
   input re_fm_en;
-  input mode;
+  input [3:0] mode;
   input [31:0] nif_mult_k_mult_k;
-  // reg mode;
+  // reg [3:0] mode;
   // reg [31:0] nif_mult_k_mult_k;
   reg         pixels_counter_signal;
   reg  [15:0] pixels_counter;
@@ -167,7 +167,7 @@ module SA_E_ReLU_Quantify_Ctrl (
 
   assign out_sa_row_idx  = (channel_out_en == 1'b1) ? (sa_counter - 6'd16) : 0;
 
-  assign mult_array_mode = (mode == 1'b1) && (sum_mult_E_en == 1'b1);
+  assign mult_array_mode = (mode == 1) && (sum_mult_E_en == 1'b1);
 
   assign sum_mult_E_en   = channel_out_en;
 

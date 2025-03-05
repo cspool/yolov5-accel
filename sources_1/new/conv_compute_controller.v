@@ -98,11 +98,11 @@ module conv_compute_controller(clk,
     
     // conv tiling module
     input clk, reset, conv_compute;
-    input mode_init;
+    input [3:0] mode_init;
     input [3:0] k_init, s_init, p_init;
     input [15:0] of_init, ox_init, oy_init, ix_init, iy_init, nif_init;
     input [3:0] nif_in_2pow_init, ix_in_2pow_init;
-    reg mode;
+    reg [3:0] mode;
     reg [3:0] k, s, p;
     reg [15:0] of, ox, oy, ix, iy, nif;
     reg [3:0] nif_in_2pow, ix_in_2pow;
@@ -286,8 +286,8 @@ module conv_compute_controller(clk,
     end
 
     //conv tiling module
-    assign row_num = (mode == 1'b0)? row_num_in_mode0 :
-    (mode == 1'b1)? row_num_in_mode1 : 0;
+    assign row_num = (mode == 0)? row_num_in_mode0 :
+    (mode == 1)? row_num_in_mode1 : 0;
     
     //loop if
     always@(posedge clk)

@@ -47,11 +47,11 @@ module conv_load_weights_controller (
   input ddr_en;  //mig fifo can accept request
   input valid_load_weights;  //ddr words is loaded from ddr
 
-  input mode_init;
+  input [3:0] mode_init;
   input [31:0] nif_mult_k_mult_k_init;
   input [15:0] of_init;
   input [31:0] weights_layer_base_ddr_adr_rd_init;
-  reg        mode;
+  reg [ 3:0] mode;
   reg [31:0] nif_mult_k_mult_k;
   reg [15:0] of;
   reg [31:0] weights_layer_base_ddr_adr_rd;
@@ -72,10 +72,10 @@ module conv_load_weights_controller (
   reg [31:0] weights_ddr_tof_base_adr;
   wire loop_weights_ddr_tof_add_begin, loop_weights_ddr_tof_add_end;
 
-  wire [31:0] row_num = (mode == 1'b0) ? row_num_in_mode0 : (mode == 1'b1) ? row_num_in_mode1 : 0;
+  wire [31:0] row_num = (mode == 0) ? row_num_in_mode0 : (mode == 1) ? row_num_in_mode1 : 0;
 
   // weights word into buf
-  reg  [31:0]                                                                                      weights_buf_word_counter;
+  reg  [31:0]                                                                                weights_buf_word_counter;
   wire loop_weights_buf_word_counter_add_begin, loop_weights_buf_word_counter_add_end;
 
   always @(posedge clk) begin

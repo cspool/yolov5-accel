@@ -35,12 +35,12 @@ def generate_conv_E_quantify_tests():
   #       for quantify_type in quantify_types:
   #          conv_test(conv_type, mode_type, quantify_type)
   
-  conv_type, mode_type, quantify_type = (2,0,0)
+  conv_type, mode_type, quantify_type = (2,1,0)
   conv_E_quantify_test(conv_type, mode_type, quantify_type)
 
 def conv_E_quantify_test(conv_type, mode_type, quantify_type):
-    # standard_conv_E_quantify(conv_type, mode_type, quantify_type)
-    fpga_conv_E_quantify(conv_type, mode_type, quantify_type)
+    standard_conv_E_quantify(conv_type, mode_type, quantify_type)
+    # fpga_conv_E_quantify(conv_type, mode_type, quantify_type)
 
 def standard_conv_E_quantify(conv_type, mode_type, quantify_type):
   # def basic conv op
@@ -323,7 +323,7 @@ def generate_conv_E_data(quantify_type, mode, of):
   # uint16 [0,256*256-1]
   # 1
   E_data = (torch.ones(of, dtype=torch.int) * (torch.tensor([2], dtype=int))) \
-    if ((quantify_type == 0) or (mode == 0)) else torch.randint(0, 256*256, size=(of,), dtype=torch.int)
+    if ((quantify_type == 0) or (mode == 0)) else torch.randint(0, 256, size=(of,), dtype=torch.int)
   ## reshape e_scale_tail data
   # the amount of out channel of tail per complete ddr word 
   E_width = 16
@@ -351,8 +351,8 @@ def generate_conv_E_data(quantify_type, mode, of):
 
 def generate_conv_scale_data(quantify_type, mode, of, k):
   # scale[F]
-  scale_scalar = (10 if (k == 1) else (13 if (k == 3) else 15)) if (mode == 0) \
-    else (3 if (k == 1) else (6 if (k == 3) else 8))
+  scale_scalar = (10+7 if (k == 1) else (13+7 if (k == 3) else 15+7)) if (mode == 0) \
+    else (3+7 if (k == 1) else (6+7 if (k == 3) else 8+7))
   # uint8 [0,256] scale_scalar
   scale_data = torch.randint(0, 256, size=(of,), dtype=torch.int) \
   if quantify_type == 2 else (torch.ones(of, dtype=torch.int) * torch.tensor([scale_scalar], dtype=int))
@@ -721,7 +721,9 @@ def generate_instr_args_init(mode,k,s,p,of,ox,oy,ix,iy,nif):
   s_real = s
   p_real = p
   of_integer = of
+  of_in_2pow_integer = int(math.log(of_integer, 2))
   ox_integer = ox
+  ox_in_2pow_integer = int(math.log(ox_integer, 2))
   oy_integer = oy
   ix_integer = ix
   ix_in_2pow_integer = int(math.log(ix_integer, 2))
@@ -753,6 +755,7 @@ def generate_instr_args_init(mode,k,s,p,of,ox,oy,ix,iy,nif):
       } #xxxx
   input_ddr_layer_base_adr_integer = (input_ddr_layer_base_adr_integers_mapping_mode0[k]) if (mode == 0) \
      else (input_ddr_layer_base_adr_integers_mapping_mode1[k]) #xxxxx
+  output_ddr_layer_base_adr_integer = 0
   ix_index_num_real = math.ceil(ix_integer / pixels_in_row_real)
   iy_index_num_real = math.ceil(iy_integer)
   tilex_first_ix_word_num_real = math.ceil(((pixels_in_row - 1) * s_real + k_real - p_real) / pixels_in_row)
@@ -781,7 +784,9 @@ def generate_instr_args_init(mode,k,s,p,of,ox,oy,ix,iy,nif):
       s_real,
       p_real,
       of_integer,
+      of_in_2pow_integer,
       ox_integer,
+      ox_in_2pow_integer,
       oy_integer,
       ix_integer,
       ix_in_2pow_integer,
@@ -790,11 +795,12 @@ def generate_instr_args_init(mode,k,s,p,of,ox,oy,ix,iy,nif):
       nif_in_2pow_integer,
       nif_mult_k_mult_k_integer,
       N_chunks_integer,
-      bias_layer_base_buf_adr_rd_integer,
       E_layer_base_buf_adr_rd_integer,
+      bias_layer_base_buf_adr_rd_integer,
       scale_layer_base_buf_adr_rd_integer,
       weights_layer_base_ddr_adr_rd_integer,
       input_ddr_layer_base_adr_integer,
+      output_ddr_layer_base_adr_integer,
       tilex_first_ix_word_num_real,
       tilex_last_ix_word_num_real,
       tilex_mid_ix_word_num_real,
@@ -819,6 +825,83 @@ def generate_instr_args_init(mode,k,s,p,of,ox,oy,ix,iy,nif):
       for value in instr_args_init_mem:
           hex_value = format(value, '08X')  # 转换为 8 位 16 进制数，不足 8 位时前面补零
           file.write(f"{hex_value}\n")
+
+  instr_args_bit_lengths = [
+      4,
+      4,
+      4,
+      4,
+      16,
+      4,
+      16,
+      4,
+      16,
+      16,
+      4,
+      16,
+      16,
+      4,
+      32,
+      32,
+      16,
+      16,
+      16,
+      32,
+      32,
+      32,
+      8,
+      8,
+      8,
+      8,
+      8,
+      8,
+      16,
+      16,
+      8,
+      8,
+      8,
+      8,
+      8,
+      8,
+      8,
+      8,
+      8,
+      8
+  ]
+  with open("./instr_args_hex_num_init.txt", "w") as file:
+    hex_value = combine_parameters_to_hex(instr_args_init_mem, instr_args_bit_lengths)
+    file.write(f"{hex_value}\n")
+
+def combine_parameters_to_hex(params, bit_lengths):
+    """
+    将参数组合成一个512位的二进制数并转换为16进制。
+
+    :param params: 参数列表，包含38个参数的值
+    :param bit_lengths: 每个参数对应的二进制位数列表
+    :return: 512位二进制数的16进制表示
+    """
+    if len(params) != len(bit_lengths):
+        raise ValueError("参数数量和位数列表长度不匹配！")
+    
+    result = 0  # 初始化结果为0
+    offset = 0  # 位偏移量
+
+    for param, bit_length in zip(params, bit_lengths):
+        # 检查参数是否超出指定的位数范围
+        if param >= (1 << bit_length):
+            raise ValueError(f"参数值 {param} 超出了 {bit_length} 位的范围！")
+        
+        # 将参数值左移至正确的位置并拼接到结果中
+        result |= param << offset
+        offset += bit_length  # 更新偏移量
+
+    # 确保结果为512位
+    if offset > 512:
+        raise ValueError("参数总位数超过了512位！")
+    
+    # 将结果转换为16进制并返回
+    hex_result = hex(result)[2:].upper().zfill(128)  # 512位对应128个16进制字符
+    return hex_result
 
 if __name__ == "__main__":
     generate_conv_E_quantify_tests()

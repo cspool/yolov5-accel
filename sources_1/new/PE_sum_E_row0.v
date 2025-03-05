@@ -51,7 +51,8 @@ module PE_sum_E_row0 (
 
   parameter pixel_width = pixel_width_88;
 
-  input clk, reset, en, mode;
+  input clk, reset, en;
+  input [3:0] mode;
 
   input [24:0] up;
   input [24:0] left;

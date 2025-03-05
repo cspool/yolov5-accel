@@ -108,7 +108,7 @@ module conv_compute_controller_tb ();
   reg  conv_decode;
   wire conv_start;
   //conv initial val
-  wire mode;
+  wire [3:0] mode;
   wire [3:0] k, s, p;
   wire [15:0] of, ox, oy, ix, iy, nif;
   wire [3:0] nif_in_2pow, ix_in_2pow;

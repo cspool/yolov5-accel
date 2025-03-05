@@ -60,7 +60,7 @@ module sum_mult_E_vecOp (
   //40 bit * 32 pixels * 2 channel > 32 bit * 32 pixels * 2 channel > 40 bit * 32 pixels * 1 channel
 
   input clk;
-  input mode;
+  input [3:0] mode;
   //cycle 0
   input [E_set_width-1 : 0] E_set;
   //16 bit * 2 channel
@@ -99,9 +99,9 @@ module sum_mult_E_vecOp (
     for (i = 0; i < pe_parallel_pixel_88 * column_num_in_sa; i = i + 1) begin
       assign sum_vector_in_mult_A_width[i*mult_A_width+:mult_A_width] =
           // 0{sign},sum_88
-          (mode == 1'b0) ? sum_vector_88[i*pixel_width_88+:pixel_width_88] :
+          (mode == 0) ? sum_vector_88[i*pixel_width_88+:pixel_width_88] :
           // 8{sign},sum_18_1
-          (mode == 1'b1) ? {{8{sum_vector_18_1[i*pixel_width_18+pixel_width_18-1]}},
+          (mode == 1) ? {{8{sum_vector_18_1[i*pixel_width_18+pixel_width_18-1]}},
           //sum
           sum_vector_18_1[i*pixel_width_18+:pixel_width_18]} : 0;
     end
@@ -109,7 +109,7 @@ module sum_mult_E_vecOp (
     for (i = 0; i < pe_parallel_pixel_18 * column_num_in_sa; i = i + 1) begin
       assign sum_vector_in_mult_A_width[(pe_parallel_pixel_18*column_num_in_sa+i)*mult_A_width+:mult_A_width] =
           // 8{sign},sum_18_2
-          (mode == 1'b1) ? {{8{sum_vector_18_2[i*pixel_width_18+pixel_width_18-1]}},
+          (mode == 1) ? {{8{sum_vector_18_2[i*pixel_width_18+pixel_width_18-1]}},
           // sum_18_2
           sum_vector_18_2[i*pixel_width_18+:pixel_width_18]} : 0;
     end
@@ -127,7 +127,7 @@ module sum_mult_E_vecOp (
     for (i = 0; i < pe_parallel_pixel_18 * column_num_in_sa; i = i + 1) begin
       assign E_vector_in_mult_B_width[(pe_parallel_pixel_18*column_num_in_sa+i)*mult_B_width+:mult_B_width] =
           //{0,E}
-          (mode == 1'b1) ? {{(mult_B_width - E_width) {1'b0}}, E_18_2} : 0;
+          (mode == 1) ? {{(mult_B_width - E_width) {1'b0}}, E_18_2} : 0;
     end
 
     // //minus sum vector

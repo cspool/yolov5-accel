@@ -24,8 +24,8 @@ module Row_Regs (
     reset,
     clk,
     //en,
-    k,
-    s,
+    // k,
+    // s,
     last_west_pad,
     last_slab_num,
     last_east_pad,
@@ -56,7 +56,7 @@ module Row_Regs (
   parameter pixels_in_row = 32;
 
   input reset, clk;
-  input [3:0] k, s;
+  // input [3:0] k, s;
   input [pixels_in_row * 8 - 1:0] last_row1_pixels_32, last_row2_pixels_32, last_row3_pixels_32;
   input [2 * 8 - 1:0] last_row1_slab_2, last_row2_slab_2, last_row3_slab_2;
   input state_conv_pixels_add_end;

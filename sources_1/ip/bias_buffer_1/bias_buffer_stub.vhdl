@@ -1,11 +1,11 @@
 -- Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2018.3 (win64) Build 2405991 Thu Dec  6 23:38:27 MST 2018
--- Date        : Wed Feb 12 22:59:11 2025
+-- Date        : Tue Feb 18 14:17:25 2025
 -- Host        : zack running 64-bit major release  (build 9200)
--- Command     : write_vhdl -force -mode synth_stub
---               D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sources_1/ip/bias_buffer_1/bias_buffer_stub.vhdl
--- Design      : bias_buffer
+-- Command     : write_vhdl -force -mode synth_stub -rename_top bias_buffer -prefix
+--               bias_buffer_ E_buffer_stub.vhdl
+-- Design      : E_buffer
 -- Purpose     : Stub declaration of top-level module interface
 -- Device      : xc7vx690tffg1761-2
 -- --------------------------------------------------------------------------------

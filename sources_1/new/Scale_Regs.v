@@ -48,7 +48,7 @@ module Scale_Regs (
 
   input clk, reset;
   input scale_set;
-  input mode;
+  input [3:0] mode;
   input [scale_word_width -1 : 0] scale_word;
   input [7:0] scale_reg_start;
   input [7:0] scale_reg_size;

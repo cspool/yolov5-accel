@@ -51,7 +51,7 @@ module mac_dsp_s25_s18 (
 
   input [24:0] I_A;
   input [24:0] I_B;
-  input mode;
+  input [3:0] mode;
   output reg [pe_out_width-1:0] O;
   wire [                  42:0] mult_O;
 
@@ -66,23 +66,23 @@ module mac_dsp_s25_s18 (
 
   wire [pixel_width_18 - 1 : 0] res_18_4;
 
-  assign adder_88_18_1      = (mode == 1'b0) ?  // mode 0
-{{(pixel_width_88 - 16) {mult_O[15]}}, mult_O[15:0]} : (mode == 1'b1) ?  // mode 1
+  assign adder_88_18_1      = (mode == 0) ?  // mode 0
+{{(pixel_width_88 - 16) {mult_O[15]}}, mult_O[15:0]} : (mode == 1) ?  // mode 1
 {{(pixel_width_88 - 9) {mult_O[8]}}, mult_O[8:0]} : 0;
 
-  assign adder_88_18_2      = (mode == 1'b0) ?  // mode 0
-{{(pixel_width_88 - 16) {mult_O[31]}}, mult_O[31:16]} : (mode == 1'b1) ?  // mode 1
+  assign adder_88_18_2      = (mode == 0) ?  // mode 0
+{{(pixel_width_88 - 16) {mult_O[31]}}, mult_O[31:16]} : (mode == 1) ?  // mode 1
 {{(pixel_width_88 - 9) {mult_O[17]}}, mult_O[17:9]} : 0;
 
-  assign adder_88_18_2_sign = (mode == 1'b0) ? mult_O[15] : (mode == 1'b1) ? mult_O[8] : 1'b0;
+  assign adder_88_18_2_sign = (mode == 0) ? mult_O[15] : (mode == 1) ? mult_O[8] : 1'b0;
 
-  assign res_88_18_1        = ((mode == 1'b0) ?  // mode 0
- O[pixel_width_88-1 : 0] : (mode == 1'b1) ?  // mode 1
+  assign res_88_18_1        = ((mode == 0) ?  // mode 0
+ O[pixel_width_88-1 : 0] : (mode == 1) ?  // mode 1
  ({{((pixel_width_88 - 16)) {O[pixel_width_18-1]}}, O[0+:(pixel_width_18)]})  //else
  : 0) + adder_88_18_1;
 
-  assign res_88_18_2        = ((mode == 1'b0) ?  // mode 0
- O[2*pixel_width_88-1 : pixel_width_88] : (mode == 1'b1) ?  // mode 1
+  assign res_88_18_2        = ((mode == 0) ?  // mode 0
+ O[2*pixel_width_88-1 : pixel_width_88] : (mode == 1) ?  // mode 1
  ({{((pixel_width_88 - 16)) {O[2*pixel_width_18-1]}}, O[(pixel_width_18)+:(pixel_width_18)]})  //else
  : 0) + adder_88_18_2 + adder_88_18_2_sign;
 
@@ -109,10 +109,10 @@ module mac_dsp_s25_s18 (
     if (reset) begin
       O <= 0;
     end else if (en) begin
-      if (mode == 1'b0) begin  //8bit * 8bit
+      if (mode == 0) begin  //8bit * 8bit
         O[pixel_width_88-1 : 0]                <= res_88_18_1[pixel_width_88-1 : 0];
         O[2*pixel_width_88-1 : pixel_width_88] <= res_88_18_2[pixel_width_88-1 : 0];
-      end else if (mode == 1'b1) begin
+      end else if (mode == 1) begin
         O[0+:(pixel_width_18)]                  <= res_88_18_1[pixel_width_18-1 : 0];
         O[(pixel_width_18)+:(pixel_width_18)]   <= res_88_18_2[pixel_width_18-1 : 0];
         O[(2*pixel_width_18)+:(pixel_width_18)] <= res_18_3;

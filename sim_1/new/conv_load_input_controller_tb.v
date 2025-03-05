@@ -34,8 +34,8 @@ module conv_load_input_controller_tb ();
 
   //conv_load_input_controller
   reg clk, conv_load_input, reset;  //load input means fin of the last execuation term
-  reg ddr_en;
-  reg mode_init;
+  reg       ddr_en;
+  reg [3:0] mode_init;
   reg [3:0] k_init, s_init, p_init;
   reg [15:0] of_init, ox_init, oy_init, ix_init, iy_init, nif_init;
   reg [3:0] nif_in_2pow_init, ix_in_2pow_init;

@@ -70,7 +70,10 @@ parameter mult_array_length = 576;
 parameter mult_dsp_array_length = 528;
 parameter mult_lut_array_length = mult_array_length - mult_dsp_array_length;
 
-input clk, reset, en, mode, channel_out_reset,channel_out_en;
+input clk, reset, en;
+
+input [3:0] mode;
+input channel_out_reset,channel_out_en;
 
 input mult_array_mode;
 
@@ -87,7 +90,7 @@ output [column_num_in_sa * mult_P_width -1:0] row0_out;
 output [sa_out_width - 1: 0] out; // pox res per channel
 //pe_parallel_pixel_88 = pe_parallel_pixel_18
 
-// reg mode;
+// reg [3:0] mode;
 
 wire [pe_out_width-1 : 0] all_out [row_num_in_sa - 1: 0][column_num_in_sa - 1 : 0]; // all results
 
@@ -131,11 +134,11 @@ assign row_en = {(row_num_in_sa){en}} << (out_sa_row_idx);
 generate
     for (i = 0; i < column_num_in_sa; i = i + 1) begin
         //uint8 input * int8 weight, unsigned input int8
-        assign I_As[i] = (mode == 1'b0)?   
+        assign I_As[i] = (mode == 0)?   
                                    //unsigned input --> I_A. s25 port
         ({1'b0,column_in[(i * 16 + 8) +: 8], 16'b0} + {{17'b0}, column_in[(i * 16) +: 8]}) :
                                    //unsigned input --> I_B, s18 port
-                                   (mode == 1'b1)? 
+                                   (mode == 1)? 
                                    {{8'b0}, column_in[(i * 16 + 8) +: 8], 9'b0} + {{17'b0}, column_in[(i * 16) +: 8]}:
                                    25'b0;
     end
@@ -143,11 +146,11 @@ endgenerate
 
 generate
     for (i = 0; i < row_num_in_sa; i = i + 1) begin
-        assign I_Bs[i] = (mode == 1'b0)?  
+        assign I_Bs[i] = (mode == 0)?  
                                   //signed weights --> I_B, s18 port
         ({{17{row_in[i * 8 + 7]}}, row_in[(i * 8) +: 8]}) :
                                   //signed weights --> I_A, s25 port
-                                  (mode == 1'b1)? 
+                                  (mode == 1)? 
                                   ({{6{row_in[i*8+1]}},1'b1, 18'b0} + {{24{row_in[i*8]}},1'b1}):
                                   25'b0;
     end

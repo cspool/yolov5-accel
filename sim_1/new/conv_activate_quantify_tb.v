@@ -102,7 +102,6 @@ module conv_activate_quantify_tb ();
   parameter product_add_bias_vector_width = mult_P_width * pe_parallel_pixel_18 * pe_parallel_weight_18 * column_num_in_sa;
   //40 bit * 32 pixels * 2 channel
   
-  
   parameter quantified_pixel_width = 8;
   parameter quantified_vector_width = (quantified_pixel_width) * pe_parallel_weight_18 * pe_parallel_pixel_18 * column_num_in_sa;
   //8 bit * 32 pixels * 2 channel
@@ -124,12 +123,13 @@ module conv_activate_quantify_tb ();
   reg  ddr_en;
   //conv decoder
   reg  conv_decode;
+  reg [511:0] conv_instr_args [0:0];
   wire conv_start;
   //all below come from instr
-  wire mode;
+  wire [3:0] mode;
   wire [3:0] k, s, p;
   wire [15:0] of, ox, oy, ix, iy, nif;
-  wire [3:0] nif_in_2pow, ix_in_2pow;
+  wire [3:0] nif_in_2pow, ix_in_2pow, of_in_2pow, ox_in_2pow;
   wire [31:0] nif_mult_k_mult_k;
   wire [31:0] N_chunks;
   wire [15:0] E_layer_base_buf_adr_rd;
@@ -137,6 +137,7 @@ module conv_activate_quantify_tb ();
   wire [15:0] scale_layer_base_buf_adr_rd;
   wire [31:0] weights_layer_base_ddr_adr_rd;
   wire [31:0] input_ddr_layer_base_adr;
+  wire [31:0] output_ddr_layer_base_adr;
   wire [ 7:0] of_div_row_num_ceil;
   wire [ 7:0] tiley_first_tilex_first_split_size;
   wire [ 7:0] tiley_first_tilex_last_split_size;
@@ -482,8 +483,9 @@ module conv_activate_quantify_tb ();
   //cycle 0 out
   wire [sa_row_num * sa_column_num-1:0] fifo_rds;
   //cycle 1 out
+  wire [31:0] conv_out_ddr_adr;
   wire [3:0] fifo_column_no, fifo_row_no;
-  wire valid_rowi_out_buf_adr;
+  wire valid_conv_out_ddr_adr;
   wire [15:0] out_y_idx, out_x_idx, out_f_idx;
   wire conv_fifo_out_tile_add_end;
   wire [out_data_width-1 : 0] conv_out_data;
@@ -568,13 +570,16 @@ module conv_activate_quantify_tb ();
       .clk                               (clk),
       .reset                             (reset),
       .conv_decode                       (conv_decode),
+      .conv_instr_args(conv_instr_args[0]),
       .conv_start                        (conv_start),
       .mode                              (mode),
       .k                                 (k),
       .s                                 (s),
       .p                                 (p),
       .of                                (of),
+      .of_in_2pow(of_in_2pow),
       .ox                                (ox),
+      .ox_in_2pow(ox_in_2pow),
       .oy                                (oy),
       .ix                                (ix),
       .iy                                (iy),
@@ -588,6 +593,7 @@ module conv_activate_quantify_tb ();
       .scale_layer_base_buf_adr_rd       (scale_layer_base_buf_adr_rd),
       .weights_layer_base_ddr_adr_rd     (weights_layer_base_ddr_adr_rd),
       .input_ddr_layer_base_adr          (input_ddr_layer_base_adr),
+      .output_ddr_layer_base_adr(output_ddr_layer_base_adr),
       .of_div_row_num_ceil               (of_div_row_num_ceil),
       .tiley_first_tilex_first_split_size(tiley_first_tilex_first_split_size),
       .tiley_first_tilex_last_split_size (tiley_first_tilex_last_split_size),
@@ -1001,8 +1007,8 @@ module conv_activate_quantify_tb ();
   Row_Regs row_regs (
       .reset                    ((reset == 1) || (conv_start == 1)),
       .clk                      (clk),
-      .k                        (k),
-      .s                        (s),
+      // .k                        (k),
+      // .s                        (s),
       .state_valid_row1_adr     (state_valid_row1_adr),
       .state_valid_row2_adr     (state_valid_row2_adr),
       .state_valid_row3_adr     (state_valid_row3_adr),
@@ -1511,7 +1517,7 @@ module conv_activate_quantify_tb ();
             .mode                            (mode),
             .scale_set(scale_4_channel_sets[(j-1)*scale_set_width+:scale_set_width]),
             .product_add_bias_vector(product_add_bias_vector_rowi_channel_setj[i-1][j-1]),
-            .quantified_vector(quantified_rowi_channel_setj[i-1][j-1])
+            .quantize_vector(quantified_rowi_channel_setj[i-1][j-1])
         );        
         //conv out fifo
         fifo_rowi_channel_seti fifo_rowi_channel_seti (
@@ -1567,7 +1573,10 @@ module conv_activate_quantify_tb ();
       .reset                     ((reset == 1) || (conv_start == 1)),
       .conv_fifo_out_start       (conv_store),
       .ddr_en(ddr_en),
+      .output_ddr_layer_base_adr(output_ddr_layer_base_adr),
       .mode                      (mode),
+      .of_in_2pow(of_in_2pow), 
+      .ox_in_2pow(ox_in_2pow),
       .cur_ox_start              (store_ox_start),
       .cur_oy_start              (store_oy_start),
       .cur_of_start              (store_of_start),
@@ -1580,10 +1589,10 @@ module conv_activate_quantify_tb ();
       //cycle 1 in
       .fifo_data                 (fifo_data),
       //cycle 1 out
-      //rowi_out_buf_adr,
+      .conv_out_ddr_adr(conv_out_ddr_adr),
       .fifo_column_no            (fifo_column_no),
       .fifo_row_no               (fifo_row_no),
-      .valid_rowi_out_buf_adr    (valid_rowi_out_buf_adr),
+      .valid_conv_out_ddr_adr    (valid_conv_out_ddr_adr),
       .out_y_idx                 (out_y_idx),
       .out_x_idx                 (out_x_idx),
       .out_f_idx                 (out_f_idx),
@@ -1622,6 +1631,8 @@ module conv_activate_quantify_tb ();
     // for (n = 0; n < 1000000; n = n + 1) begin //DDR_mem_limit
     //   $display("DDR_mem[%d] = %h", n, DDR_mem[n]);
     // end
+    $readmemh("D:\\project\\Vivado\\yolov5_accel\\yolov5_accel.srcs\\instr_args_hex_num_init.txt", conv_instr_args);
+    $display("conv_instr_args[%d] = %h", 0, conv_instr_args[0]);
     $readmemh("D:\\project\\Vivado\\yolov5_accel\\yolov5_accel.srcs\\bias_buffer_init.txt", bias_buffer_mem);
     $readmemh("D:\\project\\Vivado\\yolov5_accel\\yolov5_accel.srcs\\E_buffer_init.txt", E_buffer_mem);
     $readmemh("D:\\project\\Vivado\\yolov5_accel\\yolov5_accel.srcs\\scale_buffer_init.txt", scale_buffer_mem);
@@ -1632,10 +1643,10 @@ module conv_activate_quantify_tb ();
             $display("Could not open file");
             $stop;
     end
-    // 写入文件�?
+    // 写入文件
     $fdisplay(file, "Time\tvalid\tout_f_idx\tout_y_idx\tout_x_idx\tresult_word");
-    // 监控信号变化并写入文�?
-    $fmonitor(file, "%t\t%b\t%d\t%d\t%d\t%h", $time, valid_rowi_out_buf_adr, out_f_idx, out_y_idx, out_x_idx, conv_out_data);
+    // 监控信号变化并写入
+    $fmonitor(file, "%t\t%b\t%d\t%d\t%d\t%h", $time, valid_conv_out_ddr_adr, out_f_idx, out_y_idx, out_x_idx, conv_out_data);
 
     // collect product add bias file
     file01 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_00.txt", "w");
@@ -1646,7 +1657,7 @@ module conv_activate_quantify_tb ();
     $fmonitor(file03, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, sum_mult_E_vector_in_mult_P_width_rowi_channel_setj[0][0]);
     file04 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/product_add_bias_00.txt", "w");
     $fmonitor(file04, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, product_add_bias_vector_rowi_channel_setj[0][0]);
-    file05 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/quantified_row_00.txt", "w");
+    file05 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/quantize_row_00.txt", "w");
     $fmonitor(file05, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, quantified_rowi_channel_setj[0][0]);
     file06 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/E_in_B_00.txt", "w");
     $fmonitor(file06, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, E_vector_in_mult_B_width_rowi_channel_setj[0][0]);
@@ -1659,7 +1670,7 @@ module conv_activate_quantify_tb ();
     $fmonitor(file13, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, sum_mult_E_vector_in_mult_P_width_rowi_channel_setj[1][0]);
     file14 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/product_add_bias_10.txt", "w");
     $fmonitor(file14, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, product_add_bias_vector_rowi_channel_setj[1][0]);
-    file15 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/quantified_row_10.txt", "w");
+    file15 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/quantize_row_10.txt", "w");
     $fmonitor(file15, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, quantified_rowi_channel_setj[1][0]);
     file16 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/E_in_B_10.txt", "w");
     $fmonitor(file16, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, E_vector_in_mult_B_width_rowi_channel_setj[1][0]);
@@ -1672,7 +1683,7 @@ module conv_activate_quantify_tb ();
     $fmonitor(file23, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, sum_mult_E_vector_in_mult_P_width_rowi_channel_setj[2][0]);
     file24 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/product_add_bias_20.txt", "w");
     $fmonitor(file24, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, product_add_bias_vector_rowi_channel_setj[2][0]);
-    file25 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/quantified_row_20.txt", "w");
+    file25 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/quantize_row_20.txt", "w");
     $fmonitor(file25, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, quantified_rowi_channel_setj[2][0]);
     file26 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/E_in_B_20.txt", "w");
     $fmonitor(file26, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, E_vector_in_mult_B_width_rowi_channel_setj[2][0]);

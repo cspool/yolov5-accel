@@ -30,7 +30,7 @@ module conv_load_weights_controller_tb ();
   reg         conv_load_weights;  //begin weights loading
   reg         ddr_en;  //mig fifo can accept request
   reg         valid_load_weights;  //ddr words is loaded from ddr
-  reg         mode_init;
+  reg  [ 3:0] mode_init;
   reg  [15:0] nif_mult_k_mult_k_init;
   reg  [15:0] of_init;
   reg  [15:0] weights_layer_base_ddr_adr_rd_init;

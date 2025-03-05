@@ -30,8 +30,8 @@ module product_add_bias_vecOp (
   parameter product_add_bias_vector_width_88 = mult_P_width * pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa;
   parameter product_add_bias_vector_width_18_2 = mult_P_width * pe_parallel_pixel_18 * 1 * column_num_in_sa;
 
-  input mode;
   input clk, en, reset;
+  input [3:0] mode;
   input [sum_mult_E_vector_in_mult_P_width_width - 1:0] sum_mult_E_vector;
   input [bias_set_width-1 : 0] bias_set;  //2 bias 16 bit, or 1 bias 8 bit
   output reg [product_add_bias_vector_width - 1:0] product_add_bias_vector;
@@ -84,9 +84,9 @@ module product_add_bias_vecOp (
     end else if (en == 1'b1) begin
       product_add_bias_vector <=
       //mode 0
-      (mode == 1'b0) ? {{(product_add_bias_vector_width - product_add_bias_vector_width_88) {1'b0}}, product_add_bias_vector_88} :
+      (mode == 0) ? {{(product_add_bias_vector_width - product_add_bias_vector_width_88) {1'b0}}, product_add_bias_vector_88} :
       // mode 1
-      (mode == 1'b1) ? {product_add_bias_vector_18_2, product_add_bias_vector_18_1} : 0;
+      (mode == 1) ? {product_add_bias_vector_18_2, product_add_bias_vector_18_1} : 0;
     end else begin
       product_add_bias_vector <= product_add_bias_vector;
     end

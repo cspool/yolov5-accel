@@ -46,7 +46,7 @@ module E_Regs (
 
   input clk, reset;
   input E_set;
-  input mode;
+  input [3:0] mode;
   input [E_word_width -1 : 0] E_word;
   input [7:0] E_reg_start;
   input [7:0] E_reg_size;

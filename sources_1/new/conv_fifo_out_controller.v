@@ -26,7 +26,10 @@ module conv_fifo_out_controller (
     //cycle 0 in
     conv_fifo_out_start,
     ddr_en,
+    output_ddr_layer_base_adr,
     mode,
+    of_in_2pow,
+    ox_in_2pow,
     cur_ox_start,
     cur_oy_start,
     cur_of_start,
@@ -38,10 +41,10 @@ module conv_fifo_out_controller (
     //cycle 1 in
     fifo_data,
     //cycle 1 out
-    //rowi_out_buf_adr,
+    conv_out_ddr_adr,
     fifo_column_no,
     fifo_row_no,
-    valid_rowi_out_buf_adr,
+    valid_conv_out_ddr_adr,
     out_y_idx,
     out_x_idx,
     out_f_idx,
@@ -67,17 +70,18 @@ module conv_fifo_out_controller (
   input clk, reset;
   input conv_fifo_out_start;
   input ddr_en;
-  input mode;
+  input [31:0] output_ddr_layer_base_adr;
+  input [3:0] mode;
   input [15:0] cur_ox_start, cur_oy_start, cur_of_start, cur_pox, cur_poy, cur_pof;
-  // input [3:0] of_in_2pow, ox_in_2pow;
+  input [3:0] of_in_2pow, ox_in_2pow;
   //cycle 1 in
   input [quantified_row_width-1 : 0] fifo_data;
   //cycle 0 out
   output [sa_row_num * sa_column_num-1:0] fifo_rds;
   //cycle 1 out
-  //    output reg [15:0] rowi_out_buf_adr;
+  output reg [31:0] conv_out_ddr_adr;
   output reg [3:0] fifo_column_no, fifo_row_no;
-  output reg valid_rowi_out_buf_adr;
+  output reg valid_conv_out_ddr_adr;
   output reg [15:0] out_y_idx, out_x_idx, out_f_idx;
   output reg conv_fifo_out_tile_add_end;
   output [conv_out_data_width-1 : 0] conv_out_data;
@@ -100,8 +104,8 @@ module conv_fifo_out_controller (
 
   always @(posedge clk) begin
     if ((reset == 1'b1) || (conv_fifo_out_tile_add_end == 1'b1)) begin
-      valid_rowi_out_buf_adr     <= 0;
-      //            rowi_out_buf_adr <= 0;
+      valid_conv_out_ddr_adr     <= 0;
+      conv_out_ddr_adr           <= 0;
       out_y_idx                  <= 0;
       out_x_idx                  <= 0;
       out_f_idx                  <= 0;
@@ -109,23 +113,28 @@ module conv_fifo_out_controller (
       fifo_column_no             <= 0;
       fifo_row_no                <= 0;
     end else if (loop_channel_counter_add_begin == 1'b1) begin
-      valid_rowi_out_buf_adr     <= loop_channel_counter_add_begin;
-      //            rowi_out_buf_adr <=
-      //            (((cur_oy_start - 1 + oy_counter - 1) << (of_in_2pow + ox_in_2pow - pixels_in_row_in_2pow))
-      //                        + (((cur_ox_start - 1) << of_in_2pow) >> pixels_in_row_in_2pow))
-      //                        + (cur_of_start - 1 + (of_counter - 1) + channel_counter - 1);
-      out_y_idx                  <= cur_oy_start - 1 + oy_counter;
-      out_x_idx                  <= cur_ox_start;
-      out_f_idx                  <= cur_of_start - 1 + (of_counter - 1) + channel_counter;
+      valid_conv_out_ddr_adr <= loop_channel_counter_add_begin;
+      conv_out_ddr_adr <=
+      //ddr base adr
+      output_ddr_layer_base_adr +
+      //row base adr 
+      (((cur_oy_start - 1 + oy_counter - 1) << (of_in_2pow + ox_in_2pow - pixels_in_row_in_2pow)) +
+      //x word base adr
+      (((cur_ox_start - 1) << of_in_2pow) >> pixels_in_row_in_2pow)) +
+      //channel adr
+      (cur_of_start - 1 + (of_counter - 1) + channel_counter - 1);
+      out_y_idx <= cur_oy_start - 1 + oy_counter;
+      out_x_idx <= cur_ox_start;
+      out_f_idx <= cur_of_start - 1 + (of_counter - 1) + channel_counter;
       conv_fifo_out_tile_add_end <= loop_oy_counter_add_end;
-      fifo_column_no             <= oy_counter - 1;  //0,1,2
-      fifo_row_no                <= (of_counter - 1) >> log_channel_num;  //0,1,2,3
+      fifo_column_no <= oy_counter - 1;  //0,1,2
+      fifo_row_no <= (of_counter - 1) >> log_channel_num;  //0,1,2,3
     end
   end
 
   assign row_fifo_rd_en = (loop_channel_counter_add_begin == 1'b0) ? 1'b0:
-     (mode == 1'b0)? 1'b1: //0,1,...,15
-     (mode == 1'b1)? channel_counter[0]:
+     (mode == 0)? 1'b1: //0,1,...,15
+     (mode == 1)? channel_counter[0]:
      0;
 
   genvar i;
@@ -141,11 +150,11 @@ module conv_fifo_out_controller (
  (last_channel_counter[0] == 1'b1) ? fifo_data[conv_out_data_width-1 : 0] :  //last read channel counter is 2,4,6,8,10,...
  (last_channel_counter[0] == 1'b0) ? fifo_data[quantified_row_width-1 : conv_out_data_width] : 0;
 
-  assign conv_out_data       = (valid_rowi_out_buf_adr == 1'b0) ? 0 : (valid_rowi_out_buf_adr == 1'b1) ? ((mode == 1'b0) ? conv_out_data_mode0 : (mode == 1'b1) ? conv_out_data_mode1 : 0) : 0;
+  assign conv_out_data       = (valid_conv_out_ddr_adr == 1'b0) ? 0 : (valid_conv_out_ddr_adr == 1'b1) ? ((mode == 0) ? conv_out_data_mode0 : (mode == 1) ? conv_out_data_mode1 : 0) : 0;
 
-  assign channel_num         = (mode == 1'b0) ? 8'd16 : (mode == 1'b1) ? 8'd32 : 0;
+  assign channel_num         = (mode == 0) ? 8'd16 : (mode == 1) ? 8'd32 : 0;
 
-  assign log_channel_num     = (mode == 1'b0) ? 4'd4 : (mode == 1'b1) ? 4'd5 : 0;
+  assign log_channel_num     = (mode == 0) ? 4'd4 : (mode == 1) ? 4'd5 : 0;
 
   always @(posedge clk) begin
     if (reset == 1'b1) begin
