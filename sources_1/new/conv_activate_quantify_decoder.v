@@ -77,7 +77,7 @@ module conv_activate_quantify_decoder (
   parameter ifs_in_row_2pow = 1;
   parameter input_buffer_size_2pow = 12;  //4096
   parameter buf_rd_ratio = 2;
-  parameter conv_instr_args_num = 38;
+  parameter conv_instr_args_num = 40;
 
   input clk, reset, conv_decode;
   input [511:0] conv_instr_args;
@@ -312,7 +312,7 @@ module conv_activate_quantify_decoder (
   // reg     [31:0] tiley_mid_tilex_last_split_size_reg;
   // reg     [31:0] tiley_mid_tilex_mid_split_size_reg;
 
-  // reg     [31:0] instr_args_init                        [conv_instr_args_num-1:0];  //38
+  // reg     [31:0] instr_args_init                        [conv_instr_args_num-1:0];  //40
   // integer        i;
 
   // initial begin

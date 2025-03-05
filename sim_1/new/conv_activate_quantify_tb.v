@@ -495,16 +495,16 @@ module conv_activate_quantify_tb ();
 //   DDR DDR (
 //       .clka (clk),                    // input wire clka
 //       .ena  (DDR_en),   // input wire ena
-//       .wea  (0),                      // input wire [0 : 0] wea
+//       .wea  (DDR_en_wr),                      // input wire [0 : 0] wea
 //       .addra(DDR_adr),  // input wire [31 : 0] addra
-//       .dina (512'b0),                      // input wire [511 : 0] dina
+//       .dina (DDR_in),                      // input wire [511 : 0] dina
 //       .douta(DDR_out)                 // output wire [511 : 0] douta
 //   );
-//   assign DDR_en          = input_word_ddr_en_rd | weights_word_ddr_en_rd;
+//   assign DDR_en          = ((input_word_ddr_en_rd == 1'b1) || (weights_word_ddr_en_rd == 1'b1)) ? 1'b1 : 1'b0;
 //   assign DDR_en_wr       = 0;
 //   assign DDR_adr         = (input_word_ddr_en_rd == 1)? input_word_ddr_adr_rd :
 //    (weights_word_ddr_en_rd == 1)? weights_word_ddr_adr_rd : 0;
-//   assign DDR_in          = 0;
+//   assign DDR_in          = 512'b0;
 //   assign load_input_word = (valid_load_input == 1'b1) ? DDR_out : 0;
 //   assign weights_word_buf_wt = (valid_load_weights == 1'b1) ? DDR_out : 0;
   //DDR reg mem

@@ -102,7 +102,6 @@ module conv_quantize_relu_scale_tb();
   parameter product_add_bias_vector_width = mult_P_width * pe_parallel_pixel_18 * pe_parallel_weight_18 * column_num_in_sa;
   //40 bit * 32 pixels * 2 channel
   
-  
   parameter quantize_pixel_width = 8;
   parameter quantize_vector_width = (quantize_pixel_width) * pe_parallel_weight_18 * pe_parallel_pixel_18 * column_num_in_sa;
   //8 bit * 32 pixels * 2 channel
@@ -122,14 +121,17 @@ module conv_quantize_relu_scale_tb();
   reg clk, reset;
   //DDR MIG
   reg  ddr_en;
+  reg start; //top start
   //conv decoder
   reg  conv_decode;
+  reg [511:0] conv_instr_args;
+  reg [511:0] conv_instr_args_mem [0:0]; //instr mem for sim
   wire conv_start;
   //all below come from instr
-  wire mode;
+  wire [3:0] mode;
   wire [3:0] k, s, p;
   wire [15:0] of, ox, oy, ix, iy, nif;
-  wire [3:0] nif_in_2pow, ix_in_2pow;
+  wire [3:0] nif_in_2pow, ix_in_2pow, of_in_2pow, ox_in_2pow;
   wire [31:0] nif_mult_k_mult_k;
   wire [31:0] N_chunks;
   wire [15:0] E_layer_base_buf_adr_rd;
@@ -137,6 +139,7 @@ module conv_quantize_relu_scale_tb();
   wire [15:0] scale_layer_base_buf_adr_rd;
   wire [31:0] weights_layer_base_ddr_adr_rd;
   wire [31:0] input_ddr_layer_base_adr;
+  wire [31:0] output_ddr_layer_base_adr;
   wire [ 7:0] of_div_row_num_ceil;
   wire [ 7:0] tiley_first_tilex_first_split_size;
   wire [ 7:0] tiley_first_tilex_last_split_size;
@@ -482,27 +485,56 @@ module conv_quantize_relu_scale_tb();
   //cycle 0 out
   wire [sa_row_num * sa_column_num-1:0] fifo_rds;
   //cycle 1 out
+  wire [31:0] conv_out_ddr_adr;
   wire [3:0] fifo_column_no, fifo_row_no;
-  wire valid_rowi_out_buf_adr;
+  wire valid_conv_out_ddr_adr;
   wire [15:0] out_y_idx, out_x_idx, out_f_idx;
   wire conv_fifo_out_tile_add_end;
   wire [out_data_width-1 : 0] conv_out_data;
   wire conv_store_fin;
 
+  //top control sim
+  always @(posedge clk) begin
+    if (reset) begin
+      conv_decode <= 0;
+    end
+    else if ((start == 1'b1) && (conv_decode == 1'b0)) begin
+      conv_decode <= 1;
+    end
+    else if (conv_decode == 1'b1) begin
+      conv_decode <= 0;
+    end
+    else begin
+      conv_decode <= conv_decode;
+    end
+  end
+
+  always @(posedge clk) begin
+    if (reset) begin
+      conv_instr_args <= 512'b0;
+    end
+    else if (start == 1'b1) begin
+      conv_instr_args <= conv_instr_args_mem[0];
+    end
+    else begin
+      conv_instr_args <= conv_instr_args;
+    end
+  end
+
   // //DDR
 //   DDR DDR (
 //       .clka (clk),                    // input wire clka
 //       .ena  (DDR_en),   // input wire ena
-//       .wea  (0),                      // input wire [0 : 0] wea
+//       .wea  (DDR_en_wr),                      // input wire [0 : 0] wea
 //       .addra(DDR_adr),  // input wire [31 : 0] addra
-//       .dina (512'b0),                      // input wire [511 : 0] dina
+//       .dina (DDR_in),                      // input wire [511 : 0] dina
 //       .douta(DDR_out)                 // output wire [511 : 0] douta
 //   );
-//   assign DDR_en          = input_word_ddr_en_rd | weights_word_ddr_en_rd;
+//   assign DDR_en          = ((input_word_ddr_en_rd == 1'b1) || (weights_word_ddr_en_rd == 1'b1)) ? 1'b1 : 1'b0;
 //   assign DDR_en_wr       = 0;
 //   assign DDR_adr         = (input_word_ddr_en_rd == 1)? input_word_ddr_adr_rd :
 //    (weights_word_ddr_en_rd == 1)? weights_word_ddr_adr_rd : 0;
-//   assign DDR_in          = 0;
+//   assign DDR_in          = 512'b0;
 //   assign load_input_word = (valid_load_input == 1'b1) ? DDR_out : 0;
 //   assign weights_word_buf_wt = (valid_load_weights == 1'b1) ? DDR_out : 0;
   //DDR reg mem
@@ -564,23 +596,26 @@ module conv_quantize_relu_scale_tb();
   end
 
   //conv decoder
-  conv_activate_quantify_decoder cv_activate_quantify_decoder (
+  conv_quantize_relu_decoder cv_quantize_relu_decoder (
       .clk                               (clk),
       .reset                             (reset),
       .conv_decode                       (conv_decode),
+      .conv_instr_args(conv_instr_args),
       .conv_start                        (conv_start),
       .mode                              (mode),
       .k                                 (k),
       .s                                 (s),
       .p                                 (p),
       .of                                (of),
+      .of_in_2pow(of_in_2pow),
       .ox                                (ox),
+      .ox_in_2pow(ox_in_2pow),
       .oy                                (oy),
       .ix                                (ix),
+      .ix_in_2pow                        (ix_in_2pow),
       .iy                                (iy),
       .nif                               (nif),
       .nif_in_2pow                       (nif_in_2pow),
-      .ix_in_2pow                        (ix_in_2pow),
       .nif_mult_k_mult_k                 (nif_mult_k_mult_k),
       .N_chunks                          (N_chunks),
       .E_layer_base_buf_adr_rd           (E_layer_base_buf_adr_rd),
@@ -588,6 +623,7 @@ module conv_quantize_relu_scale_tb();
       .scale_layer_base_buf_adr_rd       (scale_layer_base_buf_adr_rd),
       .weights_layer_base_ddr_adr_rd     (weights_layer_base_ddr_adr_rd),
       .input_ddr_layer_base_adr          (input_ddr_layer_base_adr),
+      .output_ddr_layer_base_adr(output_ddr_layer_base_adr),
       .of_div_row_num_ceil               (of_div_row_num_ceil),
       .tiley_first_tilex_first_split_size(tiley_first_tilex_first_split_size),
       .tiley_first_tilex_last_split_size (tiley_first_tilex_last_split_size),
@@ -1240,8 +1276,8 @@ module conv_quantize_relu_scale_tb();
   //     .douta(E_buf_rd)      // output wire [511 : 0] douta
   // );
   // assign E_buf_adr = 
-  // ((E_buf_en_rd == 1'b0) && (E_buf_en_wr == 1'b1)) ? E_buf_adr_wr : //wt E buf
-  // ((E_buf_en_rd == 1'b1) && (E_buf_en_wr == 1'b0)) ? E_buf_adr_rd : 0; //rd E buf
+  // ((E_buf_en_rd == 1'b0) && (E_buf_en_wr == 1'b1)) ? E_buf_adr_wr[8 : 0] : //wt E buf
+  // ((E_buf_en_rd == 1'b1) && (E_buf_en_wr == 1'b0)) ? E_buf_adr_rd[8 : 0] : 0; //rd E buf
   // assign E_buf_en  = ((E_buf_en_rd == 1'b1) || (E_buf_en_wr == 1'b1)) ? 1 : 0;
   // assign E_buf_en_wr = 1'b0;
   // assign E_buf_wr = 512'b0;
@@ -1261,8 +1297,8 @@ module conv_quantize_relu_scale_tb();
     end
   end
   assign E_buf_adr = 
-  ((E_buf_en_rd == 1'b0) && (E_buf_en_wr == 1'b1)) ? E_buf_adr_wr : //wt E buf
-  ((E_buf_en_rd == 1'b1) && (E_buf_en_wr == 1'b0)) ? E_buf_adr_rd : 0; //rd E buf
+  ((E_buf_en_rd == 1'b0) && (E_buf_en_wr == 1'b1)) ? E_buf_adr_wr[8 : 0] : //wt E buf
+  ((E_buf_en_rd == 1'b1) && (E_buf_en_wr == 1'b0)) ? E_buf_adr_rd[8 : 0] : 0; //rd E buf
   assign E_buf_en  = ((E_buf_en_rd == 1'b1) || (E_buf_en_wr == 1'b1)) ? 1 : 0;
   assign E_buf_en_wr = 1'b0;
   assign E_buf_wr = 512'b0;
@@ -1278,8 +1314,8 @@ module conv_quantize_relu_scale_tb();
 //       .douta(bias_buf_rd)      // output wire [511 : 0] douta
 //   );
 //   assign bias_buf_adr = 
-//   ((bias_buf_en_rd == 1'b0) && (bias_buf_en_wr == 1'b1)) ?bias_buf_adr_wr : //wt bias buf
-//   ((bias_buf_en_rd == 1'b1) && (bias_buf_en_wr == 1'b0)) ?bias_buf_adr_rd : 0; //rd bias buf
+//   ((bias_buf_en_rd == 1'b0) && (bias_buf_en_wr == 1'b1)) ?bias_buf_adr_wr[8 : 0] : //wt bias buf
+//   ((bias_buf_en_rd == 1'b1) && (bias_buf_en_wr == 1'b0)) ?bias_buf_adr_rd[8 : 0] : 0; //rd bias buf
 //   assign bias_buf_en  = ((bias_buf_en_rd == 1'b1) || (bias_buf_en_wr == 1'b1)) ? 1 : 0;
 //   assign bias_buf_en_wr = 0;
 //   assign bias_buf_wr = 512'b0;
@@ -1299,8 +1335,8 @@ module conv_quantize_relu_scale_tb();
     end
   end
   assign bias_buf_adr = 
-  ((bias_buf_en_rd == 1'b0) && (bias_buf_en_wr == 1'b1)) ?bias_buf_adr_wr : //wt bias buf
-  ((bias_buf_en_rd == 1'b1) && (bias_buf_en_wr == 1'b0)) ?bias_buf_adr_rd : 0; //rd bias buf
+  ((bias_buf_en_rd == 1'b0) && (bias_buf_en_wr == 1'b1)) ?bias_buf_adr_wr[8 : 0] : //wt bias buf
+  ((bias_buf_en_rd == 1'b1) && (bias_buf_en_wr == 1'b0)) ?bias_buf_adr_rd[8 : 0] : 0; //rd bias buf
   assign bias_buf_en  = ((bias_buf_en_rd == 1'b1) || (bias_buf_en_wr == 1'b1)) ? 1 : 0;
   assign bias_buf_en_wr = 0;
   assign bias_buf_wr = 512'b0;
@@ -1316,8 +1352,8 @@ module conv_quantize_relu_scale_tb();
   //     .douta(scale_buf_rd)      // output wire [511 : 0] douta
   // );
   // assign scale_buf_adr = 
-  // ((scale_buf_en_rd == 1'b0) && (scale_buf_en_wr == 1'b1)) ? scale_buf_adr_wr : //wt scale buf
-  // ((scale_buf_en_rd == 1'b1) && (scale_buf_en_wr == 1'b0)) ? scale_buf_adr_rd : 0; //rd scale buf
+  // ((scale_buf_en_rd == 1'b0) && (scale_buf_en_wr == 1'b1)) ? scale_buf_adr_wr[8 : 0] : //wt scale buf
+  // ((scale_buf_en_rd == 1'b1) && (scale_buf_en_wr == 1'b0)) ? scale_buf_adr_rd[8 : 0] : 0; //rd scale buf
   // assign scale_buf_en  = ((scale_buf_en_rd == 1'b1) || (scale_buf_en_wr == 1'b1)) ? 1 : 0;
   // assign scale_buf_en_wr = 1'b0;
   // assign scale_buf_wr = 512'b0;
@@ -1337,8 +1373,8 @@ module conv_quantize_relu_scale_tb();
     end
   end
   assign scale_buf_adr = 
-  ((scale_buf_en_rd == 1'b0) && (scale_buf_en_wr == 1'b1)) ? scale_buf_adr_wr : //wt scale buf
-  ((scale_buf_en_rd == 1'b1) && (scale_buf_en_wr == 1'b0)) ? scale_buf_adr_rd : 0; //rd scale buf
+  ((scale_buf_en_rd == 1'b0) && (scale_buf_en_wr == 1'b1)) ? scale_buf_adr_wr[8 : 0] : //wt scale buf
+  ((scale_buf_en_rd == 1'b1) && (scale_buf_en_wr == 1'b0)) ? scale_buf_adr_rd[8 : 0] : 0; //rd scale buf
   assign scale_buf_en  = ((scale_buf_en_rd == 1'b1) || (scale_buf_en_wr == 1'b1)) ? 1 : 0;
   assign scale_buf_en_wr = 1'b0;
   assign scale_buf_wr = 512'b0;
@@ -1567,7 +1603,10 @@ module conv_quantize_relu_scale_tb();
       .reset                     ((reset == 1) || (conv_start == 1)),
       .conv_fifo_out_start       (conv_store),
       .ddr_en(ddr_en),
+      .output_ddr_layer_base_adr(output_ddr_layer_base_adr),
       .mode                      (mode),
+      .of_in_2pow(of_in_2pow), 
+      .ox_in_2pow(ox_in_2pow),
       .cur_ox_start              (store_ox_start),
       .cur_oy_start              (store_oy_start),
       .cur_of_start              (store_of_start),
@@ -1580,10 +1619,10 @@ module conv_quantize_relu_scale_tb();
       //cycle 1 in
       .fifo_data                 (fifo_data),
       //cycle 1 out
-      //rowi_out_buf_adr,
+      .conv_out_ddr_adr(conv_out_ddr_adr),
       .fifo_column_no            (fifo_column_no),
       .fifo_row_no               (fifo_row_no),
-      .valid_rowi_out_buf_adr    (valid_rowi_out_buf_adr),
+      .valid_conv_out_ddr_adr    (valid_conv_out_ddr_adr),
       .out_y_idx                 (out_y_idx),
       .out_x_idx                 (out_x_idx),
       .out_f_idx                 (out_f_idx),
@@ -1622,6 +1661,8 @@ module conv_quantize_relu_scale_tb();
     // for (n = 0; n < 1000000; n = n + 1) begin //DDR_mem_limit
     //   $display("DDR_mem[%d] = %h", n, DDR_mem[n]);
     // end
+    $readmemh("D:\\project\\Vivado\\yolov5_accel\\yolov5_accel.srcs\\instr_args_hex_num_init.txt", conv_instr_args_mem);
+    // $display("conv_instr_args_mem[%d] = %h", 0, conv_instr_args_mem[0]);
     $readmemh("D:\\project\\Vivado\\yolov5_accel\\yolov5_accel.srcs\\bias_buffer_init.txt", bias_buffer_mem);
     $readmemh("D:\\project\\Vivado\\yolov5_accel\\yolov5_accel.srcs\\E_buffer_init.txt", E_buffer_mem);
     $readmemh("D:\\project\\Vivado\\yolov5_accel\\yolov5_accel.srcs\\scale_buffer_init.txt", scale_buffer_mem);
@@ -1632,10 +1673,10 @@ module conv_quantize_relu_scale_tb();
             $display("Could not open file");
             $stop;
     end
-    // 写入文件�?
+    // 写入文件
     $fdisplay(file, "Time\tvalid\tout_f_idx\tout_y_idx\tout_x_idx\tresult_word");
-    // 监控信号变化并写入文�?
-    $fmonitor(file, "%t\t%b\t%d\t%d\t%d\t%h", $time, valid_rowi_out_buf_adr, out_f_idx, out_y_idx, out_x_idx, conv_out_data);
+    // 监控信号变化并写入
+    $fmonitor(file, "%t\t%b\t%d\t%d\t%d\t%h", $time, valid_conv_out_ddr_adr, out_f_idx, out_y_idx, out_x_idx, conv_out_data);
 
     // collect product add bias file
     file01 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_00.txt", "w");
@@ -1683,10 +1724,10 @@ module conv_quantize_relu_scale_tb();
 
     #10;
     reset       = 0;
-    conv_decode = 1;
+    start = 1;
 
     #10;
-    conv_decode = 0;
+    start = 0;
 
     // #1316134912;
     // $fclose(file); // 关闭文件
@@ -1694,4 +1735,3 @@ module conv_quantize_relu_scale_tb();
   end
 
 endmodule
-

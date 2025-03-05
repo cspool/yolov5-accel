@@ -39,8 +39,8 @@ def generate_conv_E_quantify_tests():
   conv_E_quantify_test(conv_type, mode_type, quantify_type)
 
 def conv_E_quantify_test(conv_type, mode_type, quantify_type):
-    standard_conv_E_quantify(conv_type, mode_type, quantify_type)
-    # fpga_conv_E_quantify(conv_type, mode_type, quantify_type)
+    # standard_conv_E_quantify(conv_type, mode_type, quantify_type)
+    fpga_conv_E_quantify(conv_type, mode_type, quantify_type)
 
 def standard_conv_E_quantify(conv_type, mode_type, quantify_type):
   # def basic conv op
@@ -267,7 +267,15 @@ def generate_conv_input_data(nif, iy, ix):
   # input channel num should be an even num. 
   # if not, expand 3 channels -> 4 channels, last channel is 0
   # uint8 [0,255]
-  input_data = torch.randint(0, 255, size=(nif, iy, ix), dtype=torch.int)
+  # if nif is odd, add a zero channel to make it even
+  if nif % 2 != 0:
+    input_data = torch.randint(0, 255, size=(nif, iy, ix), dtype=torch.int)
+    zero_channel = torch.zeros((1, iy, ix), dtype=torch.int)
+    input_data = torch.cat((input_data, zero_channel), dim=0)
+    nif += 1
+  else:
+    input_data = torch.randint(0, 255, size=(nif, iy, ix), dtype=torch.int)  
+
   # reshape input tensor into ddr words
   activation_x_num_in_ddr_word = 32
   activation_in_channel_num_in_ddr_word = 2 # ddr_word_width / activation_x_num_in_ddr_word / weight_word_width

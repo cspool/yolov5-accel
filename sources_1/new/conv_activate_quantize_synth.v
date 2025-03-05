@@ -21,12 +21,17 @@
 
 
 module conv_activate_quantize_synth(
-   clk, 
-   reset,
+  clk,  //i
+  reset,  //i
   //DDR MIG
-  ddr_en,
-  //conv decoder
-  conv_decode
+  ddr_en, //i
+  start,
+
+  DDR_en,  //o
+  DDR_en_wr, //o
+  DDR_in,  //o
+  DDR_adr, //o
+  DDR_out  //i
 
 );
   //SA
@@ -109,11 +114,10 @@ module conv_activate_quantize_synth(
   parameter product_add_bias_vector_width = mult_P_width * pe_parallel_pixel_18 * pe_parallel_weight_18 * column_num_in_sa;
   //40 bit * 32 pixels * 2 channel
   
-  
-  parameter quantified_pixel_width = 8;
-  parameter quantified_vector_width = (quantified_pixel_width) * pe_parallel_weight_18 * pe_parallel_pixel_18 * column_num_in_sa;
+  parameter quantize_pixel_width = 8;
+  parameter quantize_vector_width = (quantize_pixel_width) * pe_parallel_weight_18 * pe_parallel_pixel_18 * column_num_in_sa;
   //8 bit * 32 pixels * 2 channel
-  parameter out_data_width = quantified_pixel_width * pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa;
+  parameter out_data_width = quantize_pixel_width * pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa;
   //load input
   parameter row_num_in_mode0 = 64;  // 64 in 8 bit, 128 in 1 bit
   parameter row_num_in_mode1 = 128;  // 64 in 8 bit, 128 in 1 bit
@@ -128,15 +132,18 @@ module conv_activate_quantize_synth(
 
   input clk, reset;
   //DDR MIG
-  input  ddr_en;
+  input ddr_en;
+  input start; //top start
   //conv decoder
-  input  conv_decode;
+  reg  conv_decode;
+  reg [511:0] conv_instr_args;
+  reg [511:0] conv_instr_args_mem [0:0]; //instr mem for sim
   wire conv_start;
   //all below come from instr
-  wire mode;
+  wire [3:0] mode;
   wire [3:0] k, s, p;
   wire [15:0] of, ox, oy, ix, iy, nif;
-  wire [3:0] nif_in_2pow, ix_in_2pow;
+  wire [3:0] nif_in_2pow, ix_in_2pow, of_in_2pow, ox_in_2pow;
   wire [31:0] nif_mult_k_mult_k;
   wire [31:0] N_chunks;
   wire [15:0] E_layer_base_buf_adr_rd;
@@ -144,6 +151,7 @@ module conv_activate_quantize_synth(
   wire [15:0] scale_layer_base_buf_adr_rd;
   wire [31:0] weights_layer_base_ddr_adr_rd;
   wire [31:0] input_ddr_layer_base_adr;
+  wire [31:0] output_ddr_layer_base_adr;
   wire [ 7:0] of_div_row_num_ceil;
   wire [ 7:0] tiley_first_tilex_first_split_size;
   wire [ 7:0] tiley_first_tilex_last_split_size;
@@ -169,11 +177,17 @@ module conv_activate_quantize_synth(
   wire last_conv_store;
   wire last_conv_compute;
   //DDR
-  wire DDR_en;
-  wire DDR_en_wr;
-  wire [511:0] DDR_in;
-  wire [ 31:0] DDR_adr;
-  wire [511:0] DDR_out;  //o
+  // wire DDR_en;
+  // wire DDR_en_wr;
+  // wire [511:0] DDR_in;
+  // wire [ 31:0] DDR_adr;
+  // wire [511:0] DDR_out;  //o
+
+  output DDR_en;
+  output DDR_en_wr;
+  output [511:0] DDR_in;
+  output [ 31:0] DDR_adr;
+  input [511:0] DDR_out;  //o
   //DDR data
   reg valid_load_input;
   wire [511:0] load_input_word;
@@ -470,11 +484,11 @@ module conv_activate_quantize_synth(
   wire [product_add_bias_vector_width-1 :0] //40 bit * 32 pixels * 2 channel
   product_add_bias_vector_rowi_channel_setj[sa_column_num-1 : 0][sa_row_num-1 : 0];
   
-  wire [quantified_vector_width-1 : 0] //8 bit * 32 pixels * 2 channel
-  quantified_rowi_channel_setj[sa_column_num-1 : 0][sa_row_num-1 : 0];
+  wire [quantize_vector_width-1 : 0] //8 bit * 32 pixels * 2 channel
+  quantize_rowi_channel_setj[sa_column_num-1 : 0][sa_row_num-1 : 0];
   //conv fifo
   wire fifo_rowi_channel_seti_rd_en[sa_column_num-1 : 0][sa_row_num-1 : 0];
-  wire [quantified_vector_width-1 : 0] //fifos out
+  wire [quantize_vector_width-1 : 0] //fifos out
   fifo_rowi_channel_seti_dout[sa_column_num-1 : 0][sa_row_num-1 : 0];
   wire fifo_rowi_channel_seti_full //fifos full
   [sa_column_num-1 : 0][sa_row_num-1 : 0];
@@ -485,55 +499,62 @@ module conv_activate_quantize_synth(
   //conv fifo out ctrl
   //cycle 0 in conv store
   //cycle 1 in
-  wire [quantified_vector_width-1 : 0] fifo_data;
+  wire [quantize_vector_width-1 : 0] fifo_data;
   //cycle 0 out
   wire [sa_row_num * sa_column_num-1:0] fifo_rds;
   //cycle 1 out
+  wire [31:0] conv_out_ddr_adr;
   wire [3:0] fifo_column_no, fifo_row_no;
-  wire valid_rowi_out_buf_adr;
+  wire valid_conv_out_ddr_adr;
   wire [15:0] out_y_idx, out_x_idx, out_f_idx;
   wire conv_fifo_out_tile_add_end;
   wire [out_data_width-1 : 0] conv_out_data;
   wire conv_store_fin;
 
+  //top control sim
+  always @(posedge clk) begin
+    if (reset) begin
+      conv_decode <= 0;
+    end
+    else if ((start == 1'b1) && (conv_decode == 1'b0)) begin
+      conv_decode <= 1;
+    end
+    else if (conv_decode == 1'b1) begin
+      conv_decode <= 0;
+    end
+    else begin
+      conv_decode <= conv_decode;
+    end
+  end
+
+  always @(posedge clk) begin
+    if (reset) begin
+      conv_instr_args <= 512'b0;
+    end
+    else if (start == 1'b1) begin
+      conv_instr_args <= conv_instr_args_mem[0];
+    end
+    else begin
+      conv_instr_args <= conv_instr_args;
+    end
+  end
+
   // //DDR
-  DDR DDR (
-      .clka (clk),                    // input wire clka
-      .ena  (DDR_en),   // input wire ena
-      .wea  (0),                      // input wire [0 : 0] wea
-      .addra(DDR_adr),  // input wire [12 : 0] addra
-      .dina (512'b0),                      // input wire [511 : 0] dina
-      .douta(DDR_out)                 // output wire [511 : 0] douta
-  );
+//   DDR DDR (
+//       .clka (clk),                    // input wire clka
+//       .ena  (DDR_en),   // input wire ena
+//       .wea  (DDR_en_wr),                      // input wire [0 : 0] wea
+//       .addra(DDR_adr),  // input wire [31 : 0] addra
+//       .dina (DDR_in),                      // input wire [511 : 0] dina
+//       .douta(DDR_out)                 // output wire [511 : 0] douta
+//   );
   assign DDR_en          = ((input_word_ddr_en_rd == 1'b1) || (weights_word_ddr_en_rd == 1'b1)) ? 1'b1 : 1'b0;
   assign DDR_en_wr       = 0;
   assign DDR_adr         = (input_word_ddr_en_rd == 1)? input_word_ddr_adr_rd :
    (weights_word_ddr_en_rd == 1)? weights_word_ddr_adr_rd : 0;
-  assign DDR_in          = 0;
+  assign DDR_in          = 512'b0;
   assign load_input_word = (valid_load_input == 1'b1) ? DDR_out : 0;
   assign weights_word_buf_wt = (valid_load_weights == 1'b1) ? DDR_out : 0;
-  //DDR reg mem
-  // parameter DDR_mem_limit = 1000000; //4096*16
-  // reg[511:0] DDR_mem [DDR_mem_limit - 1:0];
-  // reg [511:0] DDR_mem_out;
-  // always @(posedge clk) begin
-  //   if (reset) begin
-  //     DDR_mem_out <= 0;
-  //   end
-  //   else if (DDR_en == 1'b1) begin
-  //     DDR_mem_out <= DDR_mem[DDR_adr];
-  //   end
-  //   else begin
-  //     DDR_mem_out <= DDR_mem_out;
-  //   end
-  // end
-  // assign DDR_en          = ((input_word_ddr_en_rd == 1'b1) || (weights_word_ddr_en_rd == 1'b1)) ? 1'b1 : 1'b0;
-  // assign DDR_en_wr       = 0;
-  // assign DDR_adr         = (input_word_ddr_en_rd == 1)? input_word_ddr_adr_rd :
-  //  (weights_word_ddr_en_rd == 1)? weights_word_ddr_adr_rd : 0;
-  // assign DDR_in          = 0;
-  // assign load_input_word = (valid_load_input == 1'b1) ? DDR_mem_out : 0;
-  // assign weights_word_buf_wt = (valid_load_weights == 1'b1) ? DDR_mem_out : 0;
 
   //DDR input load
   always @(posedge clk) begin
@@ -571,23 +592,26 @@ module conv_activate_quantize_synth(
   end
 
   //conv decoder
-  conv_activate_quantify_decoder cv_activate_quantify_decoder (
+  conv_quantize_relu_decoder cv_quantize_relu_decoder (
       .clk                               (clk),
       .reset                             (reset),
       .conv_decode                       (conv_decode),
+      .conv_instr_args(conv_instr_args),
       .conv_start                        (conv_start),
       .mode                              (mode),
       .k                                 (k),
       .s                                 (s),
       .p                                 (p),
       .of                                (of),
+      .of_in_2pow(of_in_2pow),
       .ox                                (ox),
+      .ox_in_2pow(ox_in_2pow),
       .oy                                (oy),
       .ix                                (ix),
+      .ix_in_2pow                        (ix_in_2pow),
       .iy                                (iy),
       .nif                               (nif),
       .nif_in_2pow                       (nif_in_2pow),
-      .ix_in_2pow                        (ix_in_2pow),
       .nif_mult_k_mult_k                 (nif_mult_k_mult_k),
       .N_chunks                          (N_chunks),
       .E_layer_base_buf_adr_rd           (E_layer_base_buf_adr_rd),
@@ -595,6 +619,7 @@ module conv_activate_quantize_synth(
       .scale_layer_base_buf_adr_rd       (scale_layer_base_buf_adr_rd),
       .weights_layer_base_ddr_adr_rd     (weights_layer_base_ddr_adr_rd),
       .input_ddr_layer_base_adr          (input_ddr_layer_base_adr),
+      .output_ddr_layer_base_adr(output_ddr_layer_base_adr),
       .of_div_row_num_ceil               (of_div_row_num_ceil),
       .tiley_first_tilex_first_split_size(tiley_first_tilex_first_split_size),
       .tiley_first_tilex_last_split_size (tiley_first_tilex_last_split_size),
@@ -1008,8 +1033,8 @@ module conv_activate_quantize_synth(
   Row_Regs row_regs (
       .reset                    ((reset == 1) || (conv_start == 1)),
       .clk                      (clk),
-      .k                        (k),
-      .s                        (s),
+      // .k                        (k),
+      // .s                        (s),
       .state_valid_row1_adr     (state_valid_row1_adr),
       .state_valid_row2_adr     (state_valid_row2_adr),
       .state_valid_row3_adr     (state_valid_row3_adr),
@@ -1247,33 +1272,11 @@ module conv_activate_quantize_synth(
       .douta(E_buf_rd)      // output wire [511 : 0] douta
   );
   assign E_buf_adr = 
-  ((E_buf_en_rd == 1'b0) && (E_buf_en_wr == 1'b1)) ? E_buf_adr_wr : //wt E buf
-  ((E_buf_en_rd == 1'b1) && (E_buf_en_wr == 1'b0)) ? E_buf_adr_rd : 0; //rd E buf
+  ((E_buf_en_rd == 1'b0) && (E_buf_en_wr == 1'b1)) ? E_buf_adr_wr[8 : 0] : //wt E buf
+  ((E_buf_en_rd == 1'b1) && (E_buf_en_wr == 1'b0)) ? E_buf_adr_rd[8 : 0] : 0; //rd E buf
   assign E_buf_en  = ((E_buf_en_rd == 1'b1) || (E_buf_en_wr == 1'b1)) ? 1 : 0;
   assign E_buf_en_wr = 1'b0;
   assign E_buf_wr = 512'b0;
-  //E buf mem
-  // parameter E_buffer_mem_limit = 512;
-  // reg [511:0] E_buffer_mem [E_buffer_mem_limit-1:0];
-  // reg [511:0] E_buffer_mem_out;
-  // always @(posedge clk) begin
-  //   if (reset) begin
-  //     E_buffer_mem_out <= 0;
-  //   end
-  //   else if (E_buf_en == 1'b1) begin
-  //     E_buffer_mem_out <= E_buffer_mem[E_buf_adr];
-  //   end
-  //   else begin
-  //     E_buffer_mem_out <= E_buffer_mem_out;
-  //   end
-  // end
-  // assign E_buf_adr = 
-  // ((E_buf_en_rd == 1'b0) && (E_buf_en_wr == 1'b1)) ? E_buf_adr_wr : //wt E buf
-  // ((E_buf_en_rd == 1'b1) && (E_buf_en_wr == 1'b0)) ? E_buf_adr_rd : 0; //rd E buf
-  // assign E_buf_en  = ((E_buf_en_rd == 1'b1) || (E_buf_en_wr == 1'b1)) ? 1 : 0;
-  // assign E_buf_en_wr = 1'b0;
-  // assign E_buf_wr = 512'b0;
-  // assign E_buf_rd = E_buffer_mem_out;
 
   //bias buf
   bias_buffer bias_buffer (
@@ -1285,33 +1288,11 @@ module conv_activate_quantize_synth(
       .douta(bias_buf_rd)      // output wire [511 : 0] douta
   );
   assign bias_buf_adr = 
-  ((bias_buf_en_rd == 1'b0) && (bias_buf_en_wr == 1'b1)) ?bias_buf_adr_wr : //wt bias buf
-  ((bias_buf_en_rd == 1'b1) && (bias_buf_en_wr == 1'b0)) ?bias_buf_adr_rd : 0; //rd bias buf
+  ((bias_buf_en_rd == 1'b0) && (bias_buf_en_wr == 1'b1)) ?bias_buf_adr_wr[8 : 0] : //wt bias buf
+  ((bias_buf_en_rd == 1'b1) && (bias_buf_en_wr == 1'b0)) ?bias_buf_adr_rd[8 : 0] : 0; //rd bias buf
   assign bias_buf_en  = ((bias_buf_en_rd == 1'b1) || (bias_buf_en_wr == 1'b1)) ? 1 : 0;
   assign bias_buf_en_wr = 0;
   assign bias_buf_wr = 512'b0;
-  //bias buf reg mem
-  // parameter bias_buffer_mem_limit = 512;
-  // reg [511:0] bias_buffer_mem [bias_buffer_mem_limit-1:0];
-  // reg [511:0] bias_buffer_mem_out;
-  // always @(posedge clk) begin
-  //   if (reset) begin
-  //     bias_buffer_mem_out <= 0;
-  //   end
-  //   else if (bias_buf_en == 1'b1) begin
-  //     bias_buffer_mem_out <= bias_buffer_mem[bias_buf_adr];
-  //   end
-  //   else begin
-  //     bias_buffer_mem_out <= bias_buffer_mem_out;
-  //   end
-  // end
-  // assign bias_buf_adr = 
-  // ((bias_buf_en_rd == 1'b0) && (bias_buf_en_wr == 1'b1)) ?bias_buf_adr_wr : //wt bias buf
-  // ((bias_buf_en_rd == 1'b1) && (bias_buf_en_wr == 1'b0)) ?bias_buf_adr_rd : 0; //rd bias buf
-  // assign bias_buf_en  = ((bias_buf_en_rd == 1'b1) || (bias_buf_en_wr == 1'b1)) ? 1 : 0;
-  // assign bias_buf_en_wr = 0;
-  // assign bias_buf_wr = 512'b0;
-  // assign bias_buf_rd = bias_buffer_mem_out;
 
   //scale buf
   scale_buffer scale_buffer (
@@ -1323,33 +1304,11 @@ module conv_activate_quantize_synth(
       .douta(scale_buf_rd)      // output wire [511 : 0] douta
   );
   assign scale_buf_adr = 
-  ((scale_buf_en_rd == 1'b0) && (scale_buf_en_wr == 1'b1)) ? scale_buf_adr_wr : //wt scale buf
-  ((scale_buf_en_rd == 1'b1) && (scale_buf_en_wr == 1'b0)) ? scale_buf_adr_rd : 0; //rd scale buf
+  ((scale_buf_en_rd == 1'b0) && (scale_buf_en_wr == 1'b1)) ? scale_buf_adr_wr[8 : 0] : //wt scale buf
+  ((scale_buf_en_rd == 1'b1) && (scale_buf_en_wr == 1'b0)) ? scale_buf_adr_rd[8 : 0] : 0; //rd scale buf
   assign scale_buf_en  = ((scale_buf_en_rd == 1'b1) || (scale_buf_en_wr == 1'b1)) ? 1 : 0;
   assign scale_buf_en_wr = 1'b0;
   assign scale_buf_wr = 512'b0;
-  //scale buf mem
-  // parameter scale_buffer_mem_limit = 512;
-  // reg [511:0] scale_buffer_mem [scale_buffer_mem_limit-1:0];
-  // reg [511:0] scale_buffer_mem_out;
-  // always @(posedge clk) begin
-  //   if (reset) begin
-  //     scale_buffer_mem_out <= 0;
-  //   end
-  //   else if (scale_buf_en == 1'b1) begin
-  //     scale_buffer_mem_out <= scale_buffer_mem[scale_buf_adr];
-  //   end
-  //   else begin
-  //     scale_buffer_mem_out <= scale_buffer_mem_out;
-  //   end
-  // end
-  // assign scale_buf_adr = 
-  // ((scale_buf_en_rd == 1'b0) && (scale_buf_en_wr == 1'b1)) ? scale_buf_adr_wr : //wt scale buf
-  // ((scale_buf_en_rd == 1'b1) && (scale_buf_en_wr == 1'b0)) ? scale_buf_adr_rd : 0; //rd scale buf
-  // assign scale_buf_en  = ((scale_buf_en_rd == 1'b1) || (scale_buf_en_wr == 1'b1)) ? 1 : 0;
-  // assign scale_buf_en_wr = 1'b0;
-  // assign scale_buf_wr = 512'b0;
-  // assign scale_buf_rd = scale_buffer_mem_out;
 
   //E regs
   E_Regs E_regs (
@@ -1518,13 +1477,13 @@ module conv_activate_quantize_synth(
             .mode                            (mode),
             .scale_set(scale_4_channel_sets[(j-1)*scale_set_width+:scale_set_width]),
             .product_add_bias_vector(product_add_bias_vector_rowi_channel_setj[i-1][j-1]),
-            .quantified_vector(quantified_rowi_channel_setj[i-1][j-1])
+            .quantize_vector(quantize_rowi_channel_setj[i-1][j-1])
         );        
         //conv out fifo
         fifo_rowi_channel_seti fifo_rowi_channel_seti (
             .clk       (clk),                                     // input wire clk
             .srst      ((reset == 1) || (conv_start == 1)),                      // input wire srst
-            .din       (quantified_rowi_channel_setj[i-1][j-1]),  // input wire [511 : 0] din
+            .din       (quantize_rowi_channel_setj[i-1][j-1]),  // input wire [511 : 0] din
             .wr_en     (relu_scale_en),                             // input wire wr_en
             .rd_en     (fifo_rowi_channel_seti_rd_en[i-1][j-1]),  // input wire rd_en
             .dout      (fifo_rowi_channel_seti_dout[i-1][j-1]),   // output wire [511 : 0] dout
@@ -1574,7 +1533,10 @@ module conv_activate_quantize_synth(
       .reset                     ((reset == 1) || (conv_start == 1)),
       .conv_fifo_out_start       (conv_store),
       .ddr_en(ddr_en),
+      .output_ddr_layer_base_adr(output_ddr_layer_base_adr),
       .mode                      (mode),
+      .of_in_2pow(of_in_2pow), 
+      .ox_in_2pow(ox_in_2pow),
       .cur_ox_start              (store_ox_start),
       .cur_oy_start              (store_oy_start),
       .cur_of_start              (store_of_start),
@@ -1587,10 +1549,10 @@ module conv_activate_quantize_synth(
       //cycle 1 in
       .fifo_data                 (fifo_data),
       //cycle 1 out
-      //rowi_out_buf_adr,
+      .conv_out_ddr_adr(conv_out_ddr_adr),
       .fifo_column_no            (fifo_column_no),
       .fifo_row_no               (fifo_row_no),
-      .valid_rowi_out_buf_adr    (valid_rowi_out_buf_adr),
+      .valid_conv_out_ddr_adr    (valid_conv_out_ddr_adr),
       .out_y_idx                 (out_y_idx),
       .out_x_idx                 (out_x_idx),
       .out_f_idx                 (out_f_idx),
@@ -1600,104 +1562,5 @@ module conv_activate_quantize_synth(
   assign fifo_data      = fifo_rowi_channel_seti_dout[fifo_column_no][fifo_row_no];
   assign conv_store_fin = conv_fifo_out_tile_add_end;  //demo store ctrl
 
-  // always begin
-  //   #5;
-  //   clk <= ~clk;
-  // end
-
-  // integer file; 
-  // integer file01, file02, file03, file04, file05, file06;
-  // integer file11, file12, file13, file14, file15, file16;
-  // integer file21, file22, file23, file24, file25, file26;
-  // integer n;
-  // initial begin
-  //   // initial data
-  //   for (n = 0; n < 1000000; n = n + 1) begin //DDR_mem_limit
-  //     DDR_mem[n] = 512'b0;
-  //   end
-  //   for (n = 0; n < bias_buffer_mem_limit; n = n + 1) begin
-  //     bias_buffer_mem[n] = 512'b0;
-  //   end
-  //   for (n = 0; n < E_buffer_mem_limit; n = n + 1) begin
-  //     E_buffer_mem[n] = 512'b0;
-  //   end
-  //   for (n = 0; n < scale_buffer_mem_limit; n = n + 1) begin
-  //     scale_buffer_mem[n] = 512'b0;
-  //   end
-  //   $readmemh("D:\\project\\Vivado\\yolov5_accel\\yolov5_accel.srcs\\DDR_init.txt", DDR_mem);
-  //   // // 打印读取的数据以验证
-  //   // for (n = 0; n < 1000000; n = n + 1) begin //DDR_mem_limit
-  //   //   $display("DDR_mem[%d] = %h", n, DDR_mem[n]);
-  //   // end
-  //   $readmemh("D:\\project\\Vivado\\yolov5_accel\\yolov5_accel.srcs\\bias_buffer_init.txt", bias_buffer_mem);
-  //   $readmemh("D:\\project\\Vivado\\yolov5_accel\\yolov5_accel.srcs\\E_buffer_init.txt", E_buffer_mem);
-  //   $readmemh("D:\\project\\Vivado\\yolov5_accel\\yolov5_accel.srcs\\scale_buffer_init.txt", scale_buffer_mem);
-  //   // collect conv res file
-  //   file = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/conv_result.txt", "w");
-  //   $display("Time\tvalid\tout_f_idx\tout_y_idx\tout_x_idx");
-  //   if (!file) begin
-  //           $display("Could not open file");
-  //           $stop;
-  //   end
-  //   // 写入文件�?
-  //   $fdisplay(file, "Time\tvalid\tout_f_idx\tout_y_idx\tout_x_idx\tresult_word");
-  //   // 监控信号变化并写入文�?
-  //   $fmonitor(file, "%t\t%b\t%d\t%d\t%d\t%h", $time, valid_rowi_out_buf_adr, out_f_idx, out_y_idx, out_x_idx, conv_out_data);
-
-  //   // collect product add bias file
-  //   file01 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_00.txt", "w");
-  //   $fmonitor(file01, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, out_rowi_channel_seti[0][0]);
-  //   file02 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_in_A_00.txt", "w");
-  //   $fmonitor(file02, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, sum_vector_in_mult_A_width_rowi_channel_setj[0][0]);
-  //   file03 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_mult_E_00.txt", "w");
-  //   $fmonitor(file03, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, sum_mult_E_vector_in_mult_P_width_rowi_channel_setj[0][0]);
-  //   file04 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/product_add_bias_00.txt", "w");
-  //   $fmonitor(file04, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, product_add_bias_vector_rowi_channel_setj[0][0]);
-  //   file05 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/quantified_row_00.txt", "w");
-  //   $fmonitor(file05, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, quantified_rowi_channel_setj[0][0]);
-  //   file06 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/E_in_B_00.txt", "w");
-  //   $fmonitor(file06, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, E_vector_in_mult_B_width_rowi_channel_setj[0][0]);
-
-  //   file11 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_10.txt", "w");
-  //   $fmonitor(file11, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, out_rowi_channel_seti[1][0]);
-  //   file12 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_in_A_10.txt", "w");
-  //   $fmonitor(file12, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, sum_vector_in_mult_A_width_rowi_channel_setj[1][0]);
-  //   file13 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_mult_E_10.txt", "w");
-  //   $fmonitor(file13, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, sum_mult_E_vector_in_mult_P_width_rowi_channel_setj[1][0]);
-  //   file14 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/product_add_bias_10.txt", "w");
-  //   $fmonitor(file14, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, product_add_bias_vector_rowi_channel_setj[1][0]);
-  //   file15 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/quantified_row_10.txt", "w");
-  //   $fmonitor(file15, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, quantified_rowi_channel_setj[1][0]);
-  //   file16 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/E_in_B_10.txt", "w");
-  //   $fmonitor(file16, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, E_vector_in_mult_B_width_rowi_channel_setj[1][0]);
-
-  //   file21 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_20.txt", "w");
-  //   $fmonitor(file21, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, out_rowi_channel_seti[2][0]);
-  //   file22 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_in_A_20.txt", "w");
-  //   $fmonitor(file22, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, sum_vector_in_mult_A_width_rowi_channel_setj[2][0]);
-  //   file23 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_mult_E_20.txt", "w");
-  //   $fmonitor(file23, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, sum_mult_E_vector_in_mult_P_width_rowi_channel_setj[2][0]);
-  //   file24 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/product_add_bias_20.txt", "w");
-  //   $fmonitor(file24, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, product_add_bias_vector_rowi_channel_setj[2][0]);
-  //   file25 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/quantified_row_20.txt", "w");
-  //   $fmonitor(file25, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, quantified_rowi_channel_setj[2][0]);
-  //   file26 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/E_in_B_20.txt", "w");
-  //   $fmonitor(file26, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, E_vector_in_mult_B_width_rowi_channel_setj[2][0]);
-  //   //begin simulation
-  //   clk   = 0;
-  //   reset = 1;
-  //   ddr_en = 1;
-
-  //   #10;
-  //   reset       = 0;
-  //   conv_decode = 1;
-
-  //   #10;
-  //   conv_decode = 0;
-
-  //   // #1316134912;
-  //   // $fclose(file); // 关闭文件
-  //   // $stop; // 停止仿真
-  // end
 
 endmodule

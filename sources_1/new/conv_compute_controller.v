@@ -4356,9 +4356,30 @@ module conv_compute_controller(clk,
     assign row3_buf_word_select = (if_start - 1) & 16'h0001;
     
     //slab
-    assign row_slab_start_idx = (slab_num > 0)? (row_start_idx - 16'd32): 16'hffff;
-    
-    assign row1_slab_idx = (slab_num > 0)? row1_buf_idx : 0;
+    // assign row_slab_start_idx = (slab_num > 0)? (row_start_idx - 16'd32): 16'hffff;
+    assign row_slab_start_idx =
+    (slab_num > 0)? 
+    ((s == 4'd1)? adr1 + tile_x_start - 1 - 16'd32:
+    (s == 4'd2)? adr1 + (tile_x_start << 1) - 2 - 16'd32:
+    0): 16'hffff;
+
+    // assign row1_slab_idx = (slab_num > 0)? row1_buf_idx : 0;
+    assign row1_slab_idx = 
+    (slab_num > 0)?
+    ((row1_idx == 16'hffff)? 0 :
+    (
+    ((row1_bias0[15] == 1'b1) || (row1_bias0 == 0))? (
+    ((row1_bias0 + {12'b0, {s_mult_3}}) <= 16'd6)?
+    (((row1_bias0 + {12'b0, {s_mult_3}}) <= 16'd3)? (row1_bias0 + {12'b0, {s_mult_3}}): ((row1_bias0 + {12'b0, {s_mult_3}}) - 16'd3)) :
+    (((row1_bias0 + {12'b0, {s_mult_3}}) <= 16'd9)? ((row1_bias0 + {12'b0, {s_mult_3}}) - 16'd6): ((row1_bias0 + {12'b0, {s_mult_3}}) - 16'd9))
+    ):
+    (
+    (row1_bias0 <= 6)?
+    ((row1_bias0 <= 3)? row1_bias0: (row1_bias0 - 3)) :
+    ((row1_bias0 <= 9)? (row1_bias0 - 6): (row1_bias0 - 9))
+    )
+    )):0;
+
     assign row1_slab_adr = (slab_num > 0)?
     (((row1_buf_adr_in_row & row_num_limit_mask_slab_buffer) << (nif_in_2pow + ix_in_2pow - pixels_in_row_in_2pow))
     + ((row_slab_start_idx << nif_in_2pow) >> pixels_in_row_in_2pow))
@@ -4369,9 +4390,40 @@ module conv_compute_controller(clk,
     (((row1_buf_adr_in_row & row_num_limit_mask_slab_buffer) << (nif_in_2pow + ix_in_2pow - pixels_in_row_in_2pow))
     + ((row_start_idx << nif_in_2pow) >> pixels_in_row_in_2pow))
     + (if_start - 1);
-    assign row1_slab_idx_to_wr = row1_buf_idx;
 
-    assign row2_slab_idx = (slab_num > 0)? row2_buf_idx : 0;
+    // assign row1_slab_idx_to_wr = row1_buf_idx;
+    assign row1_slab_idx_to_wr = 
+    (row1_idx == 16'hffff)? 0 :
+    (
+    ((row1_bias0[15] == 1'b1) || (row1_bias0 == 0))? (
+    ((row1_bias0 + {12'b0, {s_mult_3}}) <= 16'd6)?
+    (((row1_bias0 + {12'b0, {s_mult_3}}) <= 16'd3)? (row1_bias0 + {12'b0, {s_mult_3}}): ((row1_bias0 + {12'b0, {s_mult_3}}) - 16'd3)) :
+    (((row1_bias0 + {12'b0, {s_mult_3}}) <= 16'd9)? ((row1_bias0 + {12'b0, {s_mult_3}}) - 16'd6): ((row1_bias0 + {12'b0, {s_mult_3}}) - 16'd9))
+    ):
+    (
+    (row1_bias0 <= 6)?
+    ((row1_bias0 <= 3)? row1_bias0: (row1_bias0 - 3)) :
+    ((row1_bias0 <= 9)? (row1_bias0 - 6): (row1_bias0 - 9))
+    )
+    );
+
+    // assign row2_slab_idx = (slab_num > 0)? row2_buf_idx : 0;
+    assign row2_slab_idx = 
+    (slab_num > 0)?
+    ((row2_idx == 16'hffff)? 0 :
+    (
+    ((row2_bias0[15] == 1'b1) || (row2_bias0 == 0))? (
+    ((row2_bias0 + {12'b0, {s_mult_3}}) <= 16'd6)?
+    (((row2_bias0 + {12'b0, {s_mult_3}}) <= 16'd3)? (row2_bias0 + {12'b0, {s_mult_3}}): ((row2_bias0 + {12'b0, {s_mult_3}}) - 16'd3)) :
+    (((row2_bias0 + {12'b0, {s_mult_3}}) <= 16'd9)? ((row2_bias0 + {12'b0, {s_mult_3}}) - 16'd6): ((row2_bias0 + {12'b0, {s_mult_3}}) - 16'd9))
+    ):
+    (
+    (row2_bias0 <= 6)?
+    ((row2_bias0 <= 3)? row2_bias0: (row2_bias0 - 3)) :
+    ((row2_bias0 <= 9)? (row2_bias0 - 6): (row2_bias0 - 9))
+    )
+    )):0;
+
     //    assign row2_slab_adr = (slab_num > 0)? (row2_buf_adr - nif): 16'hffff;
     assign row2_slab_adr = (slab_num > 0)?
     (((row2_buf_adr_in_row & row_num_limit_mask_slab_buffer) << (nif_in_2pow + ix_in_2pow - pixels_in_row_in_2pow))
@@ -4383,9 +4435,40 @@ module conv_compute_controller(clk,
     (((row2_buf_adr_in_row & row_num_limit_mask_slab_buffer) << (nif_in_2pow + ix_in_2pow - pixels_in_row_in_2pow))
     + ((row_start_idx << nif_in_2pow) >> pixels_in_row_in_2pow))
     + (if_start - 1);
-    assign row2_slab_idx_to_wr = row2_buf_idx;
+
+    // assign row2_slab_idx_to_wr = row2_buf_idx;
+    assign row2_slab_idx_to_wr = 
+    (row2_idx == 16'hffff)? 0 :
+    (
+    ((row2_bias0[15] == 1'b1) || (row2_bias0 == 0))? (
+    ((row2_bias0 + {12'b0, {s_mult_3}}) <= 16'd6)?
+    (((row2_bias0 + {12'b0, {s_mult_3}}) <= 16'd3)? (row2_bias0 + {12'b0, {s_mult_3}}): ((row2_bias0 + {12'b0, {s_mult_3}}) - 16'd3)) :
+    (((row2_bias0 + {12'b0, {s_mult_3}}) <= 16'd9)? ((row2_bias0 + {12'b0, {s_mult_3}}) - 16'd6): ((row2_bias0 + {12'b0, {s_mult_3}}) - 16'd9))
+    ):
+    (
+    (row2_bias0 <= 6)?
+    ((row2_bias0 <= 3)? row2_bias0: (row2_bias0 - 3)) :
+    ((row2_bias0 <= 9)? (row2_bias0 - 6): (row2_bias0 - 9))
+    )
+    );
     
-    assign row3_slab_idx = (slab_num > 0)? row3_buf_idx : 0;
+    // assign row3_slab_idx = (slab_num > 0)? row3_buf_idx : 0;
+    assign row3_slab_idx = 
+    (slab_num > 0)?
+    ((row3_idx == 16'hffff)? 0 :
+    (
+    ((row3_bias0[15] == 1'b1) || (row3_bias0 == 0))? (
+    ((row3_bias0 + {12'b0, {s_mult_3}}) <= 16'd6)?
+    (((row3_bias0 + {12'b0, {s_mult_3}}) <= 16'd3)? (row3_bias0 + {12'b0, {s_mult_3}}): ((row3_bias0 + {12'b0, {s_mult_3}}) - 16'd3)) :
+    (((row3_bias0 + {12'b0, {s_mult_3}}) <= 16'd9)? ((row3_bias0 + {12'b0, {s_mult_3}}) - 16'd6): ((row3_bias0 + {12'b0, {s_mult_3}}) - 16'd9))
+    ):
+    (
+    (row3_bias0 <= 6)?
+    ((row3_bias0 <= 3)? row3_bias0: (row3_bias0 - 3)) :
+    ((row3_bias0 <= 9)? (row3_bias0 - 6): (row3_bias0 - 9))
+    )
+    )):0;
+
     assign row3_slab_adr = (slab_num > 0)?
     (((row3_buf_adr_in_row & row_num_limit_mask_slab_buffer) << (nif_in_2pow + ix_in_2pow - pixels_in_row_in_2pow))
     + ((row_slab_start_idx << nif_in_2pow) >> pixels_in_row_in_2pow))
@@ -4396,5 +4479,20 @@ module conv_compute_controller(clk,
     (((row3_buf_adr_in_row & row_num_limit_mask_slab_buffer) << (nif_in_2pow + ix_in_2pow - pixels_in_row_in_2pow))
     + ((row_start_idx << nif_in_2pow) >> pixels_in_row_in_2pow))
     + (if_start - 1);
-    assign row3_slab_idx_to_wr = row3_buf_idx;
+
+    // assign row3_slab_idx_to_wr = row3_buf_idx;
+    assign row3_slab_idx_to_wr = 
+    (row3_idx == 16'hffff)? 0 :
+    (
+    ((row3_bias0[15] == 1'b1) || (row3_bias0 == 0))? (
+    ((row3_bias0 + {12'b0, {s_mult_3}}) <= 16'd6)?
+    (((row3_bias0 + {12'b0, {s_mult_3}}) <= 16'd3)? (row3_bias0 + {12'b0, {s_mult_3}}): ((row3_bias0 + {12'b0, {s_mult_3}}) - 16'd3)) :
+    (((row3_bias0 + {12'b0, {s_mult_3}}) <= 16'd9)? ((row3_bias0 + {12'b0, {s_mult_3}}) - 16'd6): ((row3_bias0 + {12'b0, {s_mult_3}}) - 16'd9))
+    ):
+    (
+    (row3_bias0 <= 6)?
+    ((row3_bias0 <= 3)? row3_bias0: (row3_bias0 - 3)) :
+    ((row3_bias0 <= 9)? (row3_bias0 - 6): (row3_bias0 - 9))
+    )
+    );
 endmodule
