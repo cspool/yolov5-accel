@@ -169,7 +169,7 @@ module conv_activate_quantize_synth(
   wire [ 7:0] tiley_last_iy_row_num;
   wire [ 7:0] tiley_mid_iy_row_num;
   wire [15:0] ix_index_num, iy_index_num;
-//conv controller
+  //conv controller
   wire conv_load_weights;
   wire conv_load_input;
   wire conv_compute;
@@ -251,11 +251,17 @@ module conv_activate_quantize_synth(
   wire [pixels_in_row * 8 - 1:0] buf1_pixels_32;
   wire [pixels_in_row * 8 - 1:0] buf2_pixels_32;
   wire [pixels_in_row * 8 - 1:0] buf3_pixels_32;
+  wire [pixels_in_row * 8 - 1:0] buf1_data;
+  wire [pixels_in_row * 8 - 1:0] buf2_data;
+  wire [pixels_in_row * 8 - 1:0] buf3_data;
   //cycle 0 in/ slab rows rd info
   //cycle 1 in/ slab data rd from slab
   wire [15:0] slab1_pixels_2;
   wire [15:0] slab2_pixels_2;
   wire [15:0] slab3_pixels_2;
+  wire [15:0] slab1_data;
+  wire [15:0] slab2_data;
+  wire [15:0] slab3_data;
   //cycle 0 in/ valid row adr
   //cycle 0 out/ buffer rd ctrl
   wire [15:0] buf1_adr_rd;
@@ -267,17 +273,23 @@ module conv_activate_quantize_synth(
   wire buf1_en_rd;
   wire buf2_en_rd;
   wire buf3_en_rd;
+  reg valid_buf1_data, valid_buf2_data, valid_buf3_data;
   //cycle 1 out/ last row data rd from buffer
   wire [pixels_in_row * 8 - 1:0] last_row1_pixels_32;
   wire [pixels_in_row * 8 - 1:0] last_row2_pixels_32;
   wire [pixels_in_row * 8 - 1:0] last_row3_pixels_32;
-  //cycle 0 out/ slab rd ctrl
+  //cycle 0 out/ slab rd ctrl, and to wt
   wire [15:0] slab1_adr_rd;
   wire [15:0] slab2_adr_rd;
   wire [15:0] slab3_adr_rd;
   wire slab1_en_rd;
   wire slab2_en_rd;
   wire slab3_en_rd;
+  reg valid_slab1_data, valid_slab2_data, valid_slab3_data;
+  wire slab1_en_to_wr, slab2_en_to_wr, slab3_en_to_wr;
+  wire [15:0] slab1_adr_to_wr;
+  wire [15:0] slab2_adr_to_wr;
+  wire [15:0] slab3_adr_to_wr;
   //cycle 1 out/ last row slab rd from slab
   wire [15:0] last_row1_slab_2;
   wire [15:0] last_row2_slab_2;
@@ -286,11 +298,16 @@ module conv_activate_quantize_synth(
   wire [15:0] slab1_adr_wr;
   wire [15:0] slab2_adr_wr;
   wire [15:0] slab3_adr_wr;
+  // reg [15:0] slab1_adr_wr;
+  // reg [15:0] slab2_adr_wr;
+  // reg [15:0] slab3_adr_wr;
   wire [15:0] slab1_pixels_2_wr;
   wire [15:0] slab2_pixels_2_wr;
   wire [15:0] slab3_pixels_2_wr;
   wire slab1_en_wr, slab2_en_wr, slab3_en_wr;
-  //-------------------------------------------
+  // reg slab1_en_wr, slab2_en_wr, slab3_en_wr;
+  
+  //------------------------------------------------------
   //cycle 0 in/ rows wt info
   wire [511:0] input_word_buf_wr;
   wire input_word_buf_en_wr;
@@ -659,7 +676,7 @@ module conv_activate_quantize_synth(
       .last_conv_store(last_conv_store),
       .last_conv_compute(last_conv_compute)
   );
-//conv load input ctrl
+  //conv load input ctrl
   conv_load_input_controller cv_load_input_ctrl (
       .clk                                    (clk),
       .conv_load_input                        (conv_load_input),
@@ -723,7 +740,7 @@ module conv_activate_quantize_synth(
   assign input_word_load_info_fifo_en_rd = valid_load_input;
   assign input_word_buf_idx_wr           = (state_valid_load_input == 1) ? input_word_load_info_fifo_rd[16+:16] : 0;
   assign input_word_buf_adr_wr           = (state_valid_load_input == 1) ? input_word_load_info_fifo_rd[0+:16] : 0;
-//conv load weights ctrl
+  //conv load weights ctrl
   conv_load_weights_controller cv_load_weights_controller (
       .clk               (clk),
       .reset             ((reset == 1) || (conv_start == 1)),
@@ -740,8 +757,9 @@ module conv_activate_quantize_synth(
       .weights_word_buf_adr_wt(weights_word_buf_adr_wt),
       .conv_load_weights_fin  (conv_load_weights_fin)
   );
-//conv compute ctrl
-  conv_compute_controller cv_compute_controller (  //conv_router_v2 // conv_router_flat
+  //conv compute ctrl
+  //conv compute ctrl
+  conv_compute_controller_v2 cv_compute_controller (  //conv_router_v2 // conv_router_flat
       .clk                 (clk),
       .reset               ((reset == 1) || (conv_start == 1)),
       .conv_compute        (conv_compute),
@@ -852,7 +870,9 @@ module conv_activate_quantize_synth(
       store_pof      <= store_pof;
     end
   end
-//conv buffers mapping interface
+
+  //conv buffers mapping interface
+  //////////////////////////////////////////////////////////////
   conv_buffers_interface cv_buffers_interface (
       .reset                ((reset == 1) || (conv_start == 1)),
       .clk                  (clk),
@@ -949,6 +969,7 @@ module conv_activate_quantize_synth(
       .buf2_en_wr           (buf2_en_wr),
       .buf3_en_wr           (buf3_en_wr)
   );
+  /////////////////////////////////////////////////////////
 
   wire [3:0] state = 4'b0001;
   //last regs, state regs, to cache the info to wait for valid buffer data read

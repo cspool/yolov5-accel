@@ -179,7 +179,7 @@ module conv_buffers_interface (
   output [pixels_in_row * 8 - 1:0] last_row1_pixels_32;
   output [pixels_in_row * 8 - 1:0] last_row2_pixels_32;
   output [pixels_in_row * 8 - 1:0] last_row3_pixels_32;
-  //cycle 0 out/ slab rd ctrl
+  //cycle 0 out/ slab rd ctrl, and to wt
   output [15:0] slab1_adr_rd;
   output [15:0] slab2_adr_rd;
   output [15:0] slab3_adr_rd;
@@ -187,19 +187,19 @@ module conv_buffers_interface (
   output slab2_en_rd;
   output slab3_en_rd;
   reg valid_slab1_data, valid_slab2_data, valid_slab3_data;
+  wire slab1_en_to_wr, slab2_en_to_wr, slab3_en_to_wr;
+  wire [15:0] slab1_adr_to_wr;
+  wire [15:0] slab2_adr_to_wr;
+  wire [15:0] slab3_adr_to_wr;
   //cycle 1 out/ last row slab rd from slab
   output [15:0] last_row1_slab_2;
   output [15:0] last_row2_slab_2;
   output [15:0] last_row3_slab_2;
   //cycle 1 out/ slab wt ctrl
   output reg slab1_en_wr, slab2_en_wr, slab3_en_wr;
-  wire slab1_en_to_wr, slab2_en_to_wr, slab3_en_to_wr;
   output reg [15:0] slab1_adr_wr;
   output reg [15:0] slab2_adr_wr;
   output reg [15:0] slab3_adr_wr;
-  wire [15:0] slab1_adr_to_wr;
-  wire [15:0] slab2_adr_to_wr;
-  wire [15:0] slab3_adr_to_wr;
   output [15:0] slab1_pixels_2_wr;
   output [15:0] slab2_pixels_2_wr;
   output [15:0] slab3_pixels_2_wr;
