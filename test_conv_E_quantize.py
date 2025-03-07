@@ -35,12 +35,12 @@ def generate_conv_E_quantize_tests():
   #       for quantize_type in quantize_types:
   #          conv_test(conv_type, mode_type, quantize_type)
   
-  conv_type, mode_type, quantize_type = (2,1,0)
+  conv_type, mode_type, quantize_type = (0,0,0)
   conv_E_quantize_test(conv_type, mode_type, quantize_type)
 
 def conv_E_quantize_test(conv_type, mode_type, quantize_type):
-    # standard_conv_E_quantize(conv_type, mode_type, quantize_type)
-    fpga_conv_E_quantize(conv_type, mode_type, quantize_type)
+    standard_conv_E_quantize(conv_type, mode_type, quantize_type)
+    # fpga_conv_E_quantize(conv_type, mode_type, quantize_type)
 
 def standard_conv_E_quantize(conv_type, mode_type, quantize_type):
   # def basic conv op
@@ -54,12 +54,15 @@ def standard_conv_E_quantize(conv_type, mode_type, quantize_type):
   nif = 128
 
   # generate input and argument data 
-  generate_instr_args_init(mode, k, s, p, of, ox, oy, ix, iy, nif)
   weight_data, weights_ddr_words = generate_conv_weight_data(mode, of, nif, k)
   bias_data, bias_ddr_words = generate_conv_bias_data(mode, of)
   E_data, E_ddr_words = generate_conv_E_data(quantize_type, mode, of)
   scale_data, scale_ddr_words = generate_conv_scale_data(quantize_type, mode, of, k)
   input_data, input_ddr_word_array = generate_conv_input_data(nif, iy, ix)
+
+  input_base_adr = weights_ddr_words.shape[0] + bias_ddr_words.shape[0] + E_ddr_words.shape[0] + scale_ddr_words.shape[0]            
+  generate_instr_args_init(mode, k, s, p, of, ox, oy, ix, iy, nif, input_base_adr)
+
   generate_ddr_txt(mode, weights_ddr_words, bias_ddr_words, E_ddr_words, scale_ddr_words, input_ddr_word_array)
   generate_ddr_init(mode, weights_ddr_words, bias_ddr_words, E_ddr_words, scale_ddr_words, input_ddr_word_array)
   generate_weight_buf_txt(mode, weights_ddr_words)
@@ -717,7 +720,7 @@ def generate_scale_buf_init(scale_ddr_words):
           if scale_ddr_word_index < scale_ddr_word_len - 1:
               f.write('\n')
 
-def generate_instr_args_init(mode,k,s,p,of,ox,oy,ix,iy,nif):
+def generate_instr_args_init(mode,k,s,p,of,ox,oy,ix,iy,nif,input_base_adr):
   pixels_in_row = 32
   buffers_num = 3
   pixels_in_row_real = 32
@@ -753,18 +756,7 @@ def generate_instr_args_init(mode,k,s,p,of,ox,oy,ix,iy,nif):
   E_layer_base_buf_adr_rd_integer = 0
   scale_layer_base_buf_adr_rd_integer = 0
   weights_layer_base_ddr_adr_rd_integer = 0
-  input_ddr_layer_base_adr_integers_mapping_mode0 = {
-      1:264,
-      3:2312,
-      6:9224
-      } #xxxx
-  input_ddr_layer_base_adr_integers_mapping_mode1 = {
-      1:136,
-      3:1160,
-      6:4616
-      } #xxxx
-  input_ddr_layer_base_adr_integer = (input_ddr_layer_base_adr_integers_mapping_mode0[k]) if (mode == 0) \
-     else (input_ddr_layer_base_adr_integers_mapping_mode1[k]) #xxxxx
+  input_ddr_layer_base_adr_integer = input_base_adr
   output_ddr_layer_base_adr_integer = 0
   ix_index_num_real = math.ceil(ix_integer / pixels_in_row_real)
   iy_index_num_real = math.ceil(iy_integer)
