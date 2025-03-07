@@ -39,19 +39,19 @@ def generate_conv_E_quantize_tests():
   conv_E_quantize_test(conv_type, mode_type, quantize_type)
 
 def conv_E_quantize_test(conv_type, mode_type, quantize_type):
-    standard_conv_E_quantize(conv_type, mode_type, quantize_type)
-    # fpga_conv_E_quantize(conv_type, mode_type, quantize_type)
+    # standard_conv_E_quantize(conv_type, mode_type, quantize_type)
+    fpga_conv_E_quantize(conv_type, mode_type, quantize_type)
 
 def standard_conv_E_quantize(conv_type, mode_type, quantize_type):
   # def basic conv op
   mode = mode_type
   k,s,p = conv_type_mapping[conv_type]
-  of = 128
-  ox = 128
-  oy = 128
+  of = 64
+  ox = 64
+  oy = 64
   ix = ox if s == 1 else ox*2
   iy = oy if s == 1 else oy*2
-  nif = 128
+  nif = 4
 
   # generate input and argument data 
   weight_data, weights_ddr_words = generate_conv_weight_data(mode, of, nif, k)
@@ -155,12 +155,12 @@ def fpga_conv_E_quantize(conv_type, mode_type, quantize_type):
   # def basic conv op
   mode = mode_type
   k,s,p = conv_type_mapping[conv_type]
-  of = 128
-  ox = 128
-  oy = 128
+  of = 64
+  ox = 64
+  oy = 64
   ix = ox if s == 1 else ox*2
   iy = oy if s == 1 else oy*2
-  nif = 128
+  nif = 4
   #fpga conv results
   collect_result(of, oy, ox)
   #compare the fpga result with std conv
@@ -362,8 +362,8 @@ def generate_conv_E_data(quantize_type, mode, of):
 
 def generate_conv_scale_data(quantize_type, mode, of, k):
   # scale[F]
-  scale_scalar = (10+7 if (k == 1) else (13+7 if (k == 3) else 15+7)) if (mode == 0) \
-    else (3+7 if (k == 1) else (6+7 if (k == 3) else 8+7))
+  scale_scalar = (10 if (k == 1) else (13 if (k == 3) else 15)) if (mode == 0) \
+    else (3 if (k == 1) else (6 if (k == 3) else 8))
   # uint8 [0,256] scale_scalar
   scale_data = torch.randint(0, 256, size=(of,), dtype=torch.int) \
   if quantize_type == 2 else (torch.ones(of, dtype=torch.int) * torch.tensor([scale_scalar], dtype=int))

@@ -164,6 +164,7 @@ module conv_quantize_relu_scale_tb();
   wire conv_store;
   wire last_conv_store;
   wire last_conv_compute;
+  wire conv_fin;
   //DDR
   wire DDR_en;
   wire DDR_en_wr;
@@ -207,9 +208,15 @@ module conv_quantize_relu_scale_tb();
   wire [15:0] row3_slab_adr_to_wr;
   wire [1:0] row3_slab_idx_to_wr;
   wire valid_row1_adr, valid_row2_adr, valid_row3_adr;
-  wire conv_end;
+  wire com_control_end;
   wire conv_pixels_add_end;
   wire conv_nif_add_end;
+  //cv kernel
+  wire [15:0] if_start;
+  wire [15:0] row_base_in_3s;
+  wire valid_adr; 
+  wire [15:0] iy_start;
+  wire [15:0] ky;
   //conv_load_input_controller
   wire [15:0] load_input_row_idx;
   wire [15:0] load_input_row_start_idx;
@@ -678,7 +685,8 @@ module conv_quantize_relu_scale_tb();
       .conv_compute     (conv_compute),
       .conv_store       (conv_store),
       .last_conv_store(last_conv_store),
-      .last_conv_compute(last_conv_compute)
+      .last_conv_compute(last_conv_compute),
+      .conv_fin(conv_fin)
   );
 //conv load input ctrl
   conv_load_input_controller cv_load_input_ctrl (
@@ -762,7 +770,104 @@ module conv_quantize_relu_scale_tb();
       .conv_load_weights_fin  (conv_load_weights_fin)
   );
   //conv compute ctrl
-  conv_compute_controller_v2 cv_compute_controller (  //conv_router_v2 // conv_router_flat
+  // conv_compute_core_controller cv_compute_core1_controller (  //conv_router_v2 // conv_router_flat
+  //   .clk                 (clk),
+  //   .reset               ((reset == 1) || (conv_start == 1)),
+  //   .conv_compute        (conv_compute),
+  //   .mode_init           (mode),
+  //   .of_init             (of),
+  //   .ox_init             (ox),
+  //   .oy_init             (oy),
+  //   .ix_init             (ix),
+  //   .iy_init             (iy),
+  //   .nif_init            (nif),
+  //   .k_init              (k),
+  //   .s_init              (s),
+  //   .p_init              (p),
+  //   .nif_in_2pow_init    (nif_in_2pow),
+  //   .ix_in_2pow_init     (ix_in_2pow),
+  //   .ox_start            (ox_start),
+  //   .oy_start            (oy_start),
+  //   .of_start            (of_start),
+  //   .pox                 (pox),
+  //   .poy                 (poy),
+  //   .pof                 (pof),
+  //   .if_idx              (if_idx),
+  //   .west_pad            (west_pad),
+  //   .slab_num            (slab_num),
+  //   .east_pad            (east_pad),
+  //   .row1_idx            (row1_idx),
+  //   .row_start_idx       (row_start_idx),
+  //   .row_end_idx         (row_end_idx),
+  //   .reg_start_idx       (reg_start_idx),
+  //   .reg_end_idx         (reg_end_idx),
+  //   .row1_buf_adr        (row1_buf_adr),
+  //   .row1_buf_idx        (row1_buf_idx),
+  //   .row1_buf_word_select(row1_buf_word_select),
+  //   .row_slab_start_idx  (row_slab_start_idx),
+  //   .row1_slab_adr       (row1_slab_adr),
+  //   .row1_slab_idx       (row1_slab_idx),
+  //   .row1_slab_adr_to_wr(row1_slab_adr_to_wr),
+  //   .row1_slab_idx_to_wr(row1_slab_idx_to_wr),
+  //   .valid_row1_adr      (valid_row1_adr),
+  //   .com_control_end            (com_control_end),
+  //   .conv_pixels_add_end (conv_pixels_add_end),
+  //   .conv_nif_add_end    (conv_nif_add_end)
+  // );
+  // conv_compute_core2_controller cv_compute_core2_controller (  //conv_router_v2 // conv_router_flat
+  //   .clk                 (clk),
+  //   .reset               ((reset == 1) || (conv_start == 1)),
+  //   .conv_compute        (conv_compute),
+  //   .mode_init           (mode),
+  //   .of_init             (of),
+  //   .ox_init             (ox),
+  //   .oy_init             (oy),
+  //   .ix_init             (ix),
+  //   .iy_init             (iy),
+  //   .nif_init            (nif),
+  //   .k_init              (k),
+  //   .s_init              (s),
+  //   .p_init              (p),
+  //   .nif_in_2pow_init    (nif_in_2pow),
+  //   .ix_in_2pow_init     (ix_in_2pow),
+  //   .row2_idx            (row2_idx),
+  //   .row2_buf_adr        (row2_buf_adr),
+  //   .row2_buf_idx        (row2_buf_idx),
+  //   .row2_buf_word_select(row2_buf_word_select),
+  //   .row2_slab_adr       (row2_slab_adr),
+  //   .row2_slab_idx       (row2_slab_idx),
+  //   .row2_slab_adr_to_wr(row2_slab_adr_to_wr),
+  //   .row2_slab_idx_to_wr(row2_slab_idx_to_wr),
+  //   .valid_row2_adr      (valid_row2_adr)
+  // );
+  // conv_compute_core3_controller cv_compute_core3_controller (  //conv_router_v2 // conv_router_flat
+  //   .clk                 (clk),
+  //   .reset               ((reset == 1) || (conv_start == 1)),
+  //   .conv_compute        (conv_compute),
+  //   .mode_init           (mode),
+  //   .of_init             (of),
+  //   .ox_init             (ox),
+  //   .oy_init             (oy),
+  //   .ix_init             (ix),
+  //   .iy_init             (iy),
+  //   .nif_init            (nif),
+  //   .k_init              (k),
+  //   .s_init              (s),
+  //   .p_init              (p),
+  //   .nif_in_2pow_init    (nif_in_2pow),
+  //   .ix_in_2pow_init     (ix_in_2pow),
+  //   .row3_idx            (row3_idx),
+  //   .row3_buf_adr        (row3_buf_adr),
+  //   .row3_buf_idx        (row3_buf_idx),
+  //   .row3_buf_word_select(row3_buf_word_select),
+  //   .row3_slab_adr       (row3_slab_adr),
+  //   .row3_slab_idx       (row3_slab_idx),
+  //   .row3_slab_adr_to_wr(row3_slab_adr_to_wr),
+  //   .row3_slab_idx_to_wr(row3_slab_idx_to_wr),
+  //   .valid_row3_adr      (valid_row3_adr)
+  // );
+
+  conv_compute_kernel_controller cv_compute_kernel_controller(
       .clk                 (clk),
       .reset               ((reset == 1) || (conv_start == 1)),
       .conv_compute        (conv_compute),
@@ -788,42 +893,102 @@ module conv_quantize_relu_scale_tb();
       .west_pad            (west_pad),
       .slab_num            (slab_num),
       .east_pad            (east_pad),
-      .row1_idx            (row1_idx),
-      .row2_idx            (row2_idx),
-      .row3_idx            (row3_idx),
       .row_start_idx       (row_start_idx),
       .row_end_idx         (row_end_idx),
       .reg_start_idx       (reg_start_idx),
       .reg_end_idx         (reg_end_idx),
-      .row1_buf_adr        (row1_buf_adr),
-      .row1_buf_idx        (row1_buf_idx),
-      .row1_buf_word_select(row1_buf_word_select),
-      .row2_buf_adr        (row2_buf_adr),
-      .row2_buf_idx        (row2_buf_idx),
-      .row2_buf_word_select(row2_buf_word_select),
-      .row3_buf_adr        (row3_buf_adr),
-      .row3_buf_idx        (row3_buf_idx),
-      .row3_buf_word_select(row3_buf_word_select),
       .row_slab_start_idx  (row_slab_start_idx),
-      .row1_slab_adr       (row1_slab_adr),
-      .row1_slab_idx       (row1_slab_idx),
-      .row2_slab_adr       (row2_slab_adr),
-      .row2_slab_idx       (row2_slab_idx),
-      .row3_slab_adr       (row3_slab_adr),
-      .row3_slab_idx       (row3_slab_idx),
-      .row1_slab_adr_to_wr(row1_slab_adr_to_wr),
-      .row1_slab_idx_to_wr(row1_slab_idx_to_wr),
-      .row2_slab_adr_to_wr(row2_slab_adr_to_wr),
-      .row2_slab_idx_to_wr(row2_slab_idx_to_wr),
-      .row3_slab_adr_to_wr(row3_slab_adr_to_wr),
-      .row3_slab_idx_to_wr(row3_slab_idx_to_wr),
-      .valid_row1_adr      (valid_row1_adr),
-      .valid_row2_adr      (valid_row2_adr),
-      .valid_row3_adr      (valid_row3_adr),
-      .conv_end            (conv_end),
+      .valid_adr(valid_adr),
+      .iy_start(iy_start),
+      .ky(ky),
+      .if_start(if_start),
+      .row_base_in_3s(row_base_in_3s),
+      .com_control_end            (com_control_end),
       .conv_pixels_add_end (conv_pixels_add_end),
       .conv_nif_add_end    (conv_nif_add_end)
   );
+
+  conv_compute_shell1_controller cv_compute_shell1_controller(
+    .s(s),
+    .p(p),
+    .iy(iy),
+    .nif_in_2pow(nif_in_2pow),
+    .ix_in_2pow(ix_in_2pow),
+    .poy(poy),
+    .valid_adr(valid_adr),
+    .iy_start(iy_start),
+    .ky(ky),
+    .row_base_in_3s(row_base_in_3s),
+    .row_start_idx(row_start_idx),
+    .if_start(if_start),
+    .slab_num(slab_num),
+    .row_slab_start_idx(row_slab_start_idx),
+
+    .row1_idx            (row1_idx),
+    .row1_buf_adr        (row1_buf_adr),
+    .row1_buf_idx        (row1_buf_idx),
+    .row1_buf_word_select(row1_buf_word_select),
+    .row1_slab_adr       (row1_slab_adr),
+    .row1_slab_idx       (row1_slab_idx),
+    .row1_slab_adr_to_wr(row1_slab_adr_to_wr),
+    .row1_slab_idx_to_wr(row1_slab_idx_to_wr),
+    .valid_row1_adr      (valid_row1_adr)
+  );
+
+  conv_compute_shell2_controller cv_compute_shell2_controller(
+    .s(s),
+    .p(p),
+    .iy(iy),
+    .nif_in_2pow(nif_in_2pow),
+    .ix_in_2pow(ix_in_2pow),
+    .poy(poy),
+    .valid_adr(valid_adr),
+    .iy_start(iy_start),
+    .ky(ky),
+    .row_base_in_3s(row_base_in_3s),
+    .row_start_idx(row_start_idx),
+    .if_start(if_start),
+    .slab_num(slab_num),
+    .row_slab_start_idx(row_slab_start_idx),
+
+    .row2_idx            (row2_idx),
+    .row2_buf_adr        (row2_buf_adr),
+    .row2_buf_idx        (row2_buf_idx),
+    .row2_buf_word_select(row2_buf_word_select),
+    .row2_slab_adr       (row2_slab_adr),
+    .row2_slab_idx       (row2_slab_idx),
+    .row2_slab_adr_to_wr(row2_slab_adr_to_wr),
+    .row2_slab_idx_to_wr(row2_slab_idx_to_wr),
+    .valid_row2_adr      (valid_row2_adr)
+  );
+
+  conv_compute_shell3_controller cv_compute_shell3_controller(
+    .s(s),
+    .p(p),
+    .iy(iy),
+    .nif_in_2pow(nif_in_2pow),
+    .ix_in_2pow(ix_in_2pow),
+    .poy(poy),
+    .valid_adr(valid_adr),
+    .iy_start(iy_start),
+    .ky(ky),
+    .row_base_in_3s(row_base_in_3s),
+    .row_start_idx(row_start_idx),
+    .if_start(if_start),
+    .slab_num(slab_num),
+    .row_slab_start_idx(row_slab_start_idx),
+
+    .row3_idx            (row3_idx),
+    .row3_buf_adr        (row3_buf_adr),
+    .row3_buf_idx        (row3_buf_idx),
+    .row3_buf_word_select(row3_buf_word_select),
+    .row3_slab_adr       (row3_slab_adr),
+    .row3_slab_idx       (row3_slab_idx),
+    .row3_slab_adr_to_wr(row3_slab_adr_to_wr),
+    .row3_slab_idx_to_wr(row3_slab_idx_to_wr),
+    .valid_row3_adr      (valid_row3_adr)
+  );
+
   //store chunk index
   always @(posedge clk) begin
     if (reset == 1'b1) begin
@@ -1442,7 +1607,7 @@ module conv_quantize_relu_scale_tb();
   assign last_scale_word = scale_buf_rd;
 
   //computation core
-  genvar i, j;
+  genvar i, j, m;
   generate
     for (i = 1; i <= sa_column_num; i = i + 1) begin : delay_regs_column  //poy, rows
       Delay_Regs_Pixels delay_regs_pixels (
@@ -1503,14 +1668,57 @@ module conv_quantize_relu_scale_tb();
         );
 
         assign extra_sa_vector_Ps[i-1][j-1] = (product_add_bias_en == 1'b1) ? sa_row0_outs[i-1][j-1] : 0;
-        sum_mult_E_vecOp sum_mult_E_vecOp(
-            .clk(clk),
-            .mode(mode),
-            .E_set(E_4_channel_sets[(j-1)*E_set_width+:E_set_width]),
-            .sum_vector(out_rowi_channel_seti[i-1][j-1]),
-            .sum_vector_in_mult_A_width(sum_vector_in_mult_A_width_rowi_channel_setj[i-1][j-1]),
-            .E_vector_in_mult_B_width(E_vector_in_mult_B_width_rowi_channel_setj[i-1][j-1])
-        );
+        // sum_mult_E_vecOp sum_mult_E_vecOp(
+        //     .clk(clk),
+        //     .mode(mode),
+        //     .E_set(E_4_channel_sets[(j-1)*E_set_width+:E_set_width]),
+        //     .sum_vector(out_rowi_channel_seti[i-1][j-1]),
+        //     .sum_vector_in_mult_A_width(sum_vector_in_mult_A_width_rowi_channel_setj[i-1][j-1]),
+        //     .E_vector_in_mult_B_width(E_vector_in_mult_B_width_rowi_channel_setj[i-1][j-1])
+        // );
+        //sum mult E vecOp////////////////////////////////////////
+        //cycle 0
+        //sum_vector * E in mult_array outside
+        // sum_vector_in_24[24 * pe_parallel_pixel_88 * column_num -1 : 0]
+        //24 bit * 32 pixels * 1 channel or 16 bit * 32 pixels * 2 channel
+        for (m = 0; m < pe_parallel_pixel_88 * column_num_in_sa; m = m + 1) begin
+          assign sum_vector_in_mult_A_width_rowi_channel_setj[i-1][j-1][m*mult_A_width+:mult_A_width] =
+              // 0{sign},sum_88
+              (mode == 0) ? out_rowi_channel_seti[i-1][j-1][m*pixel_width_88+:pixel_width_88] :
+              // 8{sign},sum_18_1
+              (mode == 1) ? {{8{out_rowi_channel_seti[i-1][j-1][m*pixel_width_18+pixel_width_18-1]}},
+              //sum
+              out_rowi_channel_seti[i-1][j-1][m*pixel_width_18+:pixel_width_18]} : 0;
+        end
+        // sum_vector_in_24[sum_vector_in_24_width-1 : 24 * pe_parallel_pixel_18 * column_num]
+        for (m = 0; m < pe_parallel_pixel_18 * column_num_in_sa; m = m + 1) begin
+          assign sum_vector_in_mult_A_width_rowi_channel_setj[i-1][j-1][(pe_parallel_pixel_18*column_num_in_sa+m)*mult_A_width+:mult_A_width] =
+              // 8{sign},sum_18_2
+              (mode == 1) ? {{8{out_rowi_channel_seti[i-1][j-1][sum_vector_width_18_2+m*pixel_width_18+pixel_width_18-1]}},
+              // sum_18_2
+              out_rowi_channel_seti[i-1][j-1][sum_vector_width_18_2+m*pixel_width_18+:pixel_width_18]} : 0;
+        end
+
+        // E_vector_in_16[16 * pe_parallel_pixel_18 * column_num -1 : 0]
+        //16 bit * 32 pixels * 2 channel
+        for (m = 0; m < pe_parallel_pixel_88 * column_num_in_sa; m = m + 1) begin
+          assign E_vector_in_mult_B_width_rowi_channel_setj[i-1][j-1][m*mult_B_width+:mult_B_width] =
+              //{0,E}; E_88 equals E_18_1
+              {
+                {(mult_B_width - E_width) {1'b0}},
+                // E_4_channel_sets[(j-1)*E_set_width+:E_set_width][E_width-1 : 0]
+                E_4_channel_sets[(j-1)*E_set_width+:E_width]
+              };
+        end
+        // E_vector_in_16[E_vector_in_16_width-1 : 16 * pe_parallel_pixel_18 * column_num]
+        for (m = 0; m < pe_parallel_pixel_18 * column_num_in_sa; m = m + 1) begin
+          assign E_vector_in_mult_B_width_rowi_channel_setj[i-1][j-1][(pe_parallel_pixel_18*column_num_in_sa+m)*mult_B_width+:mult_B_width] =
+              //{0,E}
+              (mode == 1) ? {{(mult_B_width - E_width) {1'b0}}, 
+              // E_4_channel_sets[(j-1)*E_set_width+:E_set_width][E_set_width-1 : E_width]} : 0;
+              E_4_channel_sets[((j-1)*E_set_width+E_width)+:E_width]} : 0;
+        end
+        //////////////////////////////////////////////////////////
         //1-48 -> mult_array[1,48]; 49-64 -> sa_row0; [1, 64] = add_bias_row_in_mult_A_width_width
         assign sum_mult_E_vector_A
         //mult array
@@ -1657,6 +1865,12 @@ module conv_quantize_relu_scale_tb();
     clk <= ~clk;
   end
 
+  always @(posedge clk) begin
+    if (conv_fin == 1) begin
+      $stop;
+    end
+  end
+
   integer file; 
   integer file01, file02, file03, file04, file05, file06;
   integer file11, file12, file13, file14, file15, file16;
@@ -1749,9 +1963,6 @@ module conv_quantize_relu_scale_tb();
     #10;
     start = 0;
 
-    // #1316134912;
-    // $fclose(file); // 关闭文件
-    // $stop; // 停止仿真
   end
 
 endmodule

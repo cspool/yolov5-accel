@@ -35,7 +35,8 @@ module conv_controller (
     conv_compute,
     conv_store,
     last_conv_store,
-    last_conv_compute
+    last_conv_compute,
+    conv_fin
 );
   input clk, reset;
   input [31:0] N_chunks;
@@ -51,6 +52,7 @@ module conv_controller (
   output reg conv_store;
   output last_conv_store;
   output last_conv_compute;
+  output conv_fin;
 
   wire conv_load_weights_en;
   wire conv_load_input_en;
@@ -426,4 +428,6 @@ module conv_controller (
           ));
   assign last_conv_store = (ns == N_chunks) && (conv_store == 1'b1);
   assign last_conv_compute = (nc == N_chunks) && (conv_compute == 1'b1);
+
+  assign conv_fin = (ns == N_chunks) && (conv_store_fin == 1'b1);
 endmodule

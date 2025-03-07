@@ -162,6 +162,7 @@ module conv_activate_quantify_tb ();
   wire conv_store;
   wire last_conv_store;
   wire last_conv_compute;
+  wire conv_fin;
   //DDR
   wire DDR_en;
   wire DDR_en_wr;
@@ -631,7 +632,8 @@ module conv_activate_quantify_tb ();
       .conv_compute     (conv_compute),
       .conv_store       (conv_store),
       .last_conv_store(last_conv_store),
-      .last_conv_compute(last_conv_compute)
+      .last_conv_compute(last_conv_compute),
+      .conv_fin(conv_fin)
   );
 //conv load input ctrl
   conv_load_input_controller cv_load_input_ctrl (
@@ -1607,6 +1609,12 @@ module conv_activate_quantify_tb ();
     clk <= ~clk;
   end
 
+  always @(posedge clk) begin
+    if (conv_fin == 1) begin
+      $stop;
+    end
+  end
+
   integer file; 
   integer file01, file02, file03, file04, file05, file06;
   integer file11, file12, file13, file14, file15, file16;
@@ -1699,9 +1707,7 @@ module conv_activate_quantify_tb ();
     #10;
     conv_decode = 0;
 
-    // #1316134912;
-    // $fclose(file); // 关闭文件
-    // $stop; // 停止仿真
+    
   end
 
 endmodule

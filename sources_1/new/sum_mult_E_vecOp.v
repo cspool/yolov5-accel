@@ -90,72 +90,82 @@ module sum_mult_E_vecOp (
   assign E_18_1          = E_88;
   assign E_18_2          = E_set[E_set_width-1 : E_width];
 
-  genvar i;
+  genvar m;
   //cycle 0
   //sum_vector * E in mult_array outside
   generate
     // sum_vector_in_24[24 * pe_parallel_pixel_88 * column_num -1 : 0]
     //24 bit * 32 pixels * 1 channel or 16 bit * 32 pixels * 2 channel
-    for (i = 0; i < pe_parallel_pixel_88 * column_num_in_sa; i = i + 1) begin
-      assign sum_vector_in_mult_A_width[i*mult_A_width+:mult_A_width] =
+    for (m = 0; m < pe_parallel_pixel_88 * column_num_in_sa; m = m + 1) begin
+      assign sum_vector_in_mult_A_width[m*mult_A_width+:mult_A_width] =
           // 0{sign},sum_88
-          (mode == 0) ? sum_vector_88[i*pixel_width_88+:pixel_width_88] :
+          // (mode == 0) ? sum_vector_88[m*pixel_width_88+:pixel_width_88] :
+          (mode == 0) ? sum_vector[m*pixel_width_88+:pixel_width_88] :
           // 8{sign},sum_18_1
-          (mode == 1) ? {{8{sum_vector_18_1[i*pixel_width_18+pixel_width_18-1]}},
+          // (mode == 1) ? {{8{sum_vector_18_1[m*pixel_width_18+pixel_width_18-1]}},
+          // //sum
+          // sum_vector_18_1[m*pixel_width_18+:pixel_width_18]} : 0;
+          (mode == 1) ? {{8{sum_vector[m*pixel_width_18+pixel_width_18-1]}},
           //sum
-          sum_vector_18_1[i*pixel_width_18+:pixel_width_18]} : 0;
+          sum_vector[m*pixel_width_18+:pixel_width_18]} : 0;
     end
     // sum_vector_in_24[sum_vector_in_24_width-1 : 24 * pe_parallel_pixel_18 * column_num]
-    for (i = 0; i < pe_parallel_pixel_18 * column_num_in_sa; i = i + 1) begin
-      assign sum_vector_in_mult_A_width[(pe_parallel_pixel_18*column_num_in_sa+i)*mult_A_width+:mult_A_width] =
+    for (m = 0; m < pe_parallel_pixel_18 * column_num_in_sa; m = m + 1) begin
+      assign sum_vector_in_mult_A_width[(pe_parallel_pixel_18*column_num_in_sa+m)*mult_A_width+:mult_A_width] =
           // 8{sign},sum_18_2
-          (mode == 1) ? {{8{sum_vector_18_2[i*pixel_width_18+pixel_width_18-1]}},
+          // (mode == 1) ? {{8{sum_vector_18_2[m*pixel_width_18+pixel_width_18-1]}},
+          // // sum_18_2
+          // sum_vector_18_2[m*pixel_width_18+:pixel_width_18]} : 0;
+          (mode == 1) ? {{8{sum_vector[sum_vector_width_18_2+m*pixel_width_18+pixel_width_18-1]}},
           // sum_18_2
-          sum_vector_18_2[i*pixel_width_18+:pixel_width_18]} : 0;
+          sum_vector[sum_vector_width_18_2+m*pixel_width_18+:pixel_width_18]} : 0;
     end
 
     // E_vector_in_16[16 * pe_parallel_pixel_18 * column_num -1 : 0]
     //16 bit * 32 pixels * 2 channel
-    for (i = 0; i < pe_parallel_pixel_88 * column_num_in_sa; i = i + 1) begin
-      assign E_vector_in_mult_B_width[i*mult_B_width+:mult_B_width] =
+    for (m = 0; m < pe_parallel_pixel_88 * column_num_in_sa; m = m + 1) begin
+      assign E_vector_in_mult_B_width[m*mult_B_width+:mult_B_width] =
           //{0,E}; E_88 equals E_18_1
           {
-            {(mult_B_width - E_width) {1'b0}}, E_88
+            // {(mult_B_width - E_width) {1'b0}}, E_88
+            {(mult_B_width - E_width) {1'b0}},
+            E_set[E_width-1 : 0]
           };
     end
     // E_vector_in_16[E_vector_in_16_width-1 : 16 * pe_parallel_pixel_18 * column_num]
-    for (i = 0; i < pe_parallel_pixel_18 * column_num_in_sa; i = i + 1) begin
-      assign E_vector_in_mult_B_width[(pe_parallel_pixel_18*column_num_in_sa+i)*mult_B_width+:mult_B_width] =
+    for (m = 0; m < pe_parallel_pixel_18 * column_num_in_sa; m = m + 1) begin
+      assign E_vector_in_mult_B_width[(pe_parallel_pixel_18*column_num_in_sa+m)*mult_B_width+:mult_B_width] =
           //{0,E}
-          (mode == 1) ? {{(mult_B_width - E_width) {1'b0}}, E_18_2} : 0;
+          // (mode == 1) ? {{(mult_B_width - E_width) {1'b0}}, E_18_2} : 0;
+          (mode == 1) ? {{(mult_B_width - E_width) {1'b0}}, E_set[E_set_width-1 : E_width]} : 0;
     end
 
     // //minus sum vector
     // // sum_vector_in_24[24 * pe_parallel_pixel_18 * pe_parallel_weight_18 * column_num -1 : 0]
     // // 24 bit * 32 pixels * 2 channel
-    // for (i = 0; i < pe_parallel_pixel_18 * pe_parallel_weight_18 * column_num_in_sa; i = i + 1) begin
-    //   assign minus_sum_vector_in_mult_A_width[i*mult_A_width+:mult_A_width] =
+    // for (m = 0; m < pe_parallel_pixel_18 * pe_parallel_weight_18 * column_num_in_sa; m = m + 1) begin
+    //   assign minus_sum_vector_in_mult_A_width[m*mult_A_width+:mult_A_width] =
     //       //sum >= 0
-    //       (sum_vector_in_mult_A_width[i*mult_A_width+mult_A_width-1] == 0) ?
+    //       (sum_vector_in_mult_A_width[m*mult_A_width+mult_A_width-1] == 0) ?
     //       //sum
-    //       (sum_vector_in_mult_A_width[i*mult_A_width+:mult_A_width]) :
+    //       (sum_vector_in_mult_A_width[m*mult_A_width+:mult_A_width]) :
     //       //-sum > 0
     //       ({(mult_A_width) {1'b0}} -
     //       //-sum
-    //       sum_vector_in_mult_A_width[i*mult_A_width+:mult_A_width]);
+    //       sum_vector_in_mult_A_width[m*mult_A_width+:mult_A_width]);
     // end
 
     // // E_vector_in_16[16 * pe_parallel_pixel_18 * pe_parallel_weight_18 * column_num -1 : 0]
-    // for (i = 0; i < pe_parallel_pixel_18 * pe_parallel_weight_18 * column_num_in_sa; i = i + 1) begin
-    //   assign minus_E_vector_in_mult_B_width[i*mult_B_width+:mult_B_width] =
+    // for (m = 0; m < pe_parallel_pixel_18 * pe_parallel_weight_18 * column_num_in_sa; m = m + 1) begin
+    //   assign minus_E_vector_in_mult_B_width[m*mult_B_width+:mult_B_width] =
     //       //sum >= 0
-    //       (sum_vector_in_mult_A_width[i*mult_A_width+mult_A_width-1] == 0) ?
+    //       (sum_vector_in_mult_A_width[m*mult_A_width+mult_A_width-1] == 0) ?
     //       //E
-    //       (E_vector_in_mult_B_width[i*mult_B_width+:mult_B_width]) :
+    //       (E_vector_in_mult_B_width[m*mult_B_width+:mult_B_width]) :
     //       //-sum > 0
     //       ({(mult_B_width) {1'b0}} -
     //       //-E
-    //       E_vector_in_mult_B_width[i*mult_B_width+:mult_B_width]);
+    //       E_vector_in_mult_B_width[m*mult_B_width+:mult_B_width]);
     // end
   endgenerate
 
