@@ -35,7 +35,7 @@ def generate_conv_E_quantize_tests():
   #       for quantize_type in quantize_types:
   #          conv_test(conv_type, mode_type, quantize_type)
   
-  conv_type, mode_type, quantize_type = (0,0,0)
+  conv_type, mode_type, quantize_type = (2,1,0)
   conv_E_quantize_test(conv_type, mode_type, quantize_type)
 
 def conv_E_quantize_test(conv_type, mode_type, quantize_type):
@@ -51,7 +51,7 @@ def standard_conv_E_quantize(conv_type, mode_type, quantize_type):
   oy = 64
   ix = ox if s == 1 else ox*2
   iy = oy if s == 1 else oy*2
-  nif = 4
+  nif = 128
 
   # generate input and argument data 
   weight_data, weights_ddr_words = generate_conv_weight_data(mode, of, nif, k)
@@ -331,7 +331,7 @@ def generate_conv_bias_data(mode, of):
 
 def generate_conv_E_data(quantize_type, mode, of):
   # E[F]
-  # uint16 [0,256*256-1]
+  # uint8 [0,256-1]
   # 1
   E_data = (torch.ones(of, dtype=torch.int) * (torch.tensor([2], dtype=int))) \
     if ((quantize_type == 0) or (mode == 0)) else torch.randint(0, 256, size=(of,), dtype=torch.int)
