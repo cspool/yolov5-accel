@@ -120,8 +120,19 @@ module conv_quantize_relu_scale_tb();
 
   reg clk, reset;
   //DDR MIG
-  reg  ddr_en;
+  reg ddr_en;
   reg start; //top start
+  always@(posedge clk) begin
+      if (reset) begin
+          start <= 1;
+      end
+      else if (start == 1) begin
+          start <= 0;
+      end
+      else begin
+          start <= start;
+      end
+  end
   //conv decoder
   reg  conv_decode;
   reg [511:0] conv_instr_args;
@@ -240,17 +251,17 @@ module conv_quantize_relu_scale_tb();
   wire [pixels_in_row * 8 - 1:0] buf1_pixels_32;
   wire [pixels_in_row * 8 - 1:0] buf2_pixels_32;
   wire [pixels_in_row * 8 - 1:0] buf3_pixels_32;
-  wire [pixels_in_row * 8 - 1:0] buf1_data;
-  wire [pixels_in_row * 8 - 1:0] buf2_data;
-  wire [pixels_in_row * 8 - 1:0] buf3_data;
+  // wire [pixels_in_row * 8 - 1:0] buf1_data;
+  // wire [pixels_in_row * 8 - 1:0] buf2_data;
+  // wire [pixels_in_row * 8 - 1:0] buf3_data;
   //cycle 0 in/ slab rows rd info
   //cycle 1 in/ slab data rd from slab
   wire [15:0] slab1_pixels_2;
   wire [15:0] slab2_pixels_2;
   wire [15:0] slab3_pixels_2;
-  wire [15:0] slab1_data;
-  wire [15:0] slab2_data;
-  wire [15:0] slab3_data;
+  // wire [15:0] slab1_data;
+  // wire [15:0] slab2_data;
+  // wire [15:0] slab3_data;
   //cycle 0 in/ valid row adr
   //cycle 0 out/ buffer rd ctrl
   wire [15:0] buf1_adr_rd;
@@ -262,7 +273,7 @@ module conv_quantize_relu_scale_tb();
   wire buf1_en_rd;
   wire buf2_en_rd;
   wire buf3_en_rd;
-  reg valid_buf1_data, valid_buf2_data, valid_buf3_data;
+  // reg valid_buf1_data, valid_buf2_data, valid_buf3_data;
   //cycle 1 out/ last row data rd from buffer
   wire [pixels_in_row * 8 - 1:0] last_row1_pixels_32;
   wire [pixels_in_row * 8 - 1:0] last_row2_pixels_32;
@@ -275,10 +286,10 @@ module conv_quantize_relu_scale_tb();
   wire slab2_en_rd;
   wire slab3_en_rd;
   reg valid_slab1_data, valid_slab2_data, valid_slab3_data;
-  wire slab1_en_to_wr, slab2_en_to_wr, slab3_en_to_wr;
-  wire [15:0] slab1_adr_to_wr;
-  wire [15:0] slab2_adr_to_wr;
-  wire [15:0] slab3_adr_to_wr;
+  // wire slab1_en_to_wr, slab2_en_to_wr, slab3_en_to_wr;
+  // wire [15:0] slab1_adr_to_wr;
+  // wire [15:0] slab2_adr_to_wr;
+  // wire [15:0] slab3_adr_to_wr;
   //cycle 1 out/ last row slab rd from slab
   wire [15:0] last_row1_slab_2;
   wire [15:0] last_row2_slab_2;
@@ -509,9 +520,11 @@ module conv_quantize_relu_scale_tb();
   //cycle 0 out
   wire [sa_row_num * sa_column_num-1:0] fifo_rds;
   //cycle 1 out
-  wire [31:0] conv_out_ddr_adr;
-  wire [3:0] fifo_column_no, fifo_row_no;
   wire valid_conv_out_ddr_adr;
+  wire [31:0] conv_out_ddr_adr;
+  wire [511:0] conv_out_ddr_data;
+  wire [3:0] fifo_column_no, fifo_row_no;
+  wire valid_conv_out;
   wire [15:0] out_y_idx, out_x_idx, out_f_idx;
   wire conv_fifo_out_tile_add_end;
   wire [out_data_width-1 : 0] conv_out_data;
@@ -576,13 +589,21 @@ module conv_quantize_relu_scale_tb();
       DDR_mem_out <= DDR_mem_out;
     end
   end
-  assign DDR_en          = ((input_word_ddr_en_rd == 1'b1) || (weights_word_ddr_en_rd == 1'b1)) ? 1'b1 : 1'b0;
-  assign DDR_en_wr       = 0;
+  // assign DDR_en          = ((input_word_ddr_en_rd == 1'b1) || (weights_word_ddr_en_rd == 1'b1)) ? 1'b1 : 1'b0;
+  // assign DDR_en_wr       = 0;
+  // assign DDR_adr         = (input_word_ddr_en_rd == 1)? input_word_ddr_adr_rd :
+  //  (weights_word_ddr_en_rd == 1)? weights_word_ddr_adr_rd : 0;
+  // assign DDR_in          = 0;
+  // assign load_input_word = (valid_load_input == 1'b1) ? DDR_mem_out : 0;
+  // assign weights_word_buf_wt = (valid_load_weights == 1'b1) ? DDR_mem_out : 0;
+  assign DDR_en          = ((input_word_ddr_en_rd == 1'b1) || (weights_word_ddr_en_rd == 1'b1) || (valid_conv_out_ddr_adr == 1'b1)) ? 1'b1 : 1'b0;
+  assign DDR_en_wr       = (valid_conv_out_ddr_adr == 1'b1)? 1 : 0;
   assign DDR_adr         = (input_word_ddr_en_rd == 1)? input_word_ddr_adr_rd :
-   (weights_word_ddr_en_rd == 1)? weights_word_ddr_adr_rd : 0;
-  assign DDR_in          = 0;
-  assign load_input_word = (valid_load_input == 1'b1) ? DDR_mem_out : 0;
-  assign weights_word_buf_wt = (valid_load_weights == 1'b1) ? DDR_mem_out : 0;
+   (weights_word_ddr_en_rd == 1)? weights_word_ddr_adr_rd : 
+   (valid_conv_out_ddr_adr == 1)? conv_out_ddr_adr : 0;
+  assign DDR_in          = (valid_conv_out_ddr_adr == 1)? conv_out_ddr_data : 512'b0;
+  assign load_input_word = (valid_load_input == 1'b1) ? DDR_mem_out : 512'b0;
+  assign weights_word_buf_wt = (valid_load_weights == 1'b1) ? DDR_mem_out : 512'b0;
 
   //DDR input load
   always @(posedge clk) begin
@@ -1847,15 +1868,17 @@ module conv_quantize_relu_scale_tb();
       //cycle 1 in
       .fifo_data                 (fifo_data),
       //cycle 1 out
-      .conv_out_ddr_adr(conv_out_ddr_adr),
       .fifo_column_no            (fifo_column_no),
       .fifo_row_no               (fifo_row_no),
-      .valid_conv_out_ddr_adr    (valid_conv_out_ddr_adr),
+      .valid_conv_out    (valid_conv_out),
       .out_y_idx                 (out_y_idx),
       .out_x_idx                 (out_x_idx),
       .out_f_idx                 (out_f_idx),
       .conv_out_data             (conv_out_data),
-      .conv_fifo_out_tile_add_end(conv_fifo_out_tile_add_end)
+      .conv_fifo_out_tile_add_end(conv_fifo_out_tile_add_end),
+      .valid_conv_out_ddr_adr(valid_conv_out_ddr_adr),
+      .conv_out_ddr_adr(conv_out_ddr_adr),
+      .conv_out_ddr_data(conv_out_ddr_data)
   );
   assign fifo_data      = fifo_rowi_channel_seti_dout[fifo_column_no][fifo_row_no];
   assign conv_store_fin = conv_fifo_out_tile_add_end;  //demo store ctrl
@@ -1910,7 +1933,7 @@ module conv_quantize_relu_scale_tb();
     // 写入文件
     $fdisplay(file, "Time\tvalid\tout_f_idx\tout_y_idx\tout_x_idx\tresult_word");
     // 监控信号变化并写入
-    $fmonitor(file, "%t\t%b\t%d\t%d\t%d\t%h", $time, valid_conv_out_ddr_adr, out_f_idx, out_y_idx, out_x_idx, conv_out_data);
+    $fmonitor(file, "%t\t%b\t%d\t%d\t%d\t%h", $time, valid_conv_out, out_f_idx, out_y_idx, out_x_idx, conv_out_data);
 
     // collect product add bias file
     file01 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_00.txt", "w");
@@ -1958,10 +1981,6 @@ module conv_quantize_relu_scale_tb();
 
     #10;
     reset       = 0;
-    start = 1;
-
-    #10;
-    start = 0;
 
   end
 
