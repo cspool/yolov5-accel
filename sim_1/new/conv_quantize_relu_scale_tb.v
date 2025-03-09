@@ -285,7 +285,7 @@ module conv_quantize_relu_scale_tb();
   wire slab1_en_rd;
   wire slab2_en_rd;
   wire slab3_en_rd;
-  reg valid_slab1_data, valid_slab2_data, valid_slab3_data;
+  // reg valid_slab1_data, valid_slab2_data, valid_slab3_data;
   // wire slab1_en_to_wr, slab2_en_to_wr, slab3_en_to_wr;
   // wire [15:0] slab1_adr_to_wr;
   // wire [15:0] slab2_adr_to_wr;

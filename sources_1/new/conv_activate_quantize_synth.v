@@ -267,17 +267,17 @@ module conv_activate_quantize_synth(
   wire [pixels_in_row * 8 - 1:0] buf1_pixels_32;
   wire [pixels_in_row * 8 - 1:0] buf2_pixels_32;
   wire [pixels_in_row * 8 - 1:0] buf3_pixels_32;
-  wire [pixels_in_row * 8 - 1:0] buf1_data;
-  wire [pixels_in_row * 8 - 1:0] buf2_data;
-  wire [pixels_in_row * 8 - 1:0] buf3_data;
+  // wire [pixels_in_row * 8 - 1:0] buf1_data;
+  // wire [pixels_in_row * 8 - 1:0] buf2_data;
+  // wire [pixels_in_row * 8 - 1:0] buf3_data;
   //cycle 0 in/ slab rows rd info
   //cycle 1 in/ slab data rd from slab
   wire [15:0] slab1_pixels_2;
   wire [15:0] slab2_pixels_2;
   wire [15:0] slab3_pixels_2;
-  wire [15:0] slab1_data;
-  wire [15:0] slab2_data;
-  wire [15:0] slab3_data;
+  // wire [15:0] slab1_data;
+  // wire [15:0] slab2_data;
+  // wire [15:0] slab3_data;
   //cycle 0 in/ valid row adr
   //cycle 0 out/ buffer rd ctrl
   wire [15:0] buf1_adr_rd;
@@ -289,7 +289,7 @@ module conv_activate_quantize_synth(
   wire buf1_en_rd;
   wire buf2_en_rd;
   wire buf3_en_rd;
-  reg valid_buf1_data, valid_buf2_data, valid_buf3_data;
+  // reg valid_buf1_data, valid_buf2_data, valid_buf3_data;
   //cycle 1 out/ last row data rd from buffer
   wire [pixels_in_row * 8 - 1:0] last_row1_pixels_32;
   wire [pixels_in_row * 8 - 1:0] last_row2_pixels_32;
@@ -301,11 +301,11 @@ module conv_activate_quantize_synth(
   wire slab1_en_rd;
   wire slab2_en_rd;
   wire slab3_en_rd;
-  reg valid_slab1_data, valid_slab2_data, valid_slab3_data;
-  wire slab1_en_to_wr, slab2_en_to_wr, slab3_en_to_wr;
-  wire [15:0] slab1_adr_to_wr;
-  wire [15:0] slab2_adr_to_wr;
-  wire [15:0] slab3_adr_to_wr;
+  // reg valid_slab1_data, valid_slab2_data, valid_slab3_data;
+  // wire slab1_en_to_wr, slab2_en_to_wr, slab3_en_to_wr;
+  // wire [15:0] slab1_adr_to_wr;
+  // wire [15:0] slab2_adr_to_wr;
+  // wire [15:0] slab3_adr_to_wr;
   //cycle 1 out/ last row slab rd from slab
   wire [15:0] last_row1_slab_2;
   wire [15:0] last_row2_slab_2;
