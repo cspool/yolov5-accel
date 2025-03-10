@@ -3,9 +3,9 @@
 // Company: 
 // Engineer: 
 // 
-// Create Date: 09/05/2024 04:03:16 PM
+// Create Date: 2025/03/10 10:50:24
 // Design Name: 
-// Module Name: Mult_Array
+// Module Name: Mult_Array_hete
 // Project Name: 
 // Target Devices: 
 // Tool Versions: 
@@ -20,7 +20,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module Mult_Array (
+module Mult_Array_hete (
     clk,
     en,
     vector_A,
@@ -88,30 +88,30 @@ module Mult_Array (
       //   .P(vector_P[((mult_dsp_array_length + i) * mult_P_width) +: mult_P_width])      // output wire [39 : 0] P
       // );
       // sum s24 * E s18
-      mult_lut_s24_s18 mult_lut_s24_s18 (
-          .CLK(clk),                                                                                                                                                                        // input wire CLK
-          .CE (en),
-          .A  (vector_A[((mult_dsp_array_length+i)*mult_A_width)+:mult_A_width]),                                                                                                           // input wire [23 : 0] A
-          .B  ({{(18 - mult_B_width) {vector_B[((mult_dsp_array_length+i)*mult_B_width)+mult_B_width-1]}},  //signed E
- vector_B[((mult_dsp_array_length+i)*mult_B_width)+:mult_B_width]}),  // input wire [17 : 0] B
-          .P  (vector_P_in_42[((mult_dsp_array_length+i)*42)+:42])                                                                                                                          // output wire [41 : 0] P
-      );
+      //       mult_lut_s24_s18 mult_lut_s24_s18 (
+      //           .CLK(clk),                                                                                                                                                                        // input wire CLK
+      //           .CE (en),
+      //           .A  (vector_A[((mult_dsp_array_length+i)*mult_A_width)+:mult_A_width]),                                                                                                           // input wire [23 : 0] A
+      //           .B  ({{(18 - mult_B_width) {vector_B[((mult_dsp_array_length+i)*mult_B_width)+mult_B_width-1]}},  //signed E
+      //  vector_B[((mult_dsp_array_length+i)*mult_B_width)+:mult_B_width]}),  // input wire [17 : 0] B
+      //           .P  (vector_P_in_42[((mult_dsp_array_length+i)*42)+:42])                                                                                                                          // output wire [41 : 0] P
+      //       );
 
-      assign vector_P[((mult_dsp_array_length+i)*mult_P_width)+:mult_P_width] = vector_P_in_42[((mult_dsp_array_length+i)*42)+:mult_P_width];
+      //       assign vector_P[((mult_dsp_array_length+i)*mult_P_width)+:mult_P_width] = vector_P_in_42[((mult_dsp_array_length+i)*42)+:mult_P_width];
 
       // sum s16 * E u8
-      // mult_lut_s16_u8 mult_lut_s16_u8 (
-      //     .CLK(clk),                                                                 // input wire CLK
-      //     .CE (en),
-      //     .A  (vector_A[((mult_dsp_array_length+i)*mult_A_width)+:pixel_width_18]),  // input wire [15 : 0] A
-      //     .B  (vector_B[((mult_dsp_array_length+i)*mult_B_width)+:8]),               // input wire [7 : 0] B
-      //     .P  (vector_P_in_42[((mult_dsp_array_length+i)*42)+:24])                   // output wire [23 : 0] P
-      // );
+      mult_lut_s16_u8 mult_lut_s16_u8 (
+          .CLK(clk),                                                                 // input wire CLK
+          .CE (en),
+          .A  (vector_A[((mult_dsp_array_length+i)*mult_A_width)+:pixel_width_18]),  // input wire [15 : 0] A
+          .B  (vector_B[((mult_dsp_array_length+i)*mult_B_width)+:8]),               // input wire [7 : 0] B
+          .P  (vector_P_in_42[((mult_dsp_array_length+i)*42)+:24])                   // output wire [23 : 0] P
+      );
 
-      // assign vector_P[((mult_dsp_array_length+i)*mult_P_width)+:mult_P_width] =  //
-      //     {
-      //       {(mult_P_width - 24) {vector_P_in_42[((mult_dsp_array_length+i)*42)+24-1]}}, vector_P_in_42[((mult_dsp_array_length+i)*42)+:24]
-      //     };
+      assign vector_P[((mult_dsp_array_length+i)*mult_P_width)+:mult_P_width] =  //
+          {
+            {(mult_P_width - 24) {vector_P_in_42[((mult_dsp_array_length+i)*42)+24-1]}}, vector_P_in_42[((mult_dsp_array_length+i)*42)+:24]
+          };
 
     end
   endgenerate

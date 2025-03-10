@@ -92,6 +92,8 @@ module conv_activate_quantize_synth(
   parameter vector_B_width = mult_array_length * mult_B_width;
   parameter vector_P_width = mult_array_length * mult_P_width;
   parameter mult_array_length_per_sa = mult_array_length / sa_row_num / sa_column_num;  //48
+  parameter mult_dsp_array_length_per_sa = mult_dsp_array_length / sa_row_num / sa_column_num; //44
+  parameter mult_lut_array_length_per_sa = mult_lut_array_length / sa_row_num / sa_column_num; //4
 
   //mult E, bias, relu, scale
   parameter sum_vector_width = pixel_width_18 * pe_parallel_pixel_18 * pe_parallel_weight_18 * column_num_in_sa;
@@ -478,8 +480,8 @@ module conv_activate_quantize_synth(
   sa_row0_outs[sa_column_num-1 : 0][sa_row_num-1 : 0];
 
   //mult_array
-  wire [vector_A_width-1 : 0] vector_A, sum_mult_E_vector_A;
-  wire [vector_B_width-1 : 0] vector_B, sum_mult_E_vector_B;
+  wire [vector_A_width-1 : 0] vector_A, sum_mult_E_vector_A,sum_mult_E_vector_A_mode0,sum_mult_E_vector_A_mode1;
+  wire [vector_B_width-1 : 0] vector_B, sum_mult_E_vector_B,sum_mult_E_vector_B_mode0,sum_mult_E_vector_B_mode1;
   wire [vector_P_width-1 : 0] vector_P, sum_mult_E_vector_P;
   ///mult_sa
   wire [column_num_in_sa * mult_A_width -1:0] //the first row of SAs is used to mult, multer A
@@ -1610,92 +1612,118 @@ module conv_activate_quantize_synth(
         );
 
         assign extra_sa_vector_Ps[i-1][j-1] = (product_add_bias_en == 1'b1) ? sa_row0_outs[i-1][j-1] : 0;
-        // sum_mult_E_vecOp sum_mult_E_vecOp(
-        //     .clk(clk),
-        //     .mode(mode),
-        //     .E_set(E_4_channel_sets[(j-1)*E_set_width+:E_set_width]),
-        //     .sum_vector(out_rowi_channel_seti[i-1][j-1]),
-        //     .sum_vector_in_mult_A_width(sum_vector_in_mult_A_width_rowi_channel_setj[i-1][j-1]),
-        //     .E_vector_in_mult_B_width(E_vector_in_mult_B_width_rowi_channel_setj[i-1][j-1])
-        // );
+        sum_mult_E_vecOp sum_mult_E_vecOp(
+            .mode(mode),
+            .E_set(E_4_channel_sets[(j-1)*E_set_width+:E_set_width]),
+            .sum_vector(out_rowi_channel_seti[i-1][j-1]),
+            .sum_vector_in_mult_A_width(sum_vector_in_mult_A_width_rowi_channel_setj[i-1][j-1]),
+            .E_vector_in_mult_B_width(E_vector_in_mult_B_width_rowi_channel_setj[i-1][j-1])
+        );
         //sum mult E vecOp////////////////////////////////////////
-        //cycle 0
-        //sum_vector * E in mult_array outside
-        // sum_vector_in_24[24 * pe_parallel_pixel_88 * column_num -1 : 0]
-        //24 bit * 32 pixels * 1 channel or 16 bit * 32 pixels * 2 channel
-        for (m = 0; m < pe_parallel_pixel_88 * column_num_in_sa; m = m + 1) begin
-          assign sum_vector_in_mult_A_width_rowi_channel_setj[i-1][j-1][m*mult_A_width+:mult_A_width] =
-              // 0{sign},sum_88
-              (mode == 0) ? out_rowi_channel_seti[i-1][j-1][m*pixel_width_88+:pixel_width_88] :
-              // 8{sign},sum_18_1
-              (mode == 1) ? {{8{out_rowi_channel_seti[i-1][j-1][m*pixel_width_18+pixel_width_18-1]}},
-              //sum
-              out_rowi_channel_seti[i-1][j-1][m*pixel_width_18+:pixel_width_18]} : 0;
-        end
-        // sum_vector_in_24[sum_vector_in_24_width-1 : 24 * pe_parallel_pixel_18 * column_num]
-        for (m = 0; m < pe_parallel_pixel_18 * column_num_in_sa; m = m + 1) begin
-          assign sum_vector_in_mult_A_width_rowi_channel_setj[i-1][j-1][(pe_parallel_pixel_18*column_num_in_sa+m)*mult_A_width+:mult_A_width] =
-              // 8{sign},sum_18_2
-              (mode == 1) ? {{8{out_rowi_channel_seti[i-1][j-1][sum_vector_width_18_2+m*pixel_width_18+pixel_width_18-1]}},
-              // sum_18_2
-              out_rowi_channel_seti[i-1][j-1][sum_vector_width_18_2+m*pixel_width_18+:pixel_width_18]} : 0;
-        end
+        // //cycle 0
+        // //sum_vector * E in mult_array outside
+        // // sum_vector_in_24[24 * pe_parallel_pixel_88 * column_num -1 : 0]
+        // //24 bit * 32 pixels * 1 channel or 16 bit * 32 pixels * 2 channel
+        // for (m = 0; m < pe_parallel_pixel_88 * column_num_in_sa; m = m + 1) begin
+        //   assign sum_vector_in_mult_A_width_rowi_channel_setj[i-1][j-1][m*mult_A_width+:mult_A_width] =
+        //       // 0{sign},sum_88
+        //       (mode == 0) ? out_rowi_channel_seti[i-1][j-1][m*pixel_width_88+:pixel_width_88] :
+        //       // 8{sign},sum_18_1
+        //       (mode == 1) ? {{8{out_rowi_channel_seti[i-1][j-1][m*pixel_width_18+pixel_width_18-1]}},
+        //       //sum
+        //       out_rowi_channel_seti[i-1][j-1][m*pixel_width_18+:pixel_width_18]} : 0;
+        // end
+        // // sum_vector_in_24[sum_vector_in_24_width-1 : 24 * pe_parallel_pixel_18 * column_num]
+        // for (m = 0; m < pe_parallel_pixel_18 * column_num_in_sa; m = m + 1) begin
+        //   assign sum_vector_in_mult_A_width_rowi_channel_setj[i-1][j-1][(pe_parallel_pixel_18*column_num_in_sa+m)*mult_A_width+:mult_A_width] =
+        //       // 8{sign},sum_18_2
+        //       (mode == 1) ? {{8{out_rowi_channel_seti[i-1][j-1][sum_vector_width_18_2+m*pixel_width_18+pixel_width_18-1]}},
+        //       // sum_18_2
+        //       out_rowi_channel_seti[i-1][j-1][sum_vector_width_18_2+m*pixel_width_18+:pixel_width_18]} : 0;
+        // end
 
-        // E_vector_in_16[16 * pe_parallel_pixel_18 * column_num -1 : 0]
-        //16 bit * 32 pixels * 2 channel
-        for (m = 0; m < pe_parallel_pixel_88 * column_num_in_sa; m = m + 1) begin
-          assign E_vector_in_mult_B_width_rowi_channel_setj[i-1][j-1][m*mult_B_width+:mult_B_width] =
-              //{0,E}; E_88 equals E_18_1
-              {
-                {(mult_B_width - E_width) {1'b0}},
-                // E_4_channel_sets[(j-1)*E_set_width+:E_set_width][E_width-1 : 0]
-                E_4_channel_sets[(j-1)*E_set_width+:E_width]
-              };
-        end
-        // E_vector_in_16[E_vector_in_16_width-1 : 16 * pe_parallel_pixel_18 * column_num]
-        for (m = 0; m < pe_parallel_pixel_18 * column_num_in_sa; m = m + 1) begin
-          assign E_vector_in_mult_B_width_rowi_channel_setj[i-1][j-1][(pe_parallel_pixel_18*column_num_in_sa+m)*mult_B_width+:mult_B_width] =
-              //{0,E}
-              (mode == 1) ? {{(mult_B_width - E_width) {1'b0}}, 
-              // E_4_channel_sets[(j-1)*E_set_width+:E_set_width][E_set_width-1 : E_width]} : 0;
-              E_4_channel_sets[((j-1)*E_set_width+E_width)+:E_width]} : 0;
-        end
+        // // E_vector_in_16[16 * pe_parallel_pixel_18 * column_num -1 : 0]
+        // //16 bit * 32 pixels * 2 channel
+        // for (m = 0; m < pe_parallel_pixel_88 * column_num_in_sa; m = m + 1) begin
+        //   assign E_vector_in_mult_B_width_rowi_channel_setj[i-1][j-1][m*mult_B_width+:mult_B_width] =
+        //       //{0,E}; E_88 equals E_18_1
+        //       {
+        //         {(mult_B_width - E_width) {1'b0}},
+        //         // E_4_channel_sets[(j-1)*E_set_width+:E_set_width][E_width-1 : 0]
+        //         E_4_channel_sets[(j-1)*E_set_width+:E_width]
+        //       };
+        // end
+        // // E_vector_in_16[E_vector_in_16_width-1 : 16 * pe_parallel_pixel_18 * column_num]
+        // for (m = 0; m < pe_parallel_pixel_18 * column_num_in_sa; m = m + 1) begin
+        //   assign E_vector_in_mult_B_width_rowi_channel_setj[i-1][j-1][(pe_parallel_pixel_18*column_num_in_sa+m)*mult_B_width+:mult_B_width] =
+        //       //{0,E}
+        //       (mode == 1) ? {{(mult_B_width - E_width) {1'b0}}, 
+        //       // E_4_channel_sets[(j-1)*E_set_width+:E_set_width][E_set_width-1 : E_width]} : 0;
+        //       E_4_channel_sets[((j-1)*E_set_width+E_width)+:E_width]} : 0;
+        // end
         //////////////////////////////////////////////////////////
+        //xxxxxxxxxxxxxxxxxxxx mapping changed because of the s16_u8_lut_dsp
         //1-48 -> mult_array[1,48]; 49-64 -> sa_row0; [1, 64] = add_bias_row_in_mult_A_width_width
-        assign sum_mult_E_vector_A
+        assign sum_mult_E_vector_A_mode0
+        [((i-1)*sa_row_num+(j-1))*((pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa)*mult_A_width)+: //32*24
+        ((pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa)*mult_A_width)] = 
+        (sum_mult_E_en == 1'b1) ? sum_vector_in_mult_A_width_rowi_channel_setj[i-1][j-1]
+        //0+:
+        [0+:((pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa)*mult_A_width)] : 
+        {((pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa)*mult_A_width){1'b0}};
+
+        assign sum_mult_E_vector_A_mode1
         //mult array
         [((i-1)*sa_row_num+(j-1))*(mult_array_length_per_sa*mult_A_width)+:(mult_array_length_per_sa*mult_A_width)] = 
         //sum vector
         (sum_mult_E_en == 1'b1) ? sum_vector_in_mult_A_width_rowi_channel_setj[i-1][j-1]
         //0+:
-        [0+:(mult_array_length_per_sa*mult_A_width)] : 0;
+        [0+:(mult_array_length_per_sa*mult_A_width)] : 
+        {(mult_array_length_per_sa*mult_A_width){1'b0}};
 
         assign extra_sa_vector_As[i-1][j-1] = 
         //sa mult
         (sum_mult_E_en == 1'b1) ? sum_vector_in_mult_A_width_rowi_channel_setj[i-1][j-1]
         //48*24+:
-        [(mult_array_length_per_sa*mult_A_width)+:(column_num_in_sa*mult_A_width)] : 0;
+        [(mult_array_length_per_sa*mult_A_width)+:(column_num_in_sa*mult_A_width)] : 
+        {(column_num_in_sa * mult_A_width){1'b0}};
         
-        assign sum_mult_E_vector_B
+        assign sum_mult_E_vector_B_mode0
+        [((i-1)*sa_row_num+(j-1))*((pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa)*mult_B_width)+: //32*16
+        ((pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa)*mult_B_width)] = 
+        (sum_mult_E_en == 1'b1) ? E_vector_in_mult_B_width_rowi_channel_setj[i-1][j-1]
+        //0+:
+        [0+:((pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa)*mult_B_width)] : 
+        {((pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa)*mult_B_width){1'b0}};
+        
+        assign sum_mult_E_vector_B_mode1
         //mult array
         [((i-1)*sa_row_num+(j-1))*(mult_array_length_per_sa*mult_B_width)+:(mult_array_length_per_sa*mult_B_width)] = 
         //E vector
         (sum_mult_E_en == 1'b1) ? E_vector_in_mult_B_width_rowi_channel_setj[i-1][j-1]
         //0+
-        [0+:(mult_array_length_per_sa*mult_B_width)] : 0;
+        [0+:(mult_array_length_per_sa*mult_B_width)] : 
+        {(mult_array_length_per_sa*mult_B_width){1'b0}};
 
         assign extra_sa_vector_Bs[i-1][j-1] = 
         //sa mult
         (sum_mult_E_en == 1'b1) ? E_vector_in_mult_B_width_rowi_channel_setj[i-1][j-1]
         //48*16+:
-        [(mult_array_length_per_sa*mult_B_width)+:row_num_in_sa*mult_B_width] : 0;
+        [(mult_array_length_per_sa*mult_B_width)+:row_num_in_sa*mult_B_width] : 
+        {(row_num_in_sa * mult_B_width){1'b0}};
         
         assign sum_mult_E_vector_in_mult_P_width_rowi_channel_setj[i-1][j-1]
         //0+:
         [0+:(mult_array_length_per_sa*mult_P_width)] = 
         //[48*40]
-        sum_mult_E_vector_P[((i-1)*sa_row_num+(j-1))*(mult_array_length_per_sa*mult_P_width)+:(mult_array_length_per_sa*mult_P_width)];
-        
+        (mode == 0)? //mode 0
+        {{((mult_array_length_per_sa - (pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa))*mult_P_width){1'b0}}, //0 pad
+        sum_mult_E_vector_P[((i-1)*sa_row_num+(j-1))*((pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa)*mult_P_width)+:
+        ((pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa)*mult_P_width)]}:
+        (mode == 1)? //mode 1
+        sum_mult_E_vector_P[((i-1)*sa_row_num+(j-1))*(mult_array_length_per_sa*mult_P_width)+:(mult_array_length_per_sa*mult_P_width)]:
+        {(sum_mult_E_vector_in_mult_P_width_width){1'b0}};
+
         assign sum_mult_E_vector_in_mult_P_width_rowi_channel_setj[i-1][j-1]
         //48*40+:
         [(mult_array_length_per_sa*mult_P_width)+:(column_num_in_sa*mult_P_width)] = 
@@ -1755,18 +1783,37 @@ module conv_activate_quantize_synth(
       .relu_scale_add_end (relu_scale_add_end)
   );
   assign conv_compute_fin = relu_scale_add_end;
-//multiplier array
-  Mult_Array mult_array (
+  //multiplier array
+  Mult_Array_hete mult_array_hete (
       .clk     (clk),
       .en      (sum_mult_E_en),
       .vector_A(vector_A),
       .vector_B(vector_B),
       .vector_P(vector_P)
   );
+  
+  //other dsp is useless, set A input to 0
+  assign sum_mult_E_vector_A_mode0
+  [vector_A_width-1:
+  ((sa_column_num-1)*sa_row_num+(sa_row_num-1)+1)*((pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa)*mult_A_width)]
+  = {(vector_A_width - ((sa_column_num-1)*sa_row_num+(sa_row_num-1)+1)*((pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa)*mult_A_width)){1'b0}};
+  
+  assign sum_mult_E_vector_B_mode0
+  [vector_B_width-1:
+  ((sa_column_num-1)*sa_row_num+(sa_row_num-1)+1)*((pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa)*mult_B_width)]
+  = {(vector_B_width - ((sa_column_num-1)*sa_row_num+(sa_row_num-1)+1)*((pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa)*mult_B_width)){1'b0}};
+  
+  assign sum_mult_E_vector_A = //mode 0 or 1
+  (mode == 0)? sum_mult_E_vector_A_mode0:
+  (mode == 1)? sum_mult_E_vector_A_mode1: {(vector_A_width){1'b0}};
+
+  assign sum_mult_E_vector_B = //mode 0 or 1
+  (mode == 0)? sum_mult_E_vector_B_mode0:
+  (mode == 1)? sum_mult_E_vector_B_mode1: {(vector_B_width){1'b0}};
   assign vector_A         = sum_mult_E_vector_A;
   assign vector_B         = sum_mult_E_vector_B;
   assign sum_mult_E_vector_P = (product_add_bias_en == 1'b1) ? vector_P : 0;
-//conv store ctrl
+  //conv store ctrl
   conv_fifo_out_controller cv_fifo_out_controller (  // conv_out_handler
       //cycle 0 in
       .clk                       (clk),

@@ -1466,7 +1466,6 @@ module conv_activate_quantify_tb ();
 
         assign extra_sa_vector_Ps[i-1][j-1] = (product_add_bias_en == 1'b1) ? sa_row0_outs[i-1][j-1] : 0;
         sum_mult_E_vecOp sum_mult_E_vecOp(
-            .clk(clk),
             .mode(mode),
             .E_set(E_4_channel_sets[(j-1)*E_set_width+:E_set_width]),
             .sum_vector(out_rowi_channel_seti[i-1][j-1]),
