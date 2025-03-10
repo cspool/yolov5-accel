@@ -36,7 +36,8 @@ module conv_load_weights_controller (
     weights_word_ddr_adr_rd,
     weights_word_buf_en_wt,
     weights_word_buf_adr_wt,
-    conv_load_weights_fin
+    conv_load_weights_fin,
+    state_conv_load_weights
 );
   // load weights from ddr while computaion
   parameter row_num_in_mode0 = 64;
@@ -61,6 +62,7 @@ module conv_load_weights_controller (
   output weights_word_buf_en_wt;
   output [15:0] weights_word_buf_adr_wt;
   output conv_load_weights_fin;
+  output state_conv_load_weights;
   reg        instr_load_weights_fin;
 
   // load weight adr
@@ -105,6 +107,8 @@ module conv_load_weights_controller (
       weights_ddr_signal_add <= weights_ddr_signal_add;
     end
   end
+
+  assign state_conv_load_weights = weights_ddr_signal_add;
 
   always @(posedge clk) begin
     if (reset == 1'b1) begin

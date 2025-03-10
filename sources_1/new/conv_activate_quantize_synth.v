@@ -30,6 +30,7 @@ module conv_activate_quantize_synth(
   DDR_en_wr, //o
   DDR_in,  //o
   DDR_adr, //o
+  DDR_valid,
   DDR_out  //i
 );
   //SA
@@ -199,13 +200,16 @@ module conv_activate_quantize_synth(
   output DDR_en_wr;
   output [511:0] DDR_in;
   output [ 31:0] DDR_adr;
+  input DDR_valid;
   input [511:0] DDR_out;  //o
   //DDR data
   reg valid_load_input;
+  // wire valid_load_input;
   wire [511:0] load_input_word;
   reg [511:0] last_load_input_word;
   reg state_valid_load_input;
   reg valid_load_weights; //ddr words is loaded from ddr
+  // wire valid_load_weights;
   //conv compute ctrl
   wire [15:0] ox_start, oy_start, of_start, pox, poy, pof, if_idx;
   reg [15:0] shadow_ox_start, shadow_oy_start, shadow_of_start, shadow_pox, shadow_poy, shadow_pof;
@@ -257,6 +261,7 @@ module conv_activate_quantize_synth(
   wire input_word_load_info_fifo_en_wt;
   wire [31:0] input_word_load_info_fifo_wt;
   wire conv_load_input_fin;
+  wire state_conv_load_input;
   //load input info fifo
   wire input_word_load_info_fifo_en_rd;
   wire [31:0] input_word_load_info_fifo_rd;
@@ -405,6 +410,7 @@ module conv_activate_quantize_synth(
   wire weights_word_buf_en_wt; //o: write buf
   wire [15:0] weights_word_buf_adr_wt;//o
   wire conv_load_weights_fin;
+  wire state_conv_load_weights;
   //cv weights handler
   wire weights_word_buf_en_rd; //o: read buf
   wire [15:0] weights_word_buf_adr_rd;//o
@@ -591,8 +597,12 @@ module conv_activate_quantize_synth(
    (weights_word_ddr_en_rd == 1)? weights_word_ddr_adr_rd : 
    (valid_conv_out_ddr_adr == 1)? conv_out_ddr_adr : 0;
   assign DDR_in          = (valid_conv_out_ddr_adr == 1)? conv_out_ddr_data : 512'b0;
-  assign load_input_word = (valid_load_input == 1'b1) ? DDR_out : 512'b0;
-  assign weights_word_buf_wt = (valid_load_weights == 1'b1) ? DDR_out : 512'b0;
+  //DDR sim
+  // assign load_input_word = (valid_load_input == 1'b1) ? DDR_mem_out : 512'b0;
+  // assign weights_word_buf_wt = (valid_load_weights == 1'b1) ? DDR_mem_out : 512'b0;
+  //DDR
+  assign load_input_word = (valid_load_input) ? DDR_out : 512'b0; 
+  assign weights_word_buf_wt = (valid_load_weights) ? DDR_out : 512'b0;
 
   //DDR input load
   always @(posedge clk) begin
@@ -602,6 +612,7 @@ module conv_activate_quantize_synth(
       valid_load_input <= input_word_ddr_en_rd;  //DDR sim
     end
   end
+    // assign valid_load_input = ((state_conv_load_input == 1) && (DDR_valid == 1));
   always @(posedge clk) begin
     if (reset == 1'b1) begin
       last_load_input_word   <= 0;
@@ -628,6 +639,8 @@ module conv_activate_quantize_synth(
       valid_load_weights <= weights_word_ddr_en_rd;  //DDR sim
     end
   end
+
+  // assign valid_load_weights = ((state_conv_load_weights == 1) && (DDR_valid == 1));
 
   //conv decoder
   conv_quantize_relu_decoder cv_quantize_relu_decoder (
@@ -745,7 +758,8 @@ module conv_activate_quantize_synth(
       .input_word_ddr_adr_rd                  (input_word_ddr_adr_rd),
       .input_word_load_info_fifo_en_wt        (input_word_load_info_fifo_en_wt),
       .input_word_load_info_fifo_wt           (input_word_load_info_fifo_wt),
-      .conv_load_input_fin                    (conv_load_input_fin)
+      .conv_load_input_fin                    (conv_load_input_fin),
+      .state_conv_load_input(state_conv_load_input)
   );
   //load input info fifo
   load_input_info_fifo load_input_info_fifo (
@@ -777,7 +791,8 @@ module conv_activate_quantize_synth(
       .weights_word_ddr_adr_rd(weights_word_ddr_adr_rd),
       .weights_word_buf_en_wt (weights_word_buf_en_wt),   //write buf instr
       .weights_word_buf_adr_wt(weights_word_buf_adr_wt),
-      .conv_load_weights_fin  (conv_load_weights_fin)
+      .conv_load_weights_fin  (conv_load_weights_fin),
+      .state_conv_load_weights(state_conv_load_weights)
   );
   //conv compute ctrl
   // conv_compute_core_controller cv_compute_core1_controller (  //conv_router_v2 // conv_router_flat

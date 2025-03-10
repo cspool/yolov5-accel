@@ -68,7 +68,8 @@ module conv_load_input_controller (
     input_word_ddr_adr_rd,
     input_word_load_info_fifo_en_wt,
     input_word_load_info_fifo_wt,
-    conv_load_input_fin
+    conv_load_input_fin,
+    state_conv_load_input
 );
   parameter pixels_in_row = 32;
   parameter pixels_in_row_mult_2 = pixels_in_row * 2;
@@ -189,6 +190,7 @@ module conv_load_input_controller (
   output input_word_load_info_fifo_en_wt;
   output [31:0] input_word_load_info_fifo_wt;
   output conv_load_input_fin;
+  output state_conv_load_input;
   reg        instr_load_input_fin;
 
   //ddr word counter
@@ -379,6 +381,8 @@ module conv_load_input_controller (
       input_ddr_word_signal <= input_ddr_word_signal;
     end
   end
+
+  assign state_conv_load_input = input_ddr_word_signal;
 
   //loop if, a input chunk load (x_size, y_size, f_size) = (32, 1, nif)
   always @(posedge clk) begin
