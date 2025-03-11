@@ -51,22 +51,22 @@ module conv_fifo_out_controller (
     conv_fifo_out_tile_add_end,
     conv_out_ddr_adr,
     valid_conv_out_ddr_adr,
-    conv_out_ddr_data,
+    conv_out_ddr_data
 );
 
   parameter pixels_in_row = 32;
   parameter pixels_in_row_in_2pow = 5;
   parameter sa_row_num = 4;  //how many rows in conv core
   parameter sa_column_num = 3;  //how many columns in conv core
-  parameter row_num = 16;  // how many rows in a sa
-  parameter column_num = 16;  // how many columns in a sa
+  parameter row_num_in_sa = 16;  // how many rows in a sa, row_num
+  parameter column_num_in_sa = 16;  // how many columns in a sa
   parameter pe_parallel_pixel_88 = 2;
   parameter pe_parallel_weight_88 = 1;
   parameter pe_parallel_pixel_18 = 2;
   parameter pe_parallel_weight_18 = 2;
   parameter quantize_pixel_width = 8;
-  parameter quantize_row_width = (quantize_pixel_width) * pe_parallel_weight_18 * pe_parallel_pixel_18 * column_num;
-  parameter conv_out_data_width = quantize_pixel_width * pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num;
+  parameter quantize_row_width = (quantize_pixel_width) * pe_parallel_weight_18 * pe_parallel_pixel_18 * column_num_in_sa;
+  parameter conv_out_data_width = quantize_pixel_width * pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa;
   parameter ofs_in_row_2pow = 1;
 
   //cycle 0 in
@@ -91,17 +91,17 @@ module conv_fifo_out_controller (
   output valid_conv_out_ddr_adr;
   reg valid_conv_out_ddr_adr_mode0, valid_conv_out_ddr_adr_mode1;
   output reg [31:0] conv_out_ddr_adr;
-  reg [conv_out_data_width-1 : 0] last_conv_out_data_mode0;
+  reg  [conv_out_data_width-1 : 0] last_conv_out_data_mode0;
 
   //out ctrl
-  reg         signal_add;
-  reg  [15:0] of_counter;
-  reg  [ 3:0] oy_counter;
-  reg  [15:0] channel_counter;  //0-16 in mode 0, 0-31 in mode 1
-  reg  [15:0] last_channel_counter;  //last channel_counter 
-  wire        row_fifo_rd_en;
-  wire [15:0] channel_num;
-  wire [ 3:0] log_channel_num;
+  reg                              signal_add;
+  reg  [                     15:0] of_counter;
+  reg  [                      3:0] oy_counter;
+  reg  [                     15:0] channel_counter;  //0-16 in mode 0, 0-31 in mode 1
+  reg  [                     15:0] last_channel_counter;  //last channel_counter 
+  wire                             row_fifo_rd_en;
+  wire [                     15:0] channel_num;
+  wire [                      3:0] log_channel_num;
   wire loop_channel_counter_add_begin, loop_channel_counter_add_end;
   wire loop_of_counter_add_begin, loop_of_counter_add_end;
   wire loop_oy_counter_add_begin, loop_oy_counter_add_end;
@@ -112,7 +112,7 @@ module conv_fifo_out_controller (
   //rd from fifo to get conv words
   always @(posedge clk) begin
     if ((reset == 1'b1) || (conv_fifo_out_tile_add_end == 1'b1)) begin
-      valid_conv_out     <= 0;
+      valid_conv_out             <= 0;
       conv_out_ddr_adr           <= 0;
       out_y_idx                  <= 0;
       out_x_idx                  <= 0;
@@ -143,29 +143,23 @@ module conv_fifo_out_controller (
   //save conv words into ddr words
   always @(posedge clk) begin
     if (reset) begin
-      last_conv_out_data_mode0 <= 256'b0;
+      last_conv_out_data_mode0     <= 256'b0;
       valid_conv_out_ddr_adr_mode0 <= 0;
       valid_conv_out_ddr_adr_mode1 <= 0;
-    end
-    else begin
-      last_conv_out_data_mode0 <= conv_out_data_mode0;
-      valid_conv_out_ddr_adr_mode0 <= (channel_counter[0] == 1'b0); //even channel num
+    end else begin
+      last_conv_out_data_mode0     <= conv_out_data_mode0;
+      valid_conv_out_ddr_adr_mode0 <= loop_channel_counter_add_begin && (channel_counter[0] == 1'b0);  //even channel num
       valid_conv_out_ddr_adr_mode1 <= loop_channel_counter_add_begin;
     end
   end
 
-  assign valid_conv_out_ddr_adr = (mode == 0)? valid_conv_out_ddr_adr_mode0:
-  (mode == 1)? valid_conv_out_ddr_adr_mode1: 0;
+  assign valid_conv_out_ddr_adr = (mode == 0) ? valid_conv_out_ddr_adr_mode0 : (mode == 1) ? valid_conv_out_ddr_adr_mode1 : 0;
 
-  assign conv_out_ddr_data = (valid_conv_out_ddr_adr == 1)? 
-  ((mode == 0)? {conv_out_data_mode0, last_conv_out_data_mode0}:
-  (mode == 1)? fifo_data : 512'b0) : 512'b0;
+  assign conv_out_ddr_data      = (valid_conv_out_ddr_adr == 1) ? ((mode == 0) ? {conv_out_data_mode0, last_conv_out_data_mode0} : (mode == 1) ? fifo_data : 512'b0) : 512'b0;
 
   //rd fifo ctrl
-  assign row_fifo_rd_en = (loop_channel_counter_add_begin == 1'b0) ? 1'b0:
-     (mode == 0)? 1'b1: //0,1,...,15
-     (mode == 1)? channel_counter[0]:
-     0;
+  assign row_fifo_rd_en         = (loop_channel_counter_add_begin == 1'b0) ? 1'b0 : (mode == 0) ? 1'b1 :  //0,1,...,15
+ (mode == 1) ? channel_counter[0] : 0;
 
   genvar i;
 
@@ -241,7 +235,7 @@ module conv_fifo_out_controller (
   end
 
   assign loop_of_counter_add_begin = (loop_channel_counter_add_end == 1'b1);
-  assign loop_of_counter_add_end   = loop_of_counter_add_begin && (of_counter - 1 + channel_counter == cur_pof);
+  assign loop_of_counter_add_end   = loop_of_counter_add_begin && (of_counter - 1 + channel_counter >= cur_pof);
 
   //loop column no
   always @(posedge clk) begin

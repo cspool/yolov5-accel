@@ -159,15 +159,15 @@ module example_top #
    // The following parameters are multiplier and divisor factors for PLLE2.
    // Based on the selected design frequency these parameters vary.
    //***************************************************************************
-   parameter CLKIN_PERIOD          = 6668,
+   parameter CLKIN_PERIOD          = 10000,
                                      // Input Clock Period
    parameter CLKFBOUT_MULT         = 8,
                                      // write PLL VCO multiplier
    parameter DIVCLK_DIVIDE         = 1,
                                      // write PLL VCO divisor
-   parameter CLKOUT0_PHASE         = 337.5,
+   parameter CLKOUT0_PHASE         = 315.0,
                                      // Phase for PLL output clock (CLKOUT0)
-   parameter CLKOUT0_DIVIDE        = 2,
+   parameter CLKOUT0_DIVIDE        = 1,
                                      // VCO output divisor for PLL output clock (CLKOUT0)
    parameter CLKOUT1_DIVIDE        = 2,
                                      // VCO output divisor for PLL output clock (CLKOUT1)
@@ -175,7 +175,7 @@ module example_top #
                                      // VCO output divisor for PLL output clock (CLKOUT2)
    parameter CLKOUT3_DIVIDE        = 8,
                                      // VCO output divisor for PLL output clock (CLKOUT3)
-   parameter MMCM_VCO              = 1199,
+   parameter MMCM_VCO              = 800,
                                      // Max Freq (MHz) of MMCM VCO
    parameter MMCM_MULT_F           = 8,
                                      // write MMCM VCO multiplier

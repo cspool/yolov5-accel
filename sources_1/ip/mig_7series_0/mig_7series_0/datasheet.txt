@@ -36,11 +36,11 @@ Controller Options :
 
    Interface                     : NATIVE
 
-   Design Clock Frequency        : 1667 ps (  0.00 MHz)
+   Design Clock Frequency        : 2500 ps (  0.00 MHz)
 
    Phy to Controller Clock Ratio : 4:1
 
-   Input Clock Period            : 6668 ps
+   Input Clock Period            : 10000 ps
 
    CLKFBOUT_MULT (PLL)           : 8
 
@@ -82,7 +82,7 @@ Memory Options:
 
    Read Burst Type (MR0[3])         : Sequential
 
-   CAS Latency (MR0[6:4])           : 9
+   CAS Latency (MR0[6:4])           : 6
 
    Output Drive Strength (MR1[5,1]) : RZQ/6
 
