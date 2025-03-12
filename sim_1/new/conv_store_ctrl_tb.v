@@ -125,7 +125,7 @@ module conv_store_ctrl_tb ();
 
   always @(posedge clk) begin
     if (reset == 1) begin
-      ddr_wt_data_ready <= 0;
+      ddr_wt_data_ready <= 1;
     end else begin
       ddr_wt_data_ready <= ~ddr_wt_data_ready;
     end
@@ -160,10 +160,17 @@ module conv_store_ctrl_tb ();
     end
   end
 
+  always @(posedge clk) begin
+    if (reset == 1) begin
+      fifo_data <= (mode == 0) ? {256'b0, 256'b0} : (mode == 1) ? {256'b0, 256'b0} : 512'b0;
+    end else if (fifo_rds != 0) begin
+      fifo_data <= (mode == 0) ? {256'b0, fifo_data[255:0] + 256'b1} : (mode == 1) ? {fifo_data[511:256] + 256'b1, fifo_data[255:0] + 256'b1} : 512'b0;
+    end
+  end
+
   initial begin
     clk                       = 0;
     reset                     = 1;
-    fifo_data                 = 512'h11111111222222223333333344444444555555556666666677777777888888889999999900000000aaaaaaaabbbbbbbbccccccccddddddddeeeeeeeeffffffff;
     output_ddr_layer_base_adr = 0;
     mode                      = 0;
     cur_ox_start              = 1;
@@ -175,11 +182,7 @@ module conv_store_ctrl_tb ();
     of_in_2pow                = 6;  //64
     ox_in_2pow                = 6;  //64
 
-    #5;
-    ddr_cmd_ready     = 1;
-    ddr_wt_data_ready = 1;
-
-    #5;
+    #10;
     reset = 0;
 
   end

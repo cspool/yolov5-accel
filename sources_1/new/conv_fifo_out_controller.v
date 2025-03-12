@@ -209,7 +209,7 @@ module conv_fifo_out_controller (
 
   //fifo rd en in 1/1 cycle in mode 0, 1/2 cycle in mode 1.
   assign loop_channel_counter_add_begin = (signal_add == 1'b1) && (ddr_en == 1'b1);
-  assign loop_channel_counter_add_end   = loop_channel_counter_add_begin && ((of_counter - 1 + channel_counter == cur_pof) || (channel_counter == channel_num));
+  assign loop_channel_counter_add_end   = loop_channel_counter_add_begin && ((of_counter - 1 + channel_counter + 1 > cur_pof) || (channel_counter == channel_num));
 
   always @(posedge clk) begin
     if (reset == 1'b1) begin
@@ -235,7 +235,7 @@ module conv_fifo_out_controller (
   end
 
   assign loop_of_counter_add_begin = (loop_channel_counter_add_end == 1'b1);
-  assign loop_of_counter_add_end   = loop_of_counter_add_begin && (of_counter - 1 + channel_counter >= cur_pof);
+  assign loop_of_counter_add_end   = loop_of_counter_add_begin && (of_counter - 1 + channel_counter + channel_num > cur_pof);  //add by 1
 
   //loop column no
   always @(posedge clk) begin
