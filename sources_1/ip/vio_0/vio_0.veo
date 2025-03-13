@@ -1,7 +1,4 @@
-
-// file: clk_wiz_0.v
-// 
-// (c) Copyright 2008 - 2013 Xilinx, Inc. All rights reserved.
+// (c) Copyright 1995-2025 Xilinx, Inc. All rights reserved.
 // 
 // This file contains confidential and proprietary information
 // of Xilinx, Inc. and is protected under U.S. and
@@ -47,50 +44,31 @@
 // THIS COPYRIGHT NOTICE AND DISCLAIMER MUST BE RETAINED AS
 // PART OF THIS FILE AT ALL TIMES.
 // 
-//----------------------------------------------------------------------------
-// User entered comments
-//----------------------------------------------------------------------------
-// None
-//
-//----------------------------------------------------------------------------
-//  Output     Output      Phase    Duty Cycle   Pk-to-Pk     Phase
-//   Clock     Freq (MHz)  (degrees)    (%)     Jitter (ps)  Error (ps)
-//----------------------------------------------------------------------------
-// clk_out1____40.000______0.000______50.0______185.906____166.174
-// clk_out2___150.000______0.000______50.0______143.865____166.174
-// clk_out3___200.000______0.000______50.0______137.833____166.174
-//
-//----------------------------------------------------------------------------
-// Input Clock   Freq (MHz)    Input Jitter (UI)
-//----------------------------------------------------------------------------
-// __primary______________40____________0.010
+// DO NOT MODIFY THIS FILE.
 
-`timescale 1ps/1ps
+// IP VLNV: xilinx.com:ip:vio:3.0
+// IP Revision: 19
 
-(* CORE_GENERATION_INFO = "clk_wiz_0,clk_wiz_v6_0_2_0_0,{component_name=clk_wiz_0,use_phase_alignment=true,use_min_o_jitter=false,use_max_i_jitter=false,use_dyn_phase_shift=false,use_inclk_switchover=false,use_dyn_reconfig=false,enable_axi=0,feedback_source=FDBK_AUTO,PRIMITIVE=PLL,num_out_clk=3,clkin1_period=25.000,clkin2_period=10.0,use_power_down=false,use_reset=false,use_locked=true,use_inclk_stopped=false,feedback_type=SINGLE,CLOCK_MGR_TYPE=NA,manual_override=false}" *)
+// The following must be inserted into your Verilog file for this
+// core to be instantiated. Change the instance name and port connections
+// (in parentheses) to your own signal names.
 
-module clk_wiz_0 
- (
-  // Clock out ports
-  output        clk_out1,
-  output        clk_out2,
-  output        clk_out3,
-  // Status and control signals
-  output        locked,
- // Clock in ports
-  input         clk_in1
- );
+//----------- Begin Cut here for INSTANTIATION Template ---// INST_TAG
+vio_0 your_instance_name (
+  .clk(clk),                // input wire clk
+  .probe_in0(probe_in0),    // input wire [0 : 0] probe_in0
+  .probe_in1(probe_in1),    // input wire [0 : 0] probe_in1
+  .probe_in2(probe_in2),    // input wire [31 : 0] probe_in2
+  .probe_in3(probe_in3),    // input wire [255 : 0] probe_in3
+  .probe_in4(probe_in4),    // input wire [255 : 0] probe_in4
+  .probe_out0(probe_out0),  // output wire [0 : 0] probe_out0
+  .probe_out1(probe_out1),  // output wire [0 : 0] probe_out1
+  .probe_out2(probe_out2),  // output wire [255 : 0] probe_out2
+  .probe_out3(probe_out3)  // output wire [255 : 0] probe_out3
+);
+// INST_TAG_END ------ End INSTANTIATION Template ---------
 
-  clk_wiz_0_clk_wiz inst
-  (
-  // Clock out ports  
-  .clk_out1(clk_out1),
-  .clk_out2(clk_out2),
-  .clk_out3(clk_out3),
-  // Status and control signals               
-  .locked(locked),
- // Clock in ports
-  .clk_in1(clk_in1)
-  );
+// You must compile the wrapper file vio_0.v when simulating
+// the core, vio_0. When compiling the wrapper file, be sure to
+// reference the Verilog simulation library.
 
-endmodule

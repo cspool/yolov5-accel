@@ -62,7 +62,7 @@ module conv_load_weights_controller (
   output weights_word_buf_en_wt;
   output [15:0] weights_word_buf_adr_wt;
   output conv_load_weights_fin;
-  output state_conv_load_weights;
+  output reg state_conv_load_weights;
   reg        instr_load_weights_fin;
 
   // load weight adr
@@ -108,7 +108,17 @@ module conv_load_weights_controller (
     end
   end
 
-  assign state_conv_load_weights = weights_ddr_signal_add;
+  always @(posedge clk) begin
+    if (reset == 1'b1) begin
+      state_conv_load_weights <= 0;
+    end else if (conv_load_weights == 1'b1) begin
+      state_conv_load_weights <= 1;
+    end else if (conv_load_weights_fin == 1'b1) begin
+      state_conv_load_weights <= 0;
+    end else begin
+      state_conv_load_weights <= state_conv_load_weights;
+    end
+  end
 
   always @(posedge clk) begin
     if (reset == 1'b1) begin

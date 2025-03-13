@@ -40,7 +40,7 @@ module conv_store_ddr_controller (
     //store cmd
     store_ddr_base_adr,
     store_ddr_length,
-    valid_ddr_cmd,
+    valid_store_ddr_cmd,
     //cycle 0 out
     fifo_rds,
     //cycle 1 in
@@ -56,7 +56,8 @@ module conv_store_ddr_controller (
     //store ddr data
     conv_out_ddr_adr,
     valid_conv_out_ddr_data,
-    conv_out_ddr_data
+    conv_out_ddr_data,
+    conv_store_fin
 );
 
   parameter pixels_in_row = 32;
@@ -74,6 +75,7 @@ module conv_store_ddr_controller (
   parameter quantize_row_width = (quantize_pixel_width) * pe_parallel_weight_18 * pe_parallel_pixel_18 * column_num_in_sa;
   parameter conv_out_data_width = quantize_pixel_width * pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa;
   parameter ofs_in_row_2pow = 1;
+  parameter ddr_cmd_word_num = 32;
 
   //cycle 0 in
   input clk, reset;
@@ -99,17 +101,21 @@ module conv_store_ddr_controller (
   output valid_conv_out_ddr_data;
   reg valid_conv_out_ddr_data_mode0, valid_conv_out_ddr_data_mode1;
   output reg [31:0] conv_out_ddr_adr;
-  reg  [conv_out_data_width-1 : 0] last_conv_out_data_mode0;
+  reg [conv_out_data_width-1 : 0] last_conv_out_data_mode0;
+  output conv_store_fin;
 
   //out data ctrl
-  reg                              state_conv_store_data;
-  reg  [                     15:0] of_counter;
-  reg  [                      3:0] oy_counter;
-  reg  [                     15:0] channel_counter;  //0-16 in mode 0, 0-31 in mode 1
-  wire [                     15:0] channel_counter_in_row;
-  wire                             row_fifo_rd_en;
-  wire [                     15:0] channel_num;
-  wire [                      3:0] log_channel_num;
+  reg         state_conv_store_data;
+  reg  [15:0] conv_store_data_counter;
+  wire        loop_conv_store_data_counter_add_begin;
+  wire        loop_conv_store_data_counter_add_end;
+  reg  [15:0] of_counter;
+  reg  [ 3:0] oy_counter;
+  reg  [15:0] channel_counter;  //0-16 in mode 0, 0-31 in mode 1
+  wire [15:0] channel_counter_in_row;
+  wire        row_fifo_rd_en;
+  wire [15:0] channel_num;
+  wire [ 3:0] log_channel_num;
   wire loop_channel_counter_add_begin, loop_channel_counter_add_end;
   wire loop_of_counter_add_begin, loop_of_counter_add_end;
   wire loop_oy_counter_add_begin, loop_oy_counter_add_end;
@@ -124,7 +130,7 @@ module conv_store_ddr_controller (
   reg [15:0] cur_store_ddr_length;
   reg [15:0] cur_store_ddr_counter;
   wire loop_cur_store_ddr_counter_add_begin, loop_cur_store_ddr_counter_add_end;
-  output valid_ddr_cmd;
+  output valid_store_ddr_cmd;
   reg [15:0] store_of_counter;
   reg [ 3:0] store_oy_counter;
   wire loop_store_of_counter_add_begin, loop_store_of_counter_add_end;
@@ -172,9 +178,9 @@ module conv_store_ddr_controller (
   assign loop_store_of_counter_add_begin = (state_conv_store_data == 0)  //no valid store process at now
  && (conv_store_signal_add == 1) && (ddr_cmd_ready == 1);
   assign loop_store_of_counter_add_end   = loop_store_of_counter_add_begin && (store_of_counter - 1 + (store_ddr_length << ofs_in_row_2pow) >= cur_pof);
-  assign valid_ddr_cmd                   = loop_store_of_counter_add_begin;
-  // assign store_ddr_length                = (store_of_counter - 1 + channel_num > cur_pof) ? ((cur_pof - store_of_counter + 1) >> ofs_in_row_2pow) : (channel_num >> ofs_in_row_2pow);
-  assign store_ddr_length                = (cur_pof >> ofs_in_row_2pow);
+  assign valid_store_ddr_cmd             = loop_store_of_counter_add_begin;
+  assign store_ddr_length                = (store_of_counter - 1 + (ddr_cmd_word_num << ofs_in_row_2pow) > cur_pof) ? ((cur_pof - store_of_counter + 1) >> ofs_in_row_2pow) : ddr_cmd_word_num;
+  // assign store_ddr_length                = (cur_pof >> ofs_in_row_2pow);
 
   always @(posedge clk) begin
     if (reset == 1'b1) begin
@@ -206,14 +212,31 @@ module conv_store_ddr_controller (
   always @(posedge clk) begin
     if (reset == 1'b1) begin
       state_conv_store_data <= 0;
-    end else if (valid_ddr_cmd == 1'b1) begin
+    end else if (valid_store_ddr_cmd == 1'b1) begin
       state_conv_store_data <= 1;
-    end else if (loop_of_counter_add_end == 1'b1) begin  // a cmd store cur_word words
+    end else if (loop_conv_store_data_counter_add_end == 1'b1) begin  // a cmd store cur_word words,xxxxxxx
       state_conv_store_data <= 0;
     end else begin
       state_conv_store_data <= state_conv_store_data;
     end
   end
+
+  always @(posedge clk) begin
+    if (reset == 1'b1) begin
+      conv_store_data_counter <= 1;
+    end else if (loop_conv_store_data_counter_add_begin == 1) begin
+      if (loop_conv_store_data_counter_add_end == 1) begin
+        conv_store_data_counter <= 1;
+      end else begin
+        conv_store_data_counter <= conv_store_data_counter + 1;
+      end
+    end else begin
+      conv_store_data_counter <= conv_store_data_counter;
+    end
+  end
+
+  assign loop_conv_store_data_counter_add_begin = valid_conv_out_ddr_data;
+  assign loop_conv_store_data_counter_add_end   = loop_conv_store_data_counter_add_begin && (conv_store_data_counter == store_ddr_length);
 
   //loop column no
   always @(posedge clk) begin
@@ -274,6 +297,8 @@ module conv_store_ddr_controller (
       fifo_row_no <= (of_counter - 1) >> log_channel_num;  //0,1,2,3
     end
   end
+
+  assign conv_store_fin = conv_fifo_out_tile_add_end;
 
   //save conv words into ddr words
   always @(posedge clk) begin

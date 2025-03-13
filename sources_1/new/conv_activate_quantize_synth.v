@@ -22,16 +22,16 @@
 
 module conv_activate_quantize_synth(
   clk,  //i
-  reset //i
-  // //DDR MIG
-  // ddr_en, //i
+  reset, //i
+  //DDR MIG
+  ddr_en, //i
 
-  // DDR_en,  //o
-  // DDR_en_wr, //o
-  // DDR_in,  //o
-  // DDR_adr, //o
-  // DDR_valid,
-  // DDR_out  //i
+  DDR_en,  //o
+  DDR_en_wr, //o
+  DDR_in,  //o
+  DDR_adr, //o
+  DDR_valid,//i
+  DDR_out  //i
 );
   //SA
   parameter sa_row_num = 4;  //how many rows in conv core
@@ -133,8 +133,8 @@ module conv_activate_quantize_synth(
 
   input clk, reset;
   //DDR MIG
-  // input ddr_en;
-  wire ddr_en = 1;
+  input ddr_en;
+  // wire ddr_en = 1;
   reg start; //top start
   always@(posedge clk) begin
       if (reset) begin
@@ -191,27 +191,27 @@ module conv_activate_quantize_synth(
   wire last_conv_compute;
   wire conv_fin;
   //DDR
-  wire DDR_en;
-  wire DDR_en_wr;
-  wire [511:0] DDR_in;
-  wire [ 31:0] DDR_adr;
-  wire DDR_valid = 1;
-  wire [511:0] DDR_out;  //o
+  // wire DDR_en;
+  // wire DDR_en_wr;
+  // wire [511:0] DDR_in;
+  // wire [ 31:0] DDR_adr;
+  // wire DDR_valid = 1;
+  // wire [511:0] DDR_out;  //o
 
-  // output DDR_en;
-  // output DDR_en_wr;
-  // output [511:0] DDR_in;
-  // output [ 31:0] DDR_adr;
-  // input DDR_valid;
-  // input [511:0] DDR_out;  //o
+  output DDR_en;
+  output DDR_en_wr;
+  output [511:0] DDR_in;
+  output [ 31:0] DDR_adr;
+  input DDR_valid;
+  input [511:0] DDR_out;  //o
   //DDR data
-  reg valid_load_input;
-  // wire valid_load_input;
+  // reg valid_load_input;
+  wire valid_load_input;
   wire [511:0] load_input_word;
   reg [511:0] last_load_input_word;
   reg state_valid_load_input;
-  reg valid_load_weights; //ddr words is loaded from ddr
-  // wire valid_load_weights;
+  // reg valid_load_weights; //ddr words is loaded from ddr
+  wire valid_load_weights;
   //conv compute ctrl
   wire [15:0] ox_start, oy_start, of_start, pox, poy, pof, if_idx;
   reg [15:0] shadow_ox_start, shadow_oy_start, shadow_of_start, shadow_pox, shadow_poy, shadow_pof;
@@ -585,14 +585,14 @@ module conv_activate_quantize_synth(
   end
 
   //DDR
-  DDR DDR (
-      .clka (clk),                    // input wire clka
-      .ena  (DDR_en),   // input wire ena
-      .wea  (DDR_en_wr),                      // input wire [0 : 0] wea
-      .addra(DDR_adr),  // input wire [31 : 0] addra
-      .dina (DDR_in),                      // input wire [511 : 0] dina
-      .douta(DDR_out)                 // output wire [511 : 0] douta
-  );
+  // DDR DDR (
+  //     .clka (clk),                    // input wire clka
+  //     .ena  (DDR_en),   // input wire ena
+  //     .wea  (DDR_en_wr),                      // input wire [0 : 0] wea
+  //     .addra(DDR_adr),  // input wire [31 : 0] addra
+  //     .dina (DDR_in),                      // input wire [511 : 0] dina
+  //     .douta(DDR_out)                 // output wire [511 : 0] douta
+  // );
   assign DDR_en          = ((input_word_ddr_en_rd == 1'b1) || (weights_word_ddr_en_rd == 1'b1) || (valid_conv_out_ddr_adr == 1'b1)) ? 1'b1 : 1'b0;
   assign DDR_en_wr       = (valid_conv_out_ddr_adr == 1'b1)? 1 : 0;
   assign DDR_adr         = (input_word_ddr_en_rd == 1)? input_word_ddr_adr_rd :
@@ -608,15 +608,15 @@ module conv_activate_quantize_synth(
 
   //DDR input load
   //DDR sim version
-  always @(posedge clk) begin
-    if (reset) begin
-      valid_load_input <= 0;
-    end else begin
-      valid_load_input <= input_word_ddr_en_rd;  //DDR sim
-    end
-  end
+  // always @(posedge clk) begin
+  //   if (reset) begin
+  //     valid_load_input <= 0;
+  //   end else begin
+  //     valid_load_input <= input_word_ddr_en_rd;  //DDR sim
+  //   end
+  // end
   //true DDR version
-  // assign valid_load_input = ((state_conv_load_input == 1) && (DDR_valid == 1));
+  assign valid_load_input = ((state_conv_load_input == 1) && (DDR_valid == 1));
   always @(posedge clk) begin
     if (reset == 1'b1) begin
       last_load_input_word   <= 0;
@@ -637,15 +637,15 @@ module conv_activate_quantize_synth(
   assign input_word_buf_en_wr = state_valid_load_input;
   //DDR weights load
   //DDR sim version
-  always @(posedge clk) begin
-    if (reset) begin
-      valid_load_weights <= 0;
-    end else begin
-      valid_load_weights <= weights_word_ddr_en_rd;  //DDR sim
-    end
-  end
+  // always @(posedge clk) begin
+  //   if (reset) begin
+  //     valid_load_weights <= 0;
+  //   end else begin
+  //     valid_load_weights <= weights_word_ddr_en_rd;  //DDR sim
+  //   end
+  // end
   // true DDR version
-  // assign valid_load_weights = ((state_conv_load_weights == 1) && (DDR_valid == 1));
+  assign valid_load_weights = ((state_conv_load_weights == 1) && (DDR_valid == 1));
 
   //conv decoder
   conv_quantize_relu_decoder cv_quantize_relu_decoder (

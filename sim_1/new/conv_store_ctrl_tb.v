@@ -63,7 +63,8 @@ module conv_store_ctrl_tb ();
   //store cmd generate
   wire [ 31:0] store_ddr_base_adr;
   wire [ 15:0] store_ddr_length;
-  wire         valid_ddr_cmd;
+  wire         valid_store_ddr_cmd;
+  wire         conv_store_fin;
 
   conv_store_ddr_controller cv_store_ddr_controller (
       .clk                       (clk),
@@ -85,7 +86,7 @@ module conv_store_ctrl_tb ();
       //store cmd
       .store_ddr_base_adr        (store_ddr_base_adr),
       .store_ddr_length          (store_ddr_length),
-      .valid_ddr_cmd             (valid_ddr_cmd),
+      .valid_store_ddr_cmd       (valid_store_ddr_cmd),
       //cycle 0 out
       .fifo_rds                  (fifo_rds),
       //cycle 1 in
@@ -101,7 +102,8 @@ module conv_store_ctrl_tb ();
       //store ddr data
       .conv_out_ddr_adr          (conv_out_ddr_adr),
       .valid_conv_out_ddr_data   (valid_conv_out_ddr_data),
-      .conv_out_ddr_data         (conv_out_ddr_data)
+      .conv_out_ddr_data         (conv_out_ddr_data),
+      .conv_store_fin            (conv_store_fin)
   );
 
   always begin
@@ -116,7 +118,7 @@ module conv_store_ctrl_tb ();
   always @(posedge clk) begin
     if (reset == 1) begin
       ddr_cmd_ready <= 1;
-    end else if (valid_ddr_cmd == 1) begin
+    end else if (valid_store_ddr_cmd == 1) begin
       ddr_cmd_ready <= 0;
     end else if (cmd_counter == 40) begin
       ddr_cmd_ready <= 1;
@@ -142,7 +144,7 @@ module conv_store_ctrl_tb ();
   always @(posedge clk) begin
     if (reset == 1) begin
       cmd_counter_signal <= 0;
-    end else if (valid_ddr_cmd == 1) begin
+    end else if (valid_store_ddr_cmd == 1) begin
       cmd_counter_signal <= 1;
     end else if (cmd_counter == 40) begin
       cmd_counter_signal <= 0;
