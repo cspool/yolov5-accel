@@ -177,7 +177,7 @@ module conv_store_ddr_controller (
 
   assign loop_store_of_counter_add_begin = (state_conv_store_data == 0)  //no valid store process at now
  && (conv_store_signal_add == 1) && (ddr_cmd_ready == 1);
-  assign loop_store_of_counter_add_end   = loop_store_of_counter_add_begin && (store_of_counter - 1 + (store_ddr_length << ofs_in_row_2pow) >= cur_pof);
+  assign loop_store_of_counter_add_end   = loop_store_of_counter_add_begin && (store_of_counter - 1 + (store_ddr_length << ofs_in_row_2pow) > cur_pof);
   assign valid_store_ddr_cmd             = loop_store_of_counter_add_begin;
   assign store_ddr_length                = (store_of_counter - 1 + (ddr_cmd_word_num << ofs_in_row_2pow) > cur_pof) ? ((cur_pof - store_of_counter + 1) >> ofs_in_row_2pow) : ddr_cmd_word_num;
   // assign store_ddr_length                = (cur_pof >> ofs_in_row_2pow);

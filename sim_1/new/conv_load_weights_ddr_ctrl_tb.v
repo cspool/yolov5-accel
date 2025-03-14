@@ -72,13 +72,13 @@ module conv_load_weights_ddr_ctrl_tb ();
     end
   end
 
-  always @(posedge clk) begin
-    if (reset == 1) begin
-      conv_load_weights <= 1;
-    end else if (conv_load_weights == 1) begin
-      conv_load_weights <= 0;
-    end
-  end
+  // always @(posedge clk) begin
+  //   if (reset == 1) begin
+  //     conv_load_weights <= 1;
+  //   end else if (conv_load_weights == 1) begin
+  //     conv_load_weights <= 0;
+  //   end
+  // end
 
   always @(posedge clk) begin
     if (reset == 1) begin
@@ -145,7 +145,19 @@ module conv_load_weights_ddr_ctrl_tb ();
     reset                              = 1;
 
     #10;
-    reset = 0;
+    reset             = 0;
+    conv_load_weights = 1;
+
+    #10;
+    conv_load_weights = 0;
+
+    #500;
+
+    #10;
+    conv_load_weights = 1;
+
+    #10;
+    conv_load_weights = 0;
 
   end
 
