@@ -35,7 +35,7 @@ def generate_conv_E_quantize_tests():
   #       for quantize_type in quantize_types:
   #          conv_test(conv_type, mode_type, quantize_type)
   
-  conv_type, mode_type, quantize_type = (2,1,0)
+  conv_type, mode_type, quantize_type = (1,0,0)
   conv_E_quantize_test(conv_type, mode_type, quantize_type)
 
 def conv_E_quantize_test(conv_type, mode_type, quantize_type):
@@ -46,12 +46,12 @@ def standard_conv_E_quantize(conv_type, mode_type, quantize_type):
   # def basic conv op
   mode = mode_type
   k,s,p = conv_type_mapping[conv_type]
-  of = 64
+  of = 16
   ox = 64
   oy = 64
   ix = ox if s == 1 else ox*2
   iy = oy if s == 1 else oy*2
-  nif = 128
+  nif = 16
 
   # generate input and argument data 
   weight_data, weights_ddr_words = generate_conv_weight_data(mode, of, nif, k)
@@ -155,12 +155,12 @@ def fpga_conv_E_quantize(conv_type, mode_type, quantize_type):
   # def basic conv op
   mode = mode_type
   k,s,p = conv_type_mapping[conv_type]
-  of = 64
+  of = 16
   ox = 64
   oy = 64
   ix = ox if s == 1 else ox*2
   iy = oy if s == 1 else oy*2
-  nif = 4
+  nif = 16
   #fpga conv results
   collect_result(of, oy, ox)
   #compare the fpga result with std conv
@@ -760,12 +760,16 @@ def generate_instr_args_init(mode,k,s,p,of,ox,oy,ix,iy,nif,input_base_adr):
   output_ddr_layer_base_adr_integer = 0
   ix_index_num_real = math.ceil(ix_integer / pixels_in_row_real)
   iy_index_num_real = math.ceil(iy_integer)
-  tilex_first_ix_word_num_real = math.ceil(((pixels_in_row - 1) * s_real + k_real - p_real) / pixels_in_row)
+  tilex_first_ix_word_num_real = math.ceil(((pixels_in_row - 1) * s_real + k_real - p_real) / pixels_in_row) \
+  if (ix_index_num_real >= math.ceil(((pixels_in_row - 1) * s_real + k_real - p_real) / pixels_in_row)) \
+  else ix_index_num_real ## the rest of idx need right pad 
   # tilex mid rectified
   tilex_last_ix_word_num_real = s_real if (((ix_index_num_real - tilex_first_ix_word_num_real) % s_real) == 0) \
   else ((ix_index_num_real - tilex_first_ix_word_num_real) % s_real)
   tilex_mid_ix_word_num_real = s_real
-  tiley_first_iy_row_num_real = (buffers_num - 1) * s_real + k_real - p_real
+  tiley_first_iy_row_num_real = (buffers_num - 1) * s_real + k_real - p_real \
+  if (iy_index_num_real >= (buffers_num - 1) * s_real + k_real - p_real) \
+  else iy_index_num_real
   # tiley mid rectified
   tiley_last_iy_row_num_real = (buffers_num * s_real) if ((iy_index_num_real - tiley_first_iy_row_num_real) % (buffers_num * s_real) == 0) \
   else ((iy_index_num_real - tiley_first_iy_row_num_real) % (buffers_num * s_real))

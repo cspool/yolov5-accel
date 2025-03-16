@@ -86,7 +86,7 @@ module conv_fifo_out_controller (
   output reg valid_conv_out;
   output reg [15:0] out_y_idx, out_x_idx, out_f_idx;
   output reg conv_fifo_out_tile_add_end;
-  output [conv_out_data_width-1 : 0] conv_out_data;
+  output [conv_out_data_width-1 : 0] conv_out_data;  //xxxxxxxxxxxxxxxxxxxx
   output [511:0] conv_out_ddr_data;
   output valid_conv_out_ddr_adr;
   reg valid_conv_out_ddr_adr_mode0, valid_conv_out_ddr_adr_mode1;

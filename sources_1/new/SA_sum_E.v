@@ -22,7 +22,7 @@
 
 module SA_sum_E(
 clk, reset, en,
-mode, 
+mode_init, 
 row_in, column_in,
 
 out_sa_row_idx,
@@ -72,7 +72,8 @@ parameter mult_lut_array_length = mult_array_length - mult_dsp_array_length;
 
 input clk, reset, en;
 
-input [3:0] mode;
+input [3:0] mode_init;
+reg [3:0] mode;
 input channel_out_reset,channel_out_en;
 
 input mult_array_mode;
@@ -117,17 +118,17 @@ wire loop_row_counter_add_begin, loop_row_counter_add_end;
 
 wire [row_num_in_sa-1 :0] row_en;
 
-// always@(posedge clk)
-//   begin
-//     if (reset == 1'b1)
-//     begin //set
-//       mode <= mode_init;
-//     end
-//     else
-//     begin
-//       mode <= mode;
-//     end
-//   end
+always@(posedge clk)
+  begin
+    if (reset == 1'b1)
+    begin //set
+      mode <= mode_init;
+    end
+    else
+    begin
+      mode <= mode;
+    end
+  end
 
 assign row_en = {(row_num_in_sa){en}} << (out_sa_row_idx);
 
