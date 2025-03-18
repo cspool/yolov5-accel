@@ -46,12 +46,12 @@ def standard_conv_E_quantize(conv_type, mode_type, quantize_type):
   # def basic conv op
   mode = mode_type
   k,s,p = conv_type_mapping[conv_type]
-  of = 16
+  of = 32
   ox = 64
   oy = 64
   ix = ox if s == 1 else ox*2
   iy = oy if s == 1 else oy*2
-  nif = 16
+  nif = 32
 
   # generate input and argument data 
   weight_data, weights_ddr_words = generate_conv_weight_data(mode, of, nif, k)
@@ -155,12 +155,12 @@ def fpga_conv_E_quantize(conv_type, mode_type, quantize_type):
   # def basic conv op
   mode = mode_type
   k,s,p = conv_type_mapping[conv_type]
-  of = 16
+  of = 32
   ox = 64
   oy = 64
   ix = ox if s == 1 else ox*2
   iy = oy if s == 1 else oy*2
-  nif = 16
+  nif = 32
   #fpga conv results
   collect_result(of, oy, ox)
   #compare the fpga result with std conv

@@ -60,7 +60,10 @@ module quan_product_add_bias_vecOp (
   output reg [product_add_bias_vector_width - 1:0] product_add_bias_vector;
 
   wire [bias_width-1 : 0] bias_88;
+  reg  [bias_width-1 : 0] bias_88_vector[pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa-1:0];
   wire [bias_width-1:0] bias_18_1, bias_18_2;
+  reg  [                                  bias_width-1 : 0] bias_18_1_vector     [pe_parallel_pixel_18 * 1 * column_num_in_sa-1:0];
+  reg  [                                  bias_width-1 : 0] bias_18_2_vector     [pe_parallel_pixel_18 * 1 * column_num_in_sa-1:0];
 
   wire [sum_mult_E_vector_in_mult_P_width_width_88 - 1 : 0] sum_mult_E_vector_88;
   wire [sum_mult_E_vector_in_mult_P_width_width_18_2 - 1 : 0] sum_mult_E_vector_18_1, sum_mult_E_vector_18_2;
@@ -87,25 +90,46 @@ module quan_product_add_bias_vecOp (
   genvar i;
   generate
     for (i = 0; i < pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa; i = i + 1) begin
+      always @(posedge clk) begin
+        if (reset == 1) begin
+          bias_88_vector[i] <= 0;
+        end else begin
+          bias_88_vector[i] <= next_bias_set[bias_width-1 : 0];
+        end
+      end
       assign product_add_bias_vector_88[(i*mult_P_width)+:mult_P_width] =
           //sum * E
           sum_mult_E_vector_88[(i*mult_P_width)+:mult_P_width] +
           //bias
-          {{(mult_P_width - bias_width) {bias_88[bias_width-1]}}, bias_88};  //bias_18_1 = bias_88
+          {{(mult_P_width - bias_width) {bias_88_vector[i][bias_width-1]}}, bias_88_vector[i]};  //bias_18_1 = bias_88
     end
     for (i = 0; i < pe_parallel_pixel_18 * 1 * column_num_in_sa; i = i + 1) begin
+      always @(posedge clk) begin
+        if (reset == 1) begin
+          bias_18_1_vector[i] <= 0;
+        end else begin
+          bias_18_1_vector[i] <= next_bias_set[bias_width-1 : 0];
+        end
+      end
       assign product_add_bias_vector_18_1[(i*mult_P_width)+:mult_P_width] =
           //sum * E
           sum_mult_E_vector_18_1[(i*mult_P_width)+:mult_P_width] +
           //bias
-          {{(mult_P_width - bias_width) {bias_18_1[bias_width-1]}}, bias_18_1};
+          {{(mult_P_width - bias_width) {bias_18_1_vector[i][bias_width-1]}}, bias_18_1_vector[i]};
     end
     for (i = 0; i < pe_parallel_pixel_18 * 1 * column_num_in_sa; i = i + 1) begin
+      always @(posedge clk) begin
+        if (reset == 1) begin
+          bias_18_2_vector[i] <= 0;
+        end else begin
+          bias_18_2_vector[i] <= next_bias_set[bias_set_width-1 : bias_width];
+        end
+      end
       assign product_add_bias_vector_18_2[(i*mult_P_width)+:mult_P_width] =
           //sum * E
           sum_mult_E_vector_18_2[(i*mult_P_width)+:mult_P_width] +
           //bias
-          {{(mult_P_width - bias_width) {bias_18_2[bias_width-1]}}, bias_18_2};
+          {{(mult_P_width - bias_width) {bias_18_2_vector[i][bias_width-1]}}, bias_18_2_vector[i]};
     end
   endgenerate
 
