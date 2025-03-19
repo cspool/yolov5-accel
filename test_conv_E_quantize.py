@@ -48,7 +48,7 @@ def standard_conv_E_quantize(conv_type, mode_type, quantize_type):
   k,s,p = conv_type_mapping[conv_type]
   of = 32
   ox = 64
-  oy = 64
+  oy = 8
   ix = ox if s == 1 else ox*2
   iy = oy if s == 1 else oy*2
   nif = 32
@@ -157,7 +157,7 @@ def fpga_conv_E_quantize(conv_type, mode_type, quantize_type):
   k,s,p = conv_type_mapping[conv_type]
   of = 32
   ox = 64
-  oy = 64
+  oy = 8
   ix = ox if s == 1 else ox*2
   iy = oy if s == 1 else oy*2
   nif = 32
