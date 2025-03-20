@@ -1,32 +1,32 @@
 //------------------------------------------------------------------------------
-// Ä£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½: ddr3_top
-// Ä£ï¿½é¹¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½:
-// ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½:
-//    - DDR3ï¿½æ´¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä£ï¿½ï¿½?
-//    - ï¿½ï¿½ï¿½ï¿½DDR3ï¿½ï¿½Ð´ï¿½ï¿½ï¿½ÆºÍ²ï¿½ï¿½Ô¹ï¿½ï¿½ï¿½
-//    - ï¿½ï¿½ï¿½ï¿½ÏµÍ³Ê±ï¿½ÓºÍ¸ï¿½Î»
+// Ä£¿éÃû³Æ: ddr3_top
+// Ä£¿é¹¦ÄÜÃèÊö:
+// Ö÷Òª¹¦ÄÜ:
+//    - DDR3´æ´¢Æ÷¶¥²ã¿ØÖÆÄ£¿é
+//    - ¼¯³ÉDDR3¶ÁÐ´¿ØÖÆºÍ²âÊÔ¹¦ÄÜ
+//    - ¹ÜÀíÏµÍ³Ê±ÖÓºÍ¸´Î»
 //
-// ï¿½Ó¿ï¿½Ëµï¿½ï¿½:
-//    ï¿½ï¿½ï¿½ï¿½ï¿½Åºï¿½:
-//    - F1_GCLK_40M: 40MHzÏµÍ³Ê±ï¿½ï¿½
+// ½Ó¿ÚËµÃ÷:
+//    ÊäÈëÐÅºÅ:
+//    - F1_GCLK_40M: 40MHzÏµÍ³Ê±ÖÓ
 //
-//    ï¿½ï¿½ï¿½ï¿½Åºï¿½?:
-//    - done: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É±ï¿½ï¿½?(ï¿½ï¿½ï¿½Ú·ï¿½ï¿½ï¿½Ä£Ê½ï¿½ï¿½ï¿½ï¿½Ð§)
+//    Êä³öÐÅºÅ:
+//    - done: ·ÂÕæÍê³É±êÖ¾(½öÔÚ·ÂÕæÄ£Ê½ÏÂÓÐÐ§)
 //
-//    DDR3ï¿½Ó¿ï¿½ï¿½Åºï¿½:
-//    - ddr3_addr: DDR3ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½(15Î»)
-//    - ddr3_ba: DDR3 bankï¿½ï¿½Ö·(3Î»)
-//    - ddr3_cas_n: ï¿½Ðµï¿½Ö·Ñ¡Í¨ï¿½Åºï¿½
-//    - ddr3_ck_n/p: DDR3Ê±ï¿½Ó²ï¿½Ö¶ï¿½?
-//    - ddr3_cke: Ê±ï¿½ï¿½Ê¹ï¿½ï¿½
-//    - ddr3_ras_n: ï¿½Ðµï¿½Ö·Ñ¡Í¨ï¿½Åºï¿½
-//    - ddr3_reset_n: DDR3ï¿½ï¿½Î»ï¿½Åºï¿½
-//    - ddr3_we_n: Ð´Ê¹ï¿½ï¿½ï¿½Åºï¿½
-//    - ddr3_dq: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½(DDR_WIDTHÎ»)
-//    - ddr3_dqs_n/p: ï¿½ï¿½ï¿½ï¿½Ñ¡Í¨ï¿½ï¿½Ö¶ï¿½?
-//    - ddr3_cs_n: Æ¬Ñ¡ï¿½Åºï¿½
-//    - ddr3_dm: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-//    - ddr3_odt: ï¿½ï¿½Ì¬ï¿½Õ¶ï¿½
+//    DDR3½Ó¿ÚÐÅºÅ:
+//    - ddr3_addr: DDR3µØÖ·×ÜÏß(15Î»)
+//    - ddr3_ba: DDR3 bankµØÖ·(3Î»)
+//    - ddr3_cas_n: ÁÐµØÖ·Ñ¡Í¨ÐÅºÅ
+//    - ddr3_ck_n/p: DDR3Ê±ÖÓ²î·Ö¶Ô
+//    - ddr3_cke: Ê±ÖÓÊ¹ÄÜ
+//    - ddr3_ras_n: ÐÐµØÖ·Ñ¡Í¨ÐÅºÅ
+//    - ddr3_reset_n: DDR3¸´Î»ÐÅºÅ
+//    - ddr3_we_n: Ð´Ê¹ÄÜÐÅºÅ
+//    - ddr3_dq: Êý¾Ý×ÜÏß(DDR_WIDTHÎ»)
+//    - ddr3_dqs_n/p: Êý¾ÝÑ¡Í¨²î·Ö¶Ô
+//    - ddr3_cs_n: Æ¬Ñ¡ÐÅºÅ
+//    - ddr3_dm: Êý¾ÝÑÚÂë
+//    - ddr3_odt: ¶¯Ì¬ÖÕ¶Ë
 //------------------------------------------------------------------------------
 
 `include "ddr3_defines.vh"
@@ -40,11 +40,7 @@ module ddr3_top #(
 ) (
     // input
     input F1_GCLK_40M,
-
-    // output
-`ifdef SIMULATION
-    output done,
-`endif
+    input ena,
 
     // DDR3 interface
     output [               14:0] ddr3_addr,
@@ -63,20 +59,20 @@ module ddr3_top #(
     output [DDR_WIDTH / 8 - 1:0] ddr3_dm,
     output [                0:0] ddr3_odt
 );
+  `default_nettype none
 
   /*
 Control flow:
   1. Wait sys reset
-  2. test_start for user
-  3. test_ready for ddr3 (when state is in STATE_INIT)
-  4. test_trig for test (when state is in STATE_Start)
+  2. ddr_start for user
+  3. cmd_rdy for ddr3 (when state is in STATE_INIT)
   Waring: Don't have combination loop
 */
 
   // Internal signals
   reg                     rst_n;
   wire                    clk_40M;
-  wire                    clk_150M;
+  wire                    clk_100M;
   wire                    clk_200M;
   wire                    clk_40MHz_locked;
   reg  [            15:0] rst_cnt;
@@ -87,33 +83,27 @@ Control flow:
   // DDR3 controller signals
   wire [  UI_WIDTH - 1:0] app_rd_data;
   wire                    app_rd_data_valid;
+  wire                    app_wr_data_rdy;
   wire                    app_wr_data_valid;
   wire                    ddr3_rd_finish;
   wire                    ddr3_rd_addr_finish;
   wire                    ddr3_wr_finish;
   wire                    error_flag;
+  wire                    cmd_rdy;
 
   wire                    init_calib_complete;
 
   // Test module signals
-  wire [             2:0] test_cmd;
-  wire [  UI_WIDTH - 1:0] test_wdf_data;
-  wire                    test_trig;
-  wire [ADDR_WIDTH - 1:0] test_base_addr;
-  wire [             9:0] test_size;
-  wire                    test_ready;
-  wire                    test_done;
-  wire                    test_err;
-
-`ifdef SIMULATION
-
-  assign done = test_done;
-`endif
+  wire [             2:0] ddr_cmd;
+  wire                    ddr_cmd_valid;
+  wire [  UI_WIDTH - 1:0] app_wdf_data;
+  wire [ADDR_WIDTH - 1:0] ddr_base_addr;
+  wire [             9:0] ddr_rw_size;
 
   // Clk wiz
-  clk_wiz_0 clk_wiz_40M_inst (
-      .clk_out3(clk_200M),
-      .clk_out2(clk_150M),
+  clk_wiz_40M clk_wiz_40M_inst (
+      .clk_out3(clk_200M), 
+      .clk_out2(clk_100M),
       .clk_out1(clk_40M),
       .locked  (clk_40MHz_locked),
       .clk_in1 (F1_GCLK_40M)
@@ -123,7 +113,8 @@ Control flow:
   always @(posedge clk_40M or negedge clk_40MHz_locked) begin
     if (!clk_40MHz_locked) begin
       rst_cnt <= 16'd0;
-    end else if (rst_cnt < RST_CNT) begin
+    end
+    else if (rst_cnt < RST_CNT) begin
       rst_cnt <= rst_cnt + 1'b1;
     end
   end
@@ -131,9 +122,11 @@ Control flow:
   always @(posedge clk_40M or negedge clk_40MHz_locked) begin
     if (!clk_40MHz_locked) begin
       rst_n <= 1'b0;
-    end else if (rst_cnt > RST_CNT - 100) begin
+    end
+    else if (rst_cnt > RST_CNT - 100) begin
       rst_n <= 1'b1;
-    end else begin
+    end
+    else begin
       rst_n <= 1'b0;
     end
   end
@@ -141,19 +134,21 @@ Control flow:
 
   // test start for simulation
 `ifdef SIMULATION
-  reg test_start;
+  reg ddr_start;
   always @(posedge clk_40M or negedge rst_n) begin
     if (!rst_n || ui_rst) begin
-      test_start <= 1'b0;
-    end else if (init_calib_complete) begin
-      test_start <= 1'b1;
-    end else begin
-      test_start <= 1'b0;
+      ddr_start <= 1'b0;
+    end
+    else if (init_calib_complete) begin
+      ddr_start <= 1'b1;
+    end
+    else begin
+      ddr_start <= 1'b0;
     end
   end
 
 `else
-  wire test_start;
+  wire ddr_start;
 `endif
 
   // DDR3 controller instance
@@ -162,28 +157,30 @@ Control flow:
       .UI_WIDTH (UI_WIDTH)
   ) ddr3_rw_inst (
       // input
-      .clk_150M      (clk_150M),
+      .clk_100M      (clk_100M),
       .clk_200M      (clk_200M),
       .rst_n         (rst_n),
-      .ena           (test_start),
-      .app_cmd       (test_cmd),
-      .ddr3_base_addr(test_base_addr),
-      .ddr3_rw_size  (test_size),
-      .app_wdf_data  (test_wdf_data),
-      .test_trig     (test_trig),
+      .ena           (ddr_start && ena),
+      .app_cmd       (ddr_cmd),
+      .cmd_valid     (ddr_cmd_valid),
+      .ddr3_base_addr(ddr_base_addr),
+      .ddr3_rw_size  (ddr_rw_size),
+      .app_wdf_data  (app_wdf_data),
+      .app_wdf_data_valid(app_wr_data_valid),
 
       // output
       .ui_clk             (ui_clk),
       .ui_rst             (ui_rst),
+      .cmd_rdy       (cmd_rdy),
       .app_rd_data        (app_rd_data),
       .app_rd_data_valid  (app_rd_data_valid),
-      .app_wr_data_valid  (app_wr_data_valid),
+      .app_wr_data_rdy  (app_wr_data_rdy),
       .ddr3_rd_finish     (ddr3_rd_finish),
       .ddr3_rd_addr_finish(ddr3_rd_addr_finish),
       .ddr3_wr_finish     (ddr3_wr_finish),
       .init_calib_complete(init_calib_complete),
       .error_flag         (error_flag),
-      .test_ready         (test_ready),
+      .test_rdy         (),
 
       // DDR3 interface
       .ddr3_addr   (ddr3_addr),
@@ -203,35 +200,50 @@ Control flow:
       .ddr3_odt    (ddr3_odt)
   );
 
-  wire                    reset;
-  wire                    ddr_en;
-  wire                    DDR_en;
-  wire                    DDR_en_wr;
-  wire [ DDR_WIDTH - 1:0] DDR_in;
-  wire [ DDR_WIDTH - 1:0] DDR_out;
-  wire [ADDR_WIDTH - 1:0] DDR_adr;
-  conv_activate_quantize_synth conv_activate_quantize_synth_inst (
-      .clk      (clk_150M),
-      .reset    (reset),
-      .ddr_en   (ddr_en),     //xxxxxxxxxxxx
-      .DDR_valid(DDR_valid),
-      .DDR_out  (DDR_out),
+  quan_accel_conv_demo quan_accel_conv_demo_inst (
+      .clk                (ui_clk),
+      .reset              (ui_rst),
+      // DDR MIG
+      .ddr_cmd_ready      (cmd_rdy),
+      .ddr_rd_data_valid  (app_rd_data_valid),
+      .ddr_wt_data_ready  (app_wr_data_rdy),
 
-      .DDR_en   (DDR_en),
-      .DDR_en_wr(DDR_en_wr),
-      .DDR_in   (DDR_in),
-      .DDR_adr  (DDR_adr)
+      .cmd_ddr_base_adr   (ddr_base_addr),
+      .cmd_ddr_length     (ddr_rw_size),
+      .valid_cmd          (ddr_cmd_valid),
+      .ddr_mode           (ddr_cmd),
+
+      .ddr_rd_data        (app_rd_data),
+      .ddr_wt_data        (app_wdf_data),
+      .valid_ddr_wt_data  (app_wr_data_valid)
   );
 
-  assign reset          = ~rst_n;
-  assign ddr_en         = test_ready;
-  assign DDR_valid      = app_rd_data_valid;
-  assign DDR_out        = app_rd_data;
-  assign DDR_en         = test_start;
+  // ila
+`ifdef DEBUG
 
-  assign test_cmd       = (DDR_en_wr == 1) ? 3'b000 : (DDR_en_wr == 0) ? 3'b001 : 0;
-  assign test_wdf_data  = DDR_in;
-  assign test_base_addr = DDR_adr;
-  assign test_size      = 1;
+  ila_wiz_40M ila_wiz_40M_inst (
+      .clk   (clk_40M),
+      .probe0(rst_n),
+      .probe1(clk_40MHz_locked)
+  );
+
+  ila_ddr3_top ila_ddr3_top_inst (
+      .clk   (ui_clk),
+      .probe0(ui_rst),
+      .probe1(ddr_start),
+      .probe3(init_calib_complete),
+  );
+`endif
+
+`ifndef SIMULATION
+  // vio
+  vio_top vio_top_inst (
+      .clk       (ui_clk),
+      .probe_out0(ddr_start)
+  );
+
+`endif
+
+`default_nettype wire
 
 endmodule

@@ -118,11 +118,11 @@ module quan_SA_sum_E_v3 (
 
   reg  [row_counter_width-1 : 0] row_counter;
 
-  // wire [                   24:0] I_As        [column_num_in_sa - 1 : 0];
-  // wire [                   24:0] I_Bs        [   row_num_in_sa - 1 : 0];
+  wire [                   24:0] I_As        [column_num_in_sa - 1 : 0];
+  wire [                   24:0] I_Bs        [   row_num_in_sa - 1 : 0];
 
-  reg  [                   24:0] I_As        [column_num_in_sa - 1 : 0];
-  reg  [                   24:0] I_Bs        [   row_num_in_sa - 1 : 0];
+  // reg  [                   24:0] I_As        [column_num_in_sa - 1 : 0];
+  // reg  [                   24:0] I_Bs        [   row_num_in_sa - 1 : 0];
 
   wire loop_row_counter_add_begin, loop_row_counter_add_end;
 
@@ -152,45 +152,45 @@ module quan_SA_sum_E_v3 (
   generate
     for (i = 0; i < column_num_in_sa; i = i + 1) begin
       //uint8 input * int8 weight, unsigned input int8
-      // assign I_As[i] = (mode == 0) ?
-      //     //unsigned input --> I_A. s25 port
-      //     ({1'b0, column_in[(i*16+8)+:8], 16'b0} + {{17'b0}, column_in[(i*16)+:8]}) :
-      //     //unsigned input --> I_B, s18 port
-      //     (mode == 1) ? {{8'b0}, column_in[(i*16+8)+:8], 9'b0} + {{17'b0}, column_in[(i*16)+:8]} : 25'b0;
-
-      always @(posedge clk) begin
-        if (reset == 1'b1) begin  //set
-          I_As[i] <= 0;
-        end else begin
-          I_As[i] <= (mode == 0) ?
+      assign I_As[i] = (mode == 0) ?
           //unsigned input --> I_A. s25 port
           ({1'b0, column_in[(i*16+8)+:8], 16'b0} + {{17'b0}, column_in[(i*16)+:8]}) :
           //unsigned input --> I_B, s18 port
           (mode == 1) ? {{8'b0}, column_in[(i*16+8)+:8], 9'b0} + {{17'b0}, column_in[(i*16)+:8]} : 25'b0;
-        end
-      end
+
+      // always @(posedge clk) begin
+      //   if (reset == 1'b1) begin  //set
+      //     I_As[i] <= 0;
+      //   end else begin
+      //     I_As[i] <= (mode == 0) ?
+      //     //unsigned input --> I_A. s25 port
+      //     ({1'b0, column_in[(i*16+8)+:8], 16'b0} + {{17'b0}, column_in[(i*16)+:8]}) :
+      //     //unsigned input --> I_B, s18 port
+      //     (mode == 1) ? {{8'b0}, column_in[(i*16+8)+:8], 9'b0} + {{17'b0}, column_in[(i*16)+:8]} : 25'b0;
+      //   end
+      // end
     end
   endgenerate
 
   generate
     for (i = 0; i < row_num_in_sa; i = i + 1) begin
-      // assign I_Bs[i] = (mode == 0) ?
-      //     //signed weights --> I_B, s18 port
-      //     ({{17{row_in[i*8+7]}}, row_in[(i*8)+:8]}) :
-      //     //signed weights --> I_A, s25 port
-      //     (mode == 1) ? ({{6{row_in[i*8+1]}}, 1'b1, 18'b0} + {{24{row_in[i*8]}}, 1'b1}) : 25'b0;
-
-      always @(posedge clk) begin
-        if (reset == 1'b1) begin  //set
-          I_Bs[i] <= 0;
-        end else begin
-          I_Bs[i] <= (mode == 0) ?
+      assign I_Bs[i] = (mode == 0) ?
           //signed weights --> I_B, s18 port
           ({{17{row_in[i*8+7]}}, row_in[(i*8)+:8]}) :
           //signed weights --> I_A, s25 port
           (mode == 1) ? ({{6{row_in[i*8+1]}}, 1'b1, 18'b0} + {{24{row_in[i*8]}}, 1'b1}) : 25'b0;
-        end
-      end
+
+      // always @(posedge clk) begin
+      //   if (reset == 1'b1) begin  //set
+      //     I_Bs[i] <= 0;
+      //   end else begin
+      //     I_Bs[i] <= (mode == 0) ?
+      //     //signed weights --> I_B, s18 port
+      //     ({{17{row_in[i*8+7]}}, row_in[(i*8)+:8]}) :
+      //     //signed weights --> I_A, s25 port
+      //     (mode == 1) ? ({{6{row_in[i*8+1]}}, 1'b1, 18'b0} + {{24{row_in[i*8]}}, 1'b1}) : 25'b0;
+      //   end
+      // end
     end
   endgenerate
 

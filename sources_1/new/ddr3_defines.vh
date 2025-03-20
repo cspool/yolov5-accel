@@ -2,8 +2,9 @@
 `ifndef DDR3_DEFINES_VH
 `define DDR3_DEFINES_VH
 
-// `define SIMULATION
+// 全局开关
+`define SIMULATION
 // `define DEBUG
-`define ONLINE
+// `define ONLINE
 
-`endif // DDR3_DEFINES_VH
+`endif  // DDR3_DEFINES_VH

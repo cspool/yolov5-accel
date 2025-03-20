@@ -1778,7 +1778,7 @@ module quan_CBR_v3_tb();
     end
   endgenerate
   // sa control
-  quan_CBR_kernel_controller_v3 quan_CBR_kernel_ctrl(
+  quan_CBR_kernel_controller_v2 quan_CBR_kernel_ctrl(
     .clk              (clk),
     .reset            ((reset == 1) || (conv_start == 1)),  //next tile need clr
     .re_fm_en         (re_fm_en),

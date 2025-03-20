@@ -19,6 +19,7 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
 
+`include "ddr3_defines.vh"
 
 module quan_accel_conv_demo(
   clk,  //i
@@ -159,7 +160,7 @@ module quan_accel_conv_demo(
  //conv decoder
   reg  conv_decode;
   reg [511:0] conv_instr_args;
-  reg [511:0] conv_instr_args_mem [0:0]; //instr mem for sim
+  // reg [511:0] conv_instr_args_mem [0:0]; //instr mem for sim
   wire conv_start_pre;
   reg conv_start;
   //all below come from instr
@@ -619,12 +620,24 @@ module quan_accel_conv_demo(
     end
   end
 
+  // always @(posedge clk) begin
+  //   if (reset) begin
+  //     conv_instr_args <= 512'b0;
+  //   end
+  //   else if (start == 1'b1) begin
+  //     conv_instr_args <= conv_instr_args_mem[0];
+  //   end
+  //   else begin
+  //     conv_instr_args <= conv_instr_args;
+  //   end
+  // end
+
   always @(posedge clk) begin
     if (reset) begin
       conv_instr_args <= 512'b0;
     end
     else if (start == 1'b1) begin
-      conv_instr_args <= conv_instr_args_mem[0];
+      conv_instr_args <= 512'h00000303030303030404040100040001030304010101000000000000002700000000000000000000000000020000002420004000450020000450020200041130;
     end
     else begin
       conv_instr_args <= conv_instr_args;
@@ -1450,13 +1463,21 @@ module quan_accel_conv_demo(
       .scale_buf_en_rd(scale_buf_en_rd)
   );
 
-//E buf
-  E_buffer E_buffer (
+  //E buf
+  // E_buffer E_buffer (
+  //     .clka (clk),                     // input wire clka
+  //     .ena  (E_buf_en),     // input wire ena
+  //     .wea  (E_buf_en_wr),  // input wire [0 : 0] wea
+  //     .addra(E_buf_adr),    // input wire [8 : 0] addra
+  //     .dina (E_buf_wr),     // input wire [511 : 0] dina
+  //     .douta(E_buf_rd)      // output wire [511 : 0] douta
+  // );
+  E_buffer_rom E_buffer (
       .clka (clk),                     // input wire clka
       .ena  (E_buf_en),     // input wire ena
-      .wea  (E_buf_en_wr),  // input wire [0 : 0] wea
+      // .wea  (E_buf_en_wr),  // input wire [0 : 0] wea
       .addra(E_buf_adr),    // input wire [8 : 0] addra
-      .dina (E_buf_wr),     // input wire [511 : 0] dina
+      // .dina (E_buf_wr),     // input wire [511 : 0] dina
       .douta(E_buf_rd)      // output wire [511 : 0] douta
   );
   assign E_buf_adr = 
@@ -1467,12 +1488,20 @@ module quan_accel_conv_demo(
   assign E_buf_wr = 512'b0;
 
   //bias buf
-  bias_buffer bias_buffer (
+  // bias_buffer bias_buffer (
+  //     .clka (clk),             // input wire clka
+  //     .ena  (bias_buf_en),     // input wire ena
+  //     .wea  (bias_buf_en_wr),  // input wire [0 : 0] wea
+  //     .addra(bias_buf_adr),    // input wire [8 : 0] addra
+  //     .dina (bias_buf_wr),     // input wire [511 : 0] dina
+  //     .douta(bias_buf_rd)      // output wire [511 : 0] douta
+  // );
+  bias_buffer_rom bias_buffer (
       .clka (clk),             // input wire clka
       .ena  (bias_buf_en),     // input wire ena
-      .wea  (bias_buf_en_wr),  // input wire [0 : 0] wea
+      // .wea  (bias_buf_en_wr),  // input wire [0 : 0] wea
       .addra(bias_buf_adr),    // input wire [8 : 0] addra
-      .dina (bias_buf_wr),     // input wire [511 : 0] dina
+      // .dina (bias_buf_wr),     // input wire [511 : 0] dina
       .douta(bias_buf_rd)      // output wire [511 : 0] douta
   );
   assign bias_buf_adr = 
@@ -1483,12 +1512,20 @@ module quan_accel_conv_demo(
   assign bias_buf_wr = 512'b0;
 
   //scale buf
-  scale_buffer scale_buffer (
+  // scale_buffer scale_buffer (
+  //     .clka (clk),                     // input wire clka
+  //     .ena  (scale_buf_en),     // input wire ena
+  //     .wea  (scale_buf_en_wr),  // input wire [0 : 0] wea
+  //     .addra(scale_buf_adr),    // input wire [8 : 0] addra
+  //     .dina (scale_buf_wr),     // input wire [511 : 0] dina
+  //     .douta(scale_buf_rd)      // output wire [511 : 0] douta
+  // );
+  scale_buffer_rom scale_buffer (
       .clka (clk),                     // input wire clka
       .ena  (scale_buf_en),     // input wire ena
-      .wea  (scale_buf_en_wr),  // input wire [0 : 0] wea
+      // .wea  (scale_buf_en_wr),  // input wire [0 : 0] wea
       .addra(scale_buf_adr),    // input wire [8 : 0] addra
-      .dina (scale_buf_wr),     // input wire [511 : 0] dina
+      // .dina (scale_buf_wr),     // input wire [511 : 0] dina
       .douta(scale_buf_rd)      // output wire [511 : 0] douta
   );
   assign scale_buf_adr = 
@@ -1719,7 +1756,7 @@ module quan_accel_conv_demo(
     end
   endgenerate
   // sa control
-  quan_CBR_kernel_controller_v3 quan_CBR_kernel_ctrl(
+  quan_CBR_kernel_controller_v2 quan_CBR_kernel_ctrl(
     .clk              (clk),
     .reset            ((reset == 1) || (conv_start == 1)),  //next tile need clr
     .re_fm_en         (re_fm_en),
@@ -1858,6 +1895,97 @@ module quan_accel_conv_demo(
   assign fifo_data      = fifo_rowi_channel_seti_dout[fifo_column_no][fifo_row_no];
   assign conv_store_fin = conv_fifo_out_tile_add_end;  //demo store ctrl
 
+`ifndef SIMULATION
+  // fin and stop
+  always @(posedge clk) begin
+    if (conv_fin == 1) begin
+      $stop;
+    end
+  end
+
+`endif
+
+  integer file; 
+  integer file01, file02, file03, file04, file05, file06;
+  integer file11, file12, file13, file14, file15, file16;
+  integer file21, file22, file23, file24, file25, file26;
+  integer n;
+  initial begin
+    // initial data
+    // for (n = 0; n < 1000000; n = n + 1) begin //DDR_mem_limit
+    //   DDR_mem[n] = 512'b0;
+    // end
+    // for (n = 0; n < bias_buffer_mem_limit; n = n + 1) begin
+    //   bias_buffer_mem[n] = 512'b0;
+    // end
+    // for (n = 0; n < E_buffer_mem_limit; n = n + 1) begin
+    //   E_buffer_mem[n] = 512'b0;
+    // end
+    // for (n = 0; n < scale_buffer_mem_limit; n = n + 1) begin
+    //   scale_buffer_mem[n] = 512'b0;
+    // end
+    // $readmemh("D:\\project\\Vivado\\yolov5_accel\\yolov5_accel.srcs\\DDR_init.txt", DDR_mem);
+    // // // 打印读取的数据以验证
+    // // for (n = 0; n < 1000000; n = n + 1) begin //DDR_mem_limit
+    // //   $display("DDR_mem[%d] = %h", n, DDR_mem[n]);
+    // // end
+    // $readmemh("D:\\project\\Vivado\\yolov5_accel\\yolov5_accel.srcs\\instr_args_hex_num_init.txt", conv_instr_args_mem);
+    // // $display("conv_instr_args_mem[%d] = %h", 0, conv_instr_args_mem[0]);
+    // $readmemh("D:\\project\\Vivado\\yolov5_accel\\yolov5_accel.srcs\\bias_buffer_init.txt", bias_buffer_mem);
+    // $readmemh("D:\\project\\Vivado\\yolov5_accel\\yolov5_accel.srcs\\E_buffer_init.txt", E_buffer_mem);
+    // $readmemh("D:\\project\\Vivado\\yolov5_accel\\yolov5_accel.srcs\\scale_buffer_init.txt", scale_buffer_mem);
+    // collect conv res file
+    file = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/conv_result.txt", "w");
+    $display("Time\tvalid\tout_f_idx\tout_y_idx\tout_x_idx");
+    if (!file) begin
+            $display("Could not open file");
+            $stop;
+    end
+    // 写入文件
+    $fdisplay(file, "Time\tvalid\tout_f_idx\tout_y_idx\tout_x_idx\tresult_word");
+    // 监控信号变化并写入
+    $fmonitor(file, "%t\t%b\t%d\t%d\t%d\t%h", $time, valid_conv_out, out_f_idx, out_y_idx, out_x_idx, conv_out_data);
+
+    // collect product add bias file
+    file01 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_00.txt", "w");
+    $fmonitor(file01, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, out_rowi_channel_seti[0][0]);
+    file02 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_in_A_00.txt", "w");
+    $fmonitor(file02, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, sum_vector_in_mult_A_width_rowi_channel_setj[0][0]);
+    file03 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_mult_E_00.txt", "w");
+    $fmonitor(file03, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, sum_mult_E_vector_in_mult_P_width_rowi_channel_setj[0][0]);
+    file04 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/product_add_bias_00.txt", "w");
+    $fmonitor(file04, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, product_add_bias_vector_rowi_channel_setj[0][0]);
+    file05 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/quantize_row_00.txt", "w");
+    $fmonitor(file05, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, quantize_rowi_channel_setj[0][0]);
+    file06 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/E_in_B_00.txt", "w");
+    $fmonitor(file06, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, E_vector_in_mult_B_width_rowi_channel_setj[0][0]);
+
+    file11 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_10.txt", "w");
+    $fmonitor(file11, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, out_rowi_channel_seti[1][0]);
+    file12 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_in_A_10.txt", "w");
+    $fmonitor(file12, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, sum_vector_in_mult_A_width_rowi_channel_setj[1][0]);
+    file13 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_mult_E_10.txt", "w");
+    $fmonitor(file13, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, sum_mult_E_vector_in_mult_P_width_rowi_channel_setj[1][0]);
+    file14 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/product_add_bias_10.txt", "w");
+    $fmonitor(file14, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, product_add_bias_vector_rowi_channel_setj[1][0]);
+    file15 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/quantize_row_10.txt", "w");
+    $fmonitor(file15, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, quantize_rowi_channel_setj[1][0]);
+    file16 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/E_in_B_10.txt", "w");
+    $fmonitor(file16, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, E_vector_in_mult_B_width_rowi_channel_setj[1][0]);
+
+    file21 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_20.txt", "w");
+    $fmonitor(file21, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, out_rowi_channel_seti[2][0]);
+    file22 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_in_A_20.txt", "w");
+    $fmonitor(file22, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, sum_vector_in_mult_A_width_rowi_channel_setj[2][0]);
+    file23 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_mult_E_20.txt", "w");
+    $fmonitor(file23, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, sum_mult_E_vector_in_mult_P_width_rowi_channel_setj[2][0]);
+    file24 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/product_add_bias_20.txt", "w");
+    $fmonitor(file24, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, product_add_bias_vector_rowi_channel_setj[2][0]);
+    file25 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/quantize_row_20.txt", "w");
+    $fmonitor(file25, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, quantize_rowi_channel_setj[2][0]);
+    file26 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/E_in_B_20.txt", "w");
+    $fmonitor(file26, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, E_vector_in_mult_B_width_rowi_channel_setj[2][0]);
+  end
 
 endmodule
 
