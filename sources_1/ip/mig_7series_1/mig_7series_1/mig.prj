@@ -21,7 +21,7 @@
 
   <SystemClock>No Buffer</SystemClock>
 
-  <ReferenceClock>No Buffer</ReferenceClock>
+  <ReferenceClock>Use System Clock</ReferenceClock>
 
   <SysResetPolarity>ACTIVE LOW</SysResetPolarity>
 

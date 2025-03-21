@@ -13,7 +13,7 @@ MIG Output Options:
 
 FPGA Options:
    System Clock Type               : No Buffer
-   Reference Clock Type            : No Buffer
+   Reference Clock Type            : Use System Clock
    Debug Port                      : OFF
    Internal Vref                   : disabled
    IO Power Reduction              : ON

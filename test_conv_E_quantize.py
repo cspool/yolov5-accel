@@ -39,8 +39,8 @@ def generate_conv_E_quantize_tests():
   conv_E_quantize_test(conv_type, mode_type, quantize_type)
 
 def conv_E_quantize_test(conv_type, mode_type, quantize_type):
-    standard_conv_E_quantize(conv_type, mode_type, quantize_type)
-    # fpga_conv_E_quantize(conv_type, mode_type, quantize_type)
+    # standard_conv_E_quantize(conv_type, mode_type, quantize_type)
+    fpga_conv_E_quantize(conv_type, mode_type, quantize_type)
 
 def standard_conv_E_quantize(conv_type, mode_type, quantize_type):
   # def basic conv op
@@ -771,7 +771,8 @@ def generate_instr_args_init(mode,k,s,p,of,ox,oy,ix,iy,nif,input_base_adr):
   if (iy_index_num_real >= (buffers_num - 1) * s_real + k_real - p_real) \
   else iy_index_num_real
   # tiley mid rectified
-  tiley_last_iy_row_num_real = (buffers_num * s_real) if ((iy_index_num_real - tiley_first_iy_row_num_real) % (buffers_num * s_real) == 0) \
+  tiley_last_iy_row_num_real = (buffers_num * s_real) \
+    if ((iy_index_num_real > tiley_first_iy_row_num_real) and ((iy_index_num_real - tiley_first_iy_row_num_real) % (buffers_num * s_real) == 0)) \
   else ((iy_index_num_real - tiley_first_iy_row_num_real) % (buffers_num * s_real))
   tiley_mid_iy_row_num_real = buffers_num * s_real
   of_div_row_num_ceil_real = math.ceil(of_integer / row_num_real)

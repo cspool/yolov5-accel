@@ -112,8 +112,6 @@
     .app_wdf_mask                   (app_wdf_mask),  // input [63:0]		app_wdf_mask
     // System Clock Ports
     .sys_clk_i                       (sys_clk_i),
-    // Reference Clock Ports
-    .clk_ref_i                      (clk_ref_i),
     .device_temp_i                  (device_temp_i),  // input [11:0]			device_temp_i
     .sys_rst                        (sys_rst) // input sys_rst
     );

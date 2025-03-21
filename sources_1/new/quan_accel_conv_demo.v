@@ -653,7 +653,7 @@ module quan_accel_conv_demo(
   (valid_load_weights_ddr_cmd == 1)? load_weights_ddr_length:
   (valid_store_ddr_cmd == 1)? store_ddr_length: 0;
   assign valid_cmd = (valid_load_input_ddr_cmd == 1) || (valid_load_weights_ddr_cmd == 1) || (valid_store_ddr_cmd == 1);
-  assign ddr_mode = ((valid_cmd == 1) && (valid_store_ddr_cmd == 1))? 1: 0;
+  assign ddr_mode = ((valid_cmd == 1) && (valid_store_ddr_cmd == 1)? 0: 1);
 
   assign load_input_word = (valid_load_input) ? ddr_rd_data : 512'b0; 
   assign weights_word_buf_wt = (valid_load_weights) ? ddr_rd_data : 512'b0;
@@ -1944,7 +1944,7 @@ module quan_accel_conv_demo(
     // 写入文件
     $fdisplay(file, "Time\tvalid\tout_f_idx\tout_y_idx\tout_x_idx\tresult_word");
     // 监控信号变化并写入
-    $fmonitor(file, "%t\t%b\t%d\t%d\t%d\t%h", $time, valid_conv_out, out_f_idx, out_y_idx, out_x_idx, conv_out_data);
+    $fmonitor(file, "%t\t%b\t%d\t%d\t%d\t%h", $time, valid_conv_out_ddr_data, out_f_idx, out_y_idx, out_x_idx, conv_out_ddr_data);
 
     // collect product add bias file
     file01 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_00.txt", "w");

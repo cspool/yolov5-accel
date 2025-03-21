@@ -26,6 +26,7 @@ module SA_E_ReLU_Quantify_Ctrl (
     re_fm_en,
     mode,
     nif_mult_k_mult_k,
+    shadow_pof,
 
     sa_en,
     sa_reset,
@@ -39,10 +40,14 @@ module SA_E_ReLU_Quantify_Ctrl (
     out_sa_row_idx,
     relu_scale_add_end
 );
+  parameter row_num_in_sa = 16;  // how many rows in a sa, row_num
+
   input reset, clk;
   input re_fm_en;
   input [3:0] mode;
   input [31:0] nif_mult_k_mult_k;
+  input [15:0] shadow_pof;
+  wire [ 5:0] shadow_pof_per_core;
   // reg [3:0] mode;
   // reg [31:0] nif_mult_k_mult_k;
   reg         pixels_counter_signal;
@@ -121,14 +126,20 @@ module SA_E_ReLU_Quantify_Ctrl (
     end
   end
   assign loop_sa_counter_add_begin = (sa_counter_signal == 1'b1) || (loop_pixels_counter_add_end == 1'b1);
-  assign loop_sa_counter_add_end   = loop_sa_counter_add_begin && (sa_counter == 6'd32);
+  assign loop_sa_counter_add_end = loop_sa_counter_add_begin && (sa_counter == 6'd32);
+
+  assign shadow_pof_per_core = (shadow_pof <= row_num_in_sa)? shadow_pof:
+  ((shadow_pof > row_num_in_sa) && (shadow_pof <= row_num_in_sa + row_num_in_sa))? shadow_pof - row_num_in_sa:
+  ((shadow_pof > row_num_in_sa + row_num_in_sa) && (shadow_pof <= row_num_in_sa + row_num_in_sa + row_num_in_sa))? shadow_pof - row_num_in_sa - row_num_in_sa:
+  shadow_pof - row_num_in_sa - row_num_in_sa - row_num_in_sa;
 
   always @(posedge clk) begin
     if (reset == 1'b1) begin
       channel_out_en <= 0;
     end else if (sa_counter == 6'd16) begin
       channel_out_en <= 1;
-    end else if (loop_sa_counter_add_end == 1'b1) begin  //xxx
+      // end else if (loop_sa_counter_add_end == 1'b1) begin  //xxx
+    end else if ((loop_sa_counter_add_begin == 1'b1) && (sa_counter == 6'd16 + shadow_pof_per_core)) begin  //of maybe less than 16
       channel_out_en <= 0;
     end else begin
       channel_out_en <= channel_out_en;

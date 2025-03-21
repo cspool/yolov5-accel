@@ -88,8 +88,6 @@ module mig_7series_1 (
   // Inputs
   // Single-ended system clock
   input             sys_clk_i,
-  // Single-ended iodelayctrl clk (reference clock)
-  input             clk_ref_i,
   // user interface signals
   input [28:0]       app_addr,
   input [2:0]       app_cmd,
@@ -172,8 +170,6 @@ module mig_7series_1 (
     .app_wdf_mask                   (app_wdf_mask),
     // System Clock Ports
     .sys_clk_i                       (sys_clk_i),
-    // Reference Clock Ports
-    .clk_ref_i                      (clk_ref_i),
     .device_temp_i                  (device_temp_i),
        .device_temp            (device_temp),
        `ifdef SKIP_CALIB

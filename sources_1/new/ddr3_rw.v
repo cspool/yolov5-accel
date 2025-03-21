@@ -468,14 +468,8 @@ module ddr3_rw #(
       .app_wdf_mask   ({DDR_WIDTH{1'b0}}),
 
       .sys_clk_i    (clk_200M),
-`ifdef ONLINE
       .sys_rst      (rst_n),
-      // For 16-bit DDR3, or it should be commented
-      .device_temp_i(12'd0),
-      .clk_ref_i    (clk_200M)
-`else
-      .sys_rst      (rst_n)
-`endif
+      .device_temp_i(12'd0)
   );
 
   // ila

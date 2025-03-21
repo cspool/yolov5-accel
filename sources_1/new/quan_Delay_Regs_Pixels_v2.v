@@ -21,60 +21,47 @@
 
 
 module quan_Delay_Regs_Pixels_v2 (
-
     clk,
-    en,
-
     re_row_pixels,
-
     delay_row_pixels
 );
-  parameter row_num = 16;
-  parameter column_num = 16;
+  parameter row_num_in_sa = 16;
+  parameter column_num_in_sa = 16;
   parameter pixels_in_row = 32;
 
-  input clk, en;
+  input clk;
 
   input [pixels_in_row*8-1:0] re_row_pixels;
 
-  output reg [column_num*16-1:0] delay_row_pixels;
+  output reg [column_num_in_sa*16-1:0] delay_row_pixels;
 
-  reg [16 -1 : 0] col_16_regs[ (row_num-1) -1:0];
-  reg [16 -1 : 0] col_15_regs[ (row_num-2) -1:0];
-  reg [16 -1 : 0] col_14_regs[ (row_num-3) -1:0];
-  reg [16 -1 : 0] col_13_regs[ (row_num-4) -1:0];
-  reg [16 -1 : 0] col_12_regs[ (row_num-5) -1:0];
-  reg [16 -1 : 0] col_11_regs[ (row_num-6) -1:0];
-  reg [16 -1 : 0] col_10_regs[ (row_num-7) -1:0];
-  reg [16 -1 : 0] col_9_regs [ (row_num-8) -1:0];
-  reg [16 -1 : 0] col_8_regs [ (row_num-9) -1:0];
-  reg [16 -1 : 0] col_7_regs [(row_num-10) -1:0];
-  reg [16 -1 : 0] col_6_regs [(row_num-11) -1:0];
-  reg [16 -1 : 0] col_5_regs [(row_num-12) -1:0];
-  reg [16 -1 : 0] col_4_regs [(row_num-13) -1:0];
-  reg [16 -1 : 0] col_3_regs [(row_num-14) -1:0];
-  reg [16 -1 : 0] col_2_regs [(row_num-15) -1:0];
+  reg [16 -1 : 0] col_16_regs[ (row_num_in_sa-1) -1:0];
+  reg [16 -1 : 0] col_15_regs[ (row_num_in_sa-2) -1:0];
+  reg [16 -1 : 0] col_14_regs[ (row_num_in_sa-3) -1:0];
+  reg [16 -1 : 0] col_13_regs[ (row_num_in_sa-4) -1:0];
+  reg [16 -1 : 0] col_12_regs[ (row_num_in_sa-5) -1:0];
+  reg [16 -1 : 0] col_11_regs[ (row_num_in_sa-6) -1:0];
+  reg [16 -1 : 0] col_10_regs[ (row_num_in_sa-7) -1:0];
+  reg [16 -1 : 0] col_9_regs [ (row_num_in_sa-8) -1:0];
+  reg [16 -1 : 0] col_8_regs [ (row_num_in_sa-9) -1:0];
+  reg [16 -1 : 0] col_7_regs [(row_num_in_sa-10) -1:0];
+  reg [16 -1 : 0] col_6_regs [(row_num_in_sa-11) -1:0];
+  reg [16 -1 : 0] col_5_regs [(row_num_in_sa-12) -1:0];
+  reg [16 -1 : 0] col_4_regs [(row_num_in_sa-13) -1:0];
+  reg [16 -1 : 0] col_3_regs [(row_num_in_sa-14) -1:0];
+  reg [16 -1 : 0] col_2_regs [(row_num_in_sa-15) -1:0];
 
   genvar i;
 
   //col 16
   always @(posedge clk) begin
-    if (en == 1'b1) begin
-      col_16_regs[0] <= re_row_pixels[((16-1)*16)+:16];
-    end else begin
-      col_16_regs[0] <= col_16_regs[0];
-    end
+    col_16_regs[0] <= re_row_pixels[((16-1)*16)+:16];
   end
   generate
-    for (i = 1; i < row_num - 1; i = i + 1) begin : col_16_row
+    for (i = 1; i < row_num_in_sa - 1; i = i + 1) begin : col_16_row
       always @(posedge clk) begin
-        if (en == 1'b1) begin
-          col_16_regs[i] <= col_16_regs[i-1];
-        end else begin
-          col_16_regs[i] <= col_16_regs[i];
-        end
+        col_16_regs[i] <= col_16_regs[i-1];
       end
-
     end
 
   endgenerate
@@ -82,31 +69,18 @@ module quan_Delay_Regs_Pixels_v2 (
   // assign delay_row_pixels[(16-1)*16+:16] = col_16_regs[14];
 
   always @(posedge clk) begin
-    if (en == 1'b1) begin
-      delay_row_pixels[(16-1)*16+:16] <= col_16_regs[14];
-    end else begin
-      delay_row_pixels[(16-1)*16+:16] <= delay_row_pixels[(16-1)*16+:16];
-    end
+    delay_row_pixels[(16-1)*16+:16] <= col_16_regs[14];
   end
 
   //col 15
   always @(posedge clk) begin
-    if (en == 1'b1) begin
-      col_15_regs[0] <= re_row_pixels[((15-1)*16)+:16];
-    end else begin
-      col_15_regs[0] <= col_15_regs[0];
-    end
+    col_15_regs[0] <= re_row_pixels[((15-1)*16)+:16];
   end
   generate
-    for (i = 1; i < row_num - 2; i = i + 1) begin : col_15_row
+    for (i = 1; i < row_num_in_sa - 2; i = i + 1) begin : col_15_row
       always @(posedge clk) begin
-        if (en == 1'b1) begin
-          col_15_regs[i] <= col_15_regs[i-1];
-        end else begin
-          col_15_regs[i] <= col_15_regs[i];
-        end
+        col_15_regs[i] <= col_15_regs[i-1];
       end
-
     end
 
   endgenerate
@@ -114,338 +88,196 @@ module quan_Delay_Regs_Pixels_v2 (
   // assign delay_row_pixels[(15-1)*16+:16] = col_15_regs[13];
 
   always @(posedge clk) begin
-    if (en == 1'b1) begin
-      delay_row_pixels[(15-1)*16+:16] <= col_15_regs[13];
-    end else begin
-      delay_row_pixels[(15-1)*16+:16] <= delay_row_pixels[(15-1)*16+:16];
-    end
+    delay_row_pixels[(15-1)*16+:16] <= col_15_regs[13];
   end
   //col 14
   always @(posedge clk) begin
-    if (en == 1'b1) begin
-      col_14_regs[0] <= re_row_pixels[((14-1)*16)+:16];
-    end else begin
-      col_14_regs[0] <= col_14_regs[0];
-    end
+    col_14_regs[0] <= re_row_pixels[((14-1)*16)+:16];
   end
   generate
-    for (i = 1; i < row_num - 3; i = i + 1) begin : col_14_row
+    for (i = 1; i < row_num_in_sa - 3; i = i + 1) begin : col_14_row
       always @(posedge clk) begin
-        if (en == 1'b1) begin
-          col_14_regs[i] <= col_14_regs[i-1];
-        end else begin
-          col_14_regs[i] <= col_14_regs[i];
-        end
+        col_14_regs[i] <= col_14_regs[i-1];
       end
-
     end
 
   endgenerate
 
   // assign delay_row_pixels[(14-1)*16+:16] = col_14_regs[12];
   always @(posedge clk) begin
-    if (en == 1'b1) begin
-      delay_row_pixels[(14-1)*16+:16] <= col_14_regs[12];
-    end else begin
-      delay_row_pixels[(14-1)*16+:16] <= delay_row_pixels[(14-1)*16+:16];
-    end
+    delay_row_pixels[(14-1)*16+:16] <= col_14_regs[12];
   end
 
   //col 13
   always @(posedge clk) begin
-    if (en == 1'b1) begin
-      col_13_regs[0] <= re_row_pixels[((13-1)*16)+:16];
-    end else begin
-      col_13_regs[0] <= col_13_regs[0];
-    end
+    col_13_regs[0] <= re_row_pixels[((13-1)*16)+:16];
   end
   generate
-    for (i = 1; i < row_num - 4; i = i + 1) begin : col_13_row
+    for (i = 1; i < row_num_in_sa - 4; i = i + 1) begin : col_13_row
       always @(posedge clk) begin
-        if (en == 1'b1) begin
-          col_13_regs[i] <= col_13_regs[i-1];
-        end else begin
-          col_13_regs[i] <= col_13_regs[i];
-        end
+        col_13_regs[i] <= col_13_regs[i-1];
       end
-
     end
 
   endgenerate
 
   // assign delay_row_pixels[(13-1)*16+:16] = col_13_regs[11];
   always @(posedge clk) begin
-    if (en == 1'b1) begin
-      delay_row_pixels[(13-1)*16+:16] <= col_13_regs[11];
-    end else begin
-      delay_row_pixels[(13-1)*16+:16] <= delay_row_pixels[(13-1)*16+:16];
-    end
+    delay_row_pixels[(13-1)*16+:16] <= col_13_regs[11];
   end
 
   //col 12
   always @(posedge clk) begin
-    if (en == 1'b1) begin
-      col_12_regs[0] <= re_row_pixels[((12-1)*16)+:16];
-    end else begin
-      col_12_regs[0] <= col_12_regs[0];
-    end
+    col_12_regs[0] <= re_row_pixels[((12-1)*16)+:16];
   end
   generate
-    for (i = 1; i < row_num - 5; i = i + 1) begin : col_12_row
+    for (i = 1; i < row_num_in_sa - 5; i = i + 1) begin : col_12_row
       always @(posedge clk) begin
-        if (en == 1'b1) begin
-          col_12_regs[i] <= col_12_regs[i-1];
-        end else begin
-          col_12_regs[i] <= col_12_regs[i];
-        end
+        col_12_regs[i] <= col_12_regs[i-1];
       end
-
     end
 
   endgenerate
 
   // assign delay_row_pixels[(12-1)*16+:16] = col_12_regs[10];
   always @(posedge clk) begin
-    if (en == 1'b1) begin
-      delay_row_pixels[(12-1)*16+:16] <= col_12_regs[10];
-    end else begin
-      delay_row_pixels[(12-1)*16+:16] <= delay_row_pixels[(12-1)*16+:16];
-    end
+    delay_row_pixels[(12-1)*16+:16] <= col_12_regs[10];
   end
 
   //col 11
   always @(posedge clk) begin
-    if (en == 1'b1) begin
-      col_11_regs[0] <= re_row_pixels[((11-1)*16)+:16];
-    end else begin
-      col_11_regs[0] <= col_11_regs[0];
-    end
+    col_11_regs[0] <= re_row_pixels[((11-1)*16)+:16];
   end
   generate
-    for (i = 1; i < row_num - 6; i = i + 1) begin : col_11_row
+    for (i = 1; i < row_num_in_sa - 6; i = i + 1) begin : col_11_row
       always @(posedge clk) begin
-        if (en == 1'b1) begin
-          col_11_regs[i] <= col_11_regs[i-1];
-        end else begin
-          col_11_regs[i] <= col_11_regs[i];
-        end
+        col_11_regs[i] <= col_11_regs[i-1];
       end
-
     end
 
   endgenerate
 
   // assign delay_row_pixels[(11-1)*16+:16] = col_11_regs[9];
   always @(posedge clk) begin
-    if (en == 1'b1) begin
-      delay_row_pixels[(11-1)*16+:16] <= col_11_regs[9];
-    end else begin
-      delay_row_pixels[(11-1)*16+:16] <= delay_row_pixels[(11-1)*16+:16];
-    end
+    delay_row_pixels[(11-1)*16+:16] <= col_11_regs[9];
   end
 
   //col 10
   always @(posedge clk) begin
-    if (en == 1'b1) begin
-      col_10_regs[0] <= re_row_pixels[((10-1)*16)+:16];
-    end else begin
-      col_10_regs[0] <= col_10_regs[0];
-    end
+    col_10_regs[0] <= re_row_pixels[((10-1)*16)+:16];
   end
   generate
-    for (i = 1; i < row_num - 7; i = i + 1) begin : col_10_row
+    for (i = 1; i < row_num_in_sa - 7; i = i + 1) begin : col_10_row
       always @(posedge clk) begin
-        if (en == 1'b1) begin
-          col_10_regs[i] <= col_10_regs[i-1];
-        end else begin
-          col_10_regs[i] <= col_10_regs[i];
-        end
+        col_10_regs[i] <= col_10_regs[i-1];
       end
-
     end
 
   endgenerate
 
   // assign delay_row_pixels[(10-1)*16+:16] = col_10_regs[8];
   always @(posedge clk) begin
-    if (en == 1'b1) begin
-      delay_row_pixels[(10-1)*16+:16] <= col_10_regs[8];
-    end else begin
-      delay_row_pixels[(10-1)*16+:16] <= delay_row_pixels[(10-1)*16+:16];
-    end
+    delay_row_pixels[(10-1)*16+:16] <= col_10_regs[8];
   end
 
   //col 9
   always @(posedge clk) begin
-    if (en == 1'b1) begin
-      col_9_regs[0] <= re_row_pixels[((9-1)*16)+:16];
-    end else begin
-      col_9_regs[0] <= col_9_regs[0];
-    end
+    col_9_regs[0] <= re_row_pixels[((9-1)*16)+:16];
   end
   generate
-    for (i = 1; i < row_num - 8; i = i + 1) begin : col_9_row
+    for (i = 1; i < row_num_in_sa - 8; i = i + 1) begin : col_9_row
       always @(posedge clk) begin
-        if (en == 1'b1) begin
-          col_9_regs[i] <= col_9_regs[i-1];
-        end else begin
-          col_9_regs[i] <= col_9_regs[i];
-        end
+        col_9_regs[i] <= col_9_regs[i-1];
       end
-
     end
 
   endgenerate
 
   // assign delay_row_pixels[(9-1)*16+:16] = col_9_regs[7];
   always @(posedge clk) begin
-    if (en == 1'b1) begin
-      delay_row_pixels[(9-1)*16+:16] <= col_9_regs[7];
-    end else begin
-      delay_row_pixels[(9-1)*16+:16] <= delay_row_pixels[(9-1)*16+:16];
-    end
+    delay_row_pixels[(9-1)*16+:16] <= col_9_regs[7];
   end
 
   //col 8
   always @(posedge clk) begin
-    if (en == 1'b1) begin
-      col_8_regs[0] <= re_row_pixels[((8-1)*16)+:16];
-    end else begin
-      col_8_regs[0] <= col_8_regs[0];
-    end
+    col_8_regs[0] <= re_row_pixels[((8-1)*16)+:16];
   end
   generate
-    for (i = 1; i < row_num - 9; i = i + 1) begin : col_8_row
+    for (i = 1; i < row_num_in_sa - 9; i = i + 1) begin : col_8_row
       always @(posedge clk) begin
-        if (en == 1'b1) begin
-          col_8_regs[i] <= col_8_regs[i-1];
-        end else begin
-          col_8_regs[i] <= col_8_regs[i];
-        end
+        col_8_regs[i] <= col_8_regs[i-1];
       end
-
     end
 
   endgenerate
 
   // assign delay_row_pixels[(8-1)*16+:16] = col_8_regs[6];
   always @(posedge clk) begin
-    if (en == 1'b1) begin
-      delay_row_pixels[(8-1)*16+:16] <= col_8_regs[6];
-    end else begin
-      delay_row_pixels[(8-1)*16+:16] <= delay_row_pixels[(8-1)*16+:16];
-    end
+    delay_row_pixels[(8-1)*16+:16] <= col_8_regs[6];
   end
 
   //col 7
   always @(posedge clk) begin
-    if (en == 1'b1) begin
-      col_7_regs[0] <= re_row_pixels[((7-1)*16)+:16];
-    end else begin
-      col_7_regs[0] <= col_7_regs[0];
-    end
+    col_7_regs[0] <= re_row_pixels[((7-1)*16)+:16];
   end
   generate
-    for (i = 1; i < row_num - 10; i = i + 1) begin : col_7_row
+    for (i = 1; i < row_num_in_sa - 10; i = i + 1) begin : col_7_row
       always @(posedge clk) begin
-        if (en == 1'b1) begin
-          col_7_regs[i] <= col_7_regs[i-1];
-        end else begin
-          col_7_regs[i] <= col_7_regs[i];
-        end
+        col_7_regs[i] <= col_7_regs[i-1];
       end
-
     end
 
   endgenerate
 
   // assign delay_row_pixels[(7-1)*16+:16] = col_7_regs[5];
   always @(posedge clk) begin
-    if (en == 1'b1) begin
-      delay_row_pixels[(7-1)*16+:16] <= col_7_regs[5];
-    end else begin
-      delay_row_pixels[(7-1)*16+:16] <= delay_row_pixels[(7-1)*16+:16];
-    end
+    delay_row_pixels[(7-1)*16+:16] <= col_7_regs[5];
   end
 
   //col 6
   always @(posedge clk) begin
-    if (en == 1'b1) begin
-      col_6_regs[0] <= re_row_pixels[((6-1)*16)+:16];
-    end else begin
-      col_6_regs[0] <= col_6_regs[0];
-    end
+    col_6_regs[0] <= re_row_pixels[((6-1)*16)+:16];
   end
   generate
-    for (i = 1; i < row_num - 11; i = i + 1) begin : col_6_row
+    for (i = 1; i < row_num_in_sa - 11; i = i + 1) begin : col_6_row
       always @(posedge clk) begin
-        if (en == 1'b1) begin
-          col_6_regs[i] <= col_6_regs[i-1];
-        end else begin
-          col_6_regs[i] <= col_6_regs[i];
-        end
+        col_6_regs[i] <= col_6_regs[i-1];
       end
-
     end
 
   endgenerate
 
   // assign delay_row_pixels[(6-1)*16+:16] = col_6_regs[4];
   always @(posedge clk) begin
-    if (en == 1'b1) begin
-      delay_row_pixels[(6-1)*16+:16] <= col_6_regs[4];
-    end else begin
-      delay_row_pixels[(6-1)*16+:16] <= delay_row_pixels[(6-1)*16+:16];
-    end
+    delay_row_pixels[(6-1)*16+:16] <= col_6_regs[4];
   end
 
   //col 5
   always @(posedge clk) begin
-    if (en == 1'b1) begin
-      col_5_regs[0] <= re_row_pixels[((5-1)*16)+:16];
-    end else begin
-      col_5_regs[0] <= col_5_regs[0];
-    end
+    col_5_regs[0] <= re_row_pixels[((5-1)*16)+:16];
   end
   generate
-    for (i = 1; i < row_num - 12; i = i + 1) begin : col_5_row
+    for (i = 1; i < row_num_in_sa - 12; i = i + 1) begin : col_5_row
       always @(posedge clk) begin
-        if (en == 1'b1) begin
-          col_5_regs[i] <= col_5_regs[i-1];
-        end else begin
-          col_5_regs[i] <= col_5_regs[i];
-        end
+        col_5_regs[i] <= col_5_regs[i-1];
       end
-
     end
 
   endgenerate
 
   // assign delay_row_pixels[(5-1)*16+:16] = col_5_regs[3];
   always @(posedge clk) begin
-    if (en == 1'b1) begin
-      delay_row_pixels[(5-1)*16+:16] <= col_5_regs[3];
-    end else begin
-      delay_row_pixels[(5-1)*16+:16] <= delay_row_pixels[(5-1)*16+:16];
-    end
+    delay_row_pixels[(5-1)*16+:16] <= col_5_regs[3];
   end
 
   //col 4
   always @(posedge clk) begin
-    if (en == 1'b1) begin
-      col_4_regs[0] <= re_row_pixels[((4-1)*16)+:16];
-    end else begin
-      col_4_regs[0] <= col_4_regs[0];
-    end
+    col_4_regs[0] <= re_row_pixels[((4-1)*16)+:16];
   end
   generate
-    for (i = 1; i < row_num - 13; i = i + 1) begin : col_4_row
+    for (i = 1; i < row_num_in_sa - 13; i = i + 1) begin : col_4_row
       always @(posedge clk) begin
-        if (en == 1'b1) begin
-          col_4_regs[i] <= col_4_regs[i-1];
-        end else begin
-          col_4_regs[i] <= col_4_regs[i];
-        end
+        col_4_regs[i] <= col_4_regs[i-1];
       end
 
     end
@@ -454,71 +286,42 @@ module quan_Delay_Regs_Pixels_v2 (
 
   // assign delay_row_pixels[(4-1)*16+:16] = col_4_regs[2];
   always @(posedge clk) begin
-    if (en == 1'b1) begin
-      delay_row_pixels[(4-1)*16+:16] <= col_4_regs[2];
-    end else begin
-      delay_row_pixels[(4-1)*16+:16] <= delay_row_pixels[(4-1)*16+:16];
-    end
+    delay_row_pixels[(4-1)*16+:16] <= col_4_regs[2];
   end
 
   //col 3
   always @(posedge clk) begin
-    if (en == 1'b1) begin
-      col_3_regs[0] <= re_row_pixels[((3-1)*16)+:16];
-    end else begin
-      col_3_regs[0] <= col_3_regs[0];
-    end
+    col_3_regs[0] <= re_row_pixels[((3-1)*16)+:16];
   end
   generate
-    for (i = 1; i < row_num - 14; i = i + 1) begin : col_3_row
+    for (i = 1; i < row_num_in_sa - 14; i = i + 1) begin : col_3_row
       always @(posedge clk) begin
-        if (en == 1'b1) begin
-          col_3_regs[i] <= col_3_regs[i-1];
-        end else begin
-          col_3_regs[i] <= col_3_regs[i];
-        end
+        col_3_regs[i] <= col_3_regs[i-1];
       end
-
     end
 
   endgenerate
 
   // assign delay_row_pixels[(3-1)*16+:16] = col_3_regs[1];
   always @(posedge clk) begin
-    if (en == 1'b1) begin
-      delay_row_pixels[(3-1)*16+:16] <= col_3_regs[1];
-    end else begin
-      delay_row_pixels[(3-1)*16+:16] <= delay_row_pixels[(3-1)*16+:16];
-    end
+    delay_row_pixels[(3-1)*16+:16] <= col_3_regs[1];
   end
 
   //col 2
   always @(posedge clk) begin
-    if (en == 1'b1) begin
-      col_2_regs[0] <= re_row_pixels[((2-1)*16)+:16];
-    end else begin
-      col_2_regs[0] <= col_2_regs[0];
-    end
+    col_2_regs[0] <= re_row_pixels[((2-1)*16)+:16];
   end
 
   // assign delay_row_pixels[(2-1)*16+:16] = col_2_regs[0];
   always @(posedge clk) begin
-    if (en == 1'b1) begin
-      delay_row_pixels[(2-1)*16+:16] <= col_2_regs[0];
-    end else begin
-      delay_row_pixels[(2-1)*16+:16] <= delay_row_pixels[(2-1)*16+:16];
-    end
+    delay_row_pixels[(2-1)*16+:16] <= col_2_regs[0];
   end
 
   //col 1
 
   // assign delay_row_pixels[(1-1)*16+:16] = re_row_pixels[(1-1)*16+:16];
   always @(posedge clk) begin
-    if (en == 1'b1) begin
-      delay_row_pixels[(1-1)*16+:16] <= re_row_pixels[(1-1)*16+:16];
-    end else begin
-      delay_row_pixels[(1-1)*16+:16] <= delay_row_pixels[(1-1)*16+:16];
-    end
+    delay_row_pixels[(1-1)*16+:16] <= re_row_pixels[(1-1)*16+:16];
   end
 
 

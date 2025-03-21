@@ -501,9 +501,9 @@ module quan_CBR_v4(
   wire [column_num_in_sa * mult_P_width -1:0] //product P
   extra_sa_vector_Ps[sa_column_num-1 : 0][sa_row_num-1 : 0];
 
-  // sa control
-  wire sa_en_pre, sa_reset_pre;
-  reg sa_en, sa_reset;
+   // sa control
+  // wire sa_en_pre, sa_reset_pre;
+  // reg sa_en, sa_reset;
   wire core_cell_en_pre;
   wire core_cell_reset_pre;
   // reg core_sa_en;
@@ -547,8 +547,8 @@ module quan_CBR_v4(
   //sa out channel
   wire [5:0] out_sa_row_idx_pre;  //output sa row idx [1,16]
   reg [5:0] out_sa_row_idx;  //output sa row idx [1,16]
-  wire [5:0] core_out_sa_row_idx_pre;
-  reg [5:0] core_out_sa_row_idx;
+  // wire [5:0] core_out_sa_row_idx_pre;
+  // reg [5:0] core_out_sa_row_idx;
   // wire mult_array_mode;
   wire core_mult_array_mode_pre;
   reg core_mult_array_mode;
@@ -1251,8 +1251,8 @@ module quan_CBR_v4(
       scale_reg_set                <= 0;
       last_scale_reg_start <= 0;
       last_scale_reg_size  <= 0;
-      sa_en <= 0;
-      sa_reset <= 0;
+      // sa_en <= 0;
+      // sa_reset <= 0;
       conv_fifo_add_end <= 0;
       conv_start <= 0;
     end else if (state == 4'b0001) begin  //conv op
@@ -1293,8 +1293,8 @@ module quan_CBR_v4(
       scale_reg_set                <= scale_buf_en_rd;
       last_scale_reg_start <= scale_reg_start;
       last_scale_reg_size  <= scale_reg_size;
-      sa_en <= sa_en_pre;
-      sa_reset <= sa_reset_pre;
+      // sa_en <= sa_en_pre;
+      // sa_reset <= sa_reset_pre;
       conv_fifo_add_end <= conv_fifo_add_end_pre;
       conv_start <= conv_start_pre;
     end
@@ -1626,7 +1626,7 @@ module quan_CBR_v4(
     for (i = 1; i <= sa_column_num; i = i + 1) begin : delay_regs_column  //poy, rows
       quan_Delay_Regs_Pixels_v2 delay_regs_pixels (
           .clk             (clk),
-          .en              (sa_en),
+          // .en              (sa_en),
           .re_row_pixels   (re_rowi_pixels[i-1]),
           .delay_row_pixels(delay_rowi_pixels[i-1])
       );
@@ -1647,7 +1647,7 @@ module quan_CBR_v4(
     for (j = 1; j <= sa_row_num; j = j + 1) begin : delay_regs_row  //output channel
       quan_Delay_Regs_Weights_v2 delay_regs_weights (
           .clk          (clk),
-          .en           (sa_en),
+          // .en           (sa_en),
           .weights      (weights_vector[(j-1)*row_num_in_sa*8+:(row_num_in_sa*8)]),
           .delay_weights(delay_weights_sets[j-1])
       );
@@ -1665,8 +1665,8 @@ module quan_CBR_v4(
         
         quan_SA_sum_E_v4 sa (
             .clk              (clk),
-            .reset((reset == 1) || (conv_start == 1)),
-            .core_cell_reset_pre((reset == 1) || (conv_start == 1) || (core_cell_reset_pre == 1)),
+            .reset((reset == 1) || (conv_start == 1) || (conv_compute_fin == 1)),
+            // .core_cell_reset_pre((reset == 1) || (conv_start == 1) || (core_cell_reset_pre == 1)),
             .core_cell_en_pre(core_cell_en_pre),
             .core_cell_output_en_pre(core_cell_output_en_pre),
             .mode_init             (mode),
@@ -1799,10 +1799,11 @@ module quan_CBR_v4(
     .re_fm_en         (re_fm_en),
     .mode_init             (mode),
     .nif_mult_k_mult_k_init(nif_mult_k_mult_k),
+    .shadow_pof(shadow_pof),
 
     //for shell ctrl
-    .sa_en_pre(sa_en_pre),
-    .sa_reset_pre(sa_reset_pre),
+    // .sa_en_pre(sa_en_pre),
+    // .sa_reset_pre(sa_reset_pre),
     .out_sa_row_idx_pre(out_sa_row_idx_pre),
     .conv_fifo_add_end_pre(conv_fifo_add_end_pre),
 
@@ -1815,8 +1816,8 @@ module quan_CBR_v4(
     .core_product_add_bias_en_pre(core_product_add_bias_en_pre),
     .core_relu_scale_en_pre(core_relu_scale_en_pre),
     .core_conv_fifo_en_pre(core_conv_fifo_en_pre),
-    .core_mult_array_mode_pre(core_mult_array_mode_pre),
-    .core_out_sa_row_idx_pre(core_out_sa_row_idx_pre)
+    .core_mult_array_mode_pre(core_mult_array_mode_pre)
+    // .core_out_sa_row_idx_pre(core_out_sa_row_idx_pre)
   );
 
   always @(posedge clk) begin
@@ -1827,7 +1828,7 @@ module quan_CBR_v4(
       core_relu_scale_en <= 0;
       core_conv_fifo_en <= 0;
       core_mult_array_mode <= 0;
-      core_out_sa_row_idx <= 0;
+      // core_out_sa_row_idx <= 0;
     end else begin
       core_sum_E_recieve_en <= core_sum_E_recieve_en_pre;
       core_sum_mult_E_en <= core_sum_mult_E_en_pre;
@@ -1835,7 +1836,7 @@ module quan_CBR_v4(
       core_relu_scale_en <= core_relu_scale_en_pre;
       core_conv_fifo_en <= core_conv_fifo_en_pre;
       core_mult_array_mode <= core_mult_array_mode_pre;
-      core_out_sa_row_idx <= core_out_sa_row_idx_pre;
+      // core_out_sa_row_idx <= core_out_sa_row_idx_pre;
     end
   end
 

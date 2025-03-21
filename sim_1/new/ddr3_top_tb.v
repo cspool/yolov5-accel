@@ -5,12 +5,12 @@ module ddr3_top_tb;
   `default_nettype none
 
   // Parameters
-  parameter DDR_WIDTH = 16;
+  parameter DDR_WIDTH = 64;
   parameter UI_WIDTH = DDR_WIDTH*8;
   parameter RW_SIZE = 32;
   parameter RST_CNT = 300;
 
-  localparam INIT_SIZE = 32;
+  localparam INIT_SIZE = 47;
   localparam CLK_PERIOD_40 = 25;  // 40MHz for F1_GCLK_40M
   localparam CLK_PERIOD_200 = 5;  // 200MHz
   localparam CLK_PERIOD_100 = 10;  // 100MHz
@@ -91,7 +91,7 @@ module ddr3_top_tb;
       cmd_valid          = 0;
       i                  = 0;  
       // Initialize test data
-      $readmemh("C:/Users/wh/Desktop/w2a2/user/src/import/test_data.txt", test_data, 0, INIT_SIZE - 1);
+      $readmemh("D:\\project\\Vivado\\yolov5_accel\\yolov5_accel.srcs\\DDR_init.txt", test_data, 0, INIT_SIZE - 1);
       // Reset pulse
       #100;
       rst_n = 1;
