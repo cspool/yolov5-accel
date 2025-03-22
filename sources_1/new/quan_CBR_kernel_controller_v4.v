@@ -327,7 +327,7 @@ module quan_CBR_kernel_controller_v4 (
       core_cell_output_en_pre <= 0;
     end else if (loop_pixels_counter_add_begin && (pixels_counter == nif_mult_k_mult_k + 1)) begin
       core_cell_output_en_pre <= 1;  //sa_cnt == 1 <===> first valid cell_out_en
-    end else if (loop_sa_counter_add_begin && (sa_counter == 6'd15)) begin
+    end else if (loop_sa_counter_add_begin && (sa_counter == 6'd15 + 1 + shadow_pof_per_core)) begin
       core_cell_output_en_pre <= 0;
     end else begin
       core_cell_output_en_pre <= core_cell_output_en_pre;

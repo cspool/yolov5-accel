@@ -91,7 +91,7 @@ Control flow:
   wire         DDR_valid;  //i
   wire [511:0] DDR_out;  //i
 
-  quan_CBR_v3 quan_CBR_inst (
+  quan_CBR_v4 quan_CBR_inst (
       .clk   (clk_150M),
       .reset (reset),
       .ddr_en(ddr_en),    //i,1bit
