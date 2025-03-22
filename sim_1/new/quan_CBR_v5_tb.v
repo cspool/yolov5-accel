@@ -1661,8 +1661,9 @@ module quan_CBR_v5_tb();
 
         assign extra_sa_vector_Ps[i-1][j-1] = (core_product_add_bias_en == 1'b1) ? sa_row0_outs[i-1][j-1] : 0;
         
-        quan_sum_mult_E_vecOp_v3 quan_sum_mult_E_vecOp(
+        quan_sum_mult_E_vecOp_v2 quan_sum_mult_E_vecOp(
             .clk(clk),
+            .en(core_sum_E_recieve_en),
             .mode(mode),
             .E_set(E_4_channel_sets[(j-1)*E_set_width+:E_set_width]),
             .sum_vector(out_rowi_channel_seti[i-1][j-1]),
@@ -1732,21 +1733,23 @@ module quan_CBR_v5_tb();
         //[16*40]
         extra_sa_vector_Ps[i-1][j-1];
 
-        quan_product_add_bias_vecOp_v3 quan_product_add_bias_vecop(
+        quan_product_add_bias_vecOp_v2 quan_product_add_bias_vecop(
             .clk              (clk),
+            .en               (core_product_add_bias_en),
             .mode             (mode),
             .sum_mult_E_vector(sum_mult_E_vector_in_mult_P_width_rowi_channel_setj[i-1][j-1]),  // pox res per channel
             .next_bias_set         (bias_4_channel_sets[(j-1)*bias_set_width+:bias_set_width]),
             .product_add_bias_vector(product_add_bias_vector_rowi_channel_setj[i-1][j-1])  // pox res per channel
         );
 
-        quan_relu_scale_vecOp_v3 quan_relu_scale_vecop(
+        quan_relu_scale_vecOp_v2 quan_relu_scale_vecop(
             .clk                             (clk),
+            .en(core_relu_scale_en),
             .mode                            (mode),
             .next_scale_set(scale_4_channel_sets[(j-1)*scale_set_width+:scale_set_width]),
             .product_add_bias_vector(product_add_bias_vector_rowi_channel_setj[i-1][j-1]),
             .quantize_vector(quantize_rowi_channel_setj[i-1][j-1])
-        );     
+        ); 
         //conv out fifo
         fifo_rowi_channel_seti fifo_rowi_channel_seti (
             .clk       (clk),                                     // input wire clk

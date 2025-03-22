@@ -63,6 +63,7 @@ module quan_CBR_kernel_controller_v4 (
   input [31:0] nif_mult_k_mult_k_init;
   input [15:0] shadow_pof;
   wire [ 5:0] shadow_pof_per_core;
+  wire [ 1:0] log_pof_per_cell;
   reg  [ 3:0] mode;
   reg  [31:0] nif_mult_k_mult_k;
   reg         pixels_counter_signal;
@@ -235,10 +236,11 @@ module quan_CBR_kernel_controller_v4 (
     end
   end
 
-  assign shadow_pof_per_core = (shadow_pof <= row_num_in_sa)? shadow_pof:
-  ((shadow_pof > row_num_in_sa) && (shadow_pof <= row_num_in_sa + row_num_in_sa))? shadow_pof - row_num_in_sa:
-  ((shadow_pof > row_num_in_sa + row_num_in_sa) && (shadow_pof <= row_num_in_sa + row_num_in_sa + row_num_in_sa))? shadow_pof - row_num_in_sa - row_num_in_sa:
-  shadow_pof - row_num_in_sa - row_num_in_sa - row_num_in_sa;
+  assign log_pof_per_cell = (mode == 0) ? 0 : (mode == 1) ? 1 : 0;
+  assign shadow_pof_per_core = ((shadow_pof >> log_pof_per_cell) <= row_num_in_sa)? (shadow_pof >> log_pof_per_cell):
+  (((shadow_pof >> log_pof_per_cell) > row_num_in_sa) && ((shadow_pof >> log_pof_per_cell) <= row_num_in_sa + row_num_in_sa))? (shadow_pof >> log_pof_per_cell) - row_num_in_sa:
+  (((shadow_pof >> log_pof_per_cell) > row_num_in_sa + row_num_in_sa) && ((shadow_pof >> log_pof_per_cell) <= row_num_in_sa + row_num_in_sa + row_num_in_sa))? (shadow_pof >> log_pof_per_cell) - row_num_in_sa - row_num_in_sa:
+  (shadow_pof >> log_pof_per_cell) - row_num_in_sa - row_num_in_sa - row_num_in_sa;
 
 
   // assign sum_E_recieve_en = channel_out_en;

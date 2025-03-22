@@ -35,7 +35,7 @@ def generate_conv_E_quantize_tests():
   #       for quantize_type in quantize_types:
   #          conv_test(conv_type, mode_type, quantize_type)
   
-  conv_type, mode_type, quantize_type = (1,0,0)
+  conv_type, mode_type, quantize_type = (1,1,0)
   conv_E_quantize_test(conv_type, mode_type, quantize_type)
 
 def conv_E_quantize_test(conv_type, mode_type, quantize_type):
@@ -46,7 +46,7 @@ def standard_conv_E_quantize(conv_type, mode_type, quantize_type):
   # def basic conv op
   mode = mode_type
   k,s,p = conv_type_mapping[conv_type]
-  of = 64
+  of = 4
   ox = 32
   oy = 6
   ix = ox if s == 1 else ox*2
@@ -155,7 +155,7 @@ def fpga_conv_E_quantize(conv_type, mode_type, quantize_type):
   # def basic conv op
   mode = mode_type
   k,s,p = conv_type_mapping[conv_type]
-  of = 64
+  of = 4
   ox = 32
   oy = 6
   ix = ox if s == 1 else ox*2

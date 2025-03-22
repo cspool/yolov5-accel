@@ -19,24 +19,30 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
 
-
 module core_cell_row0_v2 (
     clk,
-    reset,
-    en,
-    cell_out_en,
-
     mode,
+
+    reset_pre,
+    en_pre,
+    cell_out_en_pre,
+
+    reset_out,
+    en_out,
+    cell_out_en_out,
+
     left,
     up,
     next_cell_out,
 
     right,
     bottom,
+
     mult_out,
 
     out
 );
+
   parameter headroom = 8;
 
   parameter pixel_width_88 = 16 + headroom;
@@ -52,7 +58,13 @@ module core_cell_row0_v2 (
 
   parameter pixel_width = pixel_width_88;
 
-  input clk, reset, en, cell_out_en;
+  input clk, reset_pre, en_pre, cell_out_en_pre;
+  output reg reset_out, en_out, cell_out_en_out;
+  always @(posedge clk) begin
+    reset_out       <= reset_pre;
+    en_out          <= en_pre;
+    cell_out_en_out <= cell_out_en_pre;
+  end
   input [3:0] mode;
 
   input [24:0] up;
@@ -62,6 +74,7 @@ module core_cell_row0_v2 (
   output reg [24:0] bottom;
   output reg [24:0] right;
   output reg [pe_out_width - 1 : 0] out;
+
   output [42:0] mult_out;
 
   wire [42:0] mult_O;
@@ -79,7 +92,10 @@ module core_cell_row0_v2 (
   wire [pixel_width_18 - 1 : 0] res_18_4;
 
   always @(posedge clk) begin
-    if (en) begin
+    if (reset_out) begin
+      right  <= 0;
+      bottom <= 0;
+    end else if (en_out) begin
       right  <= left;
       bottom <= up;
     end else begin
@@ -121,9 +137,9 @@ module core_cell_row0_v2 (
   );
 
   always @(posedge clk) begin
-    if (reset) begin
+    if (reset_out) begin
       out <= 0;
-    end else if (en) begin
+    end else if (en_out) begin
       if (mode == 0) begin  //8bit * 8bit
         out[pixel_width_88-1 : 0]                <= res_88_18_1[pixel_width_88-1 : 0];
         out[2*pixel_width_88-1 : pixel_width_88] <= res_88_18_2[pixel_width_88-1 : 0];
@@ -135,10 +151,9 @@ module core_cell_row0_v2 (
       end else begin
         out <= out;
       end
-    end else if (cell_out_en) begin
+    end else if (cell_out_en_out) begin
       out <= next_cell_out;
     end
   end
 
 endmodule
-

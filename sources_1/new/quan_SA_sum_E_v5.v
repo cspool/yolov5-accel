@@ -89,9 +89,9 @@ module quan_SA_sum_E_v5 (
   input [row_num_in_sa * mult_B_width -1:0] sa_E_in;  //the first row of SAs is used to mult, multer B
   input [column_num_in_sa * mult_A_width - 1:0] sa_sum_in;
 
-  reg cell_output_en_array[row_num_in_sa-1:0][column_num_in_sa-1 : 0];
-  reg cell_en_array       [row_num_in_sa-1:0][column_num_in_sa-1 : 0];
-  reg cell_reset_array    [row_num_in_sa-1:0][column_num_in_sa-1 : 0];
+  wire cell_output_en_array[row_num_in_sa-1:0][column_num_in_sa-1 : 0];
+  wire cell_en_array       [row_num_in_sa-1:0][column_num_in_sa-1 : 0];
+  wire cell_reset_array    [row_num_in_sa-1:0][column_num_in_sa-1 : 0];
 
   output [column_num_in_sa * mult_P_width -1:0] row0_out;
 
@@ -186,37 +186,7 @@ module quan_SA_sum_E_v5 (
 
   //signal roll 
   generate
-    for (i = 0; i < row_num_in_sa; i = i + 1) begin
-      for (j = 0; j < column_num_in_sa; j = j + 1) begin
-        always @(posedge clk) begin
-          // cell_reset_array[i][j] <= ((i == 0) && (j == 0)) ? core_cell_reset_pre :  //
-          cell_reset_array[i][j] <= ((i == 0) && (j == 0)) ? reset :  //
-          ((i == 0) && (j > 0)) ? cell_reset_array[i][j-1] :  // 
-          ((i > 0) && (j == 0)) ? cell_reset_array[i-1][j] :  //
-          (cell_reset_array[i][j-1] | cell_reset_array[i-1][j]);  //
-        end
-      end
-    end
-    for (i = 0; i < row_num_in_sa; i = i + 1) begin
-      for (j = 0; j < column_num_in_sa; j = j + 1) begin
-        always @(posedge clk) begin
-          cell_en_array[i][j] <= ((i == 0) && (j == 0)) ? core_cell_en_pre :  //
-          ((i == 0) && (j > 0)) ? cell_en_array[i][j-1] :  // 
-          ((i > 0) && (j == 0)) ? cell_en_array[i-1][j] :  //
-          (cell_en_array[i][j-1] | cell_en_array[i-1][j]);  //
-        end
-      end
-    end
-    for (i = 0; i < row_num_in_sa; i = i + 1) begin
-      for (j = 0; j < column_num_in_sa; j = j + 1) begin
-        always @(posedge clk) begin
-          cell_output_en_array[i][j] <= ((i == 0) && (j == 0)) ? core_cell_output_en_pre :  //
-          ((i == 0) && (j > 0)) ? cell_output_en_array[i][j-1] :  // 
-          ((i > 0) && (j == 0)) ? cell_output_en_array[i-1][j] :  //
-          (cell_output_en_array[i][j-1] | cell_output_en_array[i-1][j]);  //
-        end
-      end
-    end
+
 
   endgenerate
 
@@ -229,11 +199,16 @@ module quan_SA_sum_E_v5 (
   generate
     for (j = 0; j < column_num_in_sa; j = j + 1) begin : row_0_column
       assign sum_row[j*pe_out_width+:pe_out_width] = all_out[0][j];
-      core_cell_row0_v2 core_cell_row0 (
-          .clk          (clk),
-          .reset        (cell_reset_array[0][j]),
-          .en           (cell_en_array[0][j]),
-          .cell_out_en  (cell_output_en_array[0][j]),
+
+      core_cell_row0_v2 core_cell_row0 (  //i == 0
+          .clk            (clk),
+          .reset_pre      ((j == 0) ? reset : cell_reset_array[0][j-1]),
+          .en_pre         ((j == 0) ? core_cell_en_pre : cell_en_array[0][j-1]),
+          .cell_out_en_pre((j == 0) ? core_cell_output_en_pre : cell_output_en_array[0][j-1]),
+          .reset_out      (cell_reset_array[0][j]),
+          .en_out         (cell_en_array[0][j]),
+          .cell_out_en_out(cell_output_en_array[0][j]),
+
           .mode         (mode),
           .left         (left[0][j]),
           .up           (up[0][j]),
@@ -241,7 +216,7 @@ module quan_SA_sum_E_v5 (
           .bottom       (bottom[0][j]),
           .right        (right[0][j]),
           .mult_out     (row0_mult_out[j]),
-          .out          (all_out[0][j])                // output is based on row                
+          .out          (all_out[0][j])      // output is based on row                
       );
 
       assign up[0][j]   = (mult_array_mode == 1'b1) ?  //mult sum
@@ -254,19 +229,22 @@ module quan_SA_sum_E_v5 (
     end
     for (i = 1; i < row_num_in_sa - 1; i = i + 1) begin : row
       for (j = 0; j < column_num_in_sa; j = j + 1) begin : column
+        core_cell_v2 core_cell (  // i > 0
+            .clk            (clk),
+            .reset_pre      ((j == 0) ? cell_reset_array[i-1][j] : (cell_reset_array[i][j-1] | cell_reset_array[i-1][j])),
+            .en_pre         ((j == 0) ? cell_en_array[i-1][j] : (cell_en_array[i][j-1] | cell_en_array[i-1][j])),
+            .cell_out_en_pre((j == 0) ? cell_output_en_array[i-1][j] : (cell_output_en_array[i][j-1] | cell_output_en_array[i-1][j])),
+            .reset_out      (cell_reset_array[i][j]),
+            .en_out         (cell_en_array[i][j]),
+            .cell_out_en_out(cell_output_en_array[i][j]),
 
-        core_cell_v2 core_cell (
-            .clk          (clk),
-            .reset        (cell_reset_array[i][j]),
-            .en           (cell_en_array[i][j]),
-            .cell_out_en  (cell_output_en_array[i][j]),
             .mode         (mode),
             .left         (left[i][j]),
             .up           (up[i][j]),
             .next_cell_out(all_out[i+1][j]),
             .bottom       (bottom[i][j]),
             .right        (right[i][j]),
-            .out          (all_out[i][j])                // output is based on row                
+            .out          (all_out[i][j])     // output is based on row                
         );
 
         assign up[i][j]   = (i == 0) ? I_As[j] : bottom[i-1][j];
@@ -275,18 +253,37 @@ module quan_SA_sum_E_v5 (
       end
     end
     for (j = 0; j < column_num_in_sa; j = j + 1) begin : row_last_column
-      core_cell_v2 core_cell (
-          .clk          (clk),
-          .reset        (cell_reset_array[row_num_in_sa-1][j]),
-          .en           (cell_en_array[row_num_in_sa-1][j]),
-          .cell_out_en  (cell_output_en_array[row_num_in_sa-1][j]),
+      // cell_reset_array[i][j] <= ((i == 0) && (j == 0)) ? reset :  //
+      //     ((i == 0) && (j > 0)) ? cell_reset_array[i][j-1] :  // 
+      //     ((i > 0) && (j == 0)) ? cell_reset_array[i-1][j] :  //
+      //     (cell_reset_array[i][j-1] | cell_reset_array[i-1][j]);  //
+
+      // cell_en_array[i][j] <= ((i == 0) && (j == 0)) ? core_cell_en_pre :  //
+      //     ((i == 0) && (j > 0)) ? cell_en_array[i][j-1] :  // 
+      //     ((i > 0) && (j == 0)) ? cell_en_array[i-1][j] :  //
+      //     (cell_en_array[i][j-1] | cell_en_array[i-1][j]);  //
+
+      // cell_output_en_array[i][j] <= ((i == 0) && (j == 0)) ? core_cell_output_en_pre :  //
+      //     ((i == 0) && (j > 0)) ? cell_output_en_array[i][j-1] :  // 
+      //     ((i > 0) && (j == 0)) ? cell_output_en_array[i-1][j] :  //
+      //     (cell_output_en_array[i][j-1] | cell_output_en_array[i-1][j]);  //
+
+      core_cell_v2 core_cell (  // i>0
+          .clk            (clk),
+          .reset_pre      ((j == 0) ? cell_reset_array[row_num_in_sa-1-1][j] : (cell_reset_array[row_num_in_sa-1][j-1] | cell_reset_array[row_num_in_sa-1-1][j])),
+          .en_pre         ((j == 0) ? cell_en_array[row_num_in_sa-1-1][j] : (cell_en_array[row_num_in_sa-1][j-1] | cell_en_array[row_num_in_sa-1-1][j])),
+          .cell_out_en_pre((j == 0) ? cell_output_en_array[row_num_in_sa-1-1][j] : (cell_output_en_array[row_num_in_sa-1][j-1] | cell_output_en_array[row_num_in_sa-1-1][j])),
+          .reset_out      (cell_reset_array[row_num_in_sa-1][j]),
+          .en_out         (cell_en_array[row_num_in_sa-1][j]),
+          .cell_out_en_out(cell_output_en_array[row_num_in_sa-1][j]),
+
           .mode         (mode),
           .left         (left[row_num_in_sa-1][j]),
           .up           (up[row_num_in_sa-1][j]),
           .next_cell_out({(pe_out_width) {1'b0}}),
           .bottom       (bottom[row_num_in_sa-1][j]),
           .right        (right[row_num_in_sa-1][j]),
-          .out          (all_out[row_num_in_sa-1][j])                // output is based on row                
+          .out          (all_out[row_num_in_sa-1][j])  // output is based on row                
       );
       assign up[row_num_in_sa-1][j]   = bottom[row_num_in_sa-1-1][j];
       assign left[row_num_in_sa-1][j] = (j == 0) ? I_Bs[row_num_in_sa-1] : right[row_num_in_sa-1][j-1];
