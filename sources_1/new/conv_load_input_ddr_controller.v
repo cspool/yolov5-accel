@@ -190,6 +190,7 @@ module conv_load_input_ddr_controller (
   //load cmd
   output [31:0] load_input_ddr_base_adr;
   output [15:0] load_input_ddr_length;
+  reg [15:0] shadow_load_input_ddr_length;
   output valid_load_input_ddr_cmd;
   //load info
   output [15:0] load_input_row_idx;
@@ -426,7 +427,7 @@ module conv_load_input_ddr_controller (
   end
 
   assign loop_conv_load_input_counter_add_begin = valid_load_input;
-  assign loop_conv_load_input_counter_add_end   = loop_conv_load_input_counter_add_begin && (conv_load_input_counter == load_input_ddr_length);
+  assign loop_conv_load_input_counter_add_end   = loop_conv_load_input_counter_add_begin && (conv_load_input_counter == shadow_load_input_ddr_length);
 
   //loop if, a input chunk load (x_size, y_size, f_size) = (32, 1, nif)
   always @(posedge clk) begin
@@ -453,6 +454,16 @@ module conv_load_input_ddr_controller (
  ((nif - if_start + 1) >> ifs_in_row_2pow) + 1  //odd length + 1
 ) : ddr_cmd_word_num;
   assign valid_load_input_ddr_cmd = input_word_ddr_en_rd;
+
+  always @(posedge clk) begin
+    if (reset) begin
+      shadow_load_input_ddr_length <= 0;
+    end else if (valid_load_input_ddr_cmd) begin
+      shadow_load_input_ddr_length <= load_input_ddr_length;
+    end else begin
+      shadow_load_input_ddr_length <= shadow_load_input_ddr_length;
+    end
+  end
 
   //chunk counter is reset every computation term
   always @(posedge clk) begin

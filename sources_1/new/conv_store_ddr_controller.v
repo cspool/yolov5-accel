@@ -127,6 +127,7 @@ module conv_store_ddr_controller (
   reg conv_store_signal_add;
   output [31:0] store_ddr_base_adr;
   output [15:0] store_ddr_length;
+  reg [15:0] shadow_store_ddr_length;
   reg [15:0] cur_store_ddr_length;
   reg [15:0] cur_store_ddr_counter;
   wire loop_cur_store_ddr_counter_add_begin, loop_cur_store_ddr_counter_add_end;
@@ -183,6 +184,16 @@ module conv_store_ddr_controller (
   // assign store_ddr_length                = (cur_pof >> ofs_in_row_2pow);
 
   always @(posedge clk) begin
+    if (reset) begin
+      shadow_store_ddr_length <= 0;
+    end else if (valid_store_ddr_cmd) begin
+      shadow_store_ddr_length <= store_ddr_length;
+    end else begin
+      shadow_store_ddr_length <= shadow_store_ddr_length;
+    end
+  end
+
+  always @(posedge clk) begin
     if (reset == 1'b1) begin
       cur_store_ddr_length <= 0;
     end else if (loop_store_of_counter_add_begin == 1'b1) begin
@@ -236,7 +247,7 @@ module conv_store_ddr_controller (
   end
 
   assign loop_conv_store_data_counter_add_begin = valid_conv_out_ddr_data;
-  assign loop_conv_store_data_counter_add_end   = loop_conv_store_data_counter_add_begin && (conv_store_data_counter == store_ddr_length);
+  assign loop_conv_store_data_counter_add_end   = loop_conv_store_data_counter_add_begin && (conv_store_data_counter == shadow_store_ddr_length);
 
   //loop column no
   always @(posedge clk) begin

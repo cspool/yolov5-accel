@@ -71,6 +71,7 @@ module conv_load_weights_ddr_controller (
   //ddr cmd
   output [31:0] load_weights_ddr_base_adr;
   output [15:0] load_weights_ddr_length;
+  reg [15:0] shadow_load_weights_ddr_length;
   output valid_load_weights_ddr_cmd;
   //buf wt 
   output valid_load_weights;
@@ -153,7 +154,7 @@ module conv_load_weights_ddr_controller (
   end
 
   assign loop_conv_load_weights_counter_add_begin = valid_load_weights;
-  assign loop_conv_load_weights_counter_add_end   = loop_conv_load_weights_counter_add_begin && (conv_load_weights_counter == load_weights_ddr_length);
+  assign loop_conv_load_weights_counter_add_end   = loop_conv_load_weights_counter_add_begin && (conv_load_weights_counter == shadow_load_weights_ddr_length);
 
 
   always @(posedge clk) begin
@@ -220,6 +221,16 @@ module conv_load_weights_ddr_controller (
   assign load_weights_ddr_length        = (weights_ddr_word_counter + ddr_cmd_word_num > nif_mult_k_mult_k) ?  //last
  (nif_mult_k_mult_k - weights_ddr_word_counter + 1) : ddr_cmd_word_num;
   assign valid_load_weights_ddr_cmd     = loop_weights_ddr_word_counter_add_begin;
+
+  always @(posedge clk) begin
+    if (reset) begin
+      shadow_load_weights_ddr_length <= 0;
+    end else if (valid_load_weights_ddr_cmd) begin
+      shadow_load_weights_ddr_length <= load_weights_ddr_length;
+    end else begin
+      shadow_load_weights_ddr_length <= shadow_load_weights_ddr_length;
+    end
+  end
 
   //write the loaded weights word into weight buffer
   always @(posedge clk) begin
