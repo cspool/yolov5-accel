@@ -509,25 +509,27 @@ module quan_accel_conv_demo(
   wire [column_num_in_sa * mult_P_width -1:0] //product P
   extra_sa_vector_Ps[sa_column_num-1 : 0][sa_row_num-1 : 0];
 
-  // sa control
-  wire sa_en_pre, sa_reset_pre;
-  reg sa_en, sa_reset;
-  wire core_sa_en_pre;
-  wire core_sa_reset_pre;
-  reg core_sa_en;
-  reg core_sa_reset;
+     // sa control
+  // wire sa_en_pre, sa_reset_pre;
+  // reg sa_en, sa_reset;
+  wire core_cell_en_pre;
+  wire core_cell_reset_pre;
+  // reg core_sa_en;
+  // reg core_sa_reset;
   // wire channel_out_reset, channel_out_en;  //need logic
-  wire core_channel_out_en_pre;
-  wire core_channel_out_reset_pre;
-  reg core_channel_out_en;
-  reg core_channel_out_reset;
+  // wire core_channel_out_en_pre;
+  // wire core_channel_out_reset_pre;
+  // reg core_channel_out_en;
+  // reg core_channel_out_reset;
+  wire core_cell_output_en_pre;
+  // reg core_cell_output_en;
   //sum E recieve
   // wire sum_E_recieve_en;
   // wire sum_E_recieve_reset;
   wire core_sum_E_recieve_en_pre;
-  wire core_sum_E_recieve_reset_pre;
+  // wire core_sum_E_recieve_reset_pre;
   reg core_sum_E_recieve_en;
-  reg core_sum_E_recieve_reset;
+  // reg core_sum_E_recieve_reset;
   //mult E
   // wire sum_mult_E_en;
   wire core_sum_mult_E_en_pre;
@@ -535,15 +537,15 @@ module quan_accel_conv_demo(
   //add bias
   // wire product_add_bias_en, product_add_bias_reset;
   wire core_product_add_bias_en_pre;
-  wire core_product_add_bias_reset_pre;
+  // wire core_product_add_bias_reset_pre;
   reg core_product_add_bias_en;
-  reg core_product_add_bias_reset;
+  // reg core_product_add_bias_reset;
   //quantify ctrl
   // wire relu_scale_en, relu_scale_reset;
   wire core_relu_scale_en_pre;
-  wire core_relu_scale_reset_pre;
+  // wire core_relu_scale_reset_pre;
   reg core_relu_scale_en;
-  reg core_relu_scale_reset;
+  // reg core_relu_scale_reset;
   //conv fifo
   // wire conv_fifo_en;
   wire conv_fifo_add_end_pre;
@@ -553,8 +555,8 @@ module quan_accel_conv_demo(
   //sa out channel
   wire [5:0] out_sa_row_idx_pre;  //output sa row idx [1,16]
   reg [5:0] out_sa_row_idx;  //output sa row idx [1,16]
-  wire [5:0] core_out_sa_row_idx_pre;
-  reg [5:0] core_out_sa_row_idx;
+  // wire [5:0] core_out_sa_row_idx_pre;
+  // reg [5:0] core_out_sa_row_idx;
   // wire mult_array_mode;
   wire core_mult_array_mode_pre;
   reg core_mult_array_mode;
@@ -637,7 +639,7 @@ module quan_accel_conv_demo(
       conv_instr_args <= 512'b0;
     end
     else if (start == 1'b1) begin
-      conv_instr_args <= 512'h00000303030303030404040100040001030304010101000000000000002700000000000000000000000000020000002420004000450020000450020200041130;
+      conv_instr_args <= 512'h00000303030202020404040100060001030204010101000000000000002800000000000000000000000000020000002420004000650020000650020600401130;
     end
     else begin
       conv_instr_args <= conv_instr_args;
@@ -1180,8 +1182,6 @@ module quan_accel_conv_demo(
       scale_reg_set                <= 0;
       last_scale_reg_start <= 0;
       last_scale_reg_size  <= 0;
-      sa_en <= 0;
-      sa_reset <= 0;
       conv_fifo_add_end <= 0;
       conv_start <= 0;
     end else if (state == 4'b0001) begin  //conv op
@@ -1222,8 +1222,6 @@ module quan_accel_conv_demo(
       scale_reg_set                <= scale_buf_en_rd;
       last_scale_reg_start <= scale_reg_start;
       last_scale_reg_size  <= scale_reg_size;
-      sa_en <= sa_en_pre;
-      sa_reset <= sa_reset_pre;
       conv_fifo_add_end <= conv_fifo_add_end_pre;
       conv_start <= conv_start_pre;
     end
@@ -1536,9 +1534,8 @@ module quan_accel_conv_demo(
   assign scale_buf_wr = 512'b0;
 
   //E regs
-  quan_E_Regs E_regs (
+  quan_E_Regs_v2 E_regs (
       .clk                   (clk),
-      .reset                 ((reset == 1) || (conv_start == 1)),
       .E_set              (E_reg_set),                 // next tile need clr
       .mode                  (mode),
       .E_word     (last_E_word),
@@ -1548,9 +1545,8 @@ module quan_accel_conv_demo(
       .E_4_channel_sets(E_4_channel_sets)
   );
   //bias regs
-  quan_Bias_Regs bias_regs (
+  quan_Bias_Regs_v2 bias_regs (
       .clk           (clk),
-      .reset         ((reset == 1) || (conv_start == 1)),
       .bias_set      (bias_reg_set),         // next tile need clr
       .mode          (mode),
       .bias_word     (last_bias_word),
@@ -1560,9 +1556,8 @@ module quan_accel_conv_demo(
       .bias_4_channel_sets(bias_4_channel_sets)
   );
   //scale regs
-  quan_Scale_Regs scale_regs (
+  quan_Scale_Regs_v2 scale_regs (
       .clk                   (clk),
-      .reset                 ((reset == 1) || (conv_start == 1)),
       .scale_set              (scale_reg_set),
       .mode                  (mode),
       .scale_word     (last_scale_word),
@@ -1580,10 +1575,9 @@ module quan_accel_conv_demo(
   genvar i, j, m, b;
   generate
     for (i = 1; i <= sa_column_num; i = i + 1) begin : delay_regs_column  //poy, rows
-      quan_Delay_Regs_Pixels delay_regs_pixels (
+      quan_Delay_Regs_Pixels_v2 delay_regs_pixels (
           .clk             (clk),
-          .reset           ((sa_reset == 1) || (reset == 1) || (conv_start == 1)),
-          .en              (sa_en),
+          // .en              (sa_en),
           .re_row_pixels   (re_rowi_pixels[i-1]),
           .delay_row_pixels(delay_rowi_pixels[i-1])
       );
@@ -1602,10 +1596,9 @@ module quan_accel_conv_demo(
       end
     end
     for (j = 1; j <= sa_row_num; j = j + 1) begin : delay_regs_row  //output channel
-      quan_Delay_Regs_Weights delay_regs_weights (
+      quan_Delay_Regs_Weights_v2 delay_regs_weights (
           .clk          (clk),
-          .reset        ((sa_reset == 1) || (reset == 1) || (conv_start == 1)),
-          .en           (sa_en),
+          // .en           (sa_en),
           .weights      (weights_vector[(j-1)*row_num_in_sa*8+:(row_num_in_sa*8)]),
           .delay_weights(delay_weights_sets[j-1])
       );
@@ -1621,15 +1614,13 @@ module quan_accel_conv_demo(
     for (i = 1; i <= sa_column_num; i = i + 1) begin : sa_column  //poy, rows
       for (j = 1; j <= sa_row_num; j = j + 1) begin : sa_row  //output channel
         
-        quan_SA_sum_E_v3 sa (
+        quan_SA_sum_E_v5 sa (
             .clk              (clk),
-            .reset            ((core_sa_reset == 1) || (reset == 1) || (conv_start == 1)),
-            // .en               (core_sa_en),
-            // .next_en(core_sa_en_pre),
+            .reset((reset == 1) || (conv_start == 1) || (conv_compute_fin == 1)),
+            // .core_cell_reset_pre((reset == 1) || (conv_start == 1) || (core_cell_reset_pre == 1)),
+            .core_cell_en_pre(core_cell_en_pre),
+            .core_cell_output_en_pre(core_cell_output_en_pre),
             .mode_init             (mode),
-            .channel_out_reset((core_channel_out_reset == 1) || (reset == 1) || (conv_start == 1)),
-            .channel_out_en   (core_channel_out_en),
-            .next_out_sa_row_idx   (core_out_sa_row_idx_pre),
             .row_in           (sa_rowi_ins[i-1][j-1]),                   //weights
             .column_in        (sa_columni_ins[i-1][j-1]),                //pixels
             .sa_E_in(extra_sa_vector_Bs[i-1][j-1]),
@@ -1641,10 +1632,8 @@ module quan_accel_conv_demo(
 
         assign extra_sa_vector_Ps[i-1][j-1] = (core_product_add_bias_en == 1'b1) ? sa_row0_outs[i-1][j-1] : 0;
         
-        quan_sum_mult_E_vecOp quan_sum_mult_E_vecOp(
+        quan_sum_mult_E_vecOp_v3 quan_sum_mult_E_vecOp(
             .clk(clk),
-            .en(core_sum_E_recieve_en),
-            .reset((core_sum_E_recieve_reset == 1) || (reset == 1) || (conv_start == 1)),
             .mode(mode),
             .E_set(E_4_channel_sets[(j-1)*E_set_width+:E_set_width]),
             .sum_vector(out_rowi_channel_seti[i-1][j-1]),
@@ -1657,50 +1646,44 @@ module quan_accel_conv_demo(
         assign sum_mult_E_vector_A_mode0
         [((i-1)*sa_row_num+(j-1))*((pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa)*mult_A_width)+: //32*24
         ((pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa)*mult_A_width)] = 
-        (core_sum_mult_E_en == 1'b1) ? sum_vector_in_mult_A_width_rowi_channel_setj[i-1][j-1]
+        sum_vector_in_mult_A_width_rowi_channel_setj[i-1][j-1]
         //0+:
-        [0+:((pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa)*mult_A_width)] : 
-        {((pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa)*mult_A_width){1'b0}};
+        [0+:((pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa)*mult_A_width)];
 
         assign sum_mult_E_vector_A_mode1
         //mult array
         [((i-1)*sa_row_num+(j-1))*(mult_array_length_per_sa*mult_A_width)+:(mult_array_length_per_sa*mult_A_width)] = 
         //sum vector
-        (core_sum_mult_E_en == 1'b1) ? sum_vector_in_mult_A_width_rowi_channel_setj[i-1][j-1]
+        sum_vector_in_mult_A_width_rowi_channel_setj[i-1][j-1]
         //0+:
-        [0+:(mult_array_length_per_sa*mult_A_width)] : 
-        {(mult_array_length_per_sa*mult_A_width){1'b0}};
+        [0+:(mult_array_length_per_sa*mult_A_width)];
 
         assign extra_sa_vector_As[i-1][j-1] = 
         //sa mult
-        (core_sum_mult_E_en == 1'b1) ? sum_vector_in_mult_A_width_rowi_channel_setj[i-1][j-1]
+        sum_vector_in_mult_A_width_rowi_channel_setj[i-1][j-1]
         //48*24+:
-        [(mult_array_length_per_sa*mult_A_width)+:(column_num_in_sa*mult_A_width)] : 
-        {(column_num_in_sa * mult_A_width){1'b0}};
+        [(mult_array_length_per_sa*mult_A_width)+:(column_num_in_sa*mult_A_width)];
         
         assign sum_mult_E_vector_B_mode0
         [((i-1)*sa_row_num+(j-1))*((pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa)*mult_B_width)+: //32*16
         ((pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa)*mult_B_width)] = 
-        (core_sum_mult_E_en == 1'b1) ? E_vector_in_mult_B_width_rowi_channel_setj[i-1][j-1]
+        E_vector_in_mult_B_width_rowi_channel_setj[i-1][j-1]
         //0+:
-        [0+:((pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa)*mult_B_width)] : 
-        {((pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa)*mult_B_width){1'b0}};
+        [0+:((pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa)*mult_B_width)];
         
         assign sum_mult_E_vector_B_mode1
         //mult array
         [((i-1)*sa_row_num+(j-1))*(mult_array_length_per_sa*mult_B_width)+:(mult_array_length_per_sa*mult_B_width)] = 
         //E vector
-        (core_sum_mult_E_en == 1'b1) ? E_vector_in_mult_B_width_rowi_channel_setj[i-1][j-1]
+        E_vector_in_mult_B_width_rowi_channel_setj[i-1][j-1]
         //0+
-        [0+:(mult_array_length_per_sa*mult_B_width)] : 
-        {(mult_array_length_per_sa*mult_B_width){1'b0}};
+        [0+:(mult_array_length_per_sa*mult_B_width)];
 
         assign extra_sa_vector_Bs[i-1][j-1] = 
         //sa mult
-        (core_sum_mult_E_en == 1'b1) ? E_vector_in_mult_B_width_rowi_channel_setj[i-1][j-1]
+        E_vector_in_mult_B_width_rowi_channel_setj[i-1][j-1]
         //48*16+:
-        [(mult_array_length_per_sa*mult_B_width)+:row_num_in_sa*mult_B_width] : 
-        {(row_num_in_sa * mult_B_width){1'b0}};
+        [(mult_array_length_per_sa*mult_B_width)+:row_num_in_sa*mult_B_width];
         
         assign sum_mult_E_vector_in_mult_P_width_rowi_channel_setj[i-1][j-1]
         //0+:
@@ -1720,20 +1703,16 @@ module quan_accel_conv_demo(
         //[16*40]
         extra_sa_vector_Ps[i-1][j-1];
 
-        quan_product_add_bias_vecOp quan_product_add_bias_vecop(
+        quan_product_add_bias_vecOp_v3 quan_product_add_bias_vecop(
             .clk              (clk),
-            .reset            ((core_product_add_bias_reset == 1) || (reset == 1) || (conv_start == 1)),
-            .en               (core_product_add_bias_en),
             .mode             (mode),
             .sum_mult_E_vector(sum_mult_E_vector_in_mult_P_width_rowi_channel_setj[i-1][j-1]),  // pox res per channel
             .next_bias_set         (bias_4_channel_sets[(j-1)*bias_set_width+:bias_set_width]),
             .product_add_bias_vector(product_add_bias_vector_rowi_channel_setj[i-1][j-1])  // pox res per channel
         );
 
-        quan_relu_scale_vecOp quan_relu_scale_vecop(
+        quan_relu_scale_vecOp_v3 quan_relu_scale_vecop(
             .clk                             (clk),
-            .reset((core_relu_scale_reset == 1) || (reset == 1) || (conv_start == 1)),
-            .en(core_relu_scale_en),
             .mode                            (mode),
             .next_scale_set(scale_4_channel_sets[(j-1)*scale_set_width+:scale_set_width]),
             .product_add_bias_vector(product_add_bias_vector_rowi_channel_setj[i-1][j-1]),
@@ -1756,67 +1735,50 @@ module quan_accel_conv_demo(
     end
   endgenerate
   // sa control
-  quan_CBR_kernel_controller_v2 quan_CBR_kernel_ctrl(
+  quan_CBR_kernel_controller_v4 quan_CBR_kernel_ctrl(
     .clk              (clk),
     .reset            ((reset == 1) || (conv_start == 1)),  //next tile need clr
     .re_fm_en         (re_fm_en),
     .mode_init             (mode),
     .nif_mult_k_mult_k_init(nif_mult_k_mult_k),
+    .shadow_pof(shadow_pof),
 
     //for shell ctrl
-    .sa_en_pre(sa_en_pre),
-    .sa_reset_pre(sa_reset_pre),
+    // .sa_en_pre(sa_en_pre),
+    // .sa_reset_pre(sa_reset_pre),
     .out_sa_row_idx_pre(out_sa_row_idx_pre),
     .conv_fifo_add_end_pre(conv_fifo_add_end_pre),
 
     //for kernel ctrl
-    .core_sa_en_pre(core_sa_en_pre),
-    .core_sa_reset_pre(core_sa_reset_pre),
-    .core_channel_out_reset_pre(core_channel_out_reset_pre),
-    .core_channel_out_en_pre(core_channel_out_en_pre),
+    .core_cell_en_pre(core_cell_en_pre),
+    .core_cell_reset_pre(core_cell_reset_pre),
+    .core_cell_output_en_pre(core_cell_output_en_pre),
     .core_sum_E_recieve_en_pre(core_sum_E_recieve_en_pre),
-    .core_sum_E_recieve_reset_pre(core_sum_E_recieve_reset_pre),
     .core_sum_mult_E_en_pre(core_sum_mult_E_en_pre),
     .core_product_add_bias_en_pre(core_product_add_bias_en_pre),
-    .core_product_add_bias_reset_pre(core_product_add_bias_reset_pre),
     .core_relu_scale_en_pre(core_relu_scale_en_pre),
-    .core_relu_scale_reset_pre(core_relu_scale_reset_pre),
     .core_conv_fifo_en_pre(core_conv_fifo_en_pre),
-    .core_mult_array_mode_pre(core_mult_array_mode_pre),
-    .core_out_sa_row_idx_pre(core_out_sa_row_idx_pre)
+    .core_mult_array_mode_pre(core_mult_array_mode_pre)
+    // .core_out_sa_row_idx_pre(core_out_sa_row_idx_pre)
   );
 
   always @(posedge clk) begin
     if ((reset == 1) || (conv_start == 1)) begin
-      core_sa_en            <= 0;
-      core_sa_reset <= 0;
-      core_channel_out_reset <= 0; 
-      core_channel_out_en <= 0;
       core_sum_E_recieve_en <= 0;
-      core_sum_E_recieve_reset <= 0;
       core_sum_mult_E_en <= 0;
       core_product_add_bias_en <= 0;
-      core_product_add_bias_reset <= 0;
       core_relu_scale_en <= 0;
-      core_relu_scale_reset <= 0;
       core_conv_fifo_en <= 0;
       core_mult_array_mode <= 0;
-      core_out_sa_row_idx <= 0;
+      // core_out_sa_row_idx <= 0;
     end else begin
-      core_sa_en              <= core_sa_en_pre;
-      core_sa_reset <= core_sa_reset_pre;
-      core_channel_out_reset <= core_channel_out_reset_pre; 
-      core_channel_out_en <= core_channel_out_en_pre;
       core_sum_E_recieve_en <= core_sum_E_recieve_en_pre;
-      core_sum_E_recieve_reset <= core_sum_E_recieve_reset_pre;
       core_sum_mult_E_en <= core_sum_mult_E_en_pre;
       core_product_add_bias_en <= core_product_add_bias_en_pre;
-      core_product_add_bias_reset <= core_product_add_bias_reset_pre;
       core_relu_scale_en <= core_relu_scale_en_pre;
-      core_relu_scale_reset<= core_relu_scale_reset_pre;
       core_conv_fifo_en <= core_conv_fifo_en_pre;
       core_mult_array_mode <= core_mult_array_mode_pre;
-      core_out_sa_row_idx <= core_out_sa_row_idx_pre;
+      // core_out_sa_row_idx <= core_out_sa_row_idx_pre;
     end
   end
 
