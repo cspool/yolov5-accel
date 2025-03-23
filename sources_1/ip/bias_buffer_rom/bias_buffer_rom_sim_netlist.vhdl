@@ -1,10 +1,10 @@
 -- Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2018.3 (win64) Build 2405991 Thu Dec  6 23:38:27 MST 2018
--- Date        : Thu Mar 20 11:29:23 2025
+-- Date        : Sun Mar 23 01:28:16 2025
 -- Host        : zack running 64-bit major release  (build 9200)
 -- Command     : write_vhdl -force -mode funcsim
---               d:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sources_1/ip/bias_buffer_rom/bias_buffer_rom_sim_netlist.vhdl
+--               D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sources_1/ip/bias_buffer_rom/bias_buffer_rom_sim_netlist.vhdl
 -- Design      : bias_buffer_rom
 -- Purpose     : This VHDL netlist is a functional simulation representation of the design and should not be modified or
 --               synthesized. This netlist cannot be used for SDF annotated simulation.
@@ -33,7 +33,7 @@ begin
     generic map(
       DOA_REG => 0,
       DOB_REG => 0,
-      INITP_00 => X"0000000000000000000000000000000000000000000000000000000000000006",
+      INITP_00 => X"0000000000000000000000000000000000000000000000000000000000000001",
       INITP_01 => X"0000000000000000000000000000000000000000000000000000000000000000",
       INITP_02 => X"0000000000000000000000000000000000000000000000000000000000000000",
       INITP_03 => X"0000000000000000000000000000000000000000000000000000000000000000",
@@ -41,7 +41,7 @@ begin
       INITP_05 => X"0000000000000000000000000000000000000000000000000000000000000000",
       INITP_06 => X"0000000000000000000000000000000000000000000000000000000000000000",
       INITP_07 => X"0000000000000000000000000000000000000000000000000000000000000000",
-      INIT_00 => X"0000000000000000000000000000000000000000000000000000000015E1556B",
+      INIT_00 => X"000000000000000000000000000000000000000000000000000000001A154D3B",
       INIT_01 => X"0000000000000000000000000000000000000000000000000000000000000000",
       INIT_02 => X"0000000000000000000000000000000000000000000000000000000000000000",
       INIT_03 => X"0000000000000000000000000000000000000000000000000000000000000000",

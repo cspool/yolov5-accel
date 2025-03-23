@@ -1614,7 +1614,7 @@ module quan_accel_conv_demo(
     for (i = 1; i <= sa_column_num; i = i + 1) begin : sa_column  //poy, rows
       for (j = 1; j <= sa_row_num; j = j + 1) begin : sa_row  //output channel
         
-        quan_SA_sum_E_v4 sa (
+        quan_SA_sum_E_v5 sa (
             .clk              (clk),
             .reset((reset == 1) || (conv_start == 1) || (conv_compute_fin == 1)),
             // .core_cell_reset_pre((reset == 1) || (conv_start == 1) || (core_cell_reset_pre == 1)),
@@ -1647,50 +1647,44 @@ module quan_accel_conv_demo(
         assign sum_mult_E_vector_A_mode0
         [((i-1)*sa_row_num+(j-1))*((pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa)*mult_A_width)+: //32*24
         ((pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa)*mult_A_width)] = 
-        (core_sum_mult_E_en == 1'b1) ? sum_vector_in_mult_A_width_rowi_channel_setj[i-1][j-1]
+        sum_vector_in_mult_A_width_rowi_channel_setj[i-1][j-1]
         //0+:
-        [0+:((pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa)*mult_A_width)] : 
-        {((pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa)*mult_A_width){1'b0}};
+        [0+:((pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa)*mult_A_width)];
 
         assign sum_mult_E_vector_A_mode1
         //mult array
         [((i-1)*sa_row_num+(j-1))*(mult_array_length_per_sa*mult_A_width)+:(mult_array_length_per_sa*mult_A_width)] = 
         //sum vector
-        (core_sum_mult_E_en == 1'b1) ? sum_vector_in_mult_A_width_rowi_channel_setj[i-1][j-1]
+        sum_vector_in_mult_A_width_rowi_channel_setj[i-1][j-1]
         //0+:
-        [0+:(mult_array_length_per_sa*mult_A_width)] : 
-        {(mult_array_length_per_sa*mult_A_width){1'b0}};
+        [0+:(mult_array_length_per_sa*mult_A_width)];
 
         assign extra_sa_vector_As[i-1][j-1] = 
         //sa mult
-        (core_sum_mult_E_en == 1'b1) ? sum_vector_in_mult_A_width_rowi_channel_setj[i-1][j-1]
+        sum_vector_in_mult_A_width_rowi_channel_setj[i-1][j-1]
         //48*24+:
-        [(mult_array_length_per_sa*mult_A_width)+:(column_num_in_sa*mult_A_width)] : 
-        {(column_num_in_sa * mult_A_width){1'b0}};
+        [(mult_array_length_per_sa*mult_A_width)+:(column_num_in_sa*mult_A_width)];
         
         assign sum_mult_E_vector_B_mode0
         [((i-1)*sa_row_num+(j-1))*((pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa)*mult_B_width)+: //32*16
         ((pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa)*mult_B_width)] = 
-        (core_sum_mult_E_en == 1'b1) ? E_vector_in_mult_B_width_rowi_channel_setj[i-1][j-1]
+        E_vector_in_mult_B_width_rowi_channel_setj[i-1][j-1]
         //0+:
-        [0+:((pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa)*mult_B_width)] : 
-        {((pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa)*mult_B_width){1'b0}};
+        [0+:((pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa)*mult_B_width)];
         
         assign sum_mult_E_vector_B_mode1
         //mult array
         [((i-1)*sa_row_num+(j-1))*(mult_array_length_per_sa*mult_B_width)+:(mult_array_length_per_sa*mult_B_width)] = 
         //E vector
-        (core_sum_mult_E_en == 1'b1) ? E_vector_in_mult_B_width_rowi_channel_setj[i-1][j-1]
+        E_vector_in_mult_B_width_rowi_channel_setj[i-1][j-1]
         //0+
-        [0+:(mult_array_length_per_sa*mult_B_width)] : 
-        {(mult_array_length_per_sa*mult_B_width){1'b0}};
+        [0+:(mult_array_length_per_sa*mult_B_width)];
 
         assign extra_sa_vector_Bs[i-1][j-1] = 
         //sa mult
-        (core_sum_mult_E_en == 1'b1) ? E_vector_in_mult_B_width_rowi_channel_setj[i-1][j-1]
+        E_vector_in_mult_B_width_rowi_channel_setj[i-1][j-1]
         //48*16+:
-        [(mult_array_length_per_sa*mult_B_width)+:row_num_in_sa*mult_B_width] : 
-        {(row_num_in_sa * mult_B_width){1'b0}};
+        [(mult_array_length_per_sa*mult_B_width)+:row_num_in_sa*mult_B_width];
         
         assign sum_mult_E_vector_in_mult_P_width_rowi_channel_setj[i-1][j-1]
         //0+:
@@ -1726,7 +1720,7 @@ module quan_accel_conv_demo(
             .next_scale_set(scale_4_channel_sets[(j-1)*scale_set_width+:scale_set_width]),
             .product_add_bias_vector(product_add_bias_vector_rowi_channel_setj[i-1][j-1]),
             .quantize_vector(quantize_rowi_channel_setj[i-1][j-1])
-        );     
+        );        
         //conv out fifo
         fifo_rowi_channel_seti fifo_rowi_channel_seti (
             .clk       (clk),                                     // input wire clk

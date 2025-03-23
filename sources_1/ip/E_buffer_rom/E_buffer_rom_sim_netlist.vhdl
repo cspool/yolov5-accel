@@ -1,10 +1,10 @@
 -- Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2018.3 (win64) Build 2405991 Thu Dec  6 23:38:27 MST 2018
--- Date        : Thu Mar 20 11:28:43 2025
+-- Date        : Thu Mar 20 11:28:42 2025
 -- Host        : zack running 64-bit major release  (build 9200)
--- Command     : write_vhdl -force -mode funcsim
---               d:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sources_1/ip/E_buffer_rom/E_buffer_rom_sim_netlist.vhdl
+-- Command     : write_vhdl -force -mode funcsim -rename_top E_buffer_rom -prefix
+--               E_buffer_rom_ E_buffer_rom_sim_netlist.vhdl
 -- Design      : E_buffer_rom
 -- Purpose     : This VHDL netlist is a functional simulation representation of the design and should not be modified or
 --               synthesized. This netlist cannot be used for SDF annotated simulation.
@@ -21,8 +21,6 @@ entity E_buffer_rom_blk_mem_gen_prim_wrapper_init is
     ena : in STD_LOGIC;
     addra : in STD_LOGIC_VECTOR ( 8 downto 0 )
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of E_buffer_rom_blk_mem_gen_prim_wrapper_init : entity is "blk_mem_gen_prim_wrapper_init";
 end E_buffer_rom_blk_mem_gen_prim_wrapper_init;
 
 architecture STRUCTURE of E_buffer_rom_blk_mem_gen_prim_wrapper_init is
@@ -1999,8 +1997,6 @@ entity E_buffer_rom_blk_mem_gen_prim_width is
     ena : in STD_LOGIC;
     addra : in STD_LOGIC_VECTOR ( 8 downto 0 )
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of E_buffer_rom_blk_mem_gen_prim_width : entity is "blk_mem_gen_prim_width";
 end E_buffer_rom_blk_mem_gen_prim_width;
 
 architecture STRUCTURE of E_buffer_rom_blk_mem_gen_prim_width is
@@ -2199,8 +2195,6 @@ entity E_buffer_rom_blk_mem_gen_generic_cstr is
     ena : in STD_LOGIC;
     addra : in STD_LOGIC_VECTOR ( 8 downto 0 )
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of E_buffer_rom_blk_mem_gen_generic_cstr : entity is "blk_mem_gen_generic_cstr";
 end E_buffer_rom_blk_mem_gen_generic_cstr;
 
 architecture STRUCTURE of E_buffer_rom_blk_mem_gen_generic_cstr is
@@ -2273,8 +2267,6 @@ entity E_buffer_rom_blk_mem_gen_top is
     ena : in STD_LOGIC;
     addra : in STD_LOGIC_VECTOR ( 8 downto 0 )
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of E_buffer_rom_blk_mem_gen_top : entity is "blk_mem_gen_top";
 end E_buffer_rom_blk_mem_gen_top;
 
 architecture STRUCTURE of E_buffer_rom_blk_mem_gen_top is
@@ -2298,8 +2290,6 @@ entity E_buffer_rom_blk_mem_gen_v8_4_2_synth is
     ena : in STD_LOGIC;
     addra : in STD_LOGIC_VECTOR ( 8 downto 0 )
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of E_buffer_rom_blk_mem_gen_v8_4_2_synth : entity is "blk_mem_gen_v8_4_2_synth";
 end E_buffer_rom_blk_mem_gen_v8_4_2_synth;
 
 architecture STRUCTURE of E_buffer_rom_blk_mem_gen_v8_4_2_synth is
@@ -2532,8 +2522,6 @@ entity E_buffer_rom_blk_mem_gen_v8_4_2 is
   attribute C_WRITE_WIDTH_B of E_buffer_rom_blk_mem_gen_v8_4_2 : entity is 512;
   attribute C_XDEVICEFAMILY : string;
   attribute C_XDEVICEFAMILY of E_buffer_rom_blk_mem_gen_v8_4_2 : entity is "virtex7";
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of E_buffer_rom_blk_mem_gen_v8_4_2 : entity is "blk_mem_gen_v8_4_2";
   attribute downgradeipidentifiedwarnings : string;
   attribute downgradeipidentifiedwarnings of E_buffer_rom_blk_mem_gen_v8_4_2 : entity is "yes";
 end E_buffer_rom_blk_mem_gen_v8_4_2;
