@@ -3,9 +3,9 @@
 // Company: 
 // Engineer: 
 // 
-// Create Date: 2025/03/19 19:26:32
+// Create Date: 2025/03/23 22:55:16
 // Design Name: 
-// Module Name: quan_accel_conv_demo
+// Module Name: quan_CBR_v6_tb
 // Project Name: 
 // Target Devices: 
 // Tool Versions: 
@@ -19,25 +19,9 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
 
-`include "ddr3_defines.vh"
 
-module quan_accel_conv_demo(
-  clk,  //i
-  reset, //i
-  //DDR MIG
-  ddr_cmd_ready, //i
-  ddr_rd_data_valid, //i
-  ddr_wt_data_ready, //i
+module quan_CBR_v6_tb();
 
-  cmd_ddr_base_adr, //o
-  cmd_ddr_length, //o
-  valid_cmd, //o
-  ddr_mode, //o
-
-  ddr_rd_data,
-  ddr_wt_data,
-  valid_ddr_wt_data
-);
   //SA
   parameter sa_row_num = 4;  //how many rows in conv core
   parameter sa_column_num = 3;  //how many columns in conv core
@@ -136,15 +120,9 @@ module quan_accel_conv_demo(
   parameter weights_in_tile_mode0 = 64;  // 8bit; //amount of weights needed in a computation tile
   parameter weights_in_tile_mode1 = 128;  // 1bit
 
-  input clk, reset;
+  reg clk, reset;
   //DDR MIG
-  input ddr_cmd_ready;
-  input ddr_rd_data_valid;
-  input ddr_wt_data_ready;
-  input [511:0] ddr_rd_data;
-  output [511:0] ddr_wt_data;
-  output valid_ddr_wt_data;
-  // wire ddr_en = 1;
+  reg ddr_en;
   reg start; //top start
   always@(posedge clk) begin
       if (reset) begin
@@ -157,10 +135,10 @@ module quan_accel_conv_demo(
           start <= start;
       end
   end
- //conv decoder
+  //conv decoder
   reg  conv_decode;
   reg [511:0] conv_instr_args;
-  // reg [511:0] conv_instr_args_mem [0:0]; //instr mem for sim
+  reg [511:0] conv_instr_args_mem [0:0]; //instr mem for sim
   wire conv_start_pre;
   reg conv_start;
   //all below come from instr
@@ -193,7 +171,7 @@ module quan_accel_conv_demo(
   wire [ 7:0] tiley_last_iy_row_num;
   wire [ 7:0] tiley_mid_iy_row_num;
   wire [15:0] ix_index_num, iy_index_num;
-  //conv controller
+//conv controller
   wire conv_load_weights;
   wire conv_load_input;
   wire conv_compute;
@@ -202,19 +180,20 @@ module quan_accel_conv_demo(
   wire last_conv_compute;
   wire conv_fin;
   //DDR
-  output [31:0] cmd_ddr_base_adr;
-  output [15:0] cmd_ddr_length;
-  output valid_cmd;
-  output ddr_mode; //rd or wt
-
+  wire DDR_en;
+  wire DDR_en_wr;
+  wire [511:0] DDR_in;
+  wire [ 31:0] DDR_adr;
+  wire [511:0] DDR_out;  //o
+  wire DDR_valid;
   //DDR data
-  // reg valid_load_input;
-  wire valid_load_input;
+  reg valid_load_input;
+  // wire valid_load_input;
   wire [511:0] load_input_word;
   reg [511:0] last_load_input_word;
   reg state_valid_load_input;
-  // reg valid_load_weights; //ddr words is loaded from ddr
-  wire valid_load_weights;
+  reg valid_load_weights; //ddr words is loaded from ddr
+  // wire valid_load_weights;
   //conv compute ctrl
   wire [15:0] ox_start, oy_start, of_start, pox, poy, pof, if_idx;
   reg [15:0] shadow_ox_start, shadow_oy_start, shadow_of_start, shadow_pox, shadow_poy, shadow_pof;
@@ -265,9 +244,6 @@ module quan_accel_conv_demo(
   wire [31:0] input_word_ddr_adr_rd;
   wire input_word_load_info_fifo_en_wt;
   wire [31:0] input_word_load_info_fifo_wt;
-  wire [31:0] load_input_ddr_base_adr;
-  wire [15:0] load_input_ddr_length;
-  wire valid_load_input_ddr_cmd;
   wire conv_load_input_fin;
   wire state_conv_load_input;
   //load input info fifo
@@ -416,9 +392,6 @@ module quan_accel_conv_demo(
   //load weights controller
   wire weights_word_ddr_en_rd; //o: read ddr
   wire [31:0] weights_word_ddr_adr_rd;//o
-  wire [31:0] load_weights_ddr_base_adr;
-  wire [15:0] load_weights_ddr_length;
-  wire valid_load_weights_ddr_cmd;
   wire weights_word_buf_en_wt; //o: write buf
   wire [15:0] weights_word_buf_adr_wt;//o
   wire conv_load_weights_fin;
@@ -510,18 +483,57 @@ module quan_accel_conv_demo(
   extra_sa_vector_Ps[sa_column_num-1 : 0][sa_row_num-1 : 0];
 
   // sa control
-  wire sa_en, sa_reset;
-  wire channel_out_reset, channel_out_en;  //need logic
+  // wire sa_en_pre, sa_reset_pre;
+  // reg sa_en, sa_reset;
+  wire core_cell_en_pre;
+  // wire core_cell_reset_pre;
+  // reg core_sa_en;
+  // reg core_sa_reset;
+  // wire channel_out_reset, channel_out_en;  //need logic
+  // wire core_channel_out_en_pre;
+  // wire core_channel_out_reset_pre;
+  // reg core_channel_out_en;
+  // reg core_channel_out_reset;
+  wire core_cell_output_en_pre;
+  // reg core_cell_output_en;
+  //sum E recieve
+  // wire sum_E_recieve_en;
+  // wire sum_E_recieve_reset;
+  wire core_sum_E_recieve_en_pre;
+  // wire core_sum_E_recieve_reset_pre;
+  reg core_sum_E_recieve_en;
+  // reg core_sum_E_recieve_reset;
   //mult E
-  wire sum_mult_E_en;
+  // wire sum_mult_E_en;
+  wire core_sum_mult_E_en_pre;
+  reg core_sum_mult_E_en;
   //add bias
-  wire product_add_bias_en, product_add_bias_reset;
+  // wire product_add_bias_en, product_add_bias_reset;
+  wire core_product_add_bias_en_pre;
+  // wire core_product_add_bias_reset_pre;
+  reg core_product_add_bias_en;
+  // reg core_product_add_bias_reset;
   //quantify ctrl
-  wire relu_scale_en;
+  // wire relu_scale_en, relu_scale_reset;
+  wire core_relu_scale_en_pre;
+  // wire core_relu_scale_reset_pre;
+  reg core_relu_scale_en;
+  // reg core_relu_scale_reset;
+  //conv fifo
+  // wire conv_fifo_en;
+  wire conv_fifo_add_end_pre;
+  reg conv_fifo_add_end;
+  wire core_conv_fifo_en_pre;
+  reg core_conv_fifo_en;
   //sa out channel
-  wire [5:0] out_sa_row_idx;  //output sa row idx [1,16]
-  wire mult_array_mode;
-  wire relu_scale_add_end;
+  wire [5:0] out_sa_row_idx_pre;  //output sa row idx [1,16]
+  reg [5:0] out_sa_row_idx;  //output sa row idx [1,16]
+  // wire [5:0] core_out_sa_row_idx_pre;
+  // reg [5:0] core_out_sa_row_idx;
+  // wire mult_array_mode;
+  wire core_mult_array_mode_pre;
+  reg core_mult_array_mode;
+  //fifo out
   wire [sa_out_width - 1:0] out_rowi_channel_seti //pox sum in a sa row, 1 channel or 2 channel
   [sa_column_num-1 : 0][sa_row_num-1 : 0]; 
   wire conv_compute_fin;
@@ -549,22 +561,21 @@ module quan_accel_conv_demo(
   [sa_column_num-1 : 0][sa_row_num-1 : 0];
   wire [8 : 0] data_counts //fifos counts
   [sa_column_num-1 : 0][sa_row_num-1 : 0];
-  //conv store ctrl
+  //conv fifo out ctrl
   //cycle 0 in conv store
   //cycle 1 in
   wire [quantize_vector_width-1 : 0] fifo_data;
   //cycle 0 out
   wire [sa_row_num * sa_column_num-1:0] fifo_rds;
-  wire [31:0] store_ddr_base_adr;
-  wire [15:0] store_ddr_length;
-  wire valid_store_ddr_cmd;
   //cycle 1 out
+  wire valid_conv_out_ddr_adr;
   wire [31:0] conv_out_ddr_adr;
   wire [511:0] conv_out_ddr_data;
-  wire valid_conv_out_ddr_data;
   wire [3:0] fifo_column_no, fifo_row_no;
+  wire valid_conv_out;
   wire [15:0] out_y_idx, out_x_idx, out_f_idx;
   wire conv_fifo_out_tile_add_end;
+  wire [out_data_width-1 : 0] conv_out_data;
   wire conv_store_fin;
 
   //top control sim
@@ -583,57 +594,80 @@ module quan_accel_conv_demo(
     end
   end
 
-  // always @(posedge clk) begin
-  //   if (reset) begin
-  //     conv_instr_args <= 512'b0;
-  //   end
-  //   else if (start == 1'b1) begin
-  //     conv_instr_args <= conv_instr_args_mem[0];
-  //   end
-  //   else begin
-  //     conv_instr_args <= conv_instr_args;
-  //   end
-  // end
-
   always @(posedge clk) begin
     if (reset) begin
       conv_instr_args <= 512'b0;
     end
     else if (start == 1'b1) begin
-      conv_instr_args <= 512'h00000303030202020404040100060001030204010101000000000000002700000000000000000000000000020000002420004000650020000650020200041131;
+      conv_instr_args <= conv_instr_args_mem[0];
     end
     else begin
       conv_instr_args <= conv_instr_args;
     end
   end
 
+  // //DDR
+//   DDR DDR (
+//       .clka (clk),                    // input wire clka
+//       .ena  (DDR_en),   // input wire ena
+//       .wea  (DDR_en_wr),                      // input wire [0 : 0] wea
+//       .addra(DDR_adr),  // input wire [31 : 0] addra
+//       .dina (DDR_in),                      // input wire [511 : 0] dina
+//       .douta(DDR_out)                 // output wire [511 : 0] douta
+//   );
+//   assign DDR_en          = ((input_word_ddr_en_rd == 1'b1) || (weights_word_ddr_en_rd == 1'b1)) ? 1'b1 : 1'b0;
+//   assign DDR_en_wr       = 0;
+//   assign DDR_adr         = (input_word_ddr_en_rd == 1)? input_word_ddr_adr_rd :
+//    (weights_word_ddr_en_rd == 1)? weights_word_ddr_adr_rd : 0;
+//   assign DDR_in          = 512'b0;
+//   assign load_input_word = (valid_load_input == 1'b1) ? DDR_out : 0;
+//   assign weights_word_buf_wt = (valid_load_weights == 1'b1) ? DDR_out : 0;
+  //DDR reg mem
+  parameter DDR_mem_limit = 1000000; //4096*16
+  reg[511:0] DDR_mem [DDR_mem_limit - 1:0];
+  reg [511:0] DDR_mem_out;
+  always @(posedge clk) begin
+    if (reset) begin
+      DDR_mem_out <= 0;
+    end
+    else if (DDR_en == 1'b1) begin
+      DDR_mem_out <= DDR_mem[DDR_adr];
+    end
+    else begin
+      DDR_mem_out <= DDR_mem_out;
+    end
+  end
+  // assign DDR_en          = ((input_word_ddr_en_rd == 1'b1) || (weights_word_ddr_en_rd == 1'b1)) ? 1'b1 : 1'b0;
+  // assign DDR_en_wr       = 0;
+  // assign DDR_adr         = (input_word_ddr_en_rd == 1)? input_word_ddr_adr_rd :
+  //  (weights_word_ddr_en_rd == 1)? weights_word_ddr_adr_rd : 0;
+  // assign DDR_in          = 0;
+  // assign load_input_word = (valid_load_input == 1'b1) ? DDR_mem_out : 0;
+  // assign weights_word_buf_wt = (valid_load_weights == 1'b1) ? DDR_mem_out : 0;
+  assign DDR_en          = ((input_word_ddr_en_rd == 1'b1) || (weights_word_ddr_en_rd == 1'b1) || (valid_conv_out_ddr_adr == 1'b1)) ? 1'b1 : 1'b0;
+  assign DDR_en_wr       = (valid_conv_out_ddr_adr == 1'b1)? 1 : 0;
+  assign DDR_adr         = (input_word_ddr_en_rd == 1)? input_word_ddr_adr_rd :
+   (weights_word_ddr_en_rd == 1)? weights_word_ddr_adr_rd : 
+   (valid_conv_out_ddr_adr == 1)? conv_out_ddr_adr : 0;
+  assign DDR_in          = (valid_conv_out_ddr_adr == 1)? conv_out_ddr_data : 512'b0;
+  //DDR sim
+  assign load_input_word = (valid_load_input == 1'b1) ? DDR_mem_out : 512'b0;
+  assign weights_word_buf_wt = (valid_load_weights == 1'b1) ? DDR_mem_out : 512'b0;
   //DDR
-  
-  assign cmd_ddr_base_adr = (valid_load_input_ddr_cmd == 1)? load_input_ddr_base_adr:
-  (valid_load_weights_ddr_cmd == 1)? load_weights_ddr_base_adr:
-  (valid_store_ddr_cmd == 1)? store_ddr_base_adr: 0;
-  assign cmd_ddr_length = (valid_load_input_ddr_cmd == 1)? load_input_ddr_length:
-  (valid_load_weights_ddr_cmd == 1)? load_weights_ddr_length:
-  (valid_store_ddr_cmd == 1)? store_ddr_length: 0;
-  assign valid_cmd = (valid_load_input_ddr_cmd == 1) || (valid_load_weights_ddr_cmd == 1) || (valid_store_ddr_cmd == 1);
-  assign ddr_mode = ((valid_cmd == 1) && (valid_store_ddr_cmd == 1)? 0: 1);
-
-  assign load_input_word = (valid_load_input) ? ddr_rd_data : 512'b0; 
-  assign weights_word_buf_wt = (valid_load_weights) ? ddr_rd_data : 512'b0;
-  assign ddr_wt_data = (valid_ddr_wt_data == 1)? conv_out_ddr_data : 512'b0;
-  assign valid_ddr_wt_data = valid_conv_out_ddr_data;
+  // assign load_input_word = (valid_load_weights) ? DDR_out : 512'b0; 
+  // assign weights_word_buf_wt = (valid_load_input) ? DDR_out : 512'b0;
 
   //DDR input load
-  //DDR sim version
-  // always @(posedge clk) begin
-  //   if (reset) begin
-  //     valid_load_input <= 0;
-  //   end else begin
-  //     valid_load_input <= input_word_ddr_en_rd;  //DDR sim
-  //   end
-  // end
-  //true DDR version
+  always @(posedge clk) begin
+    if (reset) begin
+      valid_load_input <= 0;
+    end else begin
+      valid_load_input <= input_word_ddr_en_rd;  //DDR sim
+    end
+  end
+
   // assign valid_load_input = ((state_conv_load_input == 1) && (DDR_valid == 1));
+  
   always @(posedge clk) begin
     if (reset == 1'b1) begin
       last_load_input_word   <= 0;
@@ -653,15 +687,14 @@ module quan_accel_conv_demo(
   assign input_word_buf_wr    = last_load_input_word;
   assign input_word_buf_en_wr = state_valid_load_input;
   //DDR weights load
-  //DDR sim version
-  // always @(posedge clk) begin
-  //   if (reset) begin
-  //     valid_load_weights <= 0;
-  //   end else begin
-  //     valid_load_weights <= weights_word_ddr_en_rd;  //DDR sim
-  //   end
-  // end
-  // true DDR version
+  always @(posedge clk) begin
+    if (reset) begin
+      valid_load_weights <= 0;
+    end else begin
+      valid_load_weights <= weights_word_ddr_en_rd;  //DDR sim
+    end
+  end
+
   // assign valid_load_weights = ((state_conv_load_weights == 1) && (DDR_valid == 1));
 
   //conv decoder
@@ -733,13 +766,12 @@ module quan_accel_conv_demo(
       .last_conv_compute(last_conv_compute),
       .conv_fin(conv_fin)
   );
-  //conv load input ctrl
-  conv_load_input_ddr_controller cv_load_input_ddr_ctrl (
+//conv load input ctrl
+  conv_load_input_controller cv_load_input_ctrl (
       .clk                                    (clk),
       .conv_load_input                        (conv_load_input),
       .reset                                  ((reset == 1) || (conv_start == 1)),
-      .ddr_cmd_ready                                 (ddr_cmd_ready),
-      .ddr_rd_data_valid(ddr_rd_data_valid),
+      .ddr_en                                 (ddr_en),
       .load_input_info_fifo_empty(load_input_info_fifo_empty),
       .mode_init                              (mode),
       .of_init                                (of),
@@ -781,10 +813,6 @@ module quan_accel_conv_demo(
       .input_word_ddr_adr_rd                  (input_word_ddr_adr_rd),
       .input_word_load_info_fifo_en_wt        (input_word_load_info_fifo_en_wt),
       .input_word_load_info_fifo_wt           (input_word_load_info_fifo_wt),
-      .load_input_ddr_base_adr(load_input_ddr_base_adr),
-      .load_input_ddr_length(load_input_ddr_length),
-      .valid_load_input_ddr_cmd(valid_load_input_ddr_cmd),
-      .valid_load_input(valid_load_input),
       .conv_load_input_fin                    (conv_load_input_fin),
       .state_conv_load_input(state_conv_load_input)
   );
@@ -803,72 +831,64 @@ module quan_accel_conv_demo(
   assign input_word_load_info_fifo_en_rd = valid_load_input;
   assign input_word_buf_idx_wr           = (state_valid_load_input == 1) ? input_word_load_info_fifo_rd[16+:16] : 0;
   assign input_word_buf_adr_wr           = (state_valid_load_input == 1) ? input_word_load_info_fifo_rd[0+:16] : 0;
-  //conv load weights ctrl
-  conv_load_weights_ddr_controller cv_load_weights_ddr_controller (
+//conv load weights ctrl
+  conv_load_weights_controller cv_load_weights_controller (
       .clk               (clk),
       .reset             ((reset == 1) || (conv_start == 1)),
       .conv_load_weights (conv_load_weights),  //load weight start
-      .ddr_cmd_ready            (ddr_cmd_ready),             //mig fifo can accept new load instr
-      .ddr_rd_data_valid(ddr_rd_data_valid),
-      
+      .ddr_en            (ddr_en),             //mig fifo can accept new load instr
+      .valid_load_weights(valid_load_weights), //ddr weights is loaded from ddr
       .weights_layer_base_ddr_adr_rd_init(weights_layer_base_ddr_adr_rd),
       .mode_init                         (mode),
       .nif_mult_k_mult_k_init            (nif_mult_k_mult_k),
       .of_init                           (of),
-      //ddr rd info
       .weights_word_ddr_en_rd (weights_word_ddr_en_rd),   //read ddr instr
       .weights_word_ddr_adr_rd(weights_word_ddr_adr_rd),
-      //ddr cmd
-      .load_weights_ddr_base_adr(load_weights_ddr_base_adr),
-      .load_weights_ddr_length(load_weights_ddr_length),
-      .valid_load_weights_ddr_cmd(valid_load_weights_ddr_cmd),
-      //buf wt
-      .valid_load_weights(valid_load_weights), //ddr weights is loaded from ddr
       .weights_word_buf_en_wt (weights_word_buf_en_wt),   //write buf instr
       .weights_word_buf_adr_wt(weights_word_buf_adr_wt),
       .conv_load_weights_fin  (conv_load_weights_fin),
       .state_conv_load_weights(state_conv_load_weights)
   );
-
+  //conv compute ctrl
   conv_compute_kernel_controller cv_compute_kernel_controller(
-    .clk                 (clk),
-    .reset               ((reset == 1) || (conv_start == 1)),
-    .conv_compute        (conv_compute),
-    .mode_init           (mode),
-    .of_init             (of),
-    .ox_init             (ox),
-    .oy_init             (oy),
-    .ix_init             (ix),
-    .iy_init             (iy),
-    .nif_init            (nif),
-    .k_init              (k),
-    .s_init              (s),
-    .p_init              (p),
-    .nif_in_2pow_init    (nif_in_2pow),
-    .ix_in_2pow_init     (ix_in_2pow),
-    .ox_start            (ox_start),
-    .oy_start            (oy_start),
-    .of_start            (of_start),
-    .pox                 (pox),
-    .poy                 (poy),
-    .pof                 (pof),
-    .if_idx              (if_idx),
-    .west_pad            (west_pad),
-    .slab_num            (slab_num),
-    .east_pad            (east_pad),
-    .row_start_idx       (row_start_idx),
-    .row_end_idx         (row_end_idx),
-    .reg_start_idx       (reg_start_idx),
-    .reg_end_idx         (reg_end_idx),
-    .row_slab_start_idx  (row_slab_start_idx),
-    .valid_adr(valid_adr),
-    .iy_start(iy_start),
-    .ky(ky),
-    .if_start(if_start),
-    .row_base_in_3s(row_base_in_3s),
-    .com_control_end            (com_control_end),
-    .conv_pixels_add_end (conv_pixels_add_end),
-    .conv_nif_add_end    (conv_nif_add_end)
+      .clk                 (clk),
+      .reset               ((reset == 1) || (conv_start == 1)),
+      .conv_compute        (conv_compute),
+      .mode_init           (mode),
+      .of_init             (of),
+      .ox_init             (ox),
+      .oy_init             (oy),
+      .ix_init             (ix),
+      .iy_init             (iy),
+      .nif_init            (nif),
+      .k_init              (k),
+      .s_init              (s),
+      .p_init              (p),
+      .nif_in_2pow_init    (nif_in_2pow),
+      .ix_in_2pow_init     (ix_in_2pow),
+      .ox_start            (ox_start),
+      .oy_start            (oy_start),
+      .of_start            (of_start),
+      .pox                 (pox),
+      .poy                 (poy),
+      .pof                 (pof),
+      .if_idx              (if_idx),
+      .west_pad            (west_pad),
+      .slab_num            (slab_num),
+      .east_pad            (east_pad),
+      .row_start_idx       (row_start_idx),
+      .row_end_idx         (row_end_idx),
+      .reg_start_idx       (reg_start_idx),
+      .reg_end_idx         (reg_end_idx),
+      .row_slab_start_idx  (row_slab_start_idx),
+      .valid_adr(valid_adr),
+      .iy_start(iy_start),
+      .ky(ky),
+      .if_start(if_start),
+      .row_base_in_3s(row_base_in_3s),
+      .com_control_end            (com_control_end),
+      .conv_pixels_add_end (conv_pixels_add_end),
+      .conv_nif_add_end    (conv_nif_add_end)
   );
 
   conv_compute_shell1_controller cv_compute_shell1_controller(
@@ -1133,14 +1153,20 @@ module quan_accel_conv_demo(
       E_reg_set                <= 0;
       last_E_reg_start <= 0;
       last_E_reg_size  <= 0;
+      out_sa_row_idx <= 0;
       last_out_sa_row_idx <= 0;
       last_2_out_sa_row_idx <= 0;
+      last_3_out_sa_row_idx <= 0;
       bias_reg_set                <= 0;
       last_bias_reg_start         <= 0;
       last_bias_reg_size          <= 0;
       scale_reg_set                <= 0;
       last_scale_reg_start <= 0;
       last_scale_reg_size  <= 0;
+      // sa_en <= 0;
+      // sa_reset <= 0;
+      conv_fifo_add_end <= 0;
+      conv_start <= 0;
     end else if (state == 4'b0001) begin  //conv op
       state_conv_pixels_add_end   <= conv_pixels_add_end;
       state_valid_row1_adr        <= valid_row1_adr;
@@ -1169,14 +1195,20 @@ module quan_accel_conv_demo(
       E_reg_set                <= E_buf_en_rd;
       last_E_reg_start <= E_reg_start;
       last_E_reg_size  <= E_reg_size;
+      out_sa_row_idx <= out_sa_row_idx_pre;
       last_out_sa_row_idx <= out_sa_row_idx;
       last_2_out_sa_row_idx <= last_out_sa_row_idx;
+      last_3_out_sa_row_idx <= last_2_out_sa_row_idx;
       bias_reg_set                <= bias_buf_en_rd;
       last_bias_reg_start         <= bias_reg_start;
       last_bias_reg_size          <= bias_reg_size;
       scale_reg_set                <= scale_buf_en_rd;
       last_scale_reg_start <= scale_reg_start;
       last_scale_reg_size  <= scale_reg_size;
+      // sa_en <= sa_en_pre;
+      // sa_reset <= sa_reset_pre;
+      conv_fifo_add_end <= conv_fifo_add_end_pre;
+      conv_start <= conv_start_pre;
     end
   end
 
@@ -1414,7 +1446,7 @@ module quan_accel_conv_demo(
       .scale_buf_en_rd(scale_buf_en_rd)
   );
 
-  //E buf
+//E buf
   // E_buffer E_buffer (
   //     .clka (clk),                     // input wire clka
   //     .ena  (E_buf_en),     // input wire ena
@@ -1423,46 +1455,74 @@ module quan_accel_conv_demo(
   //     .dina (E_buf_wr),     // input wire [511 : 0] dina
   //     .douta(E_buf_rd)      // output wire [511 : 0] douta
   // );
-  E_buffer_rom E_buffer (
-      .clka (clk),                     // input wire clka
-      .ena  (E_buf_en),     // input wire ena
-      // .wea  (E_buf_en_wr),  // input wire [0 : 0] wea
-      .addra(E_buf_adr),    // input wire [8 : 0] addra
-      // .dina (E_buf_wr),     // input wire [511 : 0] dina
-      .douta(E_buf_rd)      // output wire [511 : 0] douta
-  );
+  // assign E_buf_adr = 
+  // ((E_buf_en_rd == 1'b0) && (E_buf_en_wr == 1'b1)) ? E_buf_adr_wr[8 : 0] : //wt E buf
+  // ((E_buf_en_rd == 1'b1) && (E_buf_en_wr == 1'b0)) ? E_buf_adr_rd[8 : 0] : 0; //rd E buf
+  // assign E_buf_en  = ((E_buf_en_rd == 1'b1) || (E_buf_en_wr == 1'b1)) ? 1 : 0;
+  // assign E_buf_en_wr = 1'b0;
+  // assign E_buf_wr = 512'b0;
+  //E buf mem
+  parameter E_buffer_mem_limit = 512;
+  reg [511:0] E_buffer_mem [E_buffer_mem_limit-1:0];
+  reg [511:0] E_buffer_mem_out;
+  always @(posedge clk) begin
+    if (reset) begin
+      E_buffer_mem_out <= 0;
+    end
+    else if (E_buf_en == 1'b1) begin
+      E_buffer_mem_out <= E_buffer_mem[E_buf_adr];
+    end
+    else begin
+      E_buffer_mem_out <= E_buffer_mem_out;
+    end
+  end
   assign E_buf_adr = 
   ((E_buf_en_rd == 1'b0) && (E_buf_en_wr == 1'b1)) ? E_buf_adr_wr[8 : 0] : //wt E buf
   ((E_buf_en_rd == 1'b1) && (E_buf_en_wr == 1'b0)) ? E_buf_adr_rd[8 : 0] : 0; //rd E buf
   assign E_buf_en  = ((E_buf_en_rd == 1'b1) || (E_buf_en_wr == 1'b1)) ? 1 : 0;
   assign E_buf_en_wr = 1'b0;
   assign E_buf_wr = 512'b0;
+  assign E_buf_rd = E_buffer_mem_out;
 
-  //bias buf
-  // bias_buffer bias_buffer (
-  //     .clka (clk),             // input wire clka
-  //     .ena  (bias_buf_en),     // input wire ena
-  //     .wea  (bias_buf_en_wr),  // input wire [0 : 0] wea
-  //     .addra(bias_buf_adr),    // input wire [8 : 0] addra
-  //     .dina (bias_buf_wr),     // input wire [511 : 0] dina
-  //     .douta(bias_buf_rd)      // output wire [511 : 0] douta
-  // );
-  bias_buffer_rom bias_buffer (
-      .clka (clk),             // input wire clka
-      .ena  (bias_buf_en),     // input wire ena
-      // .wea  (bias_buf_en_wr),  // input wire [0 : 0] wea
-      .addra(bias_buf_adr),    // input wire [8 : 0] addra
-      // .dina (bias_buf_wr),     // input wire [511 : 0] dina
-      .douta(bias_buf_rd)      // output wire [511 : 0] douta
-  );
+  // //bias buf
+//   bias_buffer bias_buffer (
+//       .clka (clk),             // input wire clka
+//       .ena  (bias_buf_en),     // input wire ena
+//       .wea  (bias_buf_en_wr),  // input wire [0 : 0] wea
+//       .addra(bias_buf_adr),    // input wire [8 : 0] addra
+//       .dina (bias_buf_wr),     // input wire [511 : 0] dina
+//       .douta(bias_buf_rd)      // output wire [511 : 0] douta
+//   );
+//   assign bias_buf_adr = 
+//   ((bias_buf_en_rd == 1'b0) && (bias_buf_en_wr == 1'b1)) ?bias_buf_adr_wr[8 : 0] : //wt bias buf
+//   ((bias_buf_en_rd == 1'b1) && (bias_buf_en_wr == 1'b0)) ?bias_buf_adr_rd[8 : 0] : 0; //rd bias buf
+//   assign bias_buf_en  = ((bias_buf_en_rd == 1'b1) || (bias_buf_en_wr == 1'b1)) ? 1 : 0;
+//   assign bias_buf_en_wr = 0;
+//   assign bias_buf_wr = 512'b0;
+  //bias buf reg mem
+  parameter bias_buffer_mem_limit = 512;
+  reg [511:0] bias_buffer_mem [bias_buffer_mem_limit-1:0];
+  reg [511:0] bias_buffer_mem_out;
+  always @(posedge clk) begin
+    if (reset) begin
+      bias_buffer_mem_out <= 0;
+    end
+    else if (bias_buf_en == 1'b1) begin
+      bias_buffer_mem_out <= bias_buffer_mem[bias_buf_adr];
+    end
+    else begin
+      bias_buffer_mem_out <= bias_buffer_mem_out;
+    end
+  end
   assign bias_buf_adr = 
   ((bias_buf_en_rd == 1'b0) && (bias_buf_en_wr == 1'b1)) ?bias_buf_adr_wr[8 : 0] : //wt bias buf
   ((bias_buf_en_rd == 1'b1) && (bias_buf_en_wr == 1'b0)) ?bias_buf_adr_rd[8 : 0] : 0; //rd bias buf
   assign bias_buf_en  = ((bias_buf_en_rd == 1'b1) || (bias_buf_en_wr == 1'b1)) ? 1 : 0;
   assign bias_buf_en_wr = 0;
   assign bias_buf_wr = 512'b0;
+  assign bias_buf_rd = bias_buffer_mem_out;
 
-  //scale buf
+  // //scale buf
   // scale_buffer scale_buffer (
   //     .clka (clk),                     // input wire clka
   //     .ena  (scale_buf_en),     // input wire ena
@@ -1471,23 +1531,37 @@ module quan_accel_conv_demo(
   //     .dina (scale_buf_wr),     // input wire [511 : 0] dina
   //     .douta(scale_buf_rd)      // output wire [511 : 0] douta
   // );
-  scale_buffer_rom scale_buffer (
-      .clka (clk),                     // input wire clka
-      .ena  (scale_buf_en),     // input wire ena
-      // .wea  (scale_buf_en_wr),  // input wire [0 : 0] wea
-      .addra(scale_buf_adr),    // input wire [8 : 0] addra
-      // .dina (scale_buf_wr),     // input wire [511 : 0] dina
-      .douta(scale_buf_rd)      // output wire [511 : 0] douta
-  );
+  // assign scale_buf_adr = 
+  // ((scale_buf_en_rd == 1'b0) && (scale_buf_en_wr == 1'b1)) ? scale_buf_adr_wr[8 : 0] : //wt scale buf
+  // ((scale_buf_en_rd == 1'b1) && (scale_buf_en_wr == 1'b0)) ? scale_buf_adr_rd[8 : 0] : 0; //rd scale buf
+  // assign scale_buf_en  = ((scale_buf_en_rd == 1'b1) || (scale_buf_en_wr == 1'b1)) ? 1 : 0;
+  // assign scale_buf_en_wr = 1'b0;
+  // assign scale_buf_wr = 512'b0;
+  //scale buf mem
+  parameter scale_buffer_mem_limit = 512;
+  reg [511:0] scale_buffer_mem [scale_buffer_mem_limit-1:0];
+  reg [511:0] scale_buffer_mem_out;
+  always @(posedge clk) begin
+    if (reset) begin
+      scale_buffer_mem_out <= 0;
+    end
+    else if (scale_buf_en == 1'b1) begin
+      scale_buffer_mem_out <= scale_buffer_mem[scale_buf_adr];
+    end
+    else begin
+      scale_buffer_mem_out <= scale_buffer_mem_out;
+    end
+  end
   assign scale_buf_adr = 
   ((scale_buf_en_rd == 1'b0) && (scale_buf_en_wr == 1'b1)) ? scale_buf_adr_wr[8 : 0] : //wt scale buf
   ((scale_buf_en_rd == 1'b1) && (scale_buf_en_wr == 1'b0)) ? scale_buf_adr_rd[8 : 0] : 0; //rd scale buf
   assign scale_buf_en  = ((scale_buf_en_rd == 1'b1) || (scale_buf_en_wr == 1'b1)) ? 1 : 0;
   assign scale_buf_en_wr = 1'b0;
   assign scale_buf_wr = 512'b0;
+  assign scale_buf_rd = scale_buffer_mem_out;
 
   //E regs
-  E_Regs E_regs (
+  quan_E_Regs E_regs (
       .clk                   (clk),
       .reset                 ((reset == 1) || (conv_start == 1)),
       .E_set              (E_reg_set),                 // next tile need clr
@@ -1495,11 +1569,11 @@ module quan_accel_conv_demo(
       .E_word     (last_E_word),
       .E_reg_start(last_E_reg_start),
       .E_reg_size (last_E_reg_size),
-      .out_sa_row_idx             (out_sa_row_idx),
+      .next_out_sa_row_idx             (out_sa_row_idx_pre),
       .E_4_channel_sets(E_4_channel_sets)
   );
   //bias regs
-  Bias_Regs bias_regs (
+  quan_Bias_Regs bias_regs (
       .clk           (clk),
       .reset         ((reset == 1) || (conv_start == 1)),
       .bias_set      (bias_reg_set),         // next tile need clr
@@ -1507,11 +1581,11 @@ module quan_accel_conv_demo(
       .bias_word     (last_bias_word),
       .bias_reg_start(last_bias_reg_start),
       .bias_reg_size (last_bias_reg_size),
-      .out_sa_row_idx     (last_out_sa_row_idx),
+      .next_out_sa_row_idx     (out_sa_row_idx),
       .bias_4_channel_sets(bias_4_channel_sets)
   );
   //scale regs
-  Scale_Regs scale_regs (
+  quan_Scale_Regs scale_regs (
       .clk                   (clk),
       .reset                 ((reset == 1) || (conv_start == 1)),
       .scale_set              (scale_reg_set),
@@ -1519,7 +1593,7 @@ module quan_accel_conv_demo(
       .scale_word     (last_scale_word),
       .scale_reg_start(last_scale_reg_start),
       .scale_reg_size (last_scale_reg_size),
-      .out_sa_row_idx             (last_2_out_sa_row_idx),
+      .next_out_sa_row_idx             (last_out_sa_row_idx),
       .scale_4_channel_sets(scale_4_channel_sets)
   );
   //last regs, state regs, to cache the info to wait for valid buffer data read
@@ -1528,13 +1602,12 @@ module quan_accel_conv_demo(
   assign last_scale_word = scale_buf_rd;
 
   //computation core
-  genvar i, j, m;
+  genvar i, j, m, b;
   generate
     for (i = 1; i <= sa_column_num; i = i + 1) begin : delay_regs_column  //poy, rows
-      Delay_Regs_Pixels delay_regs_pixels (
+      quan_Delay_Regs_Pixels_v2 delay_regs_pixels (
           .clk             (clk),
-          .reset           ((sa_reset == 1) || (reset == 1) || (conv_start == 1)),
-          .en              (sa_en),
+          // .en              (sa_en),
           .re_row_pixels   (re_rowi_pixels[i-1]),
           .delay_row_pixels(delay_rowi_pixels[i-1])
       );
@@ -1553,10 +1626,9 @@ module quan_accel_conv_demo(
       end
     end
     for (j = 1; j <= sa_row_num; j = j + 1) begin : delay_regs_row  //output channel
-      Delay_Regs_Weights delay_regs_weights (
+      quan_Delay_Regs_Weights_v2 delay_regs_weights (
           .clk          (clk),
-          .reset        ((sa_reset == 1) || (reset == 1) || (conv_start == 1)),
-          .en           (sa_en),
+          // .en           (sa_en),
           .weights      (weights_vector[(j-1)*row_num_in_sa*8+:(row_num_in_sa*8)]),
           .delay_weights(delay_weights_sets[j-1])
       );
@@ -1571,123 +1643,78 @@ module quan_accel_conv_demo(
     end
     for (i = 1; i <= sa_column_num; i = i + 1) begin : sa_column  //poy, rows
       for (j = 1; j <= sa_row_num; j = j + 1) begin : sa_row  //output channel
-        SA_sum_E sa (
+        
+        quan_SA_sum_E_v6 sa (
             .clk              (clk),
-            .reset            ((sa_reset == 1) || (reset == 1) || (conv_start == 1)),
-            .en               (sa_en),
+            .reset((reset == 1) || (conv_start == 1) || (conv_compute_fin == 1)),
+            // .core_cell_reset_pre((reset == 1) || (conv_start == 1) || (core_cell_reset_pre == 1)),
+            .core_cell_en_pre(core_cell_en_pre),
+            .core_cell_output_en_pre(core_cell_output_en_pre),
             .mode_init             (mode),
-            .channel_out_reset((channel_out_reset == 1) || (reset == 1) || (conv_start == 1)),
-            .channel_out_en   (channel_out_en),
-            .out_sa_row_idx   (out_sa_row_idx),
             .row_in           (sa_rowi_ins[i-1][j-1]),                   //weights
             .column_in        (sa_columni_ins[i-1][j-1]),                //pixels
             .sa_E_in(extra_sa_vector_Bs[i-1][j-1]),
             .sa_sum_in(extra_sa_vector_As[i-1][j-1]),
-            .mult_array_mode  (mult_array_mode),
+            .mult_array_mode  (core_mult_array_mode),
             .row0_out         (sa_row0_outs[i-1][j-1]),
             .out              (out_rowi_channel_seti[i-1][j-1])
         );
 
-        assign extra_sa_vector_Ps[i-1][j-1] = (product_add_bias_en == 1'b1) ? sa_row0_outs[i-1][j-1] : 0;
-        sum_mult_E_vecOp sum_mult_E_vecOp(
+        assign extra_sa_vector_Ps[i-1][j-1] = (core_product_add_bias_en == 1'b1) ? sa_row0_outs[i-1][j-1] : 0;
+        
+        quan_sum_mult_E_vecOp_v2 quan_sum_mult_E_vecOp(
+            .clk(clk),
+            .en(core_sum_E_recieve_en),
             .mode(mode),
             .E_set(E_4_channel_sets[(j-1)*E_set_width+:E_set_width]),
             .sum_vector(out_rowi_channel_seti[i-1][j-1]),
             .sum_vector_in_mult_A_width(sum_vector_in_mult_A_width_rowi_channel_setj[i-1][j-1]),
             .E_vector_in_mult_B_width(E_vector_in_mult_B_width_rowi_channel_setj[i-1][j-1])
         );
-        //sum mult E vecOp////////////////////////////////////////
-        // //cycle 0
-        // //sum_vector * E in mult_array outside
-        // // sum_vector_in_24[24 * pe_parallel_pixel_88 * column_num -1 : 0]
-        // //24 bit * 32 pixels * 1 channel or 16 bit * 32 pixels * 2 channel
-        // for (m = 0; m < pe_parallel_pixel_88 * column_num_in_sa; m = m + 1) begin
-        //   assign sum_vector_in_mult_A_width_rowi_channel_setj[i-1][j-1][m*mult_A_width+:mult_A_width] =
-        //       // 0{sign},sum_88
-        //       (mode == 0) ? out_rowi_channel_seti[i-1][j-1][m*pixel_width_88+:pixel_width_88] :
-        //       // 8{sign},sum_18_1
-        //       (mode == 1) ? {{8{out_rowi_channel_seti[i-1][j-1][m*pixel_width_18+pixel_width_18-1]}},
-        //       //sum
-        //       out_rowi_channel_seti[i-1][j-1][m*pixel_width_18+:pixel_width_18]} : 0;
-        // end
-        // // sum_vector_in_24[sum_vector_in_24_width-1 : 24 * pe_parallel_pixel_18 * column_num]
-        // for (m = 0; m < pe_parallel_pixel_18 * column_num_in_sa; m = m + 1) begin
-        //   assign sum_vector_in_mult_A_width_rowi_channel_setj[i-1][j-1][(pe_parallel_pixel_18*column_num_in_sa+m)*mult_A_width+:mult_A_width] =
-        //       // 8{sign},sum_18_2
-        //       (mode == 1) ? {{8{out_rowi_channel_seti[i-1][j-1][sum_vector_width_18_2+m*pixel_width_18+pixel_width_18-1]}},
-        //       // sum_18_2
-        //       out_rowi_channel_seti[i-1][j-1][sum_vector_width_18_2+m*pixel_width_18+:pixel_width_18]} : 0;
-        // end
-
-        // // E_vector_in_16[16 * pe_parallel_pixel_18 * column_num -1 : 0]
-        // //16 bit * 32 pixels * 2 channel
-        // for (m = 0; m < pe_parallel_pixel_88 * column_num_in_sa; m = m + 1) begin
-        //   assign E_vector_in_mult_B_width_rowi_channel_setj[i-1][j-1][m*mult_B_width+:mult_B_width] =
-        //       //{0,E}; E_88 equals E_18_1
-        //       {
-        //         {(mult_B_width - E_width) {1'b0}},
-        //         // E_4_channel_sets[(j-1)*E_set_width+:E_set_width][E_width-1 : 0]
-        //         E_4_channel_sets[(j-1)*E_set_width+:E_width]
-        //       };
-        // end
-        // // E_vector_in_16[E_vector_in_16_width-1 : 16 * pe_parallel_pixel_18 * column_num]
-        // for (m = 0; m < pe_parallel_pixel_18 * column_num_in_sa; m = m + 1) begin
-        //   assign E_vector_in_mult_B_width_rowi_channel_setj[i-1][j-1][(pe_parallel_pixel_18*column_num_in_sa+m)*mult_B_width+:mult_B_width] =
-        //       //{0,E}
-        //       (mode == 1) ? {{(mult_B_width - E_width) {1'b0}}, 
-        //       // E_4_channel_sets[(j-1)*E_set_width+:E_set_width][E_set_width-1 : E_width]} : 0;
-        //       E_4_channel_sets[((j-1)*E_set_width+E_width)+:E_width]} : 0;
-        // end
-        //////////////////////////////////////////////////////////
+       
         //xxxxxxxxxxxxxxxxxxxx mapping changed because of the s16_u8_lut_dsp
         //1-48 -> mult_array[1,48]; 49-64 -> sa_row0; [1, 64] = add_bias_row_in_mult_A_width_width
         assign sum_mult_E_vector_A_mode0
         [((i-1)*sa_row_num+(j-1))*((pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa)*mult_A_width)+: //32*24
         ((pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa)*mult_A_width)] = 
-        (sum_mult_E_en == 1'b1) ? sum_vector_in_mult_A_width_rowi_channel_setj[i-1][j-1]
+        sum_vector_in_mult_A_width_rowi_channel_setj[i-1][j-1]
         //0+:
-        [0+:((pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa)*mult_A_width)] : 
-        {((pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa)*mult_A_width){1'b0}};
+        [0+:((pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa)*mult_A_width)];
 
         assign sum_mult_E_vector_A_mode1
         //mult array
         [((i-1)*sa_row_num+(j-1))*(mult_array_length_per_sa*mult_A_width)+:(mult_array_length_per_sa*mult_A_width)] = 
         //sum vector
-        (sum_mult_E_en == 1'b1) ? sum_vector_in_mult_A_width_rowi_channel_setj[i-1][j-1]
+        sum_vector_in_mult_A_width_rowi_channel_setj[i-1][j-1]
         //0+:
-        [0+:(mult_array_length_per_sa*mult_A_width)] : 
-        {(mult_array_length_per_sa*mult_A_width){1'b0}};
+        [0+:(mult_array_length_per_sa*mult_A_width)];
 
         assign extra_sa_vector_As[i-1][j-1] = 
         //sa mult
-        (sum_mult_E_en == 1'b1) ? sum_vector_in_mult_A_width_rowi_channel_setj[i-1][j-1]
+        sum_vector_in_mult_A_width_rowi_channel_setj[i-1][j-1]
         //48*24+:
-        [(mult_array_length_per_sa*mult_A_width)+:(column_num_in_sa*mult_A_width)] : 
-        {(column_num_in_sa * mult_A_width){1'b0}};
+        [(mult_array_length_per_sa*mult_A_width)+:(column_num_in_sa*mult_A_width)];
         
         assign sum_mult_E_vector_B_mode0
         [((i-1)*sa_row_num+(j-1))*((pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa)*mult_B_width)+: //32*16
         ((pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa)*mult_B_width)] = 
-        (sum_mult_E_en == 1'b1) ? E_vector_in_mult_B_width_rowi_channel_setj[i-1][j-1]
+        E_vector_in_mult_B_width_rowi_channel_setj[i-1][j-1]
         //0+:
-        [0+:((pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa)*mult_B_width)] : 
-        {((pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa)*mult_B_width){1'b0}};
+        [0+:((pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa)*mult_B_width)];
         
         assign sum_mult_E_vector_B_mode1
         //mult array
         [((i-1)*sa_row_num+(j-1))*(mult_array_length_per_sa*mult_B_width)+:(mult_array_length_per_sa*mult_B_width)] = 
         //E vector
-        (sum_mult_E_en == 1'b1) ? E_vector_in_mult_B_width_rowi_channel_setj[i-1][j-1]
+        E_vector_in_mult_B_width_rowi_channel_setj[i-1][j-1]
         //0+
-        [0+:(mult_array_length_per_sa*mult_B_width)] : 
-        {(mult_array_length_per_sa*mult_B_width){1'b0}};
+        [0+:(mult_array_length_per_sa*mult_B_width)];
 
         assign extra_sa_vector_Bs[i-1][j-1] = 
         //sa mult
-        (sum_mult_E_en == 1'b1) ? E_vector_in_mult_B_width_rowi_channel_setj[i-1][j-1]
+        E_vector_in_mult_B_width_rowi_channel_setj[i-1][j-1]
         //48*16+:
-        [(mult_array_length_per_sa*mult_B_width)+:row_num_in_sa*mult_B_width] : 
-        {(row_num_in_sa * mult_B_width){1'b0}};
+        [(mult_array_length_per_sa*mult_B_width)+:row_num_in_sa*mult_B_width];
         
         assign sum_mult_E_vector_in_mult_P_width_rowi_channel_setj[i-1][j-1]
         //0+:
@@ -1707,29 +1734,29 @@ module quan_accel_conv_demo(
         //[16*40]
         extra_sa_vector_Ps[i-1][j-1];
 
-        product_add_bias_vecOp product_add_bias_vecop(
+        quan_product_add_bias_vecOp_v2 quan_product_add_bias_vecop(
             .clk              (clk),
-            .reset            ((product_add_bias_reset == 1) || (reset == 1) || (conv_start == 1)),
-            .en               (product_add_bias_en),
+            .en               (core_product_add_bias_en),
             .mode             (mode),
             .sum_mult_E_vector(sum_mult_E_vector_in_mult_P_width_rowi_channel_setj[i-1][j-1]),  // pox res per channel
-            .bias_set         (bias_4_channel_sets[(j-1)*bias_set_width+:bias_set_width]),
+            .next_bias_set         (bias_4_channel_sets[(j-1)*bias_set_width+:bias_set_width]),
             .product_add_bias_vector(product_add_bias_vector_rowi_channel_setj[i-1][j-1])  // pox res per channel
         );
 
-        relu_scale_vecOp relu_scale_vecop(
+        quan_relu_scale_vecOp_v2 quan_relu_scale_vecop(
             .clk                             (clk),
+            .en(core_relu_scale_en),
             .mode                            (mode),
-            .scale_set(scale_4_channel_sets[(j-1)*scale_set_width+:scale_set_width]),
+            .next_scale_set(scale_4_channel_sets[(j-1)*scale_set_width+:scale_set_width]),
             .product_add_bias_vector(product_add_bias_vector_rowi_channel_setj[i-1][j-1]),
             .quantize_vector(quantize_rowi_channel_setj[i-1][j-1])
-        );        
+        ); 
         //conv out fifo
         fifo_rowi_channel_seti fifo_rowi_channel_seti (
             .clk       (clk),                                     // input wire clk
             .srst      ((reset == 1) || (conv_start == 1)),                      // input wire srst
             .din       (quantize_rowi_channel_setj[i-1][j-1]),  // input wire [511 : 0] din
-            .wr_en     (relu_scale_en),                             // input wire wr_en
+            .wr_en     (core_conv_fifo_en),                             // input wire wr_en
             .rd_en     (fifo_rowi_channel_seti_rd_en[i-1][j-1]),  // input wire rd_en
             .dout      (fifo_rowi_channel_seti_dout[i-1][j-1]),   // output wire [511 : 0] dout
             .full      (fifo_rowi_channel_seti_full[i-1][j-1]),   // output wire full
@@ -1741,27 +1768,54 @@ module quan_accel_conv_demo(
     end
   endgenerate
   // sa control
-  SA_E_ReLU_Quantify_Ctrl sa_E_relu_quantify_ctrl (
-      .clk              (clk),
-      .reset            ((reset == 1) || (conv_start == 1)),  //next tile need clr
-      .re_fm_en         (re_fm_en),
-      .mode             (mode),
-      .nif_mult_k_mult_k(nif_mult_k_mult_k),
-      .sa_en            (sa_en),
-      .sa_reset         (sa_reset),
-      .channel_out_reset(channel_out_reset),
-      .channel_out_en   (channel_out_en),
-      .sum_mult_E_en        (sum_mult_E_en),
-      .product_add_bias_en      (product_add_bias_en),
-      .product_add_bias_reset   (product_add_bias_reset),
-      .relu_scale_en      (relu_scale_en),
-      .mult_array_mode  (mult_array_mode),
-      .out_sa_row_idx   (out_sa_row_idx),
-      .relu_scale_add_end (relu_scale_add_end)
+  quan_CBR_kernel_controller_v5 quan_CBR_kernel_ctrl(
+    .clk              (clk),
+    .reset            ((reset == 1) || (conv_start == 1)),  //next tile need clr
+    .re_fm_en         (re_fm_en),
+    .mode_init             (mode),
+    .nif_mult_k_mult_k_init(nif_mult_k_mult_k),
+    .shadow_pof(shadow_pof),
+
+    //for shell ctrl
+    // .sa_en_pre(sa_en_pre),
+    // .sa_reset_pre(sa_reset_pre),
+    .out_sa_row_idx_pre(out_sa_row_idx_pre),
+    .conv_fifo_add_end_pre(conv_fifo_add_end_pre),
+
+    //for kernel ctrl
+    .core_cell_en_pre(core_cell_en_pre),
+    // .core_cell_reset_pre(core_cell_reset_pre),
+    .core_cell_output_en_pre(core_cell_output_en_pre),
+    .core_sum_E_recieve_en_pre(core_sum_E_recieve_en_pre),
+    .core_sum_mult_E_en_pre(core_sum_mult_E_en_pre),
+    .core_product_add_bias_en_pre(core_product_add_bias_en_pre),
+    .core_relu_scale_en_pre(core_relu_scale_en_pre),
+    .core_conv_fifo_en_pre(core_conv_fifo_en_pre),
+    .core_mult_array_mode_pre(core_mult_array_mode_pre)
+    // .core_out_sa_row_idx_pre(core_out_sa_row_idx_pre)
   );
 
+  always @(posedge clk) begin
+    if ((reset == 1) || (conv_start == 1)) begin
+      core_sum_E_recieve_en <= 0;
+      core_sum_mult_E_en <= 0;
+      core_product_add_bias_en <= 0;
+      core_relu_scale_en <= 0;
+      core_conv_fifo_en <= 0;
+      core_mult_array_mode <= 0;
+      // core_out_sa_row_idx <= 0;
+    end else begin
+      core_sum_E_recieve_en <= core_sum_E_recieve_en_pre;
+      core_sum_mult_E_en <= core_sum_mult_E_en_pre;
+      core_product_add_bias_en <= core_product_add_bias_en_pre;
+      core_relu_scale_en <= core_relu_scale_en_pre;
+      core_conv_fifo_en <= core_conv_fifo_en_pre;
+      core_mult_array_mode <= core_mult_array_mode_pre;
+      // core_out_sa_row_idx <= core_out_sa_row_idx_pre;
+    end
+  end
 
-  assign conv_compute_fin = relu_scale_add_end;
+  assign conv_compute_fin = conv_fifo_add_end;
   //multiplier array
   Mult_Array_hete_naive mult_array_hete (
       .clk     (clk),
@@ -1789,19 +1843,19 @@ module quan_accel_conv_demo(
   assign sum_mult_E_vector_B = //mode 0 or 1
   (mode == 0)? sum_mult_E_vector_B_mode0:
   (mode == 1)? sum_mult_E_vector_B_mode1: {(vector_B_width){1'b0}};
+
   assign vector_A         = sum_mult_E_vector_A;
   assign vector_B         = sum_mult_E_vector_B;
   // assign sum_mult_E_vector_P = (product_add_bias_en == 1'b1) ? vector_P : 0;
   assign sum_mult_E_vector_P = vector_P;
   
-  //conv store ctrl
-  conv_store_ddr_controller cv_store_ddr_controller (  // conv_out_handler
+//conv store ctrl
+  conv_fifo_out_controller_v2 cv_fifo_out_controller (  // conv_out_handler
       //cycle 0 in
       .clk                       (clk),
       .reset                     ((reset == 1) || (conv_start == 1)),
-      .conv_store_start       (conv_store),
-      .ddr_cmd_ready(ddr_cmd_ready),
-      .ddr_wt_data_ready(ddr_wt_data_ready),
+      .conv_fifo_out_start       (conv_store),
+      .ddr_en(ddr_en),
       .output_ddr_layer_base_adr(output_ddr_layer_base_adr),
       .mode                      (mode),
       .of_in_2pow(of_in_2pow), 
@@ -1812,10 +1866,7 @@ module quan_accel_conv_demo(
       .cur_pox                   (store_pox),
       .cur_poy                   (store_poy),
       .cur_pof                   (store_pof),
-      //store cmd
-      .store_ddr_base_adr(store_ddr_base_adr),
-      .store_ddr_length(store_ddr_length),
-      .valid_store_ddr_cmd(valid_store_ddr_cmd),
+      
       //cycle 0 out
       .fifo_rds                  (fifo_rds),
       //cycle 1 in
@@ -1823,28 +1874,29 @@ module quan_accel_conv_demo(
       //cycle 1 out
       .fifo_column_no            (fifo_column_no),
       .fifo_row_no               (fifo_row_no),
+      .valid_conv_out    (valid_conv_out),
       .out_y_idx                 (out_y_idx),
       .out_x_idx                 (out_x_idx),
       .out_f_idx                 (out_f_idx),
+      .conv_out_data             (conv_out_data),
       .conv_fifo_out_tile_add_end(conv_fifo_out_tile_add_end),
-      //store ddr data
+      .valid_conv_out_ddr_adr(valid_conv_out_ddr_adr),
       .conv_out_ddr_adr(conv_out_ddr_adr),
-      .valid_conv_out_ddr_data(valid_conv_out_ddr_data),
-      .conv_out_ddr_data(conv_out_ddr_data),
-      .conv_store_fin(conv_store_fin)
+      .conv_out_ddr_data(conv_out_ddr_data)
   );
   assign fifo_data      = fifo_rowi_channel_seti_dout[fifo_column_no][fifo_row_no];
   assign conv_store_fin = conv_fifo_out_tile_add_end;  //demo store ctrl
 
-`ifdef SIMULATION
-  // fin and stop
+  always begin
+    #5;
+    clk <= ~clk;
+  end
+
   always @(posedge clk) begin
     if (conv_fin == 1) begin
       $stop;
     end
   end
-
-`endif
 
   integer file; 
   integer file01, file02, file03, file04, file05, file06;
@@ -1853,28 +1905,28 @@ module quan_accel_conv_demo(
   integer n;
   initial begin
     // initial data
+    for (n = 0; n < 1000000; n = n + 1) begin //DDR_mem_limit
+      DDR_mem[n] = 512'b0;
+    end
+    for (n = 0; n < bias_buffer_mem_limit; n = n + 1) begin
+      bias_buffer_mem[n] = 512'b0;
+    end
+    for (n = 0; n < E_buffer_mem_limit; n = n + 1) begin
+      E_buffer_mem[n] = 512'b0;
+    end
+    for (n = 0; n < scale_buffer_mem_limit; n = n + 1) begin
+      scale_buffer_mem[n] = 512'b0;
+    end
+    $readmemh("D:\\project\\Vivado\\yolov5_accel\\yolov5_accel.srcs\\DDR_init.txt", DDR_mem);
+    // // 打印读取的数据以验证
     // for (n = 0; n < 1000000; n = n + 1) begin //DDR_mem_limit
-    //   DDR_mem[n] = 512'b0;
+    //   $display("DDR_mem[%d] = %h", n, DDR_mem[n]);
     // end
-    // for (n = 0; n < bias_buffer_mem_limit; n = n + 1) begin
-    //   bias_buffer_mem[n] = 512'b0;
-    // end
-    // for (n = 0; n < E_buffer_mem_limit; n = n + 1) begin
-    //   E_buffer_mem[n] = 512'b0;
-    // end
-    // for (n = 0; n < scale_buffer_mem_limit; n = n + 1) begin
-    //   scale_buffer_mem[n] = 512'b0;
-    // end
-    // $readmemh("D:\\project\\Vivado\\yolov5_accel\\yolov5_accel.srcs\\DDR_init.txt", DDR_mem);
-    // // // 打印读取的数据以验证
-    // // for (n = 0; n < 1000000; n = n + 1) begin //DDR_mem_limit
-    // //   $display("DDR_mem[%d] = %h", n, DDR_mem[n]);
-    // // end
-    // $readmemh("D:\\project\\Vivado\\yolov5_accel\\yolov5_accel.srcs\\instr_args_hex_num_init.txt", conv_instr_args_mem);
-    // // $display("conv_instr_args_mem[%d] = %h", 0, conv_instr_args_mem[0]);
-    // $readmemh("D:\\project\\Vivado\\yolov5_accel\\yolov5_accel.srcs\\bias_buffer_init.txt", bias_buffer_mem);
-    // $readmemh("D:\\project\\Vivado\\yolov5_accel\\yolov5_accel.srcs\\E_buffer_init.txt", E_buffer_mem);
-    // $readmemh("D:\\project\\Vivado\\yolov5_accel\\yolov5_accel.srcs\\scale_buffer_init.txt", scale_buffer_mem);
+    $readmemh("D:\\project\\Vivado\\yolov5_accel\\yolov5_accel.srcs\\instr_args_hex_num_init.txt", conv_instr_args_mem);
+    // $display("conv_instr_args_mem[%d] = %h", 0, conv_instr_args_mem[0]);
+    $readmemh("D:\\project\\Vivado\\yolov5_accel\\yolov5_accel.srcs\\bias_buffer_init.txt", bias_buffer_mem);
+    $readmemh("D:\\project\\Vivado\\yolov5_accel\\yolov5_accel.srcs\\E_buffer_init.txt", E_buffer_mem);
+    $readmemh("D:\\project\\Vivado\\yolov5_accel\\yolov5_accel.srcs\\scale_buffer_init.txt", scale_buffer_mem);
     // collect conv res file
     file = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/conv_result.txt", "w");
     $display("Time\tvalid\tout_f_idx\tout_y_idx\tout_x_idx");
@@ -1885,11 +1937,11 @@ module quan_accel_conv_demo(
     // 写入文件
     $fdisplay(file, "Time\tvalid\tout_f_idx\tout_y_idx\tout_x_idx\tresult_word");
     // 监控信号变化并写入
-    $fmonitor(file, "%t\t%b\t%d\t%d\t%d\t%h", $time, valid_conv_out_ddr_data, out_f_idx, out_y_idx, out_x_idx, conv_out_ddr_data);
+    $fmonitor(file, "%t\t%b\t%d\t%d\t%d\t%h", $time, valid_conv_out, out_f_idx, out_y_idx, out_x_idx, conv_out_data);
 
     // collect product add bias file
     file01 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_00.txt", "w");
-    $fmonitor(file01, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, out_rowi_channel_seti[0][0]);
+    $fmonitor(file01, "%d\t%d\t%d\t%d\t%h", core_sum_E_recieve_en, shadow_of_start, shadow_oy_start, shadow_ox_start, out_rowi_channel_seti[0][0]);
     file02 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_in_A_00.txt", "w");
     $fmonitor(file02, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, sum_vector_in_mult_A_width_rowi_channel_setj[0][0]);
     file03 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_mult_E_00.txt", "w");
@@ -1902,7 +1954,7 @@ module quan_accel_conv_demo(
     $fmonitor(file06, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, E_vector_in_mult_B_width_rowi_channel_setj[0][0]);
 
     file11 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_10.txt", "w");
-    $fmonitor(file11, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, out_rowi_channel_seti[1][0]);
+    $fmonitor(file11, "%d\t%d\t%d\t%d\t%h", core_sum_E_recieve_en, shadow_of_start, shadow_oy_start, shadow_ox_start, out_rowi_channel_seti[1][0]);
     file12 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_in_A_10.txt", "w");
     $fmonitor(file12, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, sum_vector_in_mult_A_width_rowi_channel_setj[1][0]);
     file13 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_mult_E_10.txt", "w");
@@ -1915,7 +1967,7 @@ module quan_accel_conv_demo(
     $fmonitor(file16, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, E_vector_in_mult_B_width_rowi_channel_setj[1][0]);
 
     file21 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_20.txt", "w");
-    $fmonitor(file21, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, out_rowi_channel_seti[2][0]);
+    $fmonitor(file21, "%d\t%d\t%d\t%d\t%h", core_sum_E_recieve_en, shadow_of_start, shadow_oy_start, shadow_ox_start, out_rowi_channel_seti[2][0]);
     file22 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_in_A_20.txt", "w");
     $fmonitor(file22, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, sum_vector_in_mult_A_width_rowi_channel_setj[2][0]);
     file23 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_mult_E_20.txt", "w");
@@ -1926,7 +1978,17 @@ module quan_accel_conv_demo(
     $fmonitor(file25, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, quantize_rowi_channel_setj[2][0]);
     file26 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/E_in_B_20.txt", "w");
     $fmonitor(file26, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, E_vector_in_mult_B_width_rowi_channel_setj[2][0]);
+    //begin simulation
+    clk   = 0;
+    reset = 1;
+    ddr_en = 1;
+
+    #30; //3 cycle
+    reset       = 0;
+
   end
 
 endmodule
+
+
 
