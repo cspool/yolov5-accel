@@ -104,7 +104,7 @@ module quan_SA_sum_E_v5 (
 
   wire [                                 42 : 0] row0_mult_out                   [column_num_in_sa - 1 : 0];
 
-  wire [pe_out_width * column_num_in_sa - 1 : 0] sum_row;  //row results
+  reg  [pe_out_width * column_num_in_sa - 1 : 0] sum_row;  //row results
   wire [pe_out_width * column_num_in_sa - 1 : 0] row_output;  //row results
   reg  [                sa_out_width_88 - 1 : 0] row_output_88;  //row results
   reg  [                sa_out_width_18 - 1 : 0] row_output_18;  //column results
@@ -190,7 +190,7 @@ module quan_SA_sum_E_v5 (
 
   endgenerate
 
-  quan_Delay_Regs_Sum quan_delay_regs_sum (
+  quan_Delay_Regs_Sum_v0p5 quan_delay_regs_sum (
       .clk          (clk),
       .sum_row      (sum_row),
       .delay_sum_row(row_output)
@@ -198,7 +198,10 @@ module quan_SA_sum_E_v5 (
 
   generate
     for (j = 0; j < column_num_in_sa; j = j + 1) begin : row_0_column
-      assign sum_row[j*pe_out_width+:pe_out_width] = all_out[0][j];
+      always @(posedge clk) begin
+        sum_row[j*pe_out_width+:pe_out_width] <= all_out[0][j];
+      end
+      // assign sum_row[j*pe_out_width+:pe_out_width] = all_out[0][j];
 
       core_cell_row0_v2 core_cell_row0 (  //i == 0
           .clk            (clk),
