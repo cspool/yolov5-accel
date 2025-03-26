@@ -59,7 +59,6 @@ module quan_CBR_v7(
   parameter sa_row_in_width = weights_row_in_width;
   parameter pixels_column_in_width = 16 * column_num_in_sa;
   parameter sa_column_in_width = pixels_column_in_width; //24 * column_num_in_sa
-  parameter pe_out_width = (pixel_width_18) * pe_parallel_pixel_18 * pe_parallel_weight_18;  // width of 18 is bigger than 88
   parameter row_counter_width = ($clog2(row_num_in_sa + 1));
   parameter sa_out_width = pixel_width_18 * pe_parallel_pixel_18 * pe_parallel_weight_18 * column_num_in_sa;
   //bias, E, scale regs
@@ -1693,7 +1692,7 @@ module quan_CBR_v7(
     end
     for (i = 1; i <= sa_column_num; i = i + 1) begin : sa_column  //poy, rows
       for (j = 1; j <= sa_row_num; j = j + 1) begin : sa_row  //output channel
-        quan_SA_sum_E_v7 sa (
+        quan_SA_sum_E_v8 sa (
             .clk              (clk),
 
             .reset(((i == 1) && (j == 1)) ? ((reset == 1) || (conv_start == 1) || (conv_compute_fin == 1)):
