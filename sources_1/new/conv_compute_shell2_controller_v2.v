@@ -20,78 +20,54 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module conv_compute_shell2_controller_v2 (
-    s,
+module conv_compute_shell2_controller_v2 #(
+    parameter sa_column_num = 2,  //how many columns in conv core
+    parameter pixels_in_row = 32,
+    parameter pixels_in_row_mult_2 = pixels_in_row * 2,
+    parameter pixels_in_row_mult_2_minus_1 = pixels_in_row_mult_2 - 1,
+    parameter pixels_in_row_mult_2_minus_2 = pixels_in_row_mult_2 - 2,
+    parameter pixels_in_row_mult_2_minus_3 = pixels_in_row_mult_2 - 3,
+    parameter pixels_in_row_mult_2_minus_4 = pixels_in_row_mult_2 - 4,
+    parameter pixels_in_row_in_2pow = 5,
+    parameter buffers_num = 3,
+    parameter pixels_in_row_minus_1 = pixels_in_row - 1,
+    parameter pixels_in_row_minus_2 = pixels_in_row - 2,
+    parameter pixels_in_row_minus_3 = pixels_in_row - 3,
+    parameter buffers_num_minus_1 = buffers_num - 1,
+    parameter row_num_in_mode0 = 64,  // 64 in 8 bit, 128 in 1 bit
+    parameter row_num_in_mode1 = 128,  // 64 in 8 bit, 128 in 1 bit
+    parameter ifs_in_row_2pow = 1,
+    parameter input_buffer_size_2pow = 12,  //4096
+    parameter slab_buffer_size_2pow = 13  //8192
+) (
+    input [ 3:0] s,
     p,
-    iy,
-    nif_in_2pow,
+    input [15:0] iy,
+    input [ 3:0] nif_in_2pow,
     ix_in_2pow,
-    poy,
-    valid_adr,
-    iy_start,
-    ky,
-    row_base_in_3s,
-    row_start_idx,
-    if_start,
-    slab_num,
-    row_slab_start_idx,
+    input [15:0] poy,
+    input        valid_adr,
+    input [15:0] iy_start,
+    input [15:0] ky,
+    input [15:0] row_base_in_3s,
+    input [15:0] row_start_idx,
+    input [15:0] if_start,
+    input [ 3:0] slab_num,
+    input [15:0] row_slab_start_idx,
 
-    row2_idx,
-    row2_buf_adr,
-    row2_buf_idx,
-    row2_buf_word_select,
-    row2_slab_adr,
-    row2_slab_idx,
-    row2_slab_adr_to_wr,
-    row2_slab_idx_to_wr,
+    output [15:0] row2_idx,
+    output [15:0] row2_buf_adr,
+    output [ 1:0] row2_buf_idx,
+    output        row2_buf_word_select,
+    output [15:0] row2_slab_adr,
+    output [ 1:0] row2_slab_idx,
+    output [15:0] row2_slab_adr_to_wr,
+    output [ 1:0] row2_slab_idx_to_wr,
     //valid is the buf/slab rd en signal, which equals slab_to_wr signal
-    valid_row2_adr
+    output        valid_row2_adr
 );
-  parameter sa_column_num = 2;
-  parameter pixels_in_row = 32;
-  parameter pixels_in_row_mult_2 = pixels_in_row * 2;
-  parameter pixels_in_row_mult_2_minus_1 = pixels_in_row_mult_2 - 1;
-  parameter pixels_in_row_mult_2_minus_2 = pixels_in_row_mult_2 - 2;
-  parameter pixels_in_row_mult_2_minus_3 = pixels_in_row_mult_2 - 3;
-  parameter pixels_in_row_mult_2_minus_4 = pixels_in_row_mult_2 - 4;
-  parameter pixels_in_row_in_2pow = 5;
-  parameter buffers_num = 3;
-  parameter pixels_in_row_minus_1 = pixels_in_row - 1;
-  parameter pixels_in_row_minus_2 = pixels_in_row - 2;
-  parameter pixels_in_row_minus_3 = pixels_in_row - 3;
-  parameter buffers_num_minus_1 = buffers_num - 1;
-  parameter row_num_in_mode0 = 64;  // 64 in 8 bit, 128 in 1 bit
-  parameter row_num_in_mode1 = 128;  // 64 in 8 bit, 128 in 1 bit
-  parameter ifs_in_row_2pow = 1;
-  parameter input_buffer_size_2pow = 12;  //4096
-  parameter slab_buffer_size_2pow = 13;  //8192
-
-  input [3:0] s, p;
-  input [15:0] iy;
-  input [3:0] nif_in_2pow, ix_in_2pow;
-  input [15:0] poy;
-  input valid_adr;
-  input [15:0] iy_start;
-  input [15:0] ky;
-  input [15:0] row_base_in_3s;
-  input [15:0] row_start_idx;
-  input [15:0] if_start;
-  input [3:0] slab_num;
-  input [15:0] row_slab_start_idx;
-
-  output [15:0] row2_idx;
-  output [15:0] row2_buf_adr;
-  output [1:0] row2_buf_idx;
-  output row2_buf_word_select;
-  output [15:0] row2_slab_adr;
-  output [1:0] row2_slab_idx;
-  output [15:0] row2_slab_adr_to_wr;
-  output [1:0] row2_slab_idx_to_wr;
-  //valid is the buf/slab rd en signal, which equals slab_to_wr signal
-  output valid_row2_adr;
 
   wire [15:0] row2_buf_adr_in_row;
-
   //address translation
   wire [15:0] row2_base_in_3;
   wire [15:0] row2_base_in_3s;

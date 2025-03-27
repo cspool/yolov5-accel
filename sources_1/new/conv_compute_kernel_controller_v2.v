@@ -20,84 +20,61 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module conv_compute_kernel_controller_v2(clk,
-                               reset,
-                               conv_compute,
-                               mode_init,
-                               of_init,
-                               ox_init,
-                               oy_init,
-                               ix_init,
-                               iy_init,
-                               nif_init,
-                               k_init,
-                               s_init,
-                               p_init,
-                               nif_in_2pow_init,
-                               ix_in_2pow_init,
-                               ox_start,
-                               oy_start,
-                               of_start,
-                               pox,
-                               poy,
-                               pof,
-                               if_idx,
-                               west_pad,
-                               slab_num,
-                               east_pad,
-                               row_start_idx,
-                               row_end_idx,
-                               reg_start_idx,
-                               reg_end_idx,
-                               row_slab_start_idx,
-                               valid_adr,
-                               iy_start,
-                               ky,
-                               if_start,
-                               row_base_in_3s,
+module conv_compute_kernel_controller_v2 
+#(
+  parameter sa_row_num = 4,  //how many rows in conv core
+    parameter sa_column_num = 2,  //how many columns in conv core
+    parameter sa_column_num_minus_1 = sa_column_num - 1,
+    parameter row_num_in_sa = 16,  // how many rows in a sa, row_num
+    parameter column_num_in_sa = 16,  // how many columns in a sa
+    parameter pixels_in_row                = 32,
+    parameter pixels_in_row_mult_2         = pixels_in_row * 2,
+    parameter pixels_in_row_mult_2_minus_1 = pixels_in_row_mult_2 - 1,
+    parameter pixels_in_row_mult_2_minus_2 = pixels_in_row_mult_2 - 2,
+    parameter pixels_in_row_mult_2_minus_3 = pixels_in_row_mult_2 - 3,
+    parameter pixels_in_row_mult_2_minus_4 = pixels_in_row_mult_2 - 4,
+    parameter pixels_in_row_in_2pow        = 5,
+    parameter buffers_num                  = 3,
+    parameter pixels_in_row_minus_1        = pixels_in_row-1,
+    parameter pixels_in_row_minus_2        = pixels_in_row-2,
+    parameter pixels_in_row_minus_3        = pixels_in_row-3,
+    parameter buffers_num_minus_1          = buffers_num-1,
+    parameter row_num_in_mode0             = 64, // 64 in 8 bit, 128 in 1 bit
+    parameter row_num_in_mode1             = 128, // 64 in 8 bit, 128 in 1 bit
+    parameter ifs_in_row_2pow              = 1,
+    parameter input_buffer_size_2pow       = 12,//4096
+    parameter slab_buffer_size_2pow        = 13 //8192
+)
+(
+  // conv tiling module
+    input clk, reset, conv_compute,
+    input [3:0] mode_init,
+    input [3:0] k_init, s_init, p_init,
+    input [15:0] of_init, ox_init, oy_init, ix_init, iy_init, nif_init,
+    input [3:0] nif_in_2pow_init, ix_in_2pow_init,
 
-                               com_control_end,
-                               conv_pixels_add_end,
-                               conv_nif_add_end
+    output [15:0] ox_start, oy_start, of_start, pox, poy, pof, if_idx,
+    output [3:0] west_pad, slab_num, east_pad,
+    output [15:0] row_start_idx, row_end_idx,
+    output [15:0] reg_start_idx, reg_end_idx,
+    output [15:0] row_slab_start_idx,
+
+    output reg [15:0] if_start,
+
+    output reg [15:0] row_base_in_3s,
+    output valid_adr, 
+    output [15:0] iy_start,
+    output com_control_end,
+    output conv_pixels_add_end,
+    output conv_nif_add_end,
+    //conv rows
+    output reg [15:0] ky
                                );
-    parameter sa_row_num = 4;  //how many rows in conv core
-    parameter sa_column_num = 2;  //how many columns in conv core
-    parameter sa_column_num_minus_1 = sa_column_num - 1;
-    parameter row_num_in_sa = 16;  // how many rows in a sa, row_num
-    parameter column_num_in_sa = 16;  // how many columns in a sa
-    parameter pixels_in_row                = 32;
-    parameter pixels_in_row_mult_2         = pixels_in_row * 2;
-    parameter pixels_in_row_mult_2_minus_1 = pixels_in_row_mult_2 - 1;
-    parameter pixels_in_row_mult_2_minus_2 = pixels_in_row_mult_2 - 2;
-    parameter pixels_in_row_mult_2_minus_3 = pixels_in_row_mult_2 - 3;
-    parameter pixels_in_row_mult_2_minus_4 = pixels_in_row_mult_2 - 4;
-    parameter pixels_in_row_in_2pow        = 5;
-    parameter buffers_num                  = 3;
-    parameter pixels_in_row_minus_1        = pixels_in_row-1;
-    parameter pixels_in_row_minus_2        = pixels_in_row-2;
-    parameter pixels_in_row_minus_3        = pixels_in_row-3;
-    parameter buffers_num_minus_1          = buffers_num-1;
-    parameter row_num_in_mode0             = 64; // 64 in 8 bit, 128 in 1 bit
-    parameter row_num_in_mode1             = 128; // 64 in 8 bit, 128 in 1 bit
-    parameter ifs_in_row_2pow              = 1;
-    parameter input_buffer_size_2pow       = 12;//4096
-    parameter slab_buffer_size_2pow        = 13;//8192
-    
-    // conv tiling module
-    input clk, reset, conv_compute;
-    input [3:0] mode_init;
-    input [3:0] k_init, s_init, p_init;
-    input [15:0] of_init, ox_init, oy_init, ix_init, iy_init, nif_init;
-    input [3:0] nif_in_2pow_init, ix_in_2pow_init;
+
     reg [3:0] mode;
     reg [3:0] k, s, p;
     reg [15:0] of, ox, oy, ix, iy, nif;
     reg [3:0] nif_in_2pow, ix_in_2pow;
-    output [15:0] ox_start, oy_start, of_start, pox, poy, pof, if_idx;
-    output [3:0] west_pad, slab_num, east_pad;
-    output [15:0] row_start_idx, row_end_idx;
-    output [15:0] reg_start_idx, reg_end_idx;
-    output [15:0] row_slab_start_idx;
     
     //conv tile module
     wire loop_y_add_begin, loop_y_add_end;
@@ -105,17 +82,10 @@ module conv_compute_kernel_controller_v2(clk,
     wire loop_f_add_begin, loop_f_add_end;
     wire loop_if_add_begin, loop_if_add_end;
     reg [15:0] tile_y_start, tile_x_start, tile_f_start; // tile_f_start is the inner loop
-    output reg [15:0] if_start;
+    
     wire [15:0] row_num;
     reg [15:0] row_base_mod_3s;
-    output reg [15:0] row_base_in_3s;
-    output valid_adr; 
-    output [15:0] iy_start;
-    output com_control_end;
-    output conv_pixels_add_end;
-    output conv_nif_add_end;
-    //conv rows
-    output reg [15:0] ky;
+    
     wire loop_ky_add_begin, loop_ky_add_end;
     wire [15:0] p_plus_1, p_plus_iy;
     //conv pixels

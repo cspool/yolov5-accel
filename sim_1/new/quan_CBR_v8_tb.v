@@ -23,7 +23,7 @@
 module quan_CBR_v8_tb();
   //SA
   parameter sa_row_num = 4;  //how many rows in conv core
-  parameter sa_column_num = 2;  //how many columns in conv core, [1,buffers_num]
+  parameter sa_column_num = 1;  //how many columns in conv core, [1,buffers_num]
   parameter row_num_in_sa = 16;  // how many rows in a sa, row_num
   parameter column_num_in_sa = 16;  // how many columns in a sa
   parameter pixels_in_row = 32;
@@ -873,49 +873,51 @@ module quan_CBR_v8_tb();
       .conv_load_weights_fin  (conv_load_weights_fin),
       .state_conv_load_weights(state_conv_load_weights)
   );
-  //conv compute ctrl
-  conv_compute_kernel_controller_v2 cv_compute_kernel_controller(
-      .clk                 (clk),
-      .reset               ((reset == 1) || (conv_start == 1)),
-      .conv_compute        (conv_compute),
-      .mode_init           (mode),
-      .of_init             (of),
-      .ox_init             (ox),
-      .oy_init             (oy),
-      .ix_init             (ix),
-      .iy_init             (iy),
-      .nif_init            (nif),
-      .k_init              (k),
-      .s_init              (s),
-      .p_init              (p),
-      .nif_in_2pow_init    (nif_in_2pow),
-      .ix_in_2pow_init     (ix_in_2pow),
-      .ox_start            (ox_start),
-      .oy_start            (oy_start),
-      .of_start            (of_start),
-      .pox                 (pox),
-      .poy                 (poy),
-      .pof                 (pof),
-      .if_idx              (if_idx),
-      .west_pad            (west_pad),
-      .slab_num            (slab_num),
-      .east_pad            (east_pad),
-      .row_start_idx       (row_start_idx),
-      .row_end_idx         (row_end_idx),
-      .reg_start_idx       (reg_start_idx),
-      .reg_end_idx         (reg_end_idx),
-      .row_slab_start_idx  (row_slab_start_idx),
-      .valid_adr(valid_adr),
-      .iy_start(iy_start),
-      .ky(ky),
-      .if_start(if_start),
-      .row_base_in_3s(row_base_in_3s),
-      .com_control_end            (com_control_end),
-      .conv_pixels_add_end (conv_pixels_add_end),
-      .conv_nif_add_end    (conv_nif_add_end)
+    //conv compute ctrl
+  conv_compute_kernel_controller_v2 #(.sa_column_num(sa_column_num)) 
+  cv_compute_kernel_controller(
+    .clk                 (clk),
+    .reset               ((reset == 1) || (conv_start == 1)),
+    .conv_compute        (conv_compute),
+    .mode_init           (mode),
+    .of_init             (of),
+    .ox_init             (ox),
+    .oy_init             (oy),
+    .ix_init             (ix),
+    .iy_init             (iy),
+    .nif_init            (nif),
+    .k_init              (k),
+    .s_init              (s),
+    .p_init              (p),
+    .nif_in_2pow_init    (nif_in_2pow),
+    .ix_in_2pow_init     (ix_in_2pow),
+    .ox_start            (ox_start),
+    .oy_start            (oy_start),
+    .of_start            (of_start),
+    .pox                 (pox),
+    .poy                 (poy),
+    .pof                 (pof),
+    .if_idx              (if_idx),
+    .west_pad            (west_pad),
+    .slab_num            (slab_num),
+    .east_pad            (east_pad),
+    .row_start_idx       (row_start_idx),
+    .row_end_idx         (row_end_idx),
+    .reg_start_idx       (reg_start_idx),
+    .reg_end_idx         (reg_end_idx),
+    .row_slab_start_idx  (row_slab_start_idx),
+    .valid_adr(valid_adr),
+    .iy_start(iy_start),
+    .ky(ky),
+    .if_start(if_start),
+    .row_base_in_3s(row_base_in_3s),
+    .com_control_end            (com_control_end),
+    .conv_pixels_add_end (conv_pixels_add_end),
+    .conv_nif_add_end    (conv_nif_add_end)
   );
 
-  conv_compute_shell1_controller_v2 cv_compute_shell1_controller(
+  conv_compute_shell1_controller_v2 #(.sa_column_num(sa_column_num)) 
+  cv_compute_shell1_controller(
     .s(s),
     .p(p),
     .iy(iy),
@@ -942,7 +944,8 @@ module quan_CBR_v8_tb();
     .valid_row1_adr      (valid_row1_adr)
   );
 
-  conv_compute_shell2_controller_v2 cv_compute_shell2_controller(
+  conv_compute_shell2_controller_v2 #(.sa_column_num(sa_column_num)) 
+  cv_compute_shell2_controller(
     .s(s),
     .p(p),
     .iy(iy),
@@ -969,7 +972,8 @@ module quan_CBR_v8_tb();
     .valid_row2_adr      (valid_row2_adr)
   );
 
-  conv_compute_shell3_controller_v2 cv_compute_shell3_controller(
+  conv_compute_shell3_controller_v2 #(.sa_column_num(sa_column_num)) 
+  cv_compute_shell3_controller(
     .s(s),
     .p(p),
     .iy(iy),

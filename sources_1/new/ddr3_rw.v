@@ -47,7 +47,7 @@
 //    - ddr3_dm: ��������
 //    - ddr3_odt: ��̬�ն�
 //------------------------------------------------------------------------------
-
+`timescale 1ps / 1ps
 `include "ddr3_defines.vh"
 
 module ddr3_rw #(
@@ -100,7 +100,7 @@ module ddr3_rw #(
 
 );
 
-  `default_nettype none
+  // `default_nettype none
 
   // �ڲ��źŶ���
   wire init_calib_complete_sync;
@@ -112,15 +112,7 @@ module ddr3_rw #(
   localparam MAX_RETRY = 3'd2;
 
   // ״̬������
-  localparam
-    STATE_RESET = 4'd0,
-    STATE_IDLE = 4'd1,
-    STATE_INIT = 4'd2,
-    STATE_READ = 4'd3,
-    STATE_WRITE = 4'd4,
-    STATE_FINISH = 4'd5,
-    STATE_ERROR = 4'd6,
-    STATE_RETRY = 4'd7;
+  localparam STATE_RESET = 4'd0, STATE_IDLE = 4'd1, STATE_INIT = 4'd2, STATE_READ = 4'd3, STATE_WRITE = 4'd4, STATE_FINISH = 4'd5, STATE_ERROR = 4'd6, STATE_RETRY = 4'd7;
 
   // DDR3�����
   localparam CMD_WRITE = 3'd0, CMD_READ = 3'd1, CMD_IDLE = 3'd2;
@@ -132,10 +124,19 @@ module ddr3_rw #(
   reg [9:0] cnt_read_data;
   reg write_data_over, write_addr_over;
   reg read_addr_over, read_data_over;
-  reg  [3:0] state;
-  reg  [3:0] next_state;
+  reg                                                  [3:0] state;
+  reg                                                  [3:0] next_state;
   // ��ʱ�ʹ�����
-  wire       timeout_error = (timeout_cnt >= TIMEOUT_VALUE);
+  wire timeout_error = (timeout_cnt >= TIMEOUT_VALUE);
+
+  reg                                                  [9:0] ddr3_rw_size_valid;
+  always @(posedge ui_clk or posedge ui_rst) begin
+    if (ui_rst) begin
+      ddr3_rw_size_valid <= 10'd0;
+    end else if (state == STATE_INIT && cmd_rdy && cmd_valid) begin
+      ddr3_rw_size_valid <= ddr3_rw_size;
+    end
+  end
 
   assign reset_needed = ui_rst || soft_rst_req;
 
@@ -145,8 +146,7 @@ module ddr3_rw #(
     if (ui_rst) begin
       init_calib_complete_r1 <= 1'b0;
       init_calib_complete_r2 <= 1'b0;
-    end
-    else begin
+    end else begin
       init_calib_complete_r1 <= init_calib_complete;
       init_calib_complete_r2 <= init_calib_complete_r1;
     end
@@ -157,11 +157,9 @@ module ddr3_rw #(
   always @(posedge ui_clk or posedge ui_rst) begin
     if (ui_rst || state == STATE_INIT) begin
       timeout_cnt <= 16'd0;
-    end
-    else if (state == STATE_IDLE || state == STATE_FINISH) begin
+    end else if (state == STATE_IDLE || state == STATE_FINISH) begin
       timeout_cnt <= 16'd0;
-    end
-    else if (state == STATE_READ || state == STATE_WRITE) begin
+    end else if (state == STATE_READ || state == STATE_WRITE) begin
       timeout_cnt <= timeout_cnt + 16'd1;
     end
 
@@ -171,11 +169,9 @@ module ddr3_rw #(
   always @(posedge ui_clk or posedge ui_rst) begin
     if (ui_rst || state == STATE_INIT) begin
       retry_cnt <= 3'd0;
-    end
-    else if (state == STATE_RETRY) begin
+    end else if (state == STATE_RETRY) begin
       retry_cnt <= retry_cnt + 3'd1;
-    end
-    else if (state == STATE_IDLE) begin
+    end else if (state == STATE_IDLE) begin
       retry_cnt <= 3'd0;
     end
   end
@@ -191,25 +187,23 @@ module ddr3_rw #(
   wire                    app_rd_addr_valid;
 
   // �����źŸ�ֵ
-  assign app_en = ((state == STATE_WRITE && ~ddr3_wr_finish) ||
-                   (state == STATE_READ && ~ddr3_rd_addr_finish));
-  assign app_wdf_wren = (app_wr_data_rdy && app_wdf_data_valid); // maybe a bug here
-  assign app_wdf_end = app_wdf_wren;
-  assign app_wr_data_rdy = (state == STATE_WRITE && app_wdf_rdy && ~write_data_over);
-  assign app_wr_addr_valid = (state == STATE_WRITE && app_rdy && ~write_addr_over);
-  assign app_rd_addr_valid = (state == STATE_READ && app_rdy && ~read_addr_over);
+  assign app_en              = ((state == STATE_WRITE && ~ddr3_wr_finish) || (state == STATE_READ && ~ddr3_rd_addr_finish));
+  assign app_wdf_wren        = (app_wr_data_rdy && app_wdf_data_valid);
+  assign app_wdf_end         = app_wdf_wren;
+  assign app_wr_data_rdy     = (state == STATE_WRITE && app_wdf_rdy && ~write_data_over);
+  assign app_wr_addr_valid   = (state == STATE_WRITE && app_rdy && ~write_addr_over);
+  assign app_rd_addr_valid   = (state == STATE_READ && app_rdy && ~read_addr_over);
 
   // ����źŸ�ֵ
   assign ddr3_rd_addr_finish = read_addr_over;
-  assign ddr3_rd_finish = (read_addr_over && read_data_over);
-  assign ddr3_wr_finish = (write_data_over && write_addr_over);
+  assign ddr3_rd_finish      = (read_addr_over && read_data_over);
+  assign ddr3_wr_finish      = (write_data_over && write_addr_over);
 
   // ״̬��ʵ��
   always @(posedge ui_clk or posedge ui_rst) begin
     if (ui_rst) begin
       state <= STATE_RESET;
-    end
-    else begin
+    end else begin
       state <= next_state;
     end
   end
@@ -220,8 +214,7 @@ module ddr3_rw #(
       STATE_RESET: begin
         if (init_calib_complete_sync) begin
           next_state = STATE_IDLE;
-        end
-        else begin
+        end else begin
           next_state = STATE_RESET;
         end
       end
@@ -229,11 +222,9 @@ module ddr3_rw #(
       STATE_IDLE: begin
         if (!init_calib_complete_sync) begin
           next_state = STATE_RESET;
-        end
-        else if (ena && app_rdy) begin
+        end else if (ena && app_rdy) begin
           next_state = STATE_INIT;
-        end
-        else begin
+        end else begin
           next_state = STATE_IDLE;
         end
       end
@@ -245,20 +236,17 @@ module ddr3_rw #(
             CMD_READ:  next_state = STATE_READ;
             default:   next_state = STATE_INIT;
           endcase
-        end
-        else begin
-          next_state = STATE_INIT;  // Ĭ��ֵ��ֹlatch
+        end else begin
+          next_state = STATE_INIT;
         end
       end
 
       STATE_WRITE: begin
         if (timeout_error) begin
           next_state = STATE_ERROR;
-        end
-        else if (ddr3_wr_finish) begin
+        end else if (ddr3_wr_finish) begin
           next_state = STATE_FINISH;
-        end
-        else begin
+        end else begin
           next_state = STATE_WRITE;
         end
       end
@@ -266,11 +254,9 @@ module ddr3_rw #(
       STATE_READ: begin
         if (timeout_error) begin
           next_state = STATE_ERROR;
-        end
-        else if (ddr3_rd_finish) begin
+        end else if (ddr3_rd_finish) begin
           next_state = STATE_FINISH;
-        end
-        else begin
+        end else begin
           next_state = STATE_READ;
         end
       end
@@ -278,12 +264,10 @@ module ddr3_rw #(
       STATE_ERROR: begin
         if (retry_cnt < MAX_RETRY) begin
           next_state = STATE_RETRY;
-        end
-        else begin
+        end else begin
           if (reset_needed) begin
             next_state = STATE_RESET;
-          end
-          else begin
+          end else begin
             next_state = STATE_ERROR;
           end
         end
@@ -306,21 +290,19 @@ module ddr3_rw #(
       write_addr_over <= 1'd0;
       read_addr_over  <= 1'd0;
       read_data_over  <= 1'd0;
-    end
-    else begin
+    end else begin
       if (state == STATE_WRITE) begin
-        if (cnt_write_data == ddr3_rw_size - 1 && app_wdf_data_valid && app_wdf_rdy) begin
+        if (cnt_write_data == ddr3_rw_size_valid - 1 && app_wdf_data_valid && app_wdf_rdy) begin
           write_data_over <= 1'b1;
         end
-        if (cnt_write_addr == ddr3_rw_size - 1 && app_rdy) begin
+        if (cnt_write_addr == ddr3_rw_size_valid - 1 && app_rdy) begin
           write_addr_over <= 1'b1;
         end
-      end
-      else if (state == STATE_READ) begin
-        if (cnt_read_addr == ddr3_rw_size - 1 && app_rdy) begin
+      end else if (state == STATE_READ) begin
+        if (cnt_read_addr == ddr3_rw_size_valid - 1 && app_rdy) begin
           read_addr_over <= 1'b1;
         end
-        if (cnt_read_data == ddr3_rw_size - 1 && app_rd_data_valid) begin
+        if (cnt_read_data == ddr3_rw_size_valid - 1 && app_rd_data_valid) begin
           read_data_over <= 1'b1;
         end
       end
@@ -331,14 +313,11 @@ module ddr3_rw #(
   always @(posedge ui_clk or posedge ui_rst) begin
     if (ui_rst) begin
       app_addr <= {ADDR_WIDTH{1'b0}};
-    end
-    else if (state == STATE_INIT) begin
+    end else if (state == STATE_INIT && cmd_rdy && cmd_valid) begin
       app_addr <= (ddr3_base_addr << 3);
-    end
-    else if (app_wr_addr_valid && ~write_addr_over) begin
+    end else if (app_wr_addr_valid && ~write_addr_over) begin
       app_addr <= app_addr + ADDR_OFFSET;
-    end
-    else if (app_rd_addr_valid && ~read_addr_over) begin
+    end else if (app_rd_addr_valid && ~read_addr_over) begin
       app_addr <= app_addr + ADDR_OFFSET;
     end
   end
@@ -347,8 +326,7 @@ module ddr3_rw #(
   always @(posedge ui_clk or posedge ui_rst) begin
     if (ui_rst || state == STATE_INIT) begin
       cnt_write_addr <= 10'd0;
-    end
-    else if (app_wr_addr_valid && cnt_write_addr < ddr3_rw_size) begin
+    end else if (app_wr_addr_valid && cnt_write_addr < ddr3_rw_size_valid) begin
       cnt_write_addr <= cnt_write_addr + 10'd1;
     end
   end
@@ -356,9 +334,10 @@ module ddr3_rw #(
   always @(posedge ui_clk or posedge ui_rst) begin
     if (ui_rst || state == STATE_INIT) begin
       cnt_write_data <= 10'd0;
-    end
-    else if (app_wr_data_rdy && app_wdf_data_valid && cnt_write_data < ddr3_rw_size) begin
-      cnt_write_data <= cnt_write_data + 10'd1;
+    end else begin
+      if (app_wr_data_rdy && app_wdf_data_valid && cnt_write_data < ddr3_rw_size_valid) begin
+        cnt_write_data <= cnt_write_data + 10'd1;
+      end
     end
   end
 
@@ -366,8 +345,7 @@ module ddr3_rw #(
   always @(posedge ui_clk or posedge ui_rst) begin
     if (ui_rst || state == STATE_INIT) begin
       cnt_read_addr <= 10'd0;
-    end
-    else if (app_rd_addr_valid && cnt_read_addr < ddr3_rw_size) begin
+    end else if (app_rd_addr_valid && cnt_read_addr < ddr3_rw_size_valid) begin
       cnt_read_addr <= cnt_read_addr + 10'd1;
     end
   end
@@ -375,8 +353,7 @@ module ddr3_rw #(
   always @(posedge ui_clk or posedge ui_rst) begin
     if (ui_rst || state == STATE_INIT) begin
       cnt_read_data <= 10'd0;
-    end
-    else if (app_rd_data_valid && cnt_read_data < ddr3_rw_size) begin
+    end else if (app_rd_data_valid && cnt_read_data < ddr3_rw_size_valid) begin
       cnt_read_data <= cnt_read_data + 10'd1;
     end
   end
@@ -385,8 +362,7 @@ module ddr3_rw #(
   always @(posedge ui_clk or posedge ui_rst) begin
     if (ui_rst || state == STATE_INIT) begin
       soft_rst_req <= 1'b0;
-    end
-    else if (state == STATE_ERROR && retry_cnt >= MAX_RETRY) begin
+    end else if (state == STATE_ERROR && retry_cnt >= MAX_RETRY) begin
       soft_rst_req <= 1'b1;
     end
   end
@@ -395,11 +371,9 @@ module ddr3_rw #(
   always @(posedge ui_clk or posedge ui_rst) begin
     if (ui_rst) begin
       cmd_rdy <= 1'b0;
-    end
-    else if (state == STATE_INIT) begin
+    end else if (state == STATE_INIT) begin
       cmd_rdy <= 1'b1;
-    end
-    else begin
+    end else begin
       cmd_rdy <= 1'b0;
     end
   end
@@ -408,11 +382,9 @@ module ddr3_rw #(
   always @(posedge ui_clk or posedge ui_rst) begin
     if (ui_rst) begin
       test_rdy <= 1'b0;
-    end
-    else if (state == STATE_INIT) begin
+    end else if (state == STATE_INIT) begin
       test_rdy <= 1'b1;
-    end
-    else begin
+    end else begin
       test_rdy <= 1'b0;
     end
   end
@@ -420,14 +392,14 @@ module ddr3_rw #(
   always @(posedge ui_clk or posedge ui_rst) begin
     if (ui_rst || state == STATE_INIT) begin
       error_flag <= 1'b0;
-    end
-    else if (state == STATE_ERROR) begin
+    end else if (state == STATE_ERROR) begin
       error_flag <= 1'b1;
     end
   end
 
   // DDR3 IP��ʵ����
-  mig_7series_1 mig_7series_1_inst (
+  mig_7series_1 mig_7series_0_inst (
+      // DDR interface Signals
       .ddr3_addr          (ddr3_addr),
       .ddr3_ba            (ddr3_ba),
       .ddr3_cas_n         (ddr3_cas_n),
@@ -445,6 +417,7 @@ module ddr3_rw #(
       .ddr3_dm            (ddr3_dm),
       .ddr3_odt           (ddr3_odt),
 
+      // Application interface Signals
       .app_addr         (app_addr),
       .app_cmd          (app_cmd),
       .app_en           (app_en),
@@ -468,8 +441,13 @@ module ddr3_rw #(
       .app_wdf_mask   ({DDR_WIDTH{1'b0}}),
 
       .sys_clk_i    (clk_200M),
+`ifdef ONLINE
       .sys_rst      (rst_n),
       .device_temp_i(12'd0)
+`else
+      .device_temp  (),
+      .sys_rst      (rst_n)
+`endif
   );
 
   // ila
@@ -479,7 +457,7 @@ module ddr3_rw #(
       .clk    (ui_clk),
       .probe0 (ena),                // 1 bit
       .probe1 (state),              // 4 bit
-      .probe2 (test_rdy),         // 1 bit
+      .probe2 (test_rdy),           // 1 bit
       .probe4 (app_en),             // 1 bit
       .probe5 (app_cmd),            // 3 bit
       .probe6 (app_rdy),            // 1 bit
@@ -507,6 +485,6 @@ module ddr3_rw #(
   );  // 1 bit
 `endif
 
-  `default_nettype wire
+  // `default_nettype wire
 
 endmodule

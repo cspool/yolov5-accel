@@ -21,7 +21,7 @@
 
   <SystemClock>No Buffer</SystemClock>
 
-  <ReferenceClock>No Buffer</ReferenceClock>
+  <ReferenceClock>Use System Clock</ReferenceClock>
 
   <SysResetPolarity>ACTIVE LOW</SysResetPolarity>
 
@@ -34,7 +34,7 @@
   <dci_cascade>0</dci_cascade>
 
   <Controller number="0">
-    <MemoryDevice>DDR3_SDRAM/Components/MT41J256m16XX-15E</MemoryDevice>
+    <MemoryDevice>DDR3_SDRAM/Components/MT41J256m16XX-125</MemoryDevice>
     <TimePeriod>2500</TimePeriod>
     <VccAuxIO>1.8V</VccAuxIO>
     <PHYRatio>4:1</PHYRatio>
@@ -70,7 +70,7 @@
       <Pin Bank="Select Bank" PADName="No connect" name="tg_compare_error"/>
     </System_Control>
     <TimingParameters>
-      <Parameters tcke="5.625" tfaw="45" tras="36" trcd="13.5" trefi="7.8" trfc="260" trp="13.5" trrd="7.5" trtp="7.5" twtr="7.5"/>
+      <Parameters tcke="5" tfaw="40" tras="35" trcd="13.75" trefi="7.8" trfc="260" trp="13.75" trrd="7.5" trtp="7.5" twtr="7.5"/>
     </TimingParameters>
     <mrBurstLength name="Burst Length">8 - Fixed</mrBurstLength>
     <mrBurstType name="Read Burst Type and Length">Sequential</mrBurstType>

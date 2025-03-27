@@ -158,7 +158,7 @@ module mig_7series_1_mig #
    parameter MEM_DENSITY           = "4Gb",
                                      // Indicates the density of the Memory part
                                      // Added for the sake of Vivado simulations
-   parameter MEM_SPEEDGRADE        = "15E",
+   parameter MEM_SPEEDGRADE        = "125",
                                      // Indicates the Speed grade of Memory Part
                                      // Added for the sake of Vivado simulations
    parameter MEM_DEVICE_WIDTH      = 16,
@@ -255,21 +255,21 @@ module mig_7series_1_mig #
    // Memory Timing Parameters. These parameters varies based on the selected
    // memory part.
    //***************************************************************************
-   parameter tCKE                  = 5625,
+   parameter tCKE                  = 5000,
                                      // memory tCKE paramter in pS
-   parameter tFAW                  = 45000,
+   parameter tFAW                  = 40000,
                                      // memory tRAW paramter in pS.
    parameter tPRDI                 = 1_000_000,
                                      // memory tPRDI paramter in pS.
-   parameter tRAS                  = 36000,
+   parameter tRAS                  = 35000,
                                      // memory tRAS paramter in pS.
-   parameter tRCD                  = 13500,
+   parameter tRCD                  = 13750,
                                      // memory tRCD paramter in pS.
    parameter tREFI                 = 7800000,
                                      // memory tREFI paramter in pS.
    parameter tRFC                  = 260000,
                                      // memory tRFC paramter in pS.
-   parameter tRP                   = 13500,
+   parameter tRP                   = 13750,
                                      // memory tRP paramter in pS.
    parameter tRRD                  = 7500,
                                      // memory tRRD paramter in pS.

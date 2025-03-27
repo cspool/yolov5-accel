@@ -319,8 +319,8 @@ module conv_store_ddr_controller (
       valid_conv_out_ddr_data_mode1 <= 0;
     end else begin
       last_conv_out_data_mode0      <= conv_out_data_mode0;
-      valid_conv_out_ddr_data_mode0 <= (loop_channel_counter_add_begin == 1) && (channel_counter[0] == 1'b0);  //even channel num
-      valid_conv_out_ddr_data_mode1 <= loop_channel_counter_add_begin;
+      valid_conv_out_ddr_data_mode0 <= (loop_channel_counter_add_begin && (loop_channel_counter_add_end == 0)) && (channel_counter[0] == 1'b0);  //even channel num
+      valid_conv_out_ddr_data_mode1 <= (loop_channel_counter_add_begin && (loop_channel_counter_add_end == 0));
     end
   end
 

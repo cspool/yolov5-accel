@@ -35,7 +35,7 @@ module quan_CBR_v8(
 );
   //SA
   parameter sa_row_num = 4;  //how many rows in conv core
-  parameter sa_column_num = 2;  //how many columns in conv core
+  parameter sa_column_num = 1;  //how many columns in conv core
   parameter row_num_in_sa = 16;  // how many rows in a sa, row_num
   parameter column_num_in_sa = 16;  // how many columns in a sa
   parameter pixels_in_row = 32;
@@ -865,7 +865,8 @@ module quan_CBR_v8(
       .state_conv_load_weights(state_conv_load_weights)
   );
   //conv compute ctrl
-  conv_compute_kernel_controller_v2 cv_compute_kernel_controller(
+  conv_compute_kernel_controller_v2 #(.sa_column_num(sa_column_num)) 
+  cv_compute_kernel_controller(
     .clk                 (clk),
     .reset               ((reset == 1) || (conv_start == 1)),
     .conv_compute        (conv_compute),
@@ -906,7 +907,8 @@ module quan_CBR_v8(
     .conv_nif_add_end    (conv_nif_add_end)
   );
 
-  conv_compute_shell1_controller_v2 cv_compute_shell1_controller(
+  conv_compute_shell1_controller_v2 #(.sa_column_num(sa_column_num)) 
+  cv_compute_shell1_controller(
     .s(s),
     .p(p),
     .iy(iy),
@@ -933,7 +935,8 @@ module quan_CBR_v8(
     .valid_row1_adr      (valid_row1_adr)
   );
 
-  conv_compute_shell2_controller_v2 cv_compute_shell2_controller(
+  conv_compute_shell2_controller_v2 #(.sa_column_num(sa_column_num)) 
+  cv_compute_shell2_controller(
     .s(s),
     .p(p),
     .iy(iy),
@@ -960,7 +963,8 @@ module quan_CBR_v8(
     .valid_row2_adr      (valid_row2_adr)
   );
 
-  conv_compute_shell3_controller_v2 cv_compute_shell3_controller(
+  conv_compute_shell3_controller_v2 #(.sa_column_num(sa_column_num)) 
+  cv_compute_shell3_controller(
     .s(s),
     .p(p),
     .iy(iy),

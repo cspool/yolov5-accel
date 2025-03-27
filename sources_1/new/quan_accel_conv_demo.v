@@ -40,14 +40,12 @@ module quan_accel_conv_demo(
 );
   //SA
   parameter sa_row_num = 4;  //how many rows in conv core
-  parameter sa_column_num = 3;  //how many columns in conv core
+  parameter sa_column_num = 1;  //how many columns in conv core
   parameter row_num_in_sa = 16;  // how many rows in a sa, row_num
   parameter column_num_in_sa = 16;  // how many columns in a sa
   parameter pixels_in_row = 32;
   parameter pixels_in_row_in_2pow = 5;
-  parameter buffers_num = sa_column_num;
-  parameter pixels_in_row_minus_1 = pixels_in_row - 1;
-  parameter buffers_num_minus_1 = buffers_num - 1;
+  parameter buffers_num = 3;
   parameter shift_regs_num = 70;
   parameter weights_in_row = row_num_in_sa * sa_row_num;  // 8bit, length of 1 bit is shorter than that in 8 bit
   parameter weight_row_length = weights_in_row * 8;
@@ -64,7 +62,6 @@ module quan_accel_conv_demo(
   parameter sa_row_in_width = weights_row_in_width;
   parameter pixels_column_in_width = 16 * column_num_in_sa;
   parameter sa_column_in_width = pixels_column_in_width; //24 * column_num_in_sa
-  parameter pe_out_width = (pixel_width_18) * pe_parallel_pixel_18 * pe_parallel_weight_18;  // width of 18 is bigger than 88
   parameter row_counter_width = ($clog2(row_num_in_sa + 1));
   parameter sa_out_width = pixel_width_18 * pe_parallel_pixel_18 * pe_parallel_weight_18 * column_num_in_sa;
   //bias, E, scale regs
@@ -97,9 +94,9 @@ module quan_accel_conv_demo(
   parameter vector_A_width = mult_array_length * mult_A_width;
   parameter vector_B_width = mult_array_length * mult_B_width;
   parameter vector_P_width = mult_array_length * mult_P_width;
-  parameter mult_array_length_per_sa = mult_array_length / sa_row_num / sa_column_num;  //48
-  parameter mult_dsp_array_length_per_sa = mult_dsp_array_length / sa_row_num / sa_column_num; //44
-  parameter mult_lut_array_length_per_sa = mult_lut_array_length / sa_row_num / sa_column_num; //4
+  parameter mult_array_length_per_sa = mult_array_length / sa_row_num / buffers_num;  //48
+  parameter mult_dsp_array_length_per_sa = mult_dsp_array_length / sa_row_num / buffers_num; //44
+  parameter mult_lut_array_length_per_sa = mult_lut_array_length / sa_row_num / buffers_num; //4
 
   //mult E, bias, relu, scale
   parameter sum_vector_width = pixel_width_18 * pe_parallel_pixel_18 * pe_parallel_weight_18 * column_num_in_sa;
@@ -393,7 +390,9 @@ module quan_accel_conv_demo(
   wire shift_start;
   //shift regs
   wire re_fm_en, re_fm_end;
-  wire [pixels_in_row*8-1:0] re_rowi_pixels[sa_column_num-1 : 0];
+  wire [pixels_in_row*8-1:0] re_rowi_pixels[buffers_num-1 : 0];
+  reg [pixels_in_row*8-1:0] delay_re_row2_pixels, delay_1_re_row3_pixels, delay_2_re_row3_pixels;
+  wire [pixels_in_row*8-1:0] delay_re_rowi_pixels[buffers_num-1 : 0];
   //input buffer 1-3
   wire in_buf1_en_wr;
   wire [11 : 0] in_buf1_adr_wr;
@@ -430,17 +429,48 @@ module quan_accel_conv_demo(
   //ping pong control, buf write and read
   wire [weight_word_length-1 : 0] weights_word_buf_wt;  //i: weights read from DDR, write into buf
   wire [weight_word_length-1 : 0] weights_word_buf_rd;  //o: ping pong buf out
-  wire weights_word_buf_ping_en;  //o
-  wire weights_word_buf_ping_en_wr;  //o
-  wire [15:0] weights_word_buf_ping_adr;  //o
-  wire [weight_word_length-1 : 0] weights_word_buf_ping_in;  //o
-  wire weights_word_buf_pong_en;  //o
-  wire weights_word_buf_pong_en_wr;  //o
-  wire [15:0] weights_word_buf_pong_adr;  //o
-  wire [weight_word_length-1 : 0] weights_word_buf_pong_in;  //o
-  //weights buf
-  wire [weight_word_length-1 : 0] weights_word_buf_ping_out;  //o
-  wire [weight_word_length-1 : 0] weights_word_buf_pong_out;  //o
+  //ping buffer
+  wire weights_bank_1_ping_en;  //o
+  wire weights_bank_1_ping_en_wr;  //o
+  wire [15:0] weights_bank_1_ping_adr;  // o
+  wire [128-1 : 0] weights_bank_1_ping_in;  //o:port in of weights ping buf
+  wire [128-1 : 0] weights_bank_1_ping_out;  //i:port out of weights ping buf
+  wire weights_bank_2_ping_en;  //o
+  wire weights_bank_2_ping_en_wr;  //o
+  wire [15:0] weights_bank_2_ping_adr;  // o
+  wire [128-1 : 0] weights_bank_2_ping_in;  //o:port in of weights ping buf
+  wire [128-1 : 0] weights_bank_2_ping_out;  //i:port out of weights ping buf
+  wire weights_bank_3_ping_en;  //o
+  wire weights_bank_3_ping_en_wr;  //o
+  wire [15:0] weights_bank_3_ping_adr;  // o
+  wire [128-1 : 0] weights_bank_3_ping_in;  //o:port in of weights ping buf
+  wire [128-1 : 0] weights_bank_3_ping_out;  //i:port out of weights ping buf
+  wire weights_bank_4_ping_en;  //o
+  wire weights_bank_4_ping_en_wr;  //o
+  wire [15:0] weights_bank_4_ping_adr;  // o
+  wire [128-1 : 0] weights_bank_4_ping_in;  //o:port in of weights ping buf
+  wire [128-1 : 0] weights_bank_4_ping_out;  //i:port out of weights ping buf
+  //pong buffer
+  wire weights_bank_1_pong_en;  //o
+  wire weights_bank_1_pong_en_wr;  //o
+  wire [15:0] weights_bank_1_pong_adr;  // o
+  wire [128-1 : 0] weights_bank_1_pong_in;  //o:port in of weights ping buf
+  wire [128-1 : 0] weights_bank_1_pong_out;  //i:port out of weights ping buf
+  wire weights_bank_2_pong_en;  //o
+  wire weights_bank_2_pong_en_wr;  //o
+  wire [15:0] weights_bank_2_pong_adr;  // o
+  wire [128-1 : 0] weights_bank_2_pong_in;  //o:port in of weights ping buf
+  wire [128-1 : 0] weights_bank_2_pong_out;  //i:port out of weights ping buf
+  wire weights_bank_3_pong_en;  //o
+  wire weights_bank_3_pong_en_wr;  //o
+  wire [15:0] weights_bank_3_pong_adr;  // o
+  wire [128-1 : 0] weights_bank_3_pong_in;  //o:port in of weights ping buf
+  wire [128-1 : 0] weights_bank_3_pong_out;  //i:port out of weights ping buf
+  wire weights_bank_4_pong_en;  //o
+  wire weights_bank_4_pong_en_wr;  //o
+  wire [15:0] weights_bank_4_pong_adr;  // o
+  wire [128-1 : 0] weights_bank_4_pong_in;  //o:port in of weights ping buf
+  wire [128-1 : 0] weights_bank_4_pong_out;  //i:port out of weights ping buf
   //conv args refresh
   //args buf rd adr
   wire [15:0] E_buf_adr_rd;
@@ -467,6 +497,7 @@ module quan_accel_conv_demo(
   wire [511:0] E_buf_rd;
   //E regs
   wire [E_set_4_channel_width-1 : 0] E_4_channel_sets;
+  wire [E_set_width-1 : 0] core_E_sets_array[buffers_num-1 : 0][sa_row_num-1 : 0];
   // bias buf
   wire bias_buf_en;
   wire bias_buf_en_wr = 0;
@@ -475,6 +506,7 @@ module quan_accel_conv_demo(
   wire [511:0] bias_buf_rd;
   //bias regs
   wire [bias_set_4_channel_width-1 : 0] bias_4_channel_sets;  //4 sets of 16bit(1 bias or 2 bias)
+  wire [bias_set_width-1 : 0] core_bias_sets_array[buffers_num-1 : 0][sa_row_num-1 : 0];
   // scale buf
   wire scale_buf_en;
   wire scale_buf_en_wr = 0;
@@ -483,19 +515,20 @@ module quan_accel_conv_demo(
   wire [511:0] scale_buf_rd;
   //scale regs
   wire [scale_set_4_channel_width-1 : 0] scale_4_channel_sets;
+  wire [scale_set_width-1 : 0] core_scale_sets_array[buffers_num-1 : 0][sa_row_num-1 : 0];
   //delay regs pixels
   wire [pixels_column_in_width-1:0]
-  delay_rowi_pixels[sa_column_num-1 : 0];
+  delay_rowi_pixels[buffers_num-1 : 0];
   //delay regs weights
   wire [weights_row_in_width -1:0]
   delay_weights_sets[sa_row_num-1 : 0];
   //sa
   wire [sa_column_in_width -1:0] //sa columns input vector
-  sa_columni_ins[sa_column_num-1 : 0][sa_row_num-1 : 0];
+  sa_columni_ins[buffers_num-1 : 0][sa_row_num-1 : 0];
   wire [sa_row_in_width -1:0] //sa rows weights vector
-  sa_rowi_ins[sa_column_num-1 : 0][sa_row_num-1 : 0];
+  sa_rowi_ins[buffers_num-1 : 0][sa_row_num-1 : 0];
   wire [column_num_in_sa * mult_P_width -1:0] //sa rows sum vector
-  sa_row0_outs[sa_column_num-1 : 0][sa_row_num-1 : 0];
+  sa_row0_outs[buffers_num-1 : 0][sa_row_num-1 : 0];
 
   //mult_array
   wire [vector_A_width-1 : 0] vector_A, sum_mult_E_vector_A,sum_mult_E_vector_A_mode0,sum_mult_E_vector_A_mode1;
@@ -503,27 +536,56 @@ module quan_accel_conv_demo(
   wire [vector_P_width-1 : 0] vector_P, sum_mult_E_vector_P;
   ///mult_sa
   wire [column_num_in_sa * mult_A_width -1:0] //the first row of SAs is used to mult, multer A
-  extra_sa_vector_As [sa_column_num-1 : 0][sa_row_num-1 : 0];
+  extra_sa_vector_As [buffers_num-1 : 0][sa_row_num-1 : 0];
   wire [row_num_in_sa * mult_B_width -1:0] extra_sa_vector_Bs //the first row of SAs is used to mult, multer B
-  [sa_column_num-1 : 0][sa_row_num-1 : 0];
+  [buffers_num-1 : 0][sa_row_num-1 : 0];
   wire [column_num_in_sa * mult_P_width -1:0] //product P
-  extra_sa_vector_Ps[sa_column_num-1 : 0][sa_row_num-1 : 0];
+  extra_sa_vector_Ps[buffers_num-1 : 0][sa_row_num-1 : 0];
 
   // sa control
-  wire sa_en, sa_reset;
-  wire channel_out_reset, channel_out_en;  //need logic
+  wire core_cell_en_pre;
+  wire core_cell_reset_pre;
+  wire core_cell_output_en_pre;
+  wire core_reset_array[buffers_num-1 : 0][sa_row_num-1 : 0];
+  wire core_en_array[buffers_num-1 : 0][sa_row_num-1 : 0];
+  wire core_output_en_array[buffers_num-1 : 0][sa_row_num-1 : 0];
+  wire [sa_row_in_width - 1:0]core_row_in_array[buffers_num-1 : 0][sa_row_num-1 : 0];
+  wire [sa_column_in_width - 1:0]core_column_in_array[buffers_num-1 : 0][sa_row_num-1 : 0];
+
+  //sum E recieve
+  wire core_sum_E_recieve_en_pre;
+  // reg core_sum_E_recieve_en;
+  wire core_sum_E_recieve_en_array[buffers_num-1 : 0][sa_row_num-1 : 0];
   //mult E
-  wire sum_mult_E_en;
+  // wire core_sum_mult_E_en_pre;
+  // reg core_sum_mult_E_en;
   //add bias
-  wire product_add_bias_en, product_add_bias_reset;
+  wire core_product_add_bias_en_pre;
+  // reg core_product_add_bias_en;
+  wire core_product_add_bias_en_array[buffers_num-1 : 0][sa_row_num-1 : 0];
   //quantify ctrl
-  wire relu_scale_en;
+  wire core_relu_scale_en_pre;
+  // reg core_relu_scale_en;
+  wire core_relu_scale_en_array[buffers_num-1 : 0][sa_row_num-1 : 0];
+  //conv fifo
+  // wire conv_fifo_en;
+  wire conv_fifo_add_end_pre;
+  reg conv_fifo_add_end;
+  wire core_conv_fifo_en_pre;
+  // reg core_conv_fifo_en;
+  reg core_conv_fifo_en_array[buffers_num-1 : 0][sa_row_num-1 : 0];
   //sa out channel
-  wire [5:0] out_sa_row_idx;  //output sa row idx [1,16]
-  wire mult_array_mode;
-  wire relu_scale_add_end;
+  wire [5:0] out_sa_row_idx_pre;  //output sa row idx [1,16]
+  reg [5:0] out_sa_row_idx;  //output sa row idx [1,16]
+  // wire [5:0] core_out_sa_row_idx_pre;
+  // reg [5:0] core_out_sa_row_idx;
+  // wire mult_array_mode;
+  wire core_mult_array_mode_pre;
+  // reg core_mult_array_mode;
+  wire core_mult_array_mode_array[buffers_num-1 : 0][sa_row_num-1 : 0]; 
+  //fifo out
   wire [sa_out_width - 1:0] out_rowi_channel_seti //pox sum in a sa row, 1 channel or 2 channel
-  [sa_column_num-1 : 0][sa_row_num-1 : 0]; 
+  [buffers_num-1 : 0][sa_row_num-1 : 0]; 
   wire conv_compute_fin;
 
   //sum_mult_E_vecOp
@@ -608,7 +670,6 @@ module quan_accel_conv_demo(
   end
 
   //DDR
-  
   assign cmd_ddr_base_adr = (valid_load_input_ddr_cmd == 1)? load_input_ddr_base_adr:
   (valid_load_weights_ddr_cmd == 1)? load_weights_ddr_base_adr:
   (valid_store_ddr_cmd == 1)? store_ddr_base_adr: 0;
@@ -830,7 +891,9 @@ module quan_accel_conv_demo(
       .state_conv_load_weights(state_conv_load_weights)
   );
 
-  conv_compute_kernel_controller cv_compute_kernel_controller(
+  //conv compute ctrl
+  conv_compute_kernel_controller_v2 #(.sa_column_num(sa_column_num)) 
+  cv_compute_kernel_controller(
     .clk                 (clk),
     .reset               ((reset == 1) || (conv_start == 1)),
     .conv_compute        (conv_compute),
@@ -871,7 +934,8 @@ module quan_accel_conv_demo(
     .conv_nif_add_end    (conv_nif_add_end)
   );
 
-  conv_compute_shell1_controller cv_compute_shell1_controller(
+  conv_compute_shell1_controller_v2 #(.sa_column_num(sa_column_num)) 
+  cv_compute_shell1_controller(
     .s(s),
     .p(p),
     .iy(iy),
@@ -898,7 +962,8 @@ module quan_accel_conv_demo(
     .valid_row1_adr      (valid_row1_adr)
   );
 
-  conv_compute_shell2_controller cv_compute_shell2_controller(
+  conv_compute_shell2_controller_v2 #(.sa_column_num(sa_column_num)) 
+  cv_compute_shell2_controller(
     .s(s),
     .p(p),
     .iy(iy),
@@ -925,7 +990,8 @@ module quan_accel_conv_demo(
     .valid_row2_adr      (valid_row2_adr)
   );
 
-  conv_compute_shell3_controller cv_compute_shell3_controller(
+  conv_compute_shell3_controller_v2 #(.sa_column_num(sa_column_num)) 
+  cv_compute_shell3_controller(
     .s(s),
     .p(p),
     .iy(iy),
@@ -1133,14 +1199,20 @@ module quan_accel_conv_demo(
       E_reg_set                <= 0;
       last_E_reg_start <= 0;
       last_E_reg_size  <= 0;
+      out_sa_row_idx <= 0;
       last_out_sa_row_idx <= 0;
       last_2_out_sa_row_idx <= 0;
+      last_3_out_sa_row_idx <= 0;
       bias_reg_set                <= 0;
       last_bias_reg_start         <= 0;
       last_bias_reg_size          <= 0;
       scale_reg_set                <= 0;
       last_scale_reg_start <= 0;
       last_scale_reg_size  <= 0;
+      // sa_en <= 0;
+      // sa_reset <= 0;
+      conv_fifo_add_end <= 0;
+      conv_start <= 0;
     end else if (state == 4'b0001) begin  //conv op
       state_conv_pixels_add_end   <= conv_pixels_add_end;
       state_valid_row1_adr        <= valid_row1_adr;
@@ -1169,17 +1241,22 @@ module quan_accel_conv_demo(
       E_reg_set                <= E_buf_en_rd;
       last_E_reg_start <= E_reg_start;
       last_E_reg_size  <= E_reg_size;
+      out_sa_row_idx <= out_sa_row_idx_pre;
       last_out_sa_row_idx <= out_sa_row_idx;
       last_2_out_sa_row_idx <= last_out_sa_row_idx;
+      last_3_out_sa_row_idx <= last_2_out_sa_row_idx;
       bias_reg_set                <= bias_buf_en_rd;
       last_bias_reg_start         <= bias_reg_start;
       last_bias_reg_size          <= bias_reg_size;
       scale_reg_set                <= scale_buf_en_rd;
       last_scale_reg_start <= scale_reg_start;
       last_scale_reg_size  <= scale_reg_size;
+      // sa_en <= sa_en_pre;
+      // sa_reset <= sa_reset_pre;
+      conv_fifo_add_end <= conv_fifo_add_end_pre;
+      conv_start <= conv_start_pre;
     end
   end
-
   //img2col
   //row regs
   Row_Regs row_regs (
@@ -1228,6 +1305,14 @@ module quan_accel_conv_demo(
       .re_row2_pixels(re_rowi_pixels[2-1]),
       .re_row3_pixels(re_rowi_pixels[3-1])
   );
+  assign delay_re_rowi_pixels[0] = re_rowi_pixels[0];
+  assign delay_re_rowi_pixels[1] = delay_re_row2_pixels;
+  assign delay_re_rowi_pixels[2] = delay_2_re_row3_pixels;
+  always @(posedge clk) begin
+    delay_re_row2_pixels <= re_rowi_pixels[1];
+    delay_1_re_row3_pixels <= re_rowi_pixels[2];
+    delay_2_re_row3_pixels <= delay_1_re_row3_pixels;
+  end
 //input buf 1
   in_buf1 in_buf1 (
       .clka (clk),             // input wire clka
@@ -1328,25 +1413,27 @@ module quan_accel_conv_demo(
       .doutb(slab3_pixels_2)         // output wire [15 : 0] doutb
   );
   //cv_weights_handler
-  cv_weights_handler cv_weights_handler (
+//cv_weights_handler
+  conv_weights_handler_v2 cv_weights_handler (
       .clk                    (clk),
       .reset                  ((reset == 1) || (conv_start == 1)),
       .mode                   (mode),
       //cycle 0 in
       .re_fm_en               (re_fm_en),                 //the first input is needed in next cycle
       .re_fm_end              (re_fm_end),                //the last input is needed in cur cycle
-      //cylce 1 in
-      .weights_dout           (weights_word_buf_rd),      //weights read from buf
+      // //cylce 1 in
+      // .weights_dout           (weights_word_buf_rd),      //weights read from buf
       //cycle 0 out
       .weights_word_buf_en_rd (weights_word_buf_en_rd),   //read weight buf
-      .weights_word_buf_adr_rd(weights_word_buf_adr_rd),
-      //cycle 1 out
-      .weights_vector         (weights_vector)            //weights vector flush into PEs
+      .weights_word_buf_adr_rd(weights_word_buf_adr_rd)
+      // //cycle 1 out
+      // .weights_vector         (weights_vector)            //weights vector flush into PEs
   );
 //ping-pong weights buf interface
-  conv_weights_ping_pong_controller cv_weights_ping_pong_controller (
+  conv_weights_ping_pong_controller_v2 cv_weights_ping_pong_controller (
       .reset            ((reset == 1) || (conv_start == 1)),
       .clk              (clk),
+      .mode(mode),
       .conv_load_weights(conv_load_weights),   //change the ping-pong state
       .last_conv_compute(last_conv_compute),
       //weights need reading from buf
@@ -1357,36 +1444,124 @@ module quan_accel_conv_demo(
       .weights_word_buf_en_wt     (weights_word_buf_en_wt),       //i
       .weights_word_buf_adr_wt    (weights_word_buf_adr_wt),      //i
       .weights_word_buf_wt        (weights_word_buf_wt),          //i:weights write to weights buf
-      //ping buffer port
-      .weights_word_buf_ping_en   (weights_word_buf_ping_en),     //o
-      .weights_word_buf_ping_en_wr(weights_word_buf_ping_en_wr),  //o
-      .weights_word_buf_ping_adr  (weights_word_buf_ping_adr),    // o
-      .weights_word_buf_ping_in   (weights_word_buf_ping_in),     //o:port in of weights ping buf
-      .weights_word_buf_ping_out  (weights_word_buf_ping_out),    //i:port out of weights ping buf
-      //pong buffer port
-      .weights_word_buf_pong_en   (weights_word_buf_pong_en),     //o
-      .weights_word_buf_pong_en_wr(weights_word_buf_pong_en_wr),  //o
-      .weights_word_buf_pong_adr  (weights_word_buf_pong_adr),    //o
-      .weights_word_buf_pong_in   (weights_word_buf_pong_in),     //o:port in of weights pong buf
-      .weights_word_buf_pong_out  (weights_word_buf_pong_out)     //i:port out of weights pong buf
+      //ping  buffer port
+      //bank 1
+      .weights_bank_1_ping_en(weights_bank_1_ping_en),  //o
+      .weights_bank_1_ping_en_wr(weights_bank_1_ping_en_wr),  //o
+      .weights_bank_1_ping_adr(weights_bank_1_ping_adr),  // o
+      .weights_bank_1_ping_in(weights_bank_1_ping_in),  //o:port in of weights ping buf
+      .weights_bank_1_ping_out(weights_bank_1_ping_out),  //i:port out of weights ping buf
+      //bank 2
+      .weights_bank_2_ping_en(weights_bank_2_ping_en),  //o
+      .weights_bank_2_ping_en_wr(weights_bank_2_ping_en_wr),  //o
+      .weights_bank_2_ping_adr(weights_bank_2_ping_adr),  // o
+      .weights_bank_2_ping_in(weights_bank_2_ping_in),  //o:port in of weights ping buf
+      .weights_bank_2_ping_out(weights_bank_2_ping_out),  //i:port out of weights ping buf
+      //bank 3
+      .weights_bank_3_ping_en(weights_bank_3_ping_en),  //o
+      .weights_bank_3_ping_en_wr(weights_bank_3_ping_en_wr),  //o
+      .weights_bank_3_ping_adr(weights_bank_3_ping_adr),  // o
+      .weights_bank_3_ping_in(weights_bank_3_ping_in),  //o:port in of weights ping buf
+      .weights_bank_3_ping_out(weights_bank_3_ping_out),  //i:port out of weights ping buf
+      //bank 4
+      .weights_bank_4_ping_en(weights_bank_4_ping_en),  //o
+      .weights_bank_4_ping_en_wr(weights_bank_4_ping_en_wr),  //o
+      .weights_bank_4_ping_adr(weights_bank_4_ping_adr),  // o
+      .weights_bank_4_ping_in(weights_bank_4_ping_in),  //o:port in of weights ping buf
+      .weights_bank_4_ping_out(weights_bank_4_ping_out),  //i:port out of weights ping buf
+
+      //pong  buffer port
+      //bank 1
+      .weights_bank_1_pong_en(weights_bank_1_pong_en),  //o
+      .weights_bank_1_pong_en_wr(weights_bank_1_pong_en_wr),  //o
+      .weights_bank_1_pong_adr(weights_bank_1_pong_adr),  // o
+      .weights_bank_1_pong_in(weights_bank_1_pong_in),  //o:port in of weights ping buf
+      .weights_bank_1_pong_out(weights_bank_1_pong_out),  //i:port out of weights ping buf
+      //bank 2
+      .weights_bank_2_pong_en(weights_bank_2_pong_en),  //o
+      .weights_bank_2_pong_en_wr(weights_bank_2_pong_en_wr),  //o
+      .weights_bank_2_pong_adr(weights_bank_2_pong_adr),  // o
+      .weights_bank_2_pong_in(weights_bank_2_pong_in),  //o:port in of weights ping buf
+      .weights_bank_2_pong_out(weights_bank_2_pong_out),  //i:port out of weights ping buf
+      //bank 3
+      .weights_bank_3_pong_en(weights_bank_3_pong_en),  //o
+      .weights_bank_3_pong_en_wr(weights_bank_3_pong_en_wr),  //o
+      .weights_bank_3_pong_adr(weights_bank_3_pong_adr),  // o
+      .weights_bank_3_pong_in(weights_bank_3_pong_in),  //o:port in of weights ping buf
+      .weights_bank_3_pong_out(weights_bank_3_pong_out),  //i:port out of weights ping buf
+      //bank 4
+      .weights_bank_4_pong_en(weights_bank_4_pong_en),  //o
+      .weights_bank_4_pong_en_wr(weights_bank_4_pong_en_wr),  //o
+      .weights_bank_4_pong_adr(weights_bank_4_pong_adr),  // o
+      .weights_bank_4_pong_in(weights_bank_4_pong_in),  //o:port in of weights ping buf
+      .weights_bank_4_pong_out(weights_bank_4_pong_out)  //i:port out of weights ping buf
   );
+
 //ping weights buf
-  weights_buffer_ping weights_buffer_ping (
+  weights_bank_1_ping weights_bank_1_ping (
       .clka (clk),                          // input wire clka
-      .ena  (weights_word_buf_ping_en),     // input wire ena
-      .wea  (weights_word_buf_ping_en_wr),  // input wire [0 : 0] wea
-      .addra(weights_word_buf_ping_adr[11 : 0]),    // input wire [11 : 0] addra
-      .dina (weights_word_buf_ping_in),     // input wire [511 : 0] dina
-      .douta(weights_word_buf_ping_out)     // output wire [511 : 0] douta
+      .ena  (weights_bank_1_ping_en),     // input wire ena
+      .wea  (weights_bank_1_ping_en_wr),  // input wire [0 : 0] wea
+      .addra(weights_bank_1_ping_adr[11 : 0]),    // input wire [11 : 0] addra
+      .dina (weights_bank_1_ping_in),     // input wire [127 : 0] dina
+      .douta(weights_bank_1_ping_out)     // output wire [127 : 0] douta
+  );
+  weights_bank_2_ping weights_bank_2_ping (
+      .clka (clk),                          // input wire clka
+      .ena  (weights_bank_2_ping_en),     // input wire ena
+      .wea  (weights_bank_2_ping_en_wr),  // input wire [0 : 0] wea
+      .addra(weights_bank_2_ping_adr[11 : 0]),    // input wire [11 : 0] addra
+      .dina (weights_bank_2_ping_in),     // input wire [127 : 0] dina
+      .douta(weights_bank_2_ping_out)     // output wire [127 : 0] douta
+  );
+  weights_bank_3_ping weights_bank_3_ping (
+      .clka (clk),                          // input wire clka
+      .ena  (weights_bank_3_ping_en),     // input wire ena
+      .wea  (weights_bank_3_ping_en_wr),  // input wire [0 : 0] wea
+      .addra(weights_bank_3_ping_adr[11 : 0]),    // input wire [11 : 0] addra
+      .dina (weights_bank_3_ping_in),     // input wire [127 : 0] dina
+      .douta(weights_bank_3_ping_out)     // output wire [127 : 0] douta
+  );
+  weights_bank_4_ping weights_bank_4_ping (
+      .clka (clk),                          // input wire clka
+      .ena  (weights_bank_4_ping_en),     // input wire ena
+      .wea  (weights_bank_4_ping_en_wr),  // input wire [0 : 0] wea
+      .addra(weights_bank_4_ping_adr[11 : 0]),    // input wire [11 : 0] addra
+      .dina (weights_bank_4_ping_in),     // input wire [127 : 0] dina
+      .douta(weights_bank_4_ping_out)     // output wire [127 : 0] douta
   );
 //pong weights buf
-  weights_buffer_pong weights_buffer_pong (
+  weights_bank_1_pong weights_bank_1_pong (
       .clka (clk),                          // input wire clka
-      .ena  (weights_word_buf_pong_en),     // input wire ena
-      .wea  (weights_word_buf_pong_en_wr),  // input wire [0 : 0] wea
-      .addra(weights_word_buf_pong_adr[11 : 0]),    // input wire [11 : 0] addra
-      .dina (weights_word_buf_pong_in),     // input wire [511 : 0] dina
-      .douta(weights_word_buf_pong_out)     // output wire [511 : 0] douta
+      .ena  (weights_bank_1_pong_en),     // input wire ena
+      .wea  (weights_bank_1_pong_en_wr),  // input wire [0 : 0] wea
+      .addra(weights_bank_1_pong_adr[11 : 0]),    // input wire [11 : 0] addra
+      .dina (weights_bank_1_pong_in),     // input wire [127 : 0] dina
+      .douta(weights_bank_1_pong_out)     // output wire [127 : 0] douta
+  );
+  weights_bank_2_pong weights_bank_2_pong (
+      .clka (clk),                          // input wire clka
+      .ena  (weights_bank_2_pong_en),     // input wire ena
+      .wea  (weights_bank_2_pong_en_wr),  // input wire [0 : 0] wea
+      .addra(weights_bank_2_pong_adr[11 : 0]),    // input wire [11 : 0] addra
+      .dina (weights_bank_2_pong_in),     // input wire [127 : 0] dina
+      .douta(weights_bank_2_pong_out)     // output wire [127 : 0] douta
+  );
+  weights_bank_3_pong weights_bank_3_pong (
+      .clka (clk),                          // input wire clka
+      .ena  (weights_bank_3_pong_en),     // input wire ena
+      .wea  (weights_bank_3_pong_en_wr),  // input wire [0 : 0] wea
+      .addra(weights_bank_3_pong_adr[11 : 0]),    // input wire [11 : 0] addra
+      .dina (weights_bank_3_pong_in),     // input wire [127 : 0] dina
+      .douta(weights_bank_3_pong_out)     // output wire [127 : 0] douta
+  );
+  weights_bank_4_pong weights_bank_4_pong (
+      .clka (clk),                          // input wire clka
+      .ena  (weights_bank_4_pong_en),     // input wire ena
+      .wea  (weights_bank_4_pong_en_wr),  // input wire [0 : 0] wea
+      .addra(weights_bank_4_pong_adr[11 : 0]),    // input wire [11 : 0] addra
+      .dina (weights_bank_4_pong_in),     // input wire [127 : 0] dina
+      .douta(weights_bank_4_pong_out)     // output wire [127 : 0] douta
   );
 
   //conv args refresh in computing
@@ -1486,8 +1661,8 @@ module quan_accel_conv_demo(
   assign scale_buf_en_wr = 1'b0;
   assign scale_buf_wr = 512'b0;
 
-  //E regs
-  E_Regs E_regs (
+//E regs
+  quan_E_Regs_v3 E_regs (
       .clk                   (clk),
       .reset                 ((reset == 1) || (conv_start == 1)),
       .E_set              (E_reg_set),                 // next tile need clr
@@ -1495,11 +1670,11 @@ module quan_accel_conv_demo(
       .E_word     (last_E_word),
       .E_reg_start(last_E_reg_start),
       .E_reg_size (last_E_reg_size),
-      .out_sa_row_idx             (out_sa_row_idx),
+      .next_out_sa_row_idx             (out_sa_row_idx_pre),
       .E_4_channel_sets(E_4_channel_sets)
   );
   //bias regs
-  Bias_Regs bias_regs (
+  quan_Bias_Regs_v3 bias_regs (
       .clk           (clk),
       .reset         ((reset == 1) || (conv_start == 1)),
       .bias_set      (bias_reg_set),         // next tile need clr
@@ -1507,11 +1682,11 @@ module quan_accel_conv_demo(
       .bias_word     (last_bias_word),
       .bias_reg_start(last_bias_reg_start),
       .bias_reg_size (last_bias_reg_size),
-      .out_sa_row_idx     (last_out_sa_row_idx),
+      .next_out_sa_row_idx     (out_sa_row_idx),
       .bias_4_channel_sets(bias_4_channel_sets)
   );
   //scale regs
-  Scale_Regs scale_regs (
+  quan_Scale_Regs_v3 scale_regs (
       .clk                   (clk),
       .reset                 ((reset == 1) || (conv_start == 1)),
       .scale_set              (scale_reg_set),
@@ -1519,7 +1694,7 @@ module quan_accel_conv_demo(
       .scale_word     (last_scale_word),
       .scale_reg_start(last_scale_reg_start),
       .scale_reg_size (last_scale_reg_size),
-      .out_sa_row_idx             (last_2_out_sa_row_idx),
+      .next_out_sa_row_idx             (last_out_sa_row_idx),
       .scale_4_channel_sets(scale_4_channel_sets)
   );
   //last regs, state regs, to cache the info to wait for valid buffer data read
@@ -1528,14 +1703,13 @@ module quan_accel_conv_demo(
   assign last_scale_word = scale_buf_rd;
 
   //computation core
-  genvar i, j, m;
+  genvar i, j, m, b;
   generate
     for (i = 1; i <= sa_column_num; i = i + 1) begin : delay_regs_column  //poy, rows
-      Delay_Regs_Pixels delay_regs_pixels (
+      quan_Delay_Regs_Pixels_v3 delay_regs_pixels (
           .clk             (clk),
-          .reset           ((sa_reset == 1) || (reset == 1) || (conv_start == 1)),
-          .en              (sa_en),
-          .re_row_pixels   (re_rowi_pixels[i-1]),
+          // .en              (sa_en),
+          .re_row_pixels   (delay_re_rowi_pixels[i-1]),
           .delay_row_pixels(delay_rowi_pixels[i-1])
       );
       //            assign sa_columni_ins[i-1] = (mult_array_mode == 1'b0) ?
@@ -1553,11 +1727,11 @@ module quan_accel_conv_demo(
       end
     end
     for (j = 1; j <= sa_row_num; j = j + 1) begin : delay_regs_row  //output channel
-      Delay_Regs_Weights delay_regs_weights (
+      quan_Delay_Regs_Weights_v3 delay_regs_weights (
           .clk          (clk),
-          .reset        ((sa_reset == 1) || (reset == 1) || (conv_start == 1)),
-          .en           (sa_en),
-          .weights      (weights_vector[(j-1)*row_num_in_sa*8+:(row_num_in_sa*8)]),
+          // .en           (sa_en),
+          // .weights      (weights_vector[(j-1)*row_num_in_sa*8+:(row_num_in_sa*8)]), //weights_word_buf_rd
+          .weights      (weights_word_buf_rd[(j-1)*row_num_in_sa*8+:(row_num_in_sa*8)]), //weights_word_buf_rd
           .delay_weights(delay_weights_sets[j-1])
       );
       for (i = 1; i <= sa_column_num; i = i + 1) begin  //poy, rows
@@ -1571,123 +1745,106 @@ module quan_accel_conv_demo(
     end
     for (i = 1; i <= sa_column_num; i = i + 1) begin : sa_column  //poy, rows
       for (j = 1; j <= sa_row_num; j = j + 1) begin : sa_row  //output channel
-        SA_sum_E sa (
+        quan_SA_sum_E_v8 sa (
             .clk              (clk),
-            .reset            ((sa_reset == 1) || (reset == 1) || (conv_start == 1)),
-            .en               (sa_en),
+
+            .reset(((i == 1) && (j == 1)) ? ((reset == 1) || (conv_start == 1) || (conv_compute_fin == 1)):
+      ((i > 1) && (j == 1))? core_reset_array[i-1-1][j-1]:
+      ((i == 1) && (j > 1))? core_reset_array[i-1][j-1-1]:
+      (core_reset_array[i-1-1][j-1] | core_reset_array[i-1][j-1-1])),
+
+            .core_cell_en_pre(((i == 1) && (j == 1)) ? (core_cell_en_pre):
+      ((i > 1) && (j == 1))? core_en_array[i-1-1][j-1]:
+      ((i == 1) && (j > 1))? core_en_array[i-1][j-1-1]:
+      (core_en_array[i-1-1][j-1] | core_en_array[i-1][j-1-1])),
+
+            .core_cell_output_en_pre(((i == 1) && (j == 1)) ? (core_cell_output_en_pre):
+      ((i > 1) && (j == 1))? core_output_en_array[i-1-1][j-1]:
+      ((i == 1) && (j > 1))? core_output_en_array[i-1][j-1-1]:
+      (core_output_en_array[i-1-1][j-1] | core_output_en_array[i-1][j-1-1])),
+
+            .core_reset_out(core_reset_array[i-1][j-1]), 
+            .core_en_out(core_en_array[i-1][j-1]), 
+            .core_output_en_out(core_output_en_array[i-1][j-1]),
             .mode_init             (mode),
-            .channel_out_reset((channel_out_reset == 1) || (reset == 1) || (conv_start == 1)),
-            .channel_out_en   (channel_out_en),
-            .out_sa_row_idx   (out_sa_row_idx),
-            .row_in           (sa_rowi_ins[i-1][j-1]),                   //weights
-            .column_in        (sa_columni_ins[i-1][j-1]),                //pixels
+            .row_in           ((i == 1)? delay_weights_sets[j-1]:core_row_in_array[i-1-1][j-1]), //weights
+            .column_in     ((j == 1)? delay_rowi_pixels[i-1]: core_column_in_array[i-1][j-1-1]), //pixels   
+            .row_in_out(core_row_in_array[i-1][j-1]),
+            .column_in_out(core_column_in_array[i-1][j-1]),
             .sa_E_in(extra_sa_vector_Bs[i-1][j-1]),
             .sa_sum_in(extra_sa_vector_As[i-1][j-1]),
-            .mult_array_mode  (mult_array_mode),
+            .mult_array_mode_pre(((i == 1) && (j == 1)) ? (core_mult_array_mode_pre):
+      ((i > 1) && (j == 1))? core_mult_array_mode_array[i-1-1][j-1]:
+      ((i == 1) && (j > 1))? core_mult_array_mode_array[i-1][j-1-1]:
+      (core_mult_array_mode_array[i-1-1][j-1] | core_mult_array_mode_array[i-1][j-1-1])),
+            .mult_array_mode_out  (core_mult_array_mode_array[i-1][j-1]),
+
             .row0_out         (sa_row0_outs[i-1][j-1]),
             .out              (out_rowi_channel_seti[i-1][j-1])
         );
 
-        assign extra_sa_vector_Ps[i-1][j-1] = (product_add_bias_en == 1'b1) ? sa_row0_outs[i-1][j-1] : 0;
-        sum_mult_E_vecOp sum_mult_E_vecOp(
+        assign extra_sa_vector_Ps[i-1][j-1] = (core_product_add_bias_en_array[i-1][j-1] == 1'b1) ? sa_row0_outs[i-1][j-1] : 0;
+        
+        quan_sum_mult_E_vecOp_v4 quan_sum_mult_E_vecOp(
+            .clk(clk),
+            .core_sum_E_recieve_en_pre(
+              ((i == 1) && (j == 1)) ? (core_sum_E_recieve_en_pre):
+      ((i > 1) && (j == 1))? core_sum_E_recieve_en_array[i-1-1][j-1]:
+      ((i == 1) && (j > 1))? core_sum_E_recieve_en_array[i-1][j-1-1]:
+      (core_sum_E_recieve_en_array[i-1-1][j-1] | core_sum_E_recieve_en_array[i-1][j-1-1])),
+            .core_sum_E_recieve_en_out(core_sum_E_recieve_en_array[i-1][j-1]),
             .mode(mode),
-            .E_set(E_4_channel_sets[(j-1)*E_set_width+:E_set_width]),
+            .next_E_set((i == 1)? E_4_channel_sets[(j-1)*E_set_width+:E_set_width]:
+            core_E_sets_array[i-1-1][j-1]),
+            .E_set(core_E_sets_array[i-1][j-1]),
             .sum_vector(out_rowi_channel_seti[i-1][j-1]),
             .sum_vector_in_mult_A_width(sum_vector_in_mult_A_width_rowi_channel_setj[i-1][j-1]),
             .E_vector_in_mult_B_width(E_vector_in_mult_B_width_rowi_channel_setj[i-1][j-1])
         );
-        //sum mult E vecOp////////////////////////////////////////
-        // //cycle 0
-        // //sum_vector * E in mult_array outside
-        // // sum_vector_in_24[24 * pe_parallel_pixel_88 * column_num -1 : 0]
-        // //24 bit * 32 pixels * 1 channel or 16 bit * 32 pixels * 2 channel
-        // for (m = 0; m < pe_parallel_pixel_88 * column_num_in_sa; m = m + 1) begin
-        //   assign sum_vector_in_mult_A_width_rowi_channel_setj[i-1][j-1][m*mult_A_width+:mult_A_width] =
-        //       // 0{sign},sum_88
-        //       (mode == 0) ? out_rowi_channel_seti[i-1][j-1][m*pixel_width_88+:pixel_width_88] :
-        //       // 8{sign},sum_18_1
-        //       (mode == 1) ? {{8{out_rowi_channel_seti[i-1][j-1][m*pixel_width_18+pixel_width_18-1]}},
-        //       //sum
-        //       out_rowi_channel_seti[i-1][j-1][m*pixel_width_18+:pixel_width_18]} : 0;
-        // end
-        // // sum_vector_in_24[sum_vector_in_24_width-1 : 24 * pe_parallel_pixel_18 * column_num]
-        // for (m = 0; m < pe_parallel_pixel_18 * column_num_in_sa; m = m + 1) begin
-        //   assign sum_vector_in_mult_A_width_rowi_channel_setj[i-1][j-1][(pe_parallel_pixel_18*column_num_in_sa+m)*mult_A_width+:mult_A_width] =
-        //       // 8{sign},sum_18_2
-        //       (mode == 1) ? {{8{out_rowi_channel_seti[i-1][j-1][sum_vector_width_18_2+m*pixel_width_18+pixel_width_18-1]}},
-        //       // sum_18_2
-        //       out_rowi_channel_seti[i-1][j-1][sum_vector_width_18_2+m*pixel_width_18+:pixel_width_18]} : 0;
-        // end
-
-        // // E_vector_in_16[16 * pe_parallel_pixel_18 * column_num -1 : 0]
-        // //16 bit * 32 pixels * 2 channel
-        // for (m = 0; m < pe_parallel_pixel_88 * column_num_in_sa; m = m + 1) begin
-        //   assign E_vector_in_mult_B_width_rowi_channel_setj[i-1][j-1][m*mult_B_width+:mult_B_width] =
-        //       //{0,E}; E_88 equals E_18_1
-        //       {
-        //         {(mult_B_width - E_width) {1'b0}},
-        //         // E_4_channel_sets[(j-1)*E_set_width+:E_set_width][E_width-1 : 0]
-        //         E_4_channel_sets[(j-1)*E_set_width+:E_width]
-        //       };
-        // end
-        // // E_vector_in_16[E_vector_in_16_width-1 : 16 * pe_parallel_pixel_18 * column_num]
-        // for (m = 0; m < pe_parallel_pixel_18 * column_num_in_sa; m = m + 1) begin
-        //   assign E_vector_in_mult_B_width_rowi_channel_setj[i-1][j-1][(pe_parallel_pixel_18*column_num_in_sa+m)*mult_B_width+:mult_B_width] =
-        //       //{0,E}
-        //       (mode == 1) ? {{(mult_B_width - E_width) {1'b0}}, 
-        //       // E_4_channel_sets[(j-1)*E_set_width+:E_set_width][E_set_width-1 : E_width]} : 0;
-        //       E_4_channel_sets[((j-1)*E_set_width+E_width)+:E_width]} : 0;
-        // end
-        //////////////////////////////////////////////////////////
+       
         //xxxxxxxxxxxxxxxxxxxx mapping changed because of the s16_u8_lut_dsp
         //1-48 -> mult_array[1,48]; 49-64 -> sa_row0; [1, 64] = add_bias_row_in_mult_A_width_width
         assign sum_mult_E_vector_A_mode0
         [((i-1)*sa_row_num+(j-1))*((pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa)*mult_A_width)+: //32*24
         ((pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa)*mult_A_width)] = 
-        (sum_mult_E_en == 1'b1) ? sum_vector_in_mult_A_width_rowi_channel_setj[i-1][j-1]
+        sum_vector_in_mult_A_width_rowi_channel_setj[i-1][j-1]
         //0+:
-        [0+:((pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa)*mult_A_width)] : 
-        {((pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa)*mult_A_width){1'b0}};
+        [0+:((pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa)*mult_A_width)];
 
         assign sum_mult_E_vector_A_mode1
         //mult array
         [((i-1)*sa_row_num+(j-1))*(mult_array_length_per_sa*mult_A_width)+:(mult_array_length_per_sa*mult_A_width)] = 
         //sum vector
-        (sum_mult_E_en == 1'b1) ? sum_vector_in_mult_A_width_rowi_channel_setj[i-1][j-1]
+        sum_vector_in_mult_A_width_rowi_channel_setj[i-1][j-1]
         //0+:
-        [0+:(mult_array_length_per_sa*mult_A_width)] : 
-        {(mult_array_length_per_sa*mult_A_width){1'b0}};
+        [0+:(mult_array_length_per_sa*mult_A_width)];
 
         assign extra_sa_vector_As[i-1][j-1] = 
         //sa mult
-        (sum_mult_E_en == 1'b1) ? sum_vector_in_mult_A_width_rowi_channel_setj[i-1][j-1]
+        sum_vector_in_mult_A_width_rowi_channel_setj[i-1][j-1]
         //48*24+:
-        [(mult_array_length_per_sa*mult_A_width)+:(column_num_in_sa*mult_A_width)] : 
-        {(column_num_in_sa * mult_A_width){1'b0}};
+        [(mult_array_length_per_sa*mult_A_width)+:(column_num_in_sa*mult_A_width)];
         
         assign sum_mult_E_vector_B_mode0
         [((i-1)*sa_row_num+(j-1))*((pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa)*mult_B_width)+: //32*16
         ((pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa)*mult_B_width)] = 
-        (sum_mult_E_en == 1'b1) ? E_vector_in_mult_B_width_rowi_channel_setj[i-1][j-1]
+        E_vector_in_mult_B_width_rowi_channel_setj[i-1][j-1]
         //0+:
-        [0+:((pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa)*mult_B_width)] : 
-        {((pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa)*mult_B_width){1'b0}};
+        [0+:((pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa)*mult_B_width)];
         
         assign sum_mult_E_vector_B_mode1
         //mult array
         [((i-1)*sa_row_num+(j-1))*(mult_array_length_per_sa*mult_B_width)+:(mult_array_length_per_sa*mult_B_width)] = 
         //E vector
-        (sum_mult_E_en == 1'b1) ? E_vector_in_mult_B_width_rowi_channel_setj[i-1][j-1]
+        E_vector_in_mult_B_width_rowi_channel_setj[i-1][j-1]
         //0+
-        [0+:(mult_array_length_per_sa*mult_B_width)] : 
-        {(mult_array_length_per_sa*mult_B_width){1'b0}};
+        [0+:(mult_array_length_per_sa*mult_B_width)];
 
         assign extra_sa_vector_Bs[i-1][j-1] = 
         //sa mult
-        (sum_mult_E_en == 1'b1) ? E_vector_in_mult_B_width_rowi_channel_setj[i-1][j-1]
+        E_vector_in_mult_B_width_rowi_channel_setj[i-1][j-1]
         //48*16+:
-        [(mult_array_length_per_sa*mult_B_width)+:row_num_in_sa*mult_B_width] : 
-        {(row_num_in_sa * mult_B_width){1'b0}};
+        [(mult_array_length_per_sa*mult_B_width)+:row_num_in_sa*mult_B_width];
         
         assign sum_mult_E_vector_in_mult_P_width_rowi_channel_setj[i-1][j-1]
         //0+:
@@ -1707,61 +1864,87 @@ module quan_accel_conv_demo(
         //[16*40]
         extra_sa_vector_Ps[i-1][j-1];
 
-        product_add_bias_vecOp product_add_bias_vecop(
+        quan_product_add_bias_vecOp_v4 quan_product_add_bias_vecop(
             .clk              (clk),
-            .reset            ((product_add_bias_reset == 1) || (reset == 1) || (conv_start == 1)),
-            .en               (product_add_bias_en),
+            .core_product_add_bias_en_pre(((i == 1) && (j == 1)) ? (core_product_add_bias_en_pre):
+      ((i > 1) && (j == 1))? core_product_add_bias_en_array[i-1-1][j-1]:
+      ((i == 1) && (j > 1))? core_product_add_bias_en_array[i-1][j-1-1]:
+      (core_product_add_bias_en_array[i-1-1][j-1] | core_product_add_bias_en_array[i-1][j-1-1])),
+            .core_product_add_bias_en_out(core_product_add_bias_en_array[i-1][j-1]),
             .mode             (mode),
             .sum_mult_E_vector(sum_mult_E_vector_in_mult_P_width_rowi_channel_setj[i-1][j-1]),  // pox res per channel
-            .bias_set         (bias_4_channel_sets[(j-1)*bias_set_width+:bias_set_width]),
+            .next_bias_set         (
+            (i == 1)? bias_4_channel_sets[(j-1)*bias_set_width+:bias_set_width]:
+            core_bias_sets_array[i-1-1][j-1]),
+            .bias_set(core_bias_sets_array[i-1][j-1]),
             .product_add_bias_vector(product_add_bias_vector_rowi_channel_setj[i-1][j-1])  // pox res per channel
         );
 
-        relu_scale_vecOp relu_scale_vecop(
+        quan_relu_scale_vecOp_v4 quan_relu_scale_vecop(
             .clk                             (clk),
+            .core_relu_scale_en_pre(((i == 1) && (j == 1)) ? (core_relu_scale_en_pre):
+      ((i > 1) && (j == 1))? core_relu_scale_en_array[i-1-1][j-1]:
+      ((i == 1) && (j > 1))? core_relu_scale_en_array[i-1][j-1-1]:
+      (core_relu_scale_en_array[i-1-1][j-1] | core_relu_scale_en_array[i-1][j-1-1])),
+            .core_relu_scale_en_out(core_relu_scale_en_array[i-1][j-1]),
             .mode                            (mode),
-            .scale_set(scale_4_channel_sets[(j-1)*scale_set_width+:scale_set_width]),
+            .next_scale_set(
+            (i == 1)? scale_4_channel_sets[(j-1)*scale_set_width+:scale_set_width]:
+            core_scale_sets_array[i-1-1][j-1]),
+            .scale_set(core_scale_sets_array[i-1][j-1]),
             .product_add_bias_vector(product_add_bias_vector_rowi_channel_setj[i-1][j-1]),
             .quantize_vector(quantize_rowi_channel_setj[i-1][j-1])
-        );        
+        ); 
         //conv out fifo
+        always @(posedge clk) begin
+           core_conv_fifo_en_array[i-1][j-1] <= ((i == 1) && (j == 1)) ? (core_conv_fifo_en_pre):
+      ((i > 1) && (j == 1))? core_conv_fifo_en_array[i-1-1][j-1]:
+      ((i == 1) && (j > 1))? core_conv_fifo_en_array[i-1][j-1-1]:
+      (core_conv_fifo_en_array[i-1-1][j-1] | core_conv_fifo_en_array[i-1][j-1-1]); 
+        end
         fifo_rowi_channel_seti fifo_rowi_channel_seti (
             .clk       (clk),                                     // input wire clk
             .srst      ((reset == 1) || (conv_start == 1)),                      // input wire srst
             .din       (quantize_rowi_channel_setj[i-1][j-1]),  // input wire [511 : 0] din
-            .wr_en     (relu_scale_en),                             // input wire wr_en
+            .wr_en     (core_conv_fifo_en_array[i-1][j-1]),                             // input wire wr_en
+            
             .rd_en     (fifo_rowi_channel_seti_rd_en[i-1][j-1]),  // input wire rd_en
             .dout      (fifo_rowi_channel_seti_dout[i-1][j-1]),   // output wire [511 : 0] dout
             .full      (fifo_rowi_channel_seti_full[i-1][j-1]),   // output wire full
             .empty     (fifo_rowi_channel_seti_empty[i-1][j-1]),  // output wire empty
             .data_count(data_counts[i-1][j-1])
         );
+
         assign fifo_rowi_channel_seti_rd_en[i-1][j-1] = fifo_rds[(((i-1)<<2)+j-1)];
       end
     end
   endgenerate
   // sa control
-  SA_E_ReLU_Quantify_Ctrl sa_E_relu_quantify_ctrl (
-      .clk              (clk),
-      .reset            ((reset == 1) || (conv_start == 1)),  //next tile need clr
-      .re_fm_en         (re_fm_en),
-      .mode             (mode),
-      .nif_mult_k_mult_k(nif_mult_k_mult_k),
-      .sa_en            (sa_en),
-      .sa_reset         (sa_reset),
-      .channel_out_reset(channel_out_reset),
-      .channel_out_en   (channel_out_en),
-      .sum_mult_E_en        (sum_mult_E_en),
-      .product_add_bias_en      (product_add_bias_en),
-      .product_add_bias_reset   (product_add_bias_reset),
-      .relu_scale_en      (relu_scale_en),
-      .mult_array_mode  (mult_array_mode),
-      .out_sa_row_idx   (out_sa_row_idx),
-      .relu_scale_add_end (relu_scale_add_end)
+  quan_CBR_kernel_controller_v4 quan_CBR_kernel_ctrl(
+    .clk              (clk),
+    .reset            ((reset == 1) || (conv_start == 1)),  //next tile need clr
+    .re_fm_en         (re_fm_en),
+    .mode_init             (mode),
+    .nif_mult_k_mult_k_init(nif_mult_k_mult_k),
+    .shadow_pof(shadow_pof),
+
+    //for shell ctrl
+    .out_sa_row_idx_pre(out_sa_row_idx_pre),
+    .conv_fifo_add_end_pre(conv_fifo_add_end_pre),
+
+    //for kernel ctrl
+    .core_cell_en_pre(core_cell_en_pre),
+    .core_cell_reset_pre(core_cell_reset_pre),
+    .core_cell_output_en_pre(core_cell_output_en_pre),
+    .core_sum_E_recieve_en_pre(core_sum_E_recieve_en_pre),
+    // .core_sum_mult_E_en_pre(core_sum_mult_E_en_pre),
+    .core_product_add_bias_en_pre(core_product_add_bias_en_pre),
+    .core_relu_scale_en_pre(core_relu_scale_en_pre),
+    .core_conv_fifo_en_pre(core_conv_fifo_en_pre),
+    .core_mult_array_mode_pre(core_mult_array_mode_pre)
   );
 
-
-  assign conv_compute_fin = relu_scale_add_end;
+  assign conv_compute_fin = conv_fifo_add_end;
   //multiplier array
   Mult_Array_hete_naive mult_array_hete (
       .clk     (clk),
@@ -1799,13 +1982,13 @@ module quan_accel_conv_demo(
       //cycle 0 in
       .clk                       (clk),
       .reset                     ((reset == 1) || (conv_start == 1)),
-      .conv_store_start       (conv_store),
-      .ddr_cmd_ready(ddr_cmd_ready),
-      .ddr_wt_data_ready(ddr_wt_data_ready),
-      .output_ddr_layer_base_adr(output_ddr_layer_base_adr),
+      .conv_store_start          (conv_store),
+      .ddr_cmd_ready             (ddr_cmd_ready),
+      .ddr_wt_data_ready         (ddr_wt_data_ready),
+      .output_ddr_layer_base_adr (output_ddr_layer_base_adr),
       .mode                      (mode),
-      .of_in_2pow(of_in_2pow), 
-      .ox_in_2pow(ox_in_2pow),
+      .of_in_2pow                (of_in_2pow),
+      .ox_in_2pow                (ox_in_2pow),
       .cur_ox_start              (store_ox_start),
       .cur_oy_start              (store_oy_start),
       .cur_of_start              (store_of_start),
@@ -1813,9 +1996,9 @@ module quan_accel_conv_demo(
       .cur_poy                   (store_poy),
       .cur_pof                   (store_pof),
       //store cmd
-      .store_ddr_base_adr(store_ddr_base_adr),
-      .store_ddr_length(store_ddr_length),
-      .valid_store_ddr_cmd(valid_store_ddr_cmd),
+      .store_ddr_base_adr        (store_ddr_base_adr),
+      .store_ddr_length          (store_ddr_length),
+      .valid_store_ddr_cmd       (valid_store_ddr_cmd),
       //cycle 0 out
       .fifo_rds                  (fifo_rds),
       //cycle 1 in
@@ -1828,12 +2011,12 @@ module quan_accel_conv_demo(
       .out_f_idx                 (out_f_idx),
       .conv_fifo_out_tile_add_end(conv_fifo_out_tile_add_end),
       //store ddr data
-      .conv_out_ddr_adr(conv_out_ddr_adr),
-      .valid_conv_out_ddr_data(valid_conv_out_ddr_data),
-      .conv_out_ddr_data(conv_out_ddr_data),
-      .conv_store_fin(conv_store_fin)
+      .conv_out_ddr_adr          (conv_out_ddr_adr),
+      .valid_conv_out_ddr_data   (valid_conv_out_ddr_data),
+      .conv_out_ddr_data         (conv_out_ddr_data),
+      .conv_store_fin            (conv_store_fin)
   );
-  assign fifo_data      = fifo_rowi_channel_seti_dout[fifo_column_no][fifo_row_no];
+  assign fifo_data = fifo_rowi_channel_seti_dout[fifo_column_no][fifo_row_no];
   assign conv_store_fin = conv_fifo_out_tile_add_end;  //demo store ctrl
 
 `ifdef SIMULATION

@@ -1,46 +1,44 @@
 //------------------------------------------------------------------------------
-// Ä£¿éÃû³Æ: ddr3_top
-// Ä£¿é¹¦ÄÜÃèÊö:
-// Ö÷Òª¹¦ÄÜ:
-//    - DDR3´æ´¢Æ÷¶¥²ã¿ØÖÆÄ£¿é
-//    - ¼¯³ÉDDR3¶ÁÐ´¿ØÖÆºÍ²âÊÔ¹¦ÄÜ
-//    - ¹ÜÀíÏµÍ³Ê±ÖÓºÍ¸´Î»
+// Ä£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½: ddr3_top
+// Ä£ï¿½é¹¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½:
+// ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½:
+//    - DDR3ï¿½æ´¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä£ï¿½ï¿½
+//    - ï¿½ï¿½ï¿½ï¿½DDR3ï¿½ï¿½Ð´ï¿½ï¿½ï¿½ÆºÍ²ï¿½ï¿½Ô¹ï¿½ï¿½ï¿½
+//    - ï¿½ï¿½ï¿½ï¿½ÏµÍ³Ê±ï¿½ÓºÍ¸ï¿½Î»
 //
-// ½Ó¿ÚËµÃ÷:
-//    ÊäÈëÐÅºÅ:
-//    - F1_GCLK_40M: 40MHzÏµÍ³Ê±ÖÓ
+// ï¿½Ó¿ï¿½Ëµï¿½ï¿½:
+//    ï¿½ï¿½ï¿½ï¿½ï¿½Åºï¿½:
+//    - F1_GCLK_40M: 40MHzÏµÍ³Ê±ï¿½ï¿½
 //
-//    Êä³öÐÅºÅ:
-//    - done: ·ÂÕæÍê³É±êÖ¾(½öÔÚ·ÂÕæÄ£Ê½ÏÂÓÐÐ§)
+//    ï¿½ï¿½ï¿½ï¿½Åºï¿½:
+//    - done: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É±ï¿½Ö¾(ï¿½ï¿½ï¿½Ú·ï¿½ï¿½ï¿½Ä£Ê½ï¿½ï¿½ï¿½ï¿½Ð§)
 //
-//    DDR3½Ó¿ÚÐÅºÅ:
-//    - ddr3_addr: DDR3µØÖ·×ÜÏß(15Î»)
-//    - ddr3_ba: DDR3 bankµØÖ·(3Î»)
-//    - ddr3_cas_n: ÁÐµØÖ·Ñ¡Í¨ÐÅºÅ
-//    - ddr3_ck_n/p: DDR3Ê±ÖÓ²î·Ö¶Ô
-//    - ddr3_cke: Ê±ÖÓÊ¹ÄÜ
-//    - ddr3_ras_n: ÐÐµØÖ·Ñ¡Í¨ÐÅºÅ
-//    - ddr3_reset_n: DDR3¸´Î»ÐÅºÅ
-//    - ddr3_we_n: Ð´Ê¹ÄÜÐÅºÅ
-//    - ddr3_dq: Êý¾Ý×ÜÏß(DDR_WIDTHÎ»)
-//    - ddr3_dqs_n/p: Êý¾ÝÑ¡Í¨²î·Ö¶Ô
-//    - ddr3_cs_n: Æ¬Ñ¡ÐÅºÅ
-//    - ddr3_dm: Êý¾ÝÑÚÂë
-//    - ddr3_odt: ¶¯Ì¬ÖÕ¶Ë
+//    DDR3ï¿½Ó¿ï¿½ï¿½Åºï¿½:
+//    - ddr3_addr: DDR3ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½(15Î»)
+//    - ddr3_ba: DDR3 bankï¿½ï¿½Ö·(3Î»)
+//    - ddr3_cas_n: ï¿½Ðµï¿½Ö·Ñ¡Í¨ï¿½Åºï¿½
+//    - ddr3_ck_n/p: DDR3Ê±ï¿½Ó²ï¿½Ö¶ï¿½
+//    - ddr3_cke: Ê±ï¿½ï¿½Ê¹ï¿½ï¿½
+//    - ddr3_ras_n: ï¿½Ðµï¿½Ö·Ñ¡Í¨ï¿½Åºï¿½
+//    - ddr3_reset_n: DDR3ï¿½ï¿½Î»ï¿½Åºï¿½
+//    - ddr3_we_n: Ð´Ê¹ï¿½ï¿½ï¿½Åºï¿½
+//    - ddr3_dq: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½(DDR_WIDTHÎ»)
+//    - ddr3_dqs_n/p: ï¿½ï¿½ï¿½ï¿½Ñ¡Í¨ï¿½ï¿½Ö¶ï¿½
+//    - ddr3_cs_n: Æ¬Ñ¡ï¿½Åºï¿½
+//    - ddr3_dm: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+//    - ddr3_odt: ï¿½ï¿½Ì¬ï¿½Õ¶ï¿½
 //------------------------------------------------------------------------------
-
+`timescale 1ps/1ps
 `include "ddr3_defines.vh"
 
 module ddr3_top #(
     parameter DDR_WIDTH  = 64,
     parameter UI_WIDTH   = DDR_WIDTH * 8,
     parameter ADDR_WIDTH = 29,
-    parameter TEST_SIZE  = 32,
     parameter RST_CNT    = 2000
 ) (
     // input
     input F1_GCLK_40M,
-    input ena,
 
     // DDR3 interface
     output [               14:0] ddr3_addr,
@@ -72,9 +70,9 @@ Control flow:
   // Internal signals
   reg                     rst_n;
   wire                    clk_40M;
+  wire                    clk_40MHz_locked;
   wire                    clk_100M;
   wire                    clk_200M;
-  wire                    clk_40MHz_locked;
   reg  [            15:0] rst_cnt;
 
   wire                    ui_clk;
@@ -131,7 +129,6 @@ Control flow:
     end
   end
 
-
   // test start for simulation
 `ifdef SIMULATION
   reg ddr_start;
@@ -151,6 +148,112 @@ Control flow:
   wire ddr_start;
 `endif
 
+  // DDR init instance
+  wire init_ddr_rdy;
+  wire init_ddr_wdf_data_rdy;
+  reg init_ddr_wr_finish;
+
+  wire [2:0] init_ddr_cmd;
+  wire init_ddr_cmd_valid;
+  wire [UI_WIDTH-1:0] init_ddr_wdf_data;
+  wire init_ddr_wdf_data_valid;
+  wire [ADDR_WIDTH-1:0] init_ddr_base_addr;
+  wire [9:0] init_ddr_size;
+  wire init_done;
+
+  ddr3_init #(
+    .DDR_WIDTH(DDR_WIDTH)
+  ) ddr3_init_inst (
+      // input
+      .ui_clk             (ui_clk             ),
+      .ui_rst             (ui_rst             ),
+      .ddr_start          (ddr_start          ),
+      .ddr_rdy            (init_ddr_rdy            ),
+      .ddr_wdf_data_rdy   (init_ddr_wdf_data_rdy),
+      .ddr_wr_finish      (init_ddr_wr_finish      ),
+
+      // output
+      .ddr_cmd            (init_ddr_cmd            ),
+      .ddr_cmd_valid      (init_ddr_cmd_valid      ),
+      .ddr_wdf_data       (init_ddr_wdf_data       ),
+      .ddr_wdf_data_valid (init_ddr_wdf_data_valid ),
+      .ddr_base_addr      (init_ddr_base_addr      ),
+      .ddr_size           (init_ddr_size           ),
+      .init_done          (init_done          )
+  );
+
+  // quan_accel_conv_demo instance
+  wire conv_ddr_cmd_rdy;
+  wire conv_ddr_wt_data_rdy;
+
+  wire [31:0] conv_ddr_base_addr;
+  wire [15:0] conv_ddr_rw_size;
+  wire conv_ddr_cmd_valid;
+  wire conv_ddr_cmd;
+  wire [512-1:0] conv_ddr_wt_data;
+  wire conv_ddr_wt_data_valid;
+  quan_accel_conv_demo quan_accel_conv_demo_inst (
+      // input
+      .clk                (ui_clk),
+      .reset              (~init_done),
+      .ddr_cmd_ready      (conv_ddr_cmd_rdy),
+      .ddr_wt_data_ready  (conv_ddr_wt_data_rdy),
+      .ddr_rd_data_valid  (app_rd_data_valid),
+      .ddr_rd_data        (app_rd_data),
+
+      // output
+      .cmd_ddr_base_adr   (conv_ddr_base_addr),
+      .cmd_ddr_length     (conv_ddr_rw_size),
+      .valid_cmd          (conv_ddr_cmd_valid),
+      .ddr_mode           (conv_ddr_cmd),
+      .ddr_wt_data        (conv_ddr_wt_data),
+      .valid_ddr_wt_data  (conv_ddr_wt_data_valid)
+  );
+
+  // Switch between init and conv
+  reg [1:0] main_state;
+  localparam INIT = 2'd0, CONV = 2'd1;
+  always @(posedge ui_clk or posedge ui_rst) begin
+    if (ui_rst) begin
+      main_state <= INIT;
+      init_ddr_wr_finish <= 1'b0;
+    end
+    else begin
+      case (main_state)
+        INIT: begin
+          if (!init_done) begin
+            main_state <= INIT;
+            init_ddr_wr_finish <= ddr3_wr_finish;
+          end
+          else begin
+            main_state <= CONV;
+            init_ddr_wr_finish <= 1'b0;
+          end
+        end
+        CONV: begin
+          main_state <= CONV;
+        end
+        default: begin
+          main_state <= INIT;
+        end
+      endcase
+    end
+  end
+
+  assign ddr_cmd = (init_done) ? {2'b00, conv_ddr_cmd} : init_ddr_cmd;
+  assign ddr_cmd_valid = (init_done) ? conv_ddr_cmd_valid : init_ddr_cmd_valid;
+  assign ddr_base_addr = (init_done) ? conv_ddr_base_addr[ADDR_WIDTH-1:0] : init_ddr_base_addr;
+  assign ddr_rw_size = (init_done) ? conv_ddr_rw_size[9:0] : init_ddr_size;
+  assign app_wdf_data = (init_done) ? conv_ddr_wt_data[UI_WIDTH-1:0] : init_ddr_wdf_data;
+  assign app_wr_data_valid = (init_done) ? conv_ddr_wt_data_valid : init_ddr_wdf_data_valid;
+
+  assign init_ddr_rdy = (init_done) ? 0 : cmd_rdy;
+  assign init_ddr_wdf_data_rdy = (init_done) ? 0 : app_wr_data_rdy;
+
+  assign conv_ddr_cmd_rdy = (init_done) ? cmd_rdy : 0;
+  assign conv_ddr_wt_data_rdy = (init_done) ? app_wr_data_rdy : 0;
+
+
   // DDR3 controller instance
   ddr3_rw #(
       .DDR_WIDTH(DDR_WIDTH),
@@ -160,7 +263,7 @@ Control flow:
       .clk_100M      (clk_100M),
       .clk_200M      (clk_200M),
       .rst_n         (rst_n),
-      .ena           (ddr_start && ena),
+      .ena           (ddr_start),
       .app_cmd       (ddr_cmd),
       .cmd_valid     (ddr_cmd_valid),
       .ddr3_base_addr(ddr_base_addr),
@@ -171,16 +274,16 @@ Control flow:
       // output
       .ui_clk             (ui_clk),
       .ui_rst             (ui_rst),
-      .cmd_rdy       (cmd_rdy),
+      .cmd_rdy            (cmd_rdy),
       .app_rd_data        (app_rd_data),
       .app_rd_data_valid  (app_rd_data_valid),
-      .app_wr_data_rdy  (app_wr_data_rdy),
+      .app_wr_data_rdy    (app_wr_data_rdy),
       .ddr3_rd_finish     (ddr3_rd_finish),
       .ddr3_rd_addr_finish(ddr3_rd_addr_finish),
       .ddr3_wr_finish     (ddr3_wr_finish),
       .init_calib_complete(init_calib_complete),
       .error_flag         (error_flag),
-      .test_rdy         (),
+      .test_rdy           (),
 
       // DDR3 interface
       .ddr3_addr   (ddr3_addr),
@@ -198,24 +301,6 @@ Control flow:
       .ddr3_cs_n   (ddr3_cs_n),
       .ddr3_dm     (ddr3_dm),
       .ddr3_odt    (ddr3_odt)
-  );
-
-  quan_accel_conv_demo quan_accel_conv_demo_inst (
-      .clk                (ui_clk),
-      .reset              (ui_rst),
-      // DDR MIG
-      .ddr_cmd_ready      (cmd_rdy),
-      .ddr_rd_data_valid  (app_rd_data_valid),
-      .ddr_wt_data_ready  (app_wr_data_rdy),
-
-      .cmd_ddr_base_adr   (ddr_base_addr),
-      .cmd_ddr_length     (ddr_rw_size),
-      .valid_cmd          (ddr_cmd_valid),
-      .ddr_mode           (ddr_cmd),
-
-      .ddr_rd_data        (app_rd_data),
-      .ddr_wt_data        (app_wdf_data),
-      .valid_ddr_wt_data  (app_wr_data_valid)
   );
 
   // ila
