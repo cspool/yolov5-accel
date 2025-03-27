@@ -27,7 +27,8 @@ module Mult_Array_hete_naive (
     vector_P
 );
   parameter sa_row_num = 4;  //how many rows in conv core
-  parameter sa_column_num = 3;  //how many columns in conv core
+  parameter sa_column_num = 2;  //how many columns in conv core
+  parameter buffers_num = 3;
   parameter headroom = 8;
   parameter pixel_width_88 = 16 + headroom;
   parameter pixel_width_18 = 8 + headroom;
@@ -37,9 +38,9 @@ module Mult_Array_hete_naive (
   parameter mult_array_length = 576;
   parameter mult_dsp_array_length = 528;  //0 of 528 is used to calculate load adress
   parameter mult_lut_array_length = mult_array_length - mult_dsp_array_length;
-  parameter mult_array_length_per_sa = mult_array_length / sa_row_num / sa_column_num;  //48
-  parameter mult_dsp_array_length_per_sa = mult_dsp_array_length / sa_row_num / sa_column_num;  //44
-  parameter mult_lut_array_length_per_sa = mult_lut_array_length / sa_row_num / sa_column_num;  //4
+  parameter mult_array_length_per_sa = mult_array_length / sa_row_num / buffers_num;  //48
+  parameter mult_dsp_array_length_per_sa = mult_dsp_array_length / sa_row_num / buffers_num;  //44
+  parameter mult_lut_array_length_per_sa = mult_lut_array_length / sa_row_num / buffers_num;  //4
   parameter vector_A_width = mult_array_length * mult_A_width;
   parameter vector_B_width = mult_array_length * mult_B_width;
   parameter vector_P_width = mult_array_length * mult_P_width;

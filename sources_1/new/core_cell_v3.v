@@ -153,4 +153,50 @@ module core_cell_v3 (
     end
   end
 
+
+  // always @(posedge clk) begin
+  //   if (reset_out) begin
+  //     out[0+:(pixel_width_18)] <= 0;
+  //   end else if (en_out) begin
+  //     out[0+:(pixel_width_18)] <= res_88_18_1[pixel_width_18-1 : 0];  //0-15
+  //   end else if (cell_out_en_out) begin
+  //     out[0+:(pixel_width_18)] <= (mode == 0) ? south_cell_out[0+:(pixel_width_18)] : east_cell_out[0+:(pixel_width_18)];
+  //   end
+  // end
+
+  // always @(posedge clk) begin
+  //   if (reset_out) begin
+  //     out[2*pixel_width_18-1 : pixel_width_18] <= 0;
+  //   end else if (en_out) begin
+  //     out[2*pixel_width_18-1 : pixel_width_18] <= (mode == 0) ?  //
+  //     {res_88_18_2[2*pixel_width_18-pixel_width_88-1 : 0], res_88_18_1[pixel_width_88-1 : pixel_width_18]} :  //
+  //     res_88_18_2[pixel_width_18-1 : 0];  //16-31
+  //   end else if (cell_out_en_out) begin
+  //     out[2*pixel_width_18-1 : pixel_width_18] <= (mode == 0) ? south_cell_out[2*pixel_width_18-1 : pixel_width_18] : east_cell_out[2*pixel_width_18-1 : pixel_width_18];
+  //   end
+  // end
+
+  // always @(posedge clk) begin
+
+  //   if (reset_out) begin
+  //     out[3*pixel_width_18-1:2*pixel_width_18] <= 0;
+  //   end else if (en_out) begin
+  //     out[3*pixel_width_18-1:2*pixel_width_18] <= (mode == 0) ?  //
+  //     res_88_18_2[pixel_width_88-1 : 2*pixel_width_18-pixel_width_88] :  //
+  //     res_18_3[pixel_width_18-1 : 0];  //32-47
+  //   end else if (cell_out_en_out) begin
+  //     out[3*pixel_width_18-1:2*pixel_width_18] <= (mode == 0) ? south_cell_out[3*pixel_width_18-1:2*pixel_width_18] : east_cell_out[3*pixel_width_18-1:2*pixel_width_18];
+  //   end
+  // end
+
+  // always @(posedge clk) begin
+  //   if (reset_out) begin
+  //     out[4*pixel_width_18-1:3*pixel_width_18] <= 0;
+  //   end else if (en_out) begin
+  //     out[4*pixel_width_18-1:3*pixel_width_18] <= res_18_4[pixel_width_18-1 : 0];
+  //   end else if (cell_out_en_out) begin
+  //     out[4*pixel_width_18-1:3*pixel_width_18] <= (mode == 0) ? south_cell_out[4*pixel_width_18-1:3*pixel_width_18] : east_cell_out[4*pixel_width_18-1:3*pixel_width_18];
+  //   end
+  // end
+
 endmodule

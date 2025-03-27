@@ -56,8 +56,9 @@ module conv_fifo_out_controller (
 
   parameter pixels_in_row = 32;
   parameter pixels_in_row_in_2pow = 5;
+  parameter buffers_num = 3;
   parameter sa_row_num = 4;  //how many rows in conv core
-  parameter sa_column_num = 3;  //how many columns in conv core
+  parameter sa_column_num = 2;  //how many columns in conv core
   parameter row_num_in_sa = 16;  // how many rows in a sa, row_num
   parameter column_num_in_sa = 16;  // how many columns in a sa
   parameter pe_parallel_pixel_88 = 2;
@@ -80,7 +81,7 @@ module conv_fifo_out_controller (
   //cycle 1 in
   input [quantize_row_width-1 : 0] fifo_data;
   //cycle 0 out
-  output [sa_row_num * sa_column_num-1:0] fifo_rds;
+  output [sa_row_num * buffers_num-1:0] fifo_rds;
   //cycle 1 out
   output reg [3:0] fifo_column_no, fifo_row_no;
   output reg valid_conv_out;
@@ -164,7 +165,7 @@ module conv_fifo_out_controller (
   genvar i;
 
   generate
-    for (i = 0; i < sa_row_num * sa_column_num; i = i + 1) begin
+    for (i = 0; i < sa_row_num * buffers_num; i = i + 1) begin
       assign fifo_rds[i] = ((((oy_counter - 1) << 2) + ((of_counter - 1) >> log_channel_num)) == i) ? (row_fifo_rd_en) : 1'b0;
     end
 

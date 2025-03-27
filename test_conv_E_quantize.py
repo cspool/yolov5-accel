@@ -722,9 +722,9 @@ def generate_scale_buf_init(scale_ddr_words):
 
 def generate_instr_args_init(mode,k,s,p,of,ox,oy,ix,iy,nif,input_base_adr):
   pixels_in_row = 32
-  buffers_num = 3
+  buffers_num = 2 ## poy
   pixels_in_row_real = 32
-  buffers_num_real = 3
+  buffers_num_real = 2
   
   # 定义变量
   mode_integer = mode
