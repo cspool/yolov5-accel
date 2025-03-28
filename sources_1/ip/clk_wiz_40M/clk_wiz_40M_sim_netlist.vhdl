@@ -1,10 +1,10 @@
 -- Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2018.3 (win64) Build 2405991 Thu Dec  6 23:38:27 MST 2018
--- Date        : Thu Mar 20 11:34:55 2025
+-- Date        : Fri Mar 28 19:17:17 2025
 -- Host        : zack running 64-bit major release  (build 9200)
 -- Command     : write_vhdl -force -mode funcsim
---               d:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sources_1/ip/clk_wiz_40M/clk_wiz_40M_sim_netlist.vhdl
+--               D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sources_1/ip/clk_wiz_40M/clk_wiz_40M_sim_netlist.vhdl
 -- Design      : clk_wiz_40M
 -- Purpose     : This VHDL netlist is a functional simulation representation of the design and should not be modified or
 --               synthesized. This netlist cannot be used for SDF annotated simulation.
@@ -101,7 +101,7 @@ mmcm_adv_inst: unisim.vcomponents.MMCME2_ADV
       CLKOUT0_DUTY_CYCLE => 0.500000,
       CLKOUT0_PHASE => 0.000000,
       CLKOUT0_USE_FINE_PS => false,
-      CLKOUT1_DIVIDE => 10,
+      CLKOUT1_DIVIDE => 5,
       CLKOUT1_DUTY_CYCLE => 0.500000,
       CLKOUT1_PHASE => 0.000000,
       CLKOUT1_USE_FINE_PS => false,

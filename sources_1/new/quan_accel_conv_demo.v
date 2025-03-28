@@ -114,7 +114,8 @@ module quan_accel_conv_demo(
   //16 bit * 32 pixels * 2 channel
   parameter sum_mult_E_vector_in_mult_P_width_width = mult_P_width * pe_parallel_weight_18 * pe_parallel_pixel_18 * column_num_in_sa;
   //40 bit * 32 pixels * 2 channel > 32 bit * 32 pixels * 2 channel > 40 bit * 32 pixels * 1 channel
-  parameter product_add_bias_vector_width = mult_P_width * pe_parallel_pixel_18 * pe_parallel_weight_18 * column_num_in_sa;
+  parameter add_bias_width = pixel_width_88 + 8; //actual E width is 8
+  parameter product_add_bias_vector_width = add_bias_width * pe_parallel_pixel_18 * pe_parallel_weight_18 * column_num_in_sa;
   //40 bit * 32 pixels * 2 channel
   
   parameter quantize_pixel_width = 8;
@@ -212,14 +213,18 @@ module quan_accel_conv_demo(
   reg state_valid_load_input;
   // reg valid_load_weights; //ddr words is loaded from ddr
   wire valid_load_weights;
-  //conv compute ctrl
-  wire [15:0] ox_start, oy_start, of_start, pox, poy, pof, if_idx;
+ //conv compute ctrl
+  reg [15:0] ox_start, oy_start, of_start, pox, poy, pof, if_idx;
+  wire [15:0] ox_start_delay, oy_start_delay, of_start_delay, pox_delay, poy_delay, pof_delay, if_idx_delay;  
   reg [15:0] shadow_ox_start, shadow_oy_start, shadow_of_start, shadow_pox, shadow_poy, shadow_pof;
   reg [15:0] store_ox_start, store_oy_start, store_of_start, store_pox, store_poy, store_pof;
-  wire [3:0] west_pad, slab_num, east_pad;
+  reg [3:0] west_pad, slab_num, east_pad;
+  wire [3:0] west_pad_delay, slab_num_delay, east_pad_delay;
   wire [15:0] row1_idx, row2_idx, row3_idx;
-  wire [15:0] row_start_idx, row_end_idx;
-  wire [15:0] reg_start_idx, reg_end_idx;
+  reg [15:0] row_start_idx, row_end_idx;
+  wire [15:0] row_start_idx_delay, row_end_idx_delay;
+  reg [15:0] reg_start_idx, reg_end_idx;
+  wire [15:0] reg_start_idx_delay, reg_end_idx_delay;
   wire [15:0] row1_buf_adr;
   wire [1:0] row1_buf_idx;
   wire row1_buf_word_select;
@@ -229,7 +234,8 @@ module quan_accel_conv_demo(
   wire [15:0] row3_buf_adr;
   wire [1:0] row3_buf_idx;
   wire row3_buf_word_select;
-  wire [15:0] row_slab_start_idx;
+  reg [15:0] row_slab_start_idx;
+  wire [15:0] row_slab_start_idx_delay;
   wire [15:0] row1_slab_adr;
   wire [1:0] row1_slab_idx;
   wire [15:0] row2_slab_adr;
@@ -243,15 +249,23 @@ module quan_accel_conv_demo(
   wire [15:0] row3_slab_adr_to_wr;
   wire [1:0] row3_slab_idx_to_wr;
   wire valid_row1_adr, valid_row2_adr, valid_row3_adr;
-  wire com_control_end;
-  wire conv_pixels_add_end;
-  wire conv_nif_add_end;
+  reg com_control_end;
+  reg conv_pixels_add_end;
+  reg conv_nif_add_end;
+  wire com_control_end_delay;
+  wire conv_pixels_add_end_delay;
+  wire conv_nif_add_end_delay;
   //cv kernel
-  wire [15:0] if_start;
-  wire [15:0] row_base_in_3s;
-  wire valid_adr; 
-  wire [15:0] iy_start;
-  wire [15:0] ky;
+  reg [15:0] if_start;
+  reg [15:0] row_base_in_3s;
+  reg valid_adr; 
+  reg [15:0] iy_start;
+  reg [15:0] ky;
+  wire [15:0] if_start_delay;
+  wire [15:0] row_base_in_3s_delay;
+  wire valid_adr_delay; 
+  wire [15:0] iy_start_delay;
+  wire [15:0] ky_delay;
   //conv_load_input_controller
   wire [15:0] load_input_row_idx;
   wire [15:0] load_input_row_start_idx;
@@ -891,8 +905,8 @@ module quan_accel_conv_demo(
       .state_conv_load_weights(state_conv_load_weights)
   );
 
-  //conv compute ctrl
-  conv_compute_kernel_controller_v2 #(.sa_column_num(sa_column_num)) 
+    //conv compute ctrl
+  conv_compute_kernel_controller_v3 #(.sa_column_num(sa_column_num)) 
   cv_compute_kernel_controller(
     .clk                 (clk),
     .reset               ((reset == 1) || (conv_start == 1)),
@@ -909,114 +923,182 @@ module quan_accel_conv_demo(
     .p_init              (p),
     .nif_in_2pow_init    (nif_in_2pow),
     .ix_in_2pow_init     (ix_in_2pow),
-    .ox_start            (ox_start),
-    .oy_start            (oy_start),
-    .of_start            (of_start),
-    .pox                 (pox),
-    .poy                 (poy),
-    .pof                 (pof),
-    .if_idx              (if_idx),
-    .west_pad            (west_pad),
-    .slab_num            (slab_num),
-    .east_pad            (east_pad),
-    .row_start_idx       (row_start_idx),
-    .row_end_idx         (row_end_idx),
-    .reg_start_idx       (reg_start_idx),
-    .reg_end_idx         (reg_end_idx),
-    .row_slab_start_idx  (row_slab_start_idx),
-    .valid_adr(valid_adr),
-    .iy_start(iy_start),
-    .ky(ky),
-    .if_start(if_start),
-    .row_base_in_3s(row_base_in_3s),
-    .com_control_end            (com_control_end),
-    .conv_pixels_add_end (conv_pixels_add_end),
-    .conv_nif_add_end    (conv_nif_add_end)
+    //general ctrl signal 1
+    .ox_start_delay            (ox_start_delay),
+    .oy_start_delay            (oy_start_delay),
+    .of_start_delay            (of_start_delay),
+    .pox_delay                 (pox_delay),
+    .pof_delay                 (pof_delay),
+    .if_idx_delay              (if_idx_delay),
+    .west_pad_delay            (west_pad_delay),
+    .east_pad_delay            (east_pad_delay),
+    .row_end_idx_delay         (row_end_idx_delay),
+    .reg_start_idx_delay       (reg_start_idx_delay),
+    .reg_end_idx_delay         (reg_end_idx_delay),
+    //ctrl signal to shell  
+    .poy_delay                 (poy_delay),
+    .valid_adr_delay(valid_adr_delay),
+    .iy_start_delay(iy_start_delay),
+    .ky_delay(ky_delay),
+    .row_base_in_3s_delay(row_base_in_3s_delay),
+    .row_start_idx_delay       (row_start_idx_delay),
+    .if_start_delay(if_start_delay),
+    .slab_num_delay            (slab_num_delay),
+    .row_slab_start_idx_delay  (row_slab_start_idx_delay),
+    //general ctrl signal 2
+    .com_control_end_delay            (com_control_end_delay),
+    .conv_pixels_add_end_delay (conv_pixels_add_end_delay),
+    .conv_nif_add_end_delay    (conv_nif_add_end_delay)
   );
 
-  conv_compute_shell1_controller_v2 #(.sa_column_num(sa_column_num)) 
+  conv_compute_shell1_controller_v3 #(.sa_column_num(sa_column_num)) 
   cv_compute_shell1_controller(
+     .clk                 (clk),
+    .reset               ((reset == 1) || (conv_start == 1)),
     .s(s),
     .p(p),
     .iy(iy),
     .nif_in_2pow(nif_in_2pow),
     .ix_in_2pow(ix_in_2pow),
-    .poy(poy),
-    .valid_adr(valid_adr),
-    .iy_start(iy_start),
-    .ky(ky),
-    .row_base_in_3s(row_base_in_3s),
-    .row_start_idx(row_start_idx),
-    .if_start(if_start),
-    .slab_num(slab_num),
-    .row_slab_start_idx(row_slab_start_idx),
 
-    .row1_idx            (row1_idx),
-    .row1_buf_adr        (row1_buf_adr),
-    .row1_buf_idx        (row1_buf_idx),
-    .row1_buf_word_select(row1_buf_word_select),
-    .row1_slab_adr       (row1_slab_adr),
-    .row1_slab_idx       (row1_slab_idx),
-    .row1_slab_adr_to_wr(row1_slab_adr_to_wr),
-    .row1_slab_idx_to_wr(row1_slab_idx_to_wr),
-    .valid_row1_adr      (valid_row1_adr)
+    .poy(poy_delay),
+    .valid_adr(valid_adr_delay),
+    .iy_start(iy_start_delay),
+    .ky(ky_delay),
+    .row_base_in_3s(row_base_in_3s_delay),
+    .row_start_idx(row_start_idx_delay),
+    .if_start(if_start_delay),
+    .slab_num(slab_num_delay),
+    .row_slab_start_idx(row_slab_start_idx_delay),
+
+    .row1_idx_delay            (row1_idx),
+    .row1_buf_adr_delay        (row1_buf_adr),
+    .row1_buf_idx_delay        (row1_buf_idx),
+    .row1_buf_word_select_delay(row1_buf_word_select),
+    .row1_slab_adr_delay       (row1_slab_adr),
+    .row1_slab_idx_delay       (row1_slab_idx),
+    .row1_slab_adr_to_wr_delay(row1_slab_adr_to_wr),
+    .row1_slab_idx_to_wr_delay(row1_slab_idx_to_wr),
+    .valid_row1_adr_delay      (valid_row1_adr)
   );
 
-  conv_compute_shell2_controller_v2 #(.sa_column_num(sa_column_num)) 
+  conv_compute_shell2_controller_v3 #(.sa_column_num(sa_column_num)) 
   cv_compute_shell2_controller(
+        .clk                 (clk),
+    .reset               ((reset == 1) || (conv_start == 1)),
     .s(s),
     .p(p),
     .iy(iy),
     .nif_in_2pow(nif_in_2pow),
     .ix_in_2pow(ix_in_2pow),
-    .poy(poy),
-    .valid_adr(valid_adr),
-    .iy_start(iy_start),
-    .ky(ky),
-    .row_base_in_3s(row_base_in_3s),
-    .row_start_idx(row_start_idx),
-    .if_start(if_start),
-    .slab_num(slab_num),
-    .row_slab_start_idx(row_slab_start_idx),
 
-    .row2_idx            (row2_idx),
-    .row2_buf_adr        (row2_buf_adr),
-    .row2_buf_idx        (row2_buf_idx),
-    .row2_buf_word_select(row2_buf_word_select),
-    .row2_slab_adr       (row2_slab_adr),
-    .row2_slab_idx       (row2_slab_idx),
-    .row2_slab_adr_to_wr(row2_slab_adr_to_wr),
-    .row2_slab_idx_to_wr(row2_slab_idx_to_wr),
-    .valid_row2_adr      (valid_row2_adr)
+    .poy(poy_delay),
+    .valid_adr(valid_adr_delay),
+    .iy_start(iy_start_delay),
+    .ky(ky_delay),
+    .row_base_in_3s(row_base_in_3s_delay),
+    .row_start_idx(row_start_idx_delay),
+    .if_start(if_start_delay),
+    .slab_num(slab_num_delay),
+    .row_slab_start_idx(row_slab_start_idx_delay),
+
+    .row2_idx_delay            (row2_idx),
+    .row2_buf_adr_delay        (row2_buf_adr),
+    .row2_buf_idx_delay        (row2_buf_idx),
+    .row2_buf_word_select_delay(row2_buf_word_select),
+    .row2_slab_adr_delay       (row2_slab_adr),
+    .row2_slab_idx_delay       (row2_slab_idx),
+    .row2_slab_adr_to_wr_delay(row2_slab_adr_to_wr),
+    .row2_slab_idx_to_wr_delay(row2_slab_idx_to_wr),
+    .valid_row2_adr_delay      (valid_row2_adr)
   );
 
-  conv_compute_shell3_controller_v2 #(.sa_column_num(sa_column_num)) 
+  conv_compute_shell3_controller_v3 #(.sa_column_num(sa_column_num)) 
   cv_compute_shell3_controller(
+        .clk                 (clk),
+    .reset               ((reset == 1) || (conv_start == 1)),
     .s(s),
     .p(p),
     .iy(iy),
     .nif_in_2pow(nif_in_2pow),
     .ix_in_2pow(ix_in_2pow),
-    .poy(poy),
-    .valid_adr(valid_adr),
-    .iy_start(iy_start),
-    .ky(ky),
-    .row_base_in_3s(row_base_in_3s),
-    .row_start_idx(row_start_idx),
-    .if_start(if_start),
-    .slab_num(slab_num),
-    .row_slab_start_idx(row_slab_start_idx),
 
-    .row3_idx            (row3_idx),
-    .row3_buf_adr        (row3_buf_adr),
-    .row3_buf_idx        (row3_buf_idx),
-    .row3_buf_word_select(row3_buf_word_select),
-    .row3_slab_adr       (row3_slab_adr),
-    .row3_slab_idx       (row3_slab_idx),
-    .row3_slab_adr_to_wr(row3_slab_adr_to_wr),
-    .row3_slab_idx_to_wr(row3_slab_idx_to_wr),
-    .valid_row3_adr      (valid_row3_adr)
+    .poy(poy_delay),
+    .valid_adr(valid_adr_delay),
+    .iy_start(iy_start_delay),
+    .ky(ky_delay),
+    .row_base_in_3s(row_base_in_3s_delay),
+    .row_start_idx(row_start_idx_delay),
+    .if_start(if_start_delay),
+    .slab_num(slab_num_delay),
+    .row_slab_start_idx(row_slab_start_idx_delay),
+
+    .row3_idx_delay            (row3_idx),
+    .row3_buf_adr_delay        (row3_buf_adr),
+    .row3_buf_idx_delay        (row3_buf_idx),
+    .row3_buf_word_select_delay(row3_buf_word_select),
+    .row3_slab_adr_delay       (row3_slab_adr),
+    .row3_slab_idx_delay       (row3_slab_idx),
+    .row3_slab_adr_to_wr_delay(row3_slab_adr_to_wr),
+    .row3_slab_idx_to_wr_delay(row3_slab_idx_to_wr),
+    .valid_row3_adr_delay      (valid_row3_adr)
   );
+
+  always @(posedge clk) begin
+    if ((reset == 1) || (conv_start == 1)) begin
+          ox_start            <=0;
+    oy_start            <=0;
+    of_start            <=0;
+    pox                 <=0;
+    pof                 <=0;
+    if_idx              <=0;
+    west_pad            <=0;
+    east_pad            <=0;
+    row_end_idx         <=0;
+    reg_start_idx       <=0;
+    reg_end_idx         <=0;
+    //ctrl signal to shell  
+    poy                 <=0;
+    valid_adr<=0;
+    iy_start<=0;
+    ky<=0;
+    row_base_in_3s<=0;
+    row_start_idx       <=0;
+    if_start<=0;
+    slab_num            <=0;
+    row_slab_start_idx  <=0;
+    //general ctrl signal 2
+    com_control_end            <=0;
+    conv_pixels_add_end <=0;
+    conv_nif_add_end    <=0;
+    end else begin
+       ox_start            <=ox_start_delay;
+    oy_start            <=oy_start_delay;
+    of_start            <=of_start_delay;
+    pox                 <=pox_delay;
+    pof                 <=pof_delay;
+    if_idx              <=if_idx_delay;
+    west_pad            <=west_pad_delay;
+    east_pad            <=east_pad_delay;
+    row_end_idx         <=row_end_idx_delay;
+    reg_start_idx       <=reg_start_idx_delay;
+    reg_end_idx         <=reg_end_idx_delay;
+    //ctrl signal to shell  
+    poy                 <=poy_delay;
+    valid_adr<=valid_adr_delay;
+    iy_start<=iy_start_delay;
+    ky<=ky_delay;
+    row_base_in_3s<=row_base_in_3s_delay;
+    row_start_idx       <=row_start_idx_delay;
+    if_start<=if_start_delay;
+    slab_num            <=slab_num_delay;
+    row_slab_start_idx  <=row_slab_start_idx_delay;
+    //general ctrl signal 2
+    com_control_end            <=com_control_end_delay;
+    conv_pixels_add_end <=conv_pixels_add_end_delay;
+    conv_nif_add_end    <=conv_nif_add_end_delay;
+    end
+  end
 
   //store chunk index
   always @(posedge clk) begin
@@ -1864,7 +1946,8 @@ module quan_accel_conv_demo(
         //[16*40]
         extra_sa_vector_Ps[i-1][j-1];
 
-        quan_product_add_bias_vecOp_v4 quan_product_add_bias_vecop(
+        quan_product_add_bias_vecOp_v5 #(.add_bias_width(add_bias_width)) 
+        quan_product_add_bias_vecop(
             .clk              (clk),
             .core_product_add_bias_en_pre(((i == 1) && (j == 1)) ? (core_product_add_bias_en_pre):
       ((i > 1) && (j == 1))? core_product_add_bias_en_array[i-1-1][j-1]:
@@ -1880,7 +1963,8 @@ module quan_accel_conv_demo(
             .product_add_bias_vector(product_add_bias_vector_rowi_channel_setj[i-1][j-1])  // pox res per channel
         );
 
-        quan_relu_scale_vecOp_v4 quan_relu_scale_vecop(
+        quan_relu_scale_vecOp_v5 #(.add_bias_width(add_bias_width)) 
+        quan_relu_scale_vecop(
             .clk                             (clk),
             .core_relu_scale_en_pre(((i == 1) && (j == 1)) ? (core_relu_scale_en_pre):
       ((i > 1) && (j == 1))? core_relu_scale_en_array[i-1-1][j-1]:
