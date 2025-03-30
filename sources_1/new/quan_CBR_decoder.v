@@ -143,48 +143,7 @@ module quan_CBR_decoder (
   end
 
   always @(posedge clk) begin
-    if (reset == 1'b1) begin
-      mode                               <= 0;
-      k                                  <= 0;
-      s                                  <= 0;
-      p                                  <= 0;
-      of                                 <= 0;
-      of_in_2pow                         <= 0;
-      ox                                 <= 0;
-      ox_in_2pow                         <= 0;
-      oy                                 <= 0;
-      ix                                 <= 0;
-      ix_in_2pow                         <= 0;
-      iy                                 <= 0;
-      nif                                <= 0;
-      nif_in_2pow                        <= 0;
-      nif_mult_k_mult_k                  <= 0;
-      N_chunks                           <= 0;
-      E_layer_base_buf_adr_rd            <= 0;
-      bias_layer_base_buf_adr_rd         <= 0;
-      scale_layer_base_buf_adr_rd        <= 0;
-      weights_layer_base_ddr_adr_rd      <= 0;
-      input_ddr_layer_base_adr           <= 0;
-      output_ddr_layer_base_adr          <= 0;
-      tilex_first_ix_word_num            <= 0;
-      tilex_last_ix_word_num             <= 0;
-      tilex_mid_ix_word_num              <= 0;
-      tiley_first_iy_row_num             <= 0;
-      tiley_last_iy_row_num              <= 0;
-      tiley_mid_iy_row_num               <= 0;
-      ix_index_num                       <= 0;
-      iy_index_num                       <= 0;
-      of_div_row_num_ceil                <= 0;
-      tiley_first_tilex_first_split_size <= 0;
-      tiley_first_tilex_last_split_size  <= 0;
-      tiley_first_tilex_mid_split_size   <= 0;
-      tiley_last_tilex_first_split_size  <= 0;
-      tiley_last_tilex_last_split_size   <= 0;
-      tiley_last_tilex_mid_split_size    <= 0;
-      tiley_mid_tilex_first_split_size   <= 0;
-      tiley_mid_tilex_last_split_size    <= 0;
-      tiley_mid_tilex_mid_split_size     <= 0;
-    end else if (conv_decode == 1'b1) begin
+    if (conv_decode == 1'b1) begin
       mode                               <= conv_instr_args[0+:4];  //4
       k                                  <= conv_instr_args[4+:4];  //4
       s                                  <= conv_instr_args[8+:4];  //4

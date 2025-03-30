@@ -364,6 +364,7 @@ def generate_conv_scale_data(quantize_type, mode, of, k):
   # scale[F]
   scale_scalar = (10 if (k == 1) else (13 if (k == 3) else 15)) if (mode == 0) \
     else (3 if (k == 1) else (6 if (k == 3) else 8))
+  scale_scalar = scale_scalar - 3
   # uint8 [0,256] scale_scalar
   scale_data = torch.randint(0, 256, size=(of,), dtype=torch.int) \
   if quantize_type == 2 else (torch.ones(of, dtype=torch.int) * torch.tensor([scale_scalar], dtype=int))
@@ -722,9 +723,9 @@ def generate_scale_buf_init(scale_ddr_words):
 
 def generate_instr_args_init(mode,k,s,p,of,ox,oy,ix,iy,nif,input_base_adr):
   pixels_in_row = 32
-  buffers_num = 1 ## poy
+  buffers_num = 2 ## poy
   pixels_in_row_real = 32
-  buffers_num_real = 1
+  buffers_num_real = 2
   
   # 定义变量
   mode_integer = mode

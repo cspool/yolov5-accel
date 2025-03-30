@@ -52,14 +52,15 @@ module quan_product_add_bias_vecOp_v5 #(
     input      [sum_mult_E_vector_in_mult_P_width_width - 1:0] sum_mult_E_vector,
     input      [                         bias_set_width-1 : 0] next_bias_set,                 //2 bias 16 bit, or 1 bias 8 bit
     output reg [                         bias_set_width-1 : 0] bias_set,
-    output reg [          product_add_bias_vector_width - 1:0] product_add_bias_vector
+    // output reg [          product_add_bias_vector_width - 1:0] product_add_bias_vector
+    output     [          product_add_bias_vector_width - 1:0] product_add_bias_vector
 );
 
-  wire [bias_width-1 : 0] bias_88;
-  reg  [bias_width-1 : 0] bias_88_vector[pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa-1:0];
-  wire [bias_width-1:0] bias_18_1, bias_18_2;
-  reg  [                                  bias_width-1 : 0] bias_18_1_vector     [pe_parallel_pixel_18 * 1 * column_num_in_sa-1:0];
-  reg  [                                  bias_width-1 : 0] bias_18_2_vector     [pe_parallel_pixel_18 * 1 * column_num_in_sa-1:0];
+  // wire [bias_width-1 : 0] bias_88;
+  reg  [                                  bias_width-1 : 0] bias_88_vector       [pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa-1:0];
+  // wire [bias_width-1:0] bias_18_1, bias_18_2;
+  // reg  [                                  bias_width-1 : 0] bias_18_1_vector     [pe_parallel_pixel_18 * 1 * column_num_in_sa-1:0];
+  reg  [                                  bias_width-1 : 0] bias_18_2_vector     [                    pe_parallel_pixel_18 * 1 * column_num_in_sa-1:0];
 
   wire [sum_mult_E_vector_in_mult_P_width_width_88 - 1 : 0] sum_mult_E_vector_88;
   wire [sum_mult_E_vector_in_mult_P_width_width_18_2 - 1 : 0] sum_mult_E_vector_18_1, sum_mult_E_vector_18_2;
@@ -77,60 +78,86 @@ module quan_product_add_bias_vecOp_v5 #(
     core_product_add_bias_en_out <= core_product_add_bias_en_pre;
   end
 
-  assign bias_88   = bias_set[bias_width-1 : 0];
-  assign bias_18_1 = bias_88;
-  assign bias_18_2 = bias_set[bias_set_width-1 : bias_width];
+  // assign bias_88   = bias_set[bias_width-1 : 0];
+  // assign bias_18_1 = bias_88;
+  // assign bias_18_2 = bias_set[bias_set_width-1 : bias_width];
 
   genvar i;
   generate
     for (i = 0; i < pe_parallel_pixel_88 * pe_parallel_weight_88 * column_num_in_sa; i = i + 1) begin
       always @(posedge clk) begin
-
         bias_88_vector[i] <= next_bias_set[bias_width-1 : 0];
-
       end
-      assign product_add_bias_vector_88[(i*add_bias_width)+:add_bias_width] =
-          //sum * E
-          sum_mult_E_vector_88[(i*mult_P_width)+:add_bias_width] +
-          //bias
-          {{(add_bias_width - bias_width) {bias_88_vector[i][bias_width-1]}}, bias_88_vector[i]};  //bias_18_1 = bias_88
+      // assign product_add_bias_vector_88[(i*add_bias_width)+:add_bias_width] =
+      //     //sum * E
+      //     sum_mult_E_vector_88[(i*mult_P_width)+:add_bias_width] +
+      //     //bias
+      //     {{(add_bias_width - bias_width) {bias_88_vector[i][bias_width-1]}}, bias_88_vector[i]};  //bias_18_1 = bias_88
+
+      adder_dsp_32 adder_dsp_32 (
+          .A  (sum_mult_E_vector_88[(i*mult_P_width)+:add_bias_width]),                                  // input wire [31 : 0] A
+          .B  ({{(add_bias_width - bias_width) {bias_88_vector[i][bias_width-1]}}, bias_88_vector[i]}),  // input wire [31 : 0] B
+          .CLK(clk),                                                                                     // input wire CLK
+          .CE (core_product_add_bias_en_out),                                                            // input wire CE
+          .S  (product_add_bias_vector_88[(i*add_bias_width)+:add_bias_width])                           // output wire [31 : 0] S
+      );
+
     end
+    // for (i = 0; i < pe_parallel_pixel_18 * 1 * column_num_in_sa; i = i + 1) begin
+    //   always @(posedge clk) begin
+
+    //     bias_18_1_vector[i] <= next_bias_set[bias_width-1 : 0];
+
+    //   end
+    //   assign product_add_bias_vector_18_1[(i*add_bias_width)+:add_bias_width] =
+    //       //sum * E
+    //       sum_mult_E_vector_18_1[(i*mult_P_width)+:add_bias_width] +
+    //       //bias
+    //       {{(add_bias_width - bias_width) {bias_18_1_vector[i][bias_width-1]}}, bias_18_1_vector[i]};
+    // end
+
     for (i = 0; i < pe_parallel_pixel_18 * 1 * column_num_in_sa; i = i + 1) begin
       always @(posedge clk) begin
-
-        bias_18_1_vector[i] <= next_bias_set[bias_width-1 : 0];
-
-      end
-      assign product_add_bias_vector_18_1[(i*add_bias_width)+:add_bias_width] =
-          //sum * E
-          sum_mult_E_vector_18_1[(i*mult_P_width)+:add_bias_width] +
-          //bias
-          {{(add_bias_width - bias_width) {bias_18_1_vector[i][bias_width-1]}}, bias_18_1_vector[i]};
-    end
-    for (i = 0; i < pe_parallel_pixel_18 * 1 * column_num_in_sa; i = i + 1) begin
-      always @(posedge clk) begin
-
         bias_18_2_vector[i] <= next_bias_set[bias_set_width-1 : bias_width];
-
       end
-      assign product_add_bias_vector_18_2[(i*add_bias_width)+:add_bias_width] =
-          //sum * E
-          sum_mult_E_vector_18_2[(i*mult_P_width)+:add_bias_width] +
-          //bias
-          {{(add_bias_width - bias_width) {bias_18_2_vector[i][bias_width-1]}}, bias_18_2_vector[i]};
+
+      // assign product_add_bias_vector_18_2[(i*add_bias_width)+:add_bias_width] =
+      //     //sum * E
+      //     sum_mult_E_vector_18_2[(i*mult_P_width)+:add_bias_width] +
+      //     //bias
+      //     {{(add_bias_width - bias_width) {bias_18_2_vector[i][bias_width-1]}}, bias_18_2_vector[i]};
+
+      adder_dsp_32 adder_dsp_32 (
+          .A  (sum_mult_E_vector_18_2[(i*mult_P_width)+:add_bias_width]),                                    // input wire [31 : 0] A
+          .B  ({{(add_bias_width - bias_width) {bias_18_2_vector[i][bias_width-1]}}, bias_18_2_vector[i]}),  // input wire [31 : 0] B
+          .CLK(clk),                                                                                         // input wire CLK
+          .CE (core_product_add_bias_en_out),                                                                // input wire CE
+          .S  (product_add_bias_vector_18_2[(i*add_bias_width)+:add_bias_width])                             // output wire [31 : 0] S
+      );
     end
+
+
   endgenerate
 
-  always @(posedge clk) begin
-    if (core_product_add_bias_en_out == 1'b1) begin
-      product_add_bias_vector <=
-      //mode 0
-      (mode == 0) ? {{(product_add_bias_vector_width - product_add_bias_vector_width_88) {1'b0}}, product_add_bias_vector_88} :
-      // mode 1
-      (mode == 1) ? {product_add_bias_vector_18_2, product_add_bias_vector_18_1} : 0;
-    end else begin
-      product_add_bias_vector <= product_add_bias_vector;
-    end
-  end
+  // always @(posedge clk) begin
+  //   if (core_product_add_bias_en_out == 1'b1) begin
+  //     product_add_bias_vector <=
+  //     //mode 0
+  //     (mode == 0) ? {{(product_add_bias_vector_width - product_add_bias_vector_width_88) {1'b0}}, product_add_bias_vector_88} :
+  //     // // mode 1
+  //     // (mode == 1) ? {product_add_bias_vector_18_2, product_add_bias_vector_18_1} : 0;
+  //     // mode 1
+  //     (mode == 1) ? {product_add_bias_vector_18_2, product_add_bias_vector_88} : 0;
+  //   end else begin
+  //     product_add_bias_vector <= product_add_bias_vector;
+  //   end
+  // end
+
+  // assign product_add_bias_vector =  //
+  //     //mode 0
+  //     (mode == 0) ? {{(product_add_bias_vector_width - product_add_bias_vector_width_88) {1'b0}}, product_add_bias_vector_88} :
+  //     // mode 1
+  //     (mode == 1) ? {product_add_bias_vector_18_2, product_add_bias_vector_88} : 0;
+  assign product_add_bias_vector = {product_add_bias_vector_18_2, product_add_bias_vector_88};
 
 endmodule

@@ -22,9 +22,10 @@
 
 module quan_CBR_v9_tb(
 
-    );//SA
+    );
+  //SA
   parameter sa_row_num = 4;  //how many rows in conv core
-  parameter sa_column_num = 1;  //how many columns in conv core, [1,buffers_num]
+  parameter sa_column_num = 2;  //how many columns in conv core, [1,buffers_num]
   parameter row_num_in_sa = 16;  // how many rows in a sa, row_num
   parameter column_num_in_sa = 16;  // how many columns in a sa
   parameter pixels_in_row = 32;
@@ -72,15 +73,21 @@ module quan_CBR_v9_tb(
   parameter mult_A_width = 24;
   parameter mult_B_width = 16;
   parameter mult_P_width = 40;
-  parameter mult_array_length = 576;
-  parameter mult_dsp_array_length = 528;
+  parameter dsp_num_total = 3600;
+  parameter dsp_num_in_cores = row_num_in_sa * column_num_in_sa * sa_column_num * sa_row_num; //2048
+  parameter dsp_num_in_bias_vecOps = pe_parallel_pixel_18 * pe_parallel_weight_18 * column_num_in_sa * sa_column_num * sa_row_num; //64*8 = 512
+  parameter mult_array_length = (pe_parallel_pixel_18 * pe_parallel_weight_18 * column_num_in_sa - column_num_in_sa) * sa_column_num * sa_row_num; //len is 576 when use row0 of sa
+  parameter mult_dsp_array_length = (mult_array_length //512-16*8
+  > dsp_num_total - dsp_num_in_cores - dsp_num_in_bias_vecOps)? //need lut
+  (dsp_num_total - dsp_num_in_cores - dsp_num_in_bias_vecOps): //dsp is enough
+  (mult_array_length);
   parameter mult_lut_array_length = mult_array_length - mult_dsp_array_length;
   parameter vector_A_width = mult_array_length * mult_A_width;
   parameter vector_B_width = mult_array_length * mult_B_width;
   parameter vector_P_width = mult_array_length * mult_P_width;
-  parameter mult_array_length_per_sa = mult_array_length / sa_row_num / buffers_num;  //48
-  parameter mult_dsp_array_length_per_sa = mult_dsp_array_length / sa_row_num / buffers_num; //44
-  parameter mult_lut_array_length_per_sa = mult_lut_array_length / sa_row_num / buffers_num; //4
+  parameter mult_array_length_per_sa = mult_array_length / sa_row_num / sa_column_num;  //48
+  parameter mult_dsp_array_length_per_sa = mult_dsp_array_length / sa_row_num / sa_column_num; //44
+  parameter mult_lut_array_length_per_sa = mult_lut_array_length / sa_row_num / sa_column_num; //4
 
   //mult E, bias, relu, scale
   parameter sum_vector_width = pixel_width_18 * pe_parallel_pixel_18 * pe_parallel_weight_18 * column_num_in_sa;
@@ -2055,7 +2062,14 @@ module quan_CBR_v9_tb(
 
   assign conv_compute_fin = conv_fifo_add_end;
   //multiplier array
-  Mult_Array_hete_naive mult_array_hete (
+  Mult_Array_naive #(
+    .sa_row_num(sa_row_num),
+    .sa_column_num(sa_column_num),
+    .buffers_num(buffers_num),
+    .mult_array_length(mult_array_length),
+    .mult_dsp_array_length(mult_dsp_array_length)
+  ) 
+  mult_array (
       .clk     (clk),
       // .en      (sum_mult_E_en),
       .vector_A(vector_A),
