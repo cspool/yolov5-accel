@@ -36,13 +36,13 @@ Controller Options :
 
    Interface                     : NATIVE
 
-   Design Clock Frequency        : 2500 ps (  0.00 MHz)
+   Design Clock Frequency        : 1250 ps (  0.00 MHz)
 
    Phy to Controller Clock Ratio : 4:1
 
    Input Clock Period            : 5000 ps
 
-   CLKFBOUT_MULT (PLL)           : 4
+   CLKFBOUT_MULT (PLL)           : 8
 
    DIVCLK_DIVIDE (PLL)           : 1
 
@@ -82,7 +82,7 @@ Memory Options:
 
    Read Burst Type (MR0[3])         : Sequential
 
-   CAS Latency (MR0[6:4])           : 6
+   CAS Latency (MR0[6:4])           : 11
 
    Output Drive Strength (MR1[5,1]) : RZQ/6
 
@@ -98,20 +98,24 @@ Memory Options:
 
 
 Bank Selections:
-	Bank: 37
+	Bank: 31
 		Byte Group T0:	DQ[32-39]
 		Byte Group T1:	DQ[40-47]
 		Byte Group T2:	DQ[48-55]
 		Byte Group T3:	DQ[56-63]
-	Bank: 38
-		Byte Group T0:	Address/Ctrl-0
-		Byte Group T1:	Address/Ctrl-1
-		Byte Group T2:	Address/Ctrl-2
-	Bank: 39
+	Bank: 32
+		Byte Group T0:	Address/Ctrl-1
+		Byte Group T1:	Address/Ctrl-3
+		Byte Group T2:	Address/Ctrl-0
+		Byte Group T3:	Address/Ctrl-2
+	Bank: 33
 		Byte Group T0:	DQ[0-7]
 		Byte Group T1:	DQ[8-15]
 		Byte Group T2:	DQ[16-23]
 		Byte Group T3:	DQ[24-31]
+	Bank: 37
+	Bank: 38
+	Bank: 39
 
 
 System_Control: 

@@ -189,6 +189,7 @@ module conv_load_input_ddr_controller (
 
   //load cmd
   output [31:0] load_input_ddr_base_adr;
+  // reg [31:0] load_input_ddr_counter_base_adr;
   output [15:0] load_input_ddr_length;
   reg [15:0] shadow_load_input_ddr_length;
   output valid_load_input_ddr_cmd;
@@ -252,7 +253,7 @@ module conv_load_input_ddr_controller (
   //adr mod mapping
   wire [ 3:0] row_num_limit_input_buffer_2pow = input_buffer_size_2pow - (nif_in_2pow - ifs_in_row_2pow + ix_in_2pow - pixels_in_row_in_2pow);
   wire [15:0] row_num_limit_mask_input_buffer = 16'hffff >> (16 - row_num_limit_input_buffer_2pow);
-  wire [15:0]                                                                                                                                  load_input_row_buf_adr_in_row;
+  wire [15:0] load_input_row_buf_adr_in_row;
 
   always @(posedge clk) begin
     if (reset == 1'b1) //layer start?
@@ -289,7 +290,8 @@ module conv_load_input_ddr_controller (
       tiley_mid_iy_row_num               <= tiley_mid_iy_row_num_init;
       ix_index_num                       <= ix_index_num_init;
       iy_index_num                       <= iy_index_num_init;
-    end else begin
+    end
+    else begin
       mode                               <= mode;
       k                                  <= k;
       s                                  <= s;
@@ -330,25 +332,31 @@ module conv_load_input_ddr_controller (
   always @(posedge clk) begin
     if (reset == 1'b1) begin  //set
       state_load_input_tile_fin <= 0;
-    end else if ((loop_input_ddr_word_tile_counter_add_end == 1)
+    end
+    else if ((loop_input_ddr_word_tile_counter_add_end == 1)
         //cur tile loading finished
         //before the last chunk in tile
         && ((loop_load_for_com_tile_f_add_end == 0) && (state_loop_load_for_com_tile_f_add_end == 0))) begin
       state_load_input_tile_fin <= 1;
-    end else if (loop_load_for_com_tile_f_add_end == 1) begin
+    end
+    else if (loop_load_for_com_tile_f_add_end == 1) begin
       state_load_input_tile_fin <= 0;
-    end else begin
+    end
+    else begin
       state_load_input_tile_fin <= state_load_input_tile_fin;
     end
   end
   always @(posedge clk) begin
     if (reset == 1'b1) begin
       load_for_com_tile_f_signal <= 0;
-    end else if (conv_load_input == 1'b1) begin
+    end
+    else if (conv_load_input == 1'b1) begin
       load_for_com_tile_f_signal <= 1;
-    end else if (load_for_com_tile_f_signal == 1'b1) begin
+    end
+    else if (load_for_com_tile_f_signal == 1'b1) begin
       load_for_com_tile_f_signal <= 0;
-    end else begin
+    end
+    else begin
       load_for_com_tile_f_signal <= load_for_com_tile_f_signal;
     end
   end
@@ -356,15 +364,18 @@ module conv_load_input_ddr_controller (
     if (reset == 1'b1) begin
       load_for_com_tile_f_start <= 1;
       of_chunk_counter          <= 1;
-    end else if (loop_load_for_com_tile_f_add_begin == 1'b1) begin
+    end
+    else if (loop_load_for_com_tile_f_add_begin == 1'b1) begin
       if (loop_load_for_com_tile_f_add_end == 1'b1) begin  // the last tile_f_start
         load_for_com_tile_f_start <= 1;
         of_chunk_counter          <= 1;
-      end else begin
+      end
+      else begin
         load_for_com_tile_f_start <= load_for_com_tile_f_start + row_num;
         of_chunk_counter          <= of_chunk_counter + 1;
       end
-    end else begin
+    end
+    else begin
       load_for_com_tile_f_start <= load_for_com_tile_f_start;
       of_chunk_counter          <= of_chunk_counter;
     end
@@ -375,14 +386,17 @@ module conv_load_input_ddr_controller (
   always @(posedge clk) begin
     if (reset == 1'b1) begin
       state_loop_load_for_com_tile_f_add_end <= 0;
-    end else if ((input_ddr_word_signal == 1'b1) && (loop_load_for_com_tile_f_add_end == 1'b1)) begin
+    end
+    else if ((input_ddr_word_signal == 1'b1) && (loop_load_for_com_tile_f_add_end == 1'b1)) begin
       // expand the tile_f_end signal til the end of the load instr generation in cur chunk
       // because tile_f_end can not last long,
       // but tile_x_begin need waiting for the instr generation finished.
       state_loop_load_for_com_tile_f_add_end <= 1;
-    end else if (loop_input_ddr_word_chunk_counter_add_end == 1'b1) begin
+    end
+    else if (loop_input_ddr_word_chunk_counter_add_end == 1'b1) begin
       state_loop_load_for_com_tile_f_add_end <= 0;
-    end else begin
+    end
+    else begin
       state_loop_load_for_com_tile_f_add_end <= state_loop_load_for_com_tile_f_add_end;
     end
   end
@@ -391,11 +405,14 @@ module conv_load_input_ddr_controller (
   always @(posedge clk) begin
     if (reset == 1'b1) begin
       input_ddr_word_signal <= 0;
-    end else if ((conv_load_input == 1'b1) && (state_load_input_tile_fin == 0) && (chunk_ix_size_mult_chunk_iy_size > 0)) begin
+    end
+    else if ((conv_load_input == 1'b1) && (state_load_input_tile_fin == 0) && (chunk_ix_size_mult_chunk_iy_size > 0)) begin
       input_ddr_word_signal <= 1;
-    end else if (loop_input_ddr_word_chunk_counter_add_end == 1'b1) begin
+    end
+    else if (loop_input_ddr_word_chunk_counter_add_end == 1'b1) begin
       input_ddr_word_signal <= 0;
-    end else begin
+    end
+    else begin
       input_ddr_word_signal <= input_ddr_word_signal;
     end
   end
@@ -403,11 +420,14 @@ module conv_load_input_ddr_controller (
   always @(posedge clk) begin
     if (reset == 1'b1) begin
       state_conv_load_input <= 0;
-    end else if (valid_load_input_ddr_cmd == 1'b1) begin
+    end
+    else if (valid_load_input_ddr_cmd == 1'b1) begin
       state_conv_load_input <= 1;
-    end else if (loop_conv_load_input_counter_add_end == 1'b1) begin
+    end
+    else if (loop_conv_load_input_counter_add_end == 1'b1) begin
       state_conv_load_input <= 0;
-    end else begin
+    end
+    else begin
       state_conv_load_input <= state_conv_load_input;
     end
   end
@@ -415,13 +435,16 @@ module conv_load_input_ddr_controller (
   always @(posedge clk) begin
     if (reset == 1'b1) begin
       conv_load_input_counter <= 1;
-    end else if (loop_conv_load_input_counter_add_begin == 1) begin
+    end
+    else if (loop_conv_load_input_counter_add_begin == 1) begin
       if (loop_conv_load_input_counter_add_end == 1) begin
         conv_load_input_counter <= 1;
-      end else begin
+      end
+      else begin
         conv_load_input_counter <= conv_load_input_counter + 1;
       end
-    end else begin
+    end
+    else begin
       conv_load_input_counter <= conv_load_input_counter;
     end
   end
@@ -430,37 +453,62 @@ module conv_load_input_ddr_controller (
   assign loop_conv_load_input_counter_add_end   = loop_conv_load_input_counter_add_begin && (conv_load_input_counter == shadow_load_input_ddr_length);
 
   //loop if, a input chunk load (x_size, y_size, f_size) = (32, 1, nif)
+  // always @(posedge clk) begin
+  //   if (reset == 1'b1) begin
+  //     load_input_ddr_counter_base_adr <= 0;
+  //   end else if() begin
+  //       load_input_ddr_counter_base_adr <= 0;
+  //   end
+  //   else if ((loop_if_add_begin == 1'b1)) begin
+
+  //       load_input_ddr_counter_base_adr <= load_input_ddr_counter_base_adr + (load_input_ddr_length);
+
+  //   end else begin
+  //     load_input_ddr_counter_base_adr <= load_input_ddr_counter_base_adr;
+  //   end
+  // end
+
   always @(posedge clk) begin
     if (reset == 1'b1) begin
       if_start <= 1;
-    end else if ((loop_if_add_begin == 1'b1)) begin
+    end
+    else if ((loop_if_add_begin == 1'b1)) begin
       if (loop_if_add_end == 1'b1) begin  //the last if_start
         if_start <= 1;
-      end else begin
+      end
+      else begin
         if_start <= if_start + (load_input_ddr_length << ifs_in_row_2pow);
       end
-    end else begin
+    end
+    else begin
       if_start <= if_start;
     end
   end
-  assign loop_if_add_begin        = (state_conv_load_input == 0)  //no valid load process at now
- && (input_ddr_word_signal == 1'b1) && (ddr_cmd_ready == 1'b1);
-  assign loop_if_add_end          = loop_if_add_begin && ((if_start + (load_input_ddr_length << ifs_in_row_2pow)) > nif);
-  assign load_input_if_idx        = if_start;
+  assign loop_if_add_begin = (state_conv_load_input == 0)  //no valid load process at now
+      && (input_ddr_word_signal == 1'b1) && (ddr_cmd_ready == 1'b1);
+  assign loop_if_add_end = loop_if_add_begin && ((if_start + (load_input_ddr_length << ifs_in_row_2pow)) > nif);
+  assign load_input_if_idx = if_start;
 
-  assign load_input_ddr_base_adr  = input_word_ddr_adr_rd;
+  assign load_input_ddr_base_adr  = 
+  ((iy_load_index > iy_index_num) || (ix_load_index > ix_index_num))? 0: //no need reading
+      (input_ddr_layer_base_adr +  //
+      (((load_input_row_idx - 1) << ((nif_in_2pow - ifs_in_row_2pow) + ix_in_2pow - pixels_in_row_in_2pow)) +  //
+      (((load_input_row_start_idx - 1) << (nif_in_2pow - ifs_in_row_2pow)) >> pixels_in_row_in_2pow)) +  //
+      ((if_start - 1) >> ifs_in_row_2pow));
   assign load_input_ddr_length    = ((if_start + (ddr_cmd_word_num << ifs_in_row_2pow)) > nif) ? ((((nif - if_start + 1) & 16'b1) == 0) ?  //even length
- ((nif - if_start + 1) >> ifs_in_row_2pow) :  //even length
- ((nif - if_start + 1) >> ifs_in_row_2pow) + 1  //odd length + 1
-) : ddr_cmd_word_num;
+      ((nif - if_start + 1) >> ifs_in_row_2pow) :  //even length
+      ((nif - if_start + 1) >> ifs_in_row_2pow) + 1  //odd length + 1
+      ) : ddr_cmd_word_num;
   assign valid_load_input_ddr_cmd = input_word_ddr_en_rd;
 
   always @(posedge clk) begin
     if (reset) begin
       shadow_load_input_ddr_length <= 0;
-    end else if (valid_load_input_ddr_cmd) begin
+    end
+    else if (valid_load_input_ddr_cmd) begin
       shadow_load_input_ddr_length <= load_input_ddr_length;
-    end else begin
+    end
+    else begin
       shadow_load_input_ddr_length <= shadow_load_input_ddr_length;
     end
   end
@@ -469,13 +517,16 @@ module conv_load_input_ddr_controller (
   always @(posedge clk) begin
     if (reset == 1'b1) begin
       input_ddr_word_chunk_counter <= 1;
-    end else if (loop_input_ddr_word_chunk_counter_add_begin == 1'b1) begin
+    end
+    else if (loop_input_ddr_word_chunk_counter_add_begin == 1'b1) begin
       if (loop_input_ddr_word_chunk_counter_add_end == 1'b1) begin
         input_ddr_word_chunk_counter <= 1;
-      end else begin
+      end
+      else begin
         input_ddr_word_chunk_counter <= input_ddr_word_chunk_counter + 1;
       end
-    end else begin
+    end
+    else begin
       input_ddr_word_chunk_counter <= input_ddr_word_chunk_counter;
     end
   end
@@ -486,7 +537,8 @@ module conv_load_input_ddr_controller (
   always @(posedge clk) begin
     if (reset == 1'b1) begin
       instr_load_input_fin <= 0;
-    end else if (
+    end
+    else if (
         //instr generate finished
         loop_input_ddr_word_chunk_counter_add_end
         //no need to generate in current tile loading
@@ -495,9 +547,11 @@ module conv_load_input_ddr_controller (
         //so chunk_ix_size_mult_chunk_iy_size(f(tile_x,tile_y) is the loading in the next tile  
         || ((conv_load_input == 1'b1) && (state_load_input_tile_fin == 1'b1) && (chunk_ix_size_mult_chunk_iy_size > 0))) begin
       instr_load_input_fin <= 1;
-    end else if (conv_load_input_fin == 1'b1) begin
+    end
+    else if (conv_load_input_fin == 1'b1) begin
       instr_load_input_fin <= 0;
-    end else begin
+    end
+    else begin
       instr_load_input_fin <= instr_load_input_fin;
     end
   end
@@ -508,13 +562,16 @@ module conv_load_input_ddr_controller (
   always @(posedge clk) begin
     if (reset == 1'b1) begin
       input_ddr_word_tile_counter <= 1;
-    end else if (loop_input_ddr_word_tile_counter_add_begin == 1'b1) begin
+    end
+    else if (loop_input_ddr_word_tile_counter_add_begin == 1'b1) begin
       if (loop_input_ddr_word_tile_counter_add_end == 1'b1) begin
         input_ddr_word_tile_counter <= 1;
-      end else begin
+      end
+      else begin
         input_ddr_word_tile_counter <= input_ddr_word_tile_counter + 1;
       end
-    end else begin
+    end
+    else begin
       input_ddr_word_tile_counter <= input_ddr_word_tile_counter;
     end
   end
@@ -526,13 +583,16 @@ module conv_load_input_ddr_controller (
   always @(posedge clk) begin
     if (reset == 1'b1) begin
       ix_load_index_counter <= 1;
-    end else if (loop_ix_load_index_counter_add_begin == 1'b1) begin
+    end
+    else if (loop_ix_load_index_counter_add_begin == 1'b1) begin
       if (loop_ix_load_index_counter_add_end == 1'b1) begin
         ix_load_index_counter <= 1;
-      end else begin
+      end
+      else begin
         ix_load_index_counter <= ix_load_index_counter + 1;
       end
-    end else begin
+    end
+    else begin
       ix_load_index_counter <= ix_load_index_counter;
     end
   end
@@ -542,13 +602,16 @@ module conv_load_input_ddr_controller (
   always @(posedge clk) begin
     if (reset == 1'b1) begin
       ix_load_index_base <= 1;
-    end else if (loop_ix_load_index_base_add_begin == 1'b1) begin
+    end
+    else if (loop_ix_load_index_base_add_begin == 1'b1) begin
       if (loop_ix_load_index_base_add_end == 1'b1) begin
         ix_load_index_base <= 1;
-      end else begin
+      end
+      else begin
         ix_load_index_base <= ix_load_index_base + chunk_ix_size;
       end
-    end else begin
+    end
+    else begin
       ix_load_index_base <= ix_load_index_base;
     end
   end
@@ -559,13 +622,16 @@ module conv_load_input_ddr_controller (
   always @(posedge clk) begin
     if (reset == 1'b1) begin
       iy_load_index_counter <= 1;
-    end else if (loop_iy_load_index_counter_add_begin == 1'b1) begin
+    end
+    else if (loop_iy_load_index_counter_add_begin == 1'b1) begin
       if (loop_iy_load_index_counter_add_end == 1'b1) begin
         iy_load_index_counter <= 1;
-      end else begin
+      end
+      else begin
         iy_load_index_counter <= iy_load_index_counter + 1;
       end
-    end else begin
+    end
+    else begin
       iy_load_index_counter <= iy_load_index_counter;
     end
   end
@@ -577,12 +643,14 @@ module conv_load_input_ddr_controller (
       iy_load_index_base               <= 1;
       iy_load_index_base_minus_1_mod_3 <= 0;  //0,1,2.
       iy_load_index_base_minus_1_in_3  <= 0;
-    end else if (loop_iy_load_index_base_add_begin == 1'b1) begin
+    end
+    else if (loop_iy_load_index_base_add_begin == 1'b1) begin
       if (loop_iy_load_index_base_add_end == 1'b1) begin
         iy_load_index_base               <= 1;
         iy_load_index_base_minus_1_mod_3 <= 0;  //0,1,2.
         iy_load_index_base_minus_1_in_3  <= 0;
-      end else begin
+      end
+      else begin
         iy_load_index_base <= iy_load_index_base + chunk_iy_size;
         iy_load_index_base_minus_1_mod_3 <= ((iy_load_index_base_minus_1_mod_3 == 0) ?  // 0 + ...
         ((chunk_iy_size == 0) ? (0) :  // 0 + 0
@@ -663,7 +731,8 @@ module conv_load_input_ddr_controller (
         (chunk_iy_size == 10) ? (iy_load_index_base_minus_1_in_3 + 4) :  // 2/5/8/11 + 10
         0) : 0);
       end
-    end else begin
+    end
+    else begin
       iy_load_index_base               <= iy_load_index_base;
       iy_load_index_base_minus_1_mod_3 <= iy_load_index_base_minus_1_mod_3;
       iy_load_index_base_minus_1_in_3  <= iy_load_index_base_minus_1_in_3;
@@ -799,13 +868,16 @@ module conv_load_input_ddr_controller (
   always @(posedge clk) begin
     if (reset == 1'b1) begin
       load_for_com_tile_x_start <= 1;
-    end else if (loop_load_for_com_tile_x_add_begin == 1'b1) begin
+    end
+    else if (loop_load_for_com_tile_x_add_begin == 1'b1) begin
       if (loop_load_for_com_tile_x_add_end == 1'b1) begin  // the last tile_x_start
         load_for_com_tile_x_start <= 1;
-      end else begin
+      end
+      else begin
         load_for_com_tile_x_start <= load_for_com_tile_x_start + pixels_in_row;
       end
-    end else begin
+    end
+    else begin
       load_for_com_tile_x_start <= load_for_com_tile_x_start;
     end
   end
@@ -820,13 +892,16 @@ module conv_load_input_ddr_controller (
   always @(posedge clk) begin
     if (reset == 1'b1) begin
       load_for_com_tile_y_start <= 1;
-    end else if (loop_load_for_com_tile_y_add_begin == 1'b1) begin
+    end
+    else if (loop_load_for_com_tile_y_add_begin == 1'b1) begin
       if (loop_load_for_com_tile_y_add_end == 1'b1) begin  //the last tile_y_start
         load_for_com_tile_y_start <= 1;
-      end else begin
+      end
+      else begin
         load_for_com_tile_y_start <= load_for_com_tile_y_start + buffers_num;
       end
-    end else begin
+    end
+    else begin
       load_for_com_tile_y_start <= load_for_com_tile_y_start;
     end
   end
@@ -936,9 +1011,62 @@ module conv_load_input_ddr_controller (
 
   //FIFO should be in the tb or top module
   //fifo
-  assign input_word_load_info_fifo_en_wt = input_word_ddr_en_rd;
-  assign input_word_load_info_fifo_wt = {14'b0, load_input_row_buf_idx, load_input_row_buf_adr};
+  reg  [15:0] ddr_input_length_counter;
+  reg         signal_ddr_input_length_counter;
+  wire        loop_ddr_input_length_counter_add_begin;
+  wire        loop_ddr_input_length_counter_add_end;
+  reg  [15:0] load_input_buf_adr_fifo_info;
+  reg  [ 1:0] load_input_row_buf_idx_fifo_info;
 
+  always @(posedge clk) begin
+    if (reset == 1'b1) begin
+      signal_ddr_input_length_counter  <= 0;
+      load_input_buf_adr_fifo_info     <= 0;
+      load_input_row_buf_idx_fifo_info <= 0;
+    end
+    else if (input_word_ddr_en_rd == 1'b1) begin
+      signal_ddr_input_length_counter  <= 1;
+      load_input_buf_adr_fifo_info     <= load_input_row_buf_adr;
+      load_input_row_buf_idx_fifo_info <= load_input_row_buf_idx;
+    end
+    else if (loop_ddr_input_length_counter_add_end == 1'b1) begin
+      signal_ddr_input_length_counter  <= 0;
+      load_input_buf_adr_fifo_info     <= 0;
+      load_input_row_buf_idx_fifo_info <= 0;
+    end
+    else begin
+      signal_ddr_input_length_counter  <= signal_ddr_input_length_counter;
+      load_input_buf_adr_fifo_info     <= load_input_buf_adr_fifo_info;
+      load_input_row_buf_idx_fifo_info <= load_input_row_buf_idx_fifo_info;
+    end
+  end
+
+  always @(posedge clk) begin
+    if (reset == 1'b1) begin
+      ddr_input_length_counter <= 1;
+    end
+    else if (loop_ddr_input_length_counter_add_begin == 1'b1) begin
+      if (loop_ddr_input_length_counter_add_end == 1'b1) begin
+        ddr_input_length_counter <= 1;
+      end
+      else begin
+        ddr_input_length_counter <= ddr_input_length_counter + 1;
+      end
+    end
+    else begin
+      ddr_input_length_counter <= ddr_input_length_counter;
+    end
+  end
+
+  assign loop_ddr_input_length_counter_add_begin = (signal_ddr_input_length_counter == 1'b1);
+  assign loop_ddr_input_length_counter_add_end = loop_ddr_input_length_counter_add_begin && (ddr_input_length_counter == load_input_ddr_length);
+
+  assign input_word_load_info_fifo_en_wt = loop_ddr_input_length_counter_add_begin;
+  assign input_word_load_info_fifo_wt = {
+    14'b0, load_input_row_buf_idx_fifo_info, (load_input_buf_adr_fifo_info + ddr_input_length_counter - 16'd1)
+  };
+
+  //rd input 
   assign valid_load_input = (state_conv_load_input == 1) && (ddr_rd_data_valid == 1);
 
 endmodule

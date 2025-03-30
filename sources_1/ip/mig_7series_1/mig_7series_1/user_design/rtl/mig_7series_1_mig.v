@@ -189,11 +189,11 @@ module mig_7series_1_mig #
                                      // DDR2 SDRAM: Burst Type (Mode Register).
                                      // # = "SEQ" - (Sequential),
                                      //   = "INT" - (Interleaved).
-   parameter CL                    = 6,
+   parameter CL                    = 11,
                                      // in number of clock cycles
                                      // DDR3 SDRAM: CAS Latency (Mode Register 0).
                                      // DDR2 SDRAM: CAS Latency (Mode Register).
-   parameter CWL                   = 5,
+   parameter CWL                   = 8,
                                      // in number of clock cycles
                                      // DDR3 SDRAM: CAS Write Latency (Mode Register 2).
                                      // DDR2 SDRAM: Can be ignored
@@ -230,13 +230,13 @@ module mig_7series_1_mig #
    //***************************************************************************
    parameter CLKIN_PERIOD          = 5000,
                                      // Input Clock Period
-   parameter CLKFBOUT_MULT         = 4,
+   parameter CLKFBOUT_MULT         = 8,
                                      // write PLL VCO multiplier
    parameter DIVCLK_DIVIDE         = 1,
                                      // write PLL VCO divisor
-   parameter CLKOUT0_PHASE         = 315.0,
+   parameter CLKOUT0_PHASE         = 337.5,
                                      // Phase for PLL output clock (CLKOUT0)
-   parameter CLKOUT0_DIVIDE        = 1,
+   parameter CLKOUT0_DIVIDE        = 2,
                                      // VCO output divisor for PLL output clock (CLKOUT0)
    parameter CLKOUT1_DIVIDE        = 2,
                                      // VCO output divisor for PLL output clock (CLKOUT1)
@@ -246,7 +246,7 @@ module mig_7series_1_mig #
                                      // VCO output divisor for PLL output clock (CLKOUT3)
    parameter MMCM_VCO              = 800,
                                      // Max Freq (MHz) of MMCM VCO
-   parameter MMCM_MULT_F           = 8,
+   parameter MMCM_MULT_F           = 4,
                                      // write MMCM VCO multiplier
    parameter MMCM_DIVCLK_DIVIDE    = 1,
                                      // write MMCM VCO divisor
@@ -303,7 +303,7 @@ module mig_7series_1_mig #
    //***************************************************************************
    parameter BYTE_LANES_B0         = 4'b1111,
                                      // Byte lanes used in an IO column.
-   parameter BYTE_LANES_B1         = 4'b1110,
+   parameter BYTE_LANES_B1         = 4'b1111,
                                      // Byte lanes used in an IO column.
    parameter BYTE_LANES_B2         = 4'b1111,
                                      // Byte lanes used in an IO column.
@@ -337,33 +337,33 @@ module mig_7series_1_mig #
                                      // position indicates a data byte lane and
                                      // a '0' indicates a control byte lane
    parameter PHY_0_BITLANES        = 48'h3FE_3FE_3FE_2FF,
-   parameter PHY_1_BITLANES        = 48'h3FF_FFF_C00_000,
+   parameter PHY_1_BITLANES        = 48'h410_CF4_0BF_AFC,
    parameter PHY_2_BITLANES        = 48'h3FE_3FE_3FE_2FF,
 
    // control/address/data pin mapping parameters
    parameter CK_BYTE_MAP
-     = 144'h00_00_00_00_00_00_00_00_00_00_00_00_00_00_00_00_00_13,
+     = 144'h00_00_00_00_00_00_00_00_00_00_00_00_00_00_00_00_00_11,
    parameter ADDR_MAP
-     = 192'h000_139_138_137_136_135_134_133_132_131_130_129_128_127_126_12B,
-   parameter BANK_MAP   = 36'h12A_125_124,
-   parameter CAS_MAP    = 12'h122,
+     = 192'h000_109_104_113_111_134_107_124_105_127_122_117_114_106_110_115,
+   parameter BANK_MAP   = 36'h102_112_13A,
+   parameter CAS_MAP    = 12'h103,
    parameter CKE_ODT_BYTE_MAP = 8'h00,
-   parameter CKE_MAP    = 96'h000_000_000_000_000_000_000_11B,
-   parameter ODT_MAP    = 96'h000_000_000_000_000_000_000_11A,
-   parameter CS_MAP     = 120'h000_000_000_000_000_000_000_000_000_120,
+   parameter CKE_MAP    = 96'h000_000_000_000_000_000_000_125,
+   parameter ODT_MAP    = 96'h000_000_000_000_000_000_000_126,
+   parameter CS_MAP     = 120'h000_000_000_000_000_000_000_000_000_12A,
    parameter PARITY_MAP = 12'h000,
-   parameter RAS_MAP    = 12'h123,
-   parameter WE_MAP     = 12'h121,
+   parameter RAS_MAP    = 12'h10B,
+   parameter WE_MAP     = 12'h12B,
    parameter DQS_BYTE_MAP
      = 144'h00_00_00_00_00_00_00_00_00_00_20_21_22_23_00_01_02_03,
-   parameter DATA0_MAP  = 96'h031_032_033_034_035_036_037_038,
-   parameter DATA1_MAP  = 96'h021_022_023_024_025_026_027_028,
-   parameter DATA2_MAP  = 96'h011_012_013_014_016_017_018_019,
-   parameter DATA3_MAP  = 96'h000_001_002_003_004_005_006_007,
-   parameter DATA4_MAP  = 96'h231_232_233_234_235_236_237_238,
-   parameter DATA5_MAP  = 96'h221_222_223_224_225_226_227_228,
-   parameter DATA6_MAP  = 96'h211_212_213_214_216_217_218_219,
-   parameter DATA7_MAP  = 96'h200_201_202_203_204_205_206_207,
+   parameter DATA0_MAP  = 96'h032_039_036_031_034_033_037_038,
+   parameter DATA1_MAP  = 96'h028_022_027_021_029_024_026_023,
+   parameter DATA2_MAP  = 96'h018_012_019_017_014_013_011_016,
+   parameter DATA3_MAP  = 96'h000_005_003_007_002_009_004_006,
+   parameter DATA4_MAP  = 96'h236_237_239_231_238_233_234_232,
+   parameter DATA5_MAP  = 96'h221_227_223_226_222_229_224_228,
+   parameter DATA6_MAP  = 96'h217_213_214_216_219_212_211_218,
+   parameter DATA7_MAP  = 96'h200_204_207_203_206_202_201_209,
    parameter DATA8_MAP  = 96'h000_000_000_000_000_000_000_000,
    parameter DATA9_MAP  = 96'h000_000_000_000_000_000_000_000,
    parameter DATA10_MAP = 96'h000_000_000_000_000_000_000_000,
@@ -374,7 +374,7 @@ module mig_7series_1_mig #
    parameter DATA15_MAP = 96'h000_000_000_000_000_000_000_000,
    parameter DATA16_MAP = 96'h000_000_000_000_000_000_000_000,
    parameter DATA17_MAP = 96'h000_000_000_000_000_000_000_000,
-   parameter MASK0_MAP  = 108'h000_209_215_229_239_009_015_029_039,
+   parameter MASK0_MAP  = 108'h000_205_215_225_235_001_015_025_035,
    parameter MASK1_MAP  = 108'h000_000_000_000_000_000_000_000_000,
 
    parameter SLOT_0_CONFIG         = 8'b0000_0001,
@@ -410,10 +410,10 @@ module mig_7series_1_mig #
                                      // Calibration bank address will be used for
                                      // calibration read and write operations
    parameter TCQ                   = 100,
-   parameter IDELAY_ADJ            = "OFF",
-   parameter FINE_PER_BIT          = "OFF",
-   parameter CENTER_COMP_MODE      = "OFF",
-   parameter PI_VAL_ADJ            = "OFF",
+   parameter IDELAY_ADJ            = "ON",
+   parameter FINE_PER_BIT          = "ON",
+   parameter CENTER_COMP_MODE      = "ON",
+   parameter PI_VAL_ADJ            = "ON",
    parameter IODELAY_GRP0          = "MIG_7SERIES_1_IODELAY_MIG0",
                                      // It is associated to a set of IODELAYs with
                                      // an IDELAYCTRL that have same IODELAY CONTROLLER
@@ -441,7 +441,7 @@ module mig_7series_1_mig #
    parameter CAL_WIDTH             = "HALF",
    parameter STARVE_LIMIT          = 2,
                                      // # = 2,3,4.
-   parameter REF_CLK_MMCM_IODELAY_CTRL    = "FALSE",
+   parameter REF_CLK_MMCM_IODELAY_CTRL    = "TRUE",
       
 
    //***************************************************************************
@@ -455,7 +455,7 @@ module mig_7series_1_mig #
    //***************************************************************************
    // System clock frequency parameters
    //***************************************************************************
-   parameter tCK                   = 2500,
+   parameter tCK                   = 1250,
                                      // memory tCK paramter.
                                      // # = Clock Period in pS.
    parameter nCK_PER_CLK           = 4,
