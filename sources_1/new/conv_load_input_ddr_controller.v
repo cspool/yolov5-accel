@@ -555,8 +555,7 @@ module conv_load_input_ddr_controller (
       instr_load_input_fin <= instr_load_input_fin;
     end
   end
-  //should wait for the inbuf writing finished
-  assign conv_load_input_fin = (instr_load_input_fin == 1'b1) && (load_input_info_fifo_empty == 1'b1);
+
 
   //tile counter is reset after the loading of nif input channel in current SP position
   always @(posedge clk) begin
@@ -1015,6 +1014,7 @@ module conv_load_input_ddr_controller (
   reg         signal_ddr_input_length_counter;
   wire        loop_ddr_input_length_counter_add_begin;
   wire        loop_ddr_input_length_counter_add_end;
+  // reg         state_ddr_input_length_counter_add_end;
   reg  [15:0] load_input_buf_adr_fifo_info;
   reg  [ 1:0] load_input_row_buf_idx_fifo_info;
 
@@ -1061,6 +1061,21 @@ module conv_load_input_ddr_controller (
   assign loop_ddr_input_length_counter_add_begin = (signal_ddr_input_length_counter == 1'b1);
   assign loop_ddr_input_length_counter_add_end = loop_ddr_input_length_counter_add_begin && (ddr_input_length_counter == load_input_ddr_length);
 
+  // always @(posedge clk) begin
+  //   if (reset == 1'b1) begin
+  //     state_ddr_input_length_counter_add_end <= 0;
+  //   end
+  //   else if (loop_ddr_input_length_counter_add_end == 1'b1) begin
+  //     state_ddr_input_length_counter_add_end <= 1;
+  //   end
+  //   else if (loop_ddr_input_length_counter_add_begin == 1'b1) begin
+  //     state_ddr_input_length_counter_add_end <= 0;
+  //   end
+  //   else begin
+  //     state_ddr_input_length_counter_add_end <= state_ddr_input_length_counter_add_end;
+  //   end
+  // end
+
   assign input_word_load_info_fifo_en_wt = loop_ddr_input_length_counter_add_begin;
   assign input_word_load_info_fifo_wt = {
     14'b0, load_input_row_buf_idx_fifo_info, (load_input_buf_adr_fifo_info + ddr_input_length_counter - 16'd1)
@@ -1068,5 +1083,11 @@ module conv_load_input_ddr_controller (
 
   //rd input 
   assign valid_load_input = (state_conv_load_input == 1) && (ddr_rd_data_valid == 1);
+
+  //should wait for the inbuf writing finished
+  assign conv_load_input_fin = (instr_load_input_fin == 1'b1) && (signal_ddr_input_length_counter == 1'b0)
+  && (load_input_info_fifo_empty == 1);
+
+
 
 endmodule

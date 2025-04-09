@@ -153,14 +153,11 @@ module conv_store_ddr_controller (
   always @(posedge clk) begin
     if (reset == 1'b1) begin
       conv_store_signal_add <= 0;
-    end
-    else if (conv_store_start == 1'b1) begin
+    end else if (conv_store_start == 1'b1) begin
       conv_store_signal_add <= 1;
-    end
-    else if (loop_oy_counter_add_end == 1'b1) begin  // conv out end
+    end else if (loop_oy_counter_add_end == 1'b1) begin  // conv out end
       conv_store_signal_add <= 0;
-    end
-    else begin
+    end else begin
       conv_store_signal_add <= conv_store_signal_add;
     end
   end
@@ -168,35 +165,30 @@ module conv_store_ddr_controller (
   always @(posedge clk) begin
     if (reset == 1'b1) begin
       store_of_counter <= 1;
-    end
-    else if ((loop_store_of_counter_add_begin == 1'b1)) begin
+    end else if ((loop_store_of_counter_add_begin == 1'b1)) begin
       if (loop_store_of_counter_add_end == 1'b1) begin  //the last row_no
         store_of_counter <= 1;
-      end
-      else begin
+      end else begin
         store_of_counter <= store_of_counter + (store_ddr_length << ofs_in_row_2pow);  //16 or 32
       end
-    end
-    else begin
+    end else begin
       store_of_counter <= store_of_counter;
     end
   end
 
   assign loop_store_of_counter_add_begin = (state_conv_store_data == 0)  //no valid store process at now
-      && (conv_store_signal_add == 1) && (ddr_cmd_ready == 1);
+ && (conv_store_signal_add == 1) && (ddr_cmd_ready == 1);
   assign loop_store_of_counter_add_end   = loop_store_of_counter_add_begin && (store_of_counter + (store_ddr_length << ofs_in_row_2pow) > cur_pof);
-  assign valid_store_ddr_cmd = loop_store_of_counter_add_begin;
+  assign valid_store_ddr_cmd             = loop_store_of_counter_add_begin;
   assign store_ddr_length                = (store_of_counter - 1 + (ddr_cmd_word_num << ofs_in_row_2pow) > cur_pof) ? ((cur_pof - store_of_counter + 1) >> ofs_in_row_2pow) : ddr_cmd_word_num;
   // assign store_ddr_length                = (cur_pof >> ofs_in_row_2pow);
 
   always @(posedge clk) begin
     if (reset) begin
       shadow_store_ddr_length <= 0;
-    end
-    else if (valid_store_ddr_cmd) begin
+    end else if (valid_store_ddr_cmd) begin
       shadow_store_ddr_length <= store_ddr_length;
-    end
-    else begin
+    end else begin
       shadow_store_ddr_length <= shadow_store_ddr_length;
     end
   end
@@ -204,11 +196,9 @@ module conv_store_ddr_controller (
   always @(posedge clk) begin
     if (reset == 1'b1) begin
       cur_store_ddr_length <= 0;
-    end
-    else if (loop_store_of_counter_add_begin == 1'b1) begin
+    end else if (loop_store_of_counter_add_begin == 1'b1) begin
       cur_store_ddr_length <= store_ddr_length;
-    end
-    else begin
+    end else begin
       cur_store_ddr_length <= cur_store_ddr_length;
     end
   end
@@ -216,16 +206,13 @@ module conv_store_ddr_controller (
   always @(posedge clk) begin
     if (reset == 1'b1) begin
       cur_store_ddr_counter <= 1;
-    end
-    else if (loop_cur_store_ddr_counter_add_begin == 1'b1) begin
+    end else if (loop_cur_store_ddr_counter_add_begin == 1'b1) begin
       if (loop_cur_store_ddr_counter_add_end == 1'b1) begin
         cur_store_ddr_counter <= 1;
-      end
-      else begin
+      end else begin
         cur_store_ddr_counter <= cur_store_ddr_counter + 1;
       end
-    end
-    else begin
+    end else begin
       cur_store_ddr_counter <= cur_store_ddr_counter;
     end
   end
@@ -236,14 +223,11 @@ module conv_store_ddr_controller (
   always @(posedge clk) begin
     if (reset == 1'b1) begin
       state_conv_store_data <= 0;
-    end
-    else if (valid_store_ddr_cmd == 1'b1) begin
+    end else if (valid_store_ddr_cmd == 1'b1) begin
       state_conv_store_data <= 1;
-    end
-    else if (loop_conv_store_data_counter_add_end == 1'b1) begin  // a cmd store cur_word words,xxxxxxx
+    end else if (loop_conv_store_data_counter_add_end == 1'b1) begin  // a cmd store cur_word words,xxxxxxx
       state_conv_store_data <= 0;
-    end
-    else begin
+    end else begin
       state_conv_store_data <= state_conv_store_data;
     end
   end
@@ -251,16 +235,13 @@ module conv_store_ddr_controller (
   always @(posedge clk) begin
     if (reset == 1'b1) begin
       conv_store_data_counter <= 1;
-    end
-    else if (loop_conv_store_data_counter_add_begin == 1) begin
+    end else if (loop_conv_store_data_counter_add_begin == 1) begin
       if (loop_conv_store_data_counter_add_end == 1) begin
         conv_store_data_counter <= 1;
-      end
-      else begin
+      end else begin
         conv_store_data_counter <= conv_store_data_counter + 1;
       end
-    end
-    else begin
+    end else begin
       conv_store_data_counter <= conv_store_data_counter;
     end
   end
@@ -272,16 +253,13 @@ module conv_store_ddr_controller (
   always @(posedge clk) begin
     if (reset == 1'b1) begin
       store_oy_counter <= 1;
-    end
-    else if (loop_store_oy_counter_add_begin == 1'b1) begin
+    end else if (loop_store_oy_counter_add_begin == 1'b1) begin
       if (loop_store_oy_counter_add_end == 1'b1) begin  // the last tile_f_start
         store_oy_counter <= 1;
-      end
-      else begin
+      end else begin
         store_oy_counter <= store_oy_counter + 1;
       end
-    end
-    else begin
+    end else begin
       store_oy_counter <= store_oy_counter;
     end
   end
@@ -311,8 +289,7 @@ module conv_store_ddr_controller (
       conv_fifo_out_tile_add_end <= 0;
       fifo_column_no             <= 0;
       fifo_row_no                <= 0;
-    end
-    else if (loop_channel_counter_add_begin == 1'b1) begin
+    end else if (loop_channel_counter_add_begin == 1'b1) begin
       // valid_conv_out <= loop_channel_counter_add_begin;
       conv_out_ddr_adr <=
       //ddr base adr
@@ -325,7 +302,8 @@ module conv_store_ddr_controller (
       ((cur_of_start - 1 + (of_counter - 1) + channel_counter - 1) >> ofs_in_row_2pow);
       out_y_idx <= cur_oy_start - 1 + oy_counter;
       out_x_idx <= cur_ox_start;
-      out_f_idx <= cur_of_start - 1 + (of_counter - 1) + channel_counter;
+      // out_f_idx <= cur_of_start - 1 + (of_counter - 1) + channel_counter;
+      out_f_idx <= ((cur_of_start - 1 + (of_counter - 1) + channel_counter - 1) >> ofs_in_row_2pow);
       conv_fifo_out_tile_add_end <= loop_oy_counter_add_end;
       fifo_column_no <= oy_counter - 1;  //0,1,2
       fifo_row_no <= (of_counter - 1) >> log_channel_num;  //0,1,2,3
@@ -338,8 +316,7 @@ module conv_store_ddr_controller (
   always @(posedge clk) begin
     if (reset) begin
       last_conv_out_data_mode0 <= 256'b0;
-    end
-    else begin
+    end else begin
       last_conv_out_data_mode0 <= conv_out_data_mode0;
     end
   end
@@ -348,8 +325,7 @@ module conv_store_ddr_controller (
     if (reset) begin
       valid_conv_out_ddr_data_mode0 <= 0;
       valid_conv_out_ddr_data_mode1 <= 0;
-    end
-    else begin
+    end else begin
       valid_conv_out_ddr_data_mode0 <= (loop_channel_counter_add_begin && (loop_conv_store_data_counter_add_end == 0)) && (channel_counter[0] == 1'b0);  //even channel num
       valid_conv_out_ddr_data_mode1 <= (loop_channel_counter_add_begin && (loop_conv_store_data_counter_add_end == 0));
     end
@@ -360,7 +336,7 @@ module conv_store_ddr_controller (
   assign conv_out_ddr_data       = (valid_conv_out_ddr_data == 1) ? ((mode == 0) ? {conv_out_data_mode0, last_conv_out_data_mode0} : (mode == 1) ? fifo_data : 512'b0) : 512'b0;
 
   //rd fifo ctrl
-  assign row_fifo_rd_en = loop_channel_counter_add_begin;
+  assign row_fifo_rd_en          = loop_channel_counter_add_begin;
 
   genvar i;
   generate
@@ -380,21 +356,18 @@ module conv_store_ddr_controller (
   always @(posedge clk) begin
     if (reset == 1'b1) begin
       channel_counter <= 1;
-    end
-    else if ((loop_channel_counter_add_begin == 1'b1)) begin
+    end else if ((loop_channel_counter_add_begin == 1'b1)) begin
       if (loop_channel_counter_add_end == 1'b1) begin
         channel_counter <= 1;
-      end
-      else begin
+      end else begin
         channel_counter <= channel_counter + channel_counter_in_row;
       end
-    end
-    else begin
+    end else begin
       channel_counter <= channel_counter;
     end
   end
 
-  assign channel_counter_in_row = (mode == 0) ? 1 : (mode == 1) ? 2 : 0;
+  assign channel_counter_in_row         = (mode == 0) ? 1 : (mode == 1) ? 2 : 0;
   assign loop_channel_counter_add_begin = ((state_conv_store_data == 1'b1) && (loop_conv_store_data_counter_add_end == 0)) && ((ddr_wt_data_ready == 1'b1) || ((channel_counter[0] == 1'b0) && (mode == 0)));
   assign loop_channel_counter_add_end   = loop_channel_counter_add_begin && ((of_counter - 1 + channel_counter + channel_counter_in_row > cur_pof) || (channel_counter + channel_counter_in_row > channel_num));
 
@@ -402,16 +375,13 @@ module conv_store_ddr_controller (
   always @(posedge clk) begin
     if (reset == 1'b1) begin
       of_counter <= 1;
-    end
-    else if ((loop_of_counter_add_begin == 1'b1)) begin
+    end else if ((loop_of_counter_add_begin == 1'b1)) begin
       if (loop_of_counter_add_end == 1'b1) begin  //the last row_no
         of_counter <= 1;
-      end
-      else begin
+      end else begin
         of_counter <= of_counter + channel_num;
       end
-    end
-    else begin
+    end else begin
       of_counter <= of_counter;
     end
   end
@@ -423,16 +393,13 @@ module conv_store_ddr_controller (
   always @(posedge clk) begin
     if (reset == 1'b1) begin
       oy_counter <= 1;
-    end
-    else if (loop_oy_counter_add_begin == 1'b1) begin
+    end else if (loop_oy_counter_add_begin == 1'b1) begin
       if (loop_oy_counter_add_end == 1'b1) begin  // the last tile_f_start
         oy_counter <= 1;
-      end
-      else begin
+      end else begin
         oy_counter <= oy_counter + 1;
       end
-    end
-    else begin
+    end else begin
       oy_counter <= oy_counter;
     end
   end

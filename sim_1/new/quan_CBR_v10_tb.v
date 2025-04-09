@@ -25,7 +25,7 @@ module quan_CBR_v10_tb(
     );
     //SA
   parameter sa_row_num = 4;  //how many rows in conv core
-  parameter sa_column_num = 2;  //how many columns in conv core, [1,buffers_num]
+  parameter sa_column_num = 1;  //how many columns in conv core, [1,buffers_num]
   parameter row_num_in_sa = 16;  // how many rows in a sa, row_num
   parameter column_num_in_sa = 16;  // how many columns in a sa
   parameter pixels_in_row = 32;
@@ -897,7 +897,7 @@ module quan_CBR_v10_tb(
       .state_conv_load_weights(state_conv_load_weights)
   );
     //conv compute ctrl
-  conv_compute_kernel_controller_v3 #(.sa_column_num(sa_column_num)) 
+  conv_compute_kernel_controller_v4 #(.sa_column_num(sa_column_num)) 
   cv_compute_kernel_controller(
     .clk                 (clk),
     .reset               ((reset == 1) || (conv_start == 1)),

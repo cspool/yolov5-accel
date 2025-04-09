@@ -3474,7 +3474,7 @@ assign row_end_fix =
         end
     end  
     
-    //assign loop_adr1_add_end = (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix));
+    //assign loop_adr1_add_end = (signal_adr1_add == 1'b1) && (stall_in_row_counter == 1'b0) && (ifx_stall == 1'b0) && ((adr1 + pixels_in_row) > (row_end_fix - row_start_fix));
     always@(posedge clk) begin
         if (reset == 1'b1) begin
             stall_in_row_counter <= 0;

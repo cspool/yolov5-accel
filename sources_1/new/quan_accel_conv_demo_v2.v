@@ -39,7 +39,7 @@ module quan_accel_conv_demo_v2(
 );
   //SA
   parameter sa_row_num = 4;  //how many rows in conv core
-  parameter sa_column_num = 2;  //how many columns in conv core
+  parameter sa_column_num = 1;  //how many columns in conv core
   parameter row_num_in_sa = 16;  // how many rows in a sa, row_num
   parameter column_num_in_sa = 16;  // how many columns in a sa
   parameter pixels_in_row = 32;

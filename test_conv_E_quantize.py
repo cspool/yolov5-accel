@@ -35,7 +35,7 @@ def generate_conv_E_quantize_tests():
   #       for quantize_type in quantize_types:
   #          conv_test(conv_type, mode_type, quantize_type)
   
-  conv_type, mode_type, quantize_type = (1,1,0)
+  conv_type, mode_type, quantize_type = (1,0,0)
   conv_E_quantize_test(conv_type, mode_type, quantize_type)
 
 def conv_E_quantize_test(conv_type, mode_type, quantize_type):
@@ -723,9 +723,9 @@ def generate_scale_buf_init(scale_ddr_words):
 
 def generate_instr_args_init(mode,k,s,p,of,ox,oy,ix,iy,nif,input_base_adr):
   pixels_in_row = 32
-  buffers_num = 2 ## poy
+  buffers_num = 1 ## poy
   pixels_in_row_real = 32
-  buffers_num_real = 2
+  buffers_num_real = 1
   
   # 定义变量
   mode_integer = mode

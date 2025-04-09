@@ -616,7 +616,7 @@ module quan_CBR(
       conv_instr_args <= 512'b0;
     end
     else if (start == 1'b1) begin
-      conv_instr_args <= conv_instr_args_mem[0];
+      conv_instr_args <= 512'b0;
     end
     else begin
       conv_instr_args <= conv_instr_args;
