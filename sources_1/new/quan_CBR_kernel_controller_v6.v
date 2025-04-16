@@ -20,10 +20,11 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module quan_CBR_kernel_controller_v6(
+module quan_CBR_kernel_controller_v6 (
     reset,
     clk,
     re_fm_en,
+    re_fm_end,
     mode_init,
     nif_mult_k_mult_k_init,
     shadow_pof,
@@ -58,7 +59,7 @@ module quan_CBR_kernel_controller_v6(
   parameter row_num_in_sa = 16;  // how many rows in a sa, row_num
 
   input reset, clk;
-  input re_fm_en;
+  input re_fm_en, re_fm_end;
   input [3:0] mode_init;
   input [31:0] nif_mult_k_mult_k_init;
   input [15:0] shadow_pof;
@@ -67,7 +68,7 @@ module quan_CBR_kernel_controller_v6(
   reg  [ 3:0] mode;
   reg  [31:0] nif_mult_k_mult_k;
   reg         pixels_counter_signal;
-  reg  [15:0] pixels_counter;
+  reg  [15:0] pixels_counter;  //row/column in has an extra delay
   wire        loop_pixels_counter_add_begin;
   wire        loop_pixels_counter_add_end;  //the last word of all nif pixels in tile
 
@@ -136,9 +137,9 @@ module quan_CBR_kernel_controller_v6(
   always @(posedge clk) begin
     if (reset == 1'b1) begin
       pixels_counter_signal <= 0;
-    end else if ((re_fm_en == 1'b1) && (loop_pixels_counter_add_end == 1'b0)) begin
+    end else if ((re_fm_en == 1'b1) && (re_fm_end == 1'b0)) begin
       pixels_counter_signal <= 1;
-    end else if (loop_pixels_counter_add_end == 1'b1) begin
+    end else if ((re_fm_end == 1'b1) || (loop_pixels_counter_add_end == 1'b1)) begin
       pixels_counter_signal <= 0;
     end else begin
       pixels_counter_signal <= pixels_counter_signal;
@@ -147,10 +148,10 @@ module quan_CBR_kernel_controller_v6(
 
   always @(posedge clk) begin
     if (reset == 1'b1) begin
-      pixels_counter <= 0;
+      pixels_counter <= 1;
     end else if (loop_pixels_counter_add_begin == 1'b1) begin
       if (loop_pixels_counter_add_end == 1'b1) begin  //last
-        pixels_counter <= 0;
+        pixels_counter <= 1;
       end else begin
         pixels_counter <= pixels_counter + 1;
       end
@@ -158,19 +159,27 @@ module quan_CBR_kernel_controller_v6(
       pixels_counter <= pixels_counter;
     end
   end
-  assign loop_pixels_counter_add_begin = (re_fm_en == 1'b1) || (pixels_counter_signal == 1'b1);
-  // assign loop_pixels_counter_add_begin = (pixels_counter_signal == 1'b1);  //add a delay between din and delay_out in delay_regs
-  assign loop_pixels_counter_add_end   = loop_pixels_counter_add_begin && (pixels_counter == nif_mult_k_mult_k + 1);
+
+  assign loop_pixels_counter_add_begin = (pixels_counter_signal == 1'b1);
+  // assign loop_pixels_counter_add_end   = loop_pixels_counter_add_begin && (pixels_counter == nif_mult_k_mult_k + 1);
+  assign loop_pixels_counter_add_end   = loop_pixels_counter_add_begin && (pixels_counter == nif_mult_k_mult_k);
+
+  // assign core_cell_en_out = sum_pixels_counter_signal;
+  reg mult_pixels_counter_add_end;
+  always @(posedge clk) begin
+    core_cell_en_pre            <= pixels_counter_signal;
+
+    mult_pixels_counter_add_end <= loop_pixels_counter_add_end;
+  end
 
   always @(posedge clk) begin
     if (reset == 1'b1) begin
       sa_counter_signal <= 0;
-    end else if ((loop_pixels_counter_add_end == 1'b1) || ((sa_counter_signal == 0) && (sa_counter > 0))) begin
+      // end else if ((loop_pixels_counter_add_end == 1'b1) || ((sa_counter_signal == 0) && (sa_counter > 0))) begin
+    end else if ((mult_pixels_counter_add_end == 1'b1) || ((sa_counter_signal == 0) && (sa_counter > 0))) begin
       sa_counter_signal <= 1;
       // end else if ((loop_sa_counter_add_end == 1'b1) || ((sa_counter_signal == 1) && (sa_counter >= 6'd15 + 1))) begin
-    end else if ((loop_sa_counter_add_end == 1'b1) || ((sa_counter_signal == 1) && (sa_counter >= row_num_in_sa * 2 - 1  //sa_cnt == 31
-        + row_num_in_sa * 2 - (shadow_pof_per_core << 1)  //sa_cnt += 0~15
-        + row_num_in_sa - 2 + 1))) begin  //
+    end else if ((loop_sa_counter_add_end == 1'b1) || ((sa_counter_signal == 1) && (sa_counter >= 1 + row_num_in_sa - 1))) begin
       sa_counter_signal <= 0;
     end else begin
       sa_counter_signal <= sa_counter_signal;
@@ -193,25 +202,7 @@ module quan_CBR_kernel_controller_v6(
   // assign loop_sa_counter_add_begin = (sa_counter_signal == 1'b1) || (loop_pixels_counter_add_end == 1'b1);
   assign loop_sa_counter_add_begin = (sa_counter_signal == 1'b1);  //1 means cell(0,0) has a valid sum out
   // assign loop_sa_counter_add_end   = loop_sa_counter_add_begin && (sa_counter == 6'd32);
-  assign loop_sa_counter_add_end   = (loop_sa_counter_add_begin && (sa_counter == row_num_in_sa * 2 - 1  //sa_cnt == 31
- + row_num_in_sa * 2 - (shadow_pof_per_core << 1)  //
- + row_num_in_sa + shadow_pof_per_core - 2 + 1));
-
-
-  always @(posedge clk) begin
-    if (reset == 1'b1) begin
-      core_cell_en_pre <= 0;
-      // end else if (re_fm_en == 1'b1) begin
-    end else if (loop_pixels_counter_add_begin && (pixels_counter == nif_mult_k_mult_k + 1)) begin  //cell (1,1) finished
-      core_cell_en_pre <= 0;  //pixels_counter == nif_k_k + 1 when last core_cell_en_pre is 1
-      // end else if (loop_pixels_counter_add_begin && (pixels_counter == 1)) begin  //a delay between delay out and sa in
-    end else if (re_fm_en) begin  //a delay between delay out and sa in, but the pipline regs need en before res reg
-      core_cell_en_pre <= 1;  //pixels_counter == 2 when core_cell_en_pre = 1
-      // end else if (sa_counter == 6'd30) begin  //a cycle before sa_rst
-    end else begin
-      core_cell_en_pre <= core_cell_en_pre;
-    end
-  end
+  assign loop_sa_counter_add_end = loop_sa_counter_add_begin && (sa_counter == 1 + row_num_in_sa - 1 + shadow_pof_per_core);  //add delay before sum out
 
   assign log_pof_per_cell = (mode == 0) ? 0 : (mode == 1) ? 1 : 0;
   assign shadow_pof_per_core = ((shadow_pof >> log_pof_per_cell) <= row_num_in_sa)? (shadow_pof >> log_pof_per_cell):
@@ -219,15 +210,29 @@ module quan_CBR_kernel_controller_v6(
   (((shadow_pof >> log_pof_per_cell) > row_num_in_sa + row_num_in_sa) && ((shadow_pof >> log_pof_per_cell) <= row_num_in_sa + row_num_in_sa + row_num_in_sa))? (shadow_pof >> log_pof_per_cell) - row_num_in_sa - row_num_in_sa:
   (shadow_pof >> log_pof_per_cell) - row_num_in_sa - row_num_in_sa - row_num_in_sa;
 
+  // always @(posedge clk) begin
+  //   if (reset == 1'b1) begin
+  //     core_cell_en_pre <= 0;
+  //     // end else if (re_fm_en == 1'b1) begin
+  //   end else if ((re_fm_end == 1'b1) || (loop_pixels_counter_add_end == 1'b1)) begin  //cell (1,1) finished
+  //     core_cell_en_pre <= 0;  //pixels_counter == nif_k_k + 1 when last core_cell_en_pre is 1
+  //     // end else if (loop_pixels_counter_add_begin && (pixels_counter == 1)) begin  //a delay between delay out and sa in
+  //   end else if ((re_fm_en == 1) && (re_fm_end == 0)) begin  //a delay between delay out and sa in, but the pipline regs need en before res reg
+  //     core_cell_en_pre <= 1;  //pixels_counter == 2 when core_cell_en_pre = 1
+  //     // end else if (sa_counter == 6'd30) begin  //a cycle before sa_rst
+  //   end else begin
+  //     core_cell_en_pre <= core_cell_en_pre;
+  //   end
+  // end
 
   always @(posedge clk) begin
     if (reset == 1'b1) begin
       core_cell_output_en_pre <= 0;
-    end else if (loop_sa_counter_add_begin && (sa_counter == row_num_in_sa * 2 - 1 - 2)) begin
-      core_cell_output_en_pre <= 1;  //sa_cnt == 31 <===> last valid cell_out_en
-    end else if (loop_sa_counter_add_begin && (sa_counter == row_num_in_sa * 2 - 1  //sa_cnt == 31
-        + row_num_in_sa * 2 - (shadow_pof_per_core << 1)  //sa_cnt += 0~15
-        + row_num_in_sa + shadow_pof_per_core - 2 + 1)) begin
+      // end else if (loop_pixels_counter_add_end) begin
+    end else if (mult_pixels_counter_add_end) begin
+      core_cell_output_en_pre <= 1;  //sa_cnt == 1 <===> first valid cell_out_en
+      // end else if (loop_sa_counter_add_begin && (sa_counter == 6'd15 + 1 + shadow_pof_per_core)) begin
+    end else if (loop_sa_counter_add_begin && (sa_counter == 1 + row_num_in_sa + shadow_pof_per_core - 2)) begin
       core_cell_output_en_pre <= 0;
     end else begin
       core_cell_output_en_pre <= core_cell_output_en_pre;
@@ -237,19 +242,14 @@ module quan_CBR_kernel_controller_v6(
   always @(posedge clk) begin
     if (reset == 1'b1) begin
       out_sa_row_idx_pre <= 0;
-    end else if (loop_sa_counter_add_begin && (sa_counter >= row_num_in_sa * 2 - 1  //sa_cnt == 31
-        + row_num_in_sa * 2 - (shadow_pof_per_core << 1)  //sa_cnt += (0~15)*2
-        + row_num_in_sa - 2 + 1)  //delay sum out
-        && (sa_counter <= row_num_in_sa * 2 - 1  //sa_cnt == 31
-        + row_num_in_sa * 2 - (shadow_pof_per_core << 1)  //
-        + row_num_in_sa + shadow_pof_per_core - 1 - 2 + 1)) begin  //add delay before sum out
-      // out_sa_row_idx_pre <= (sa_counter - 6'd15);
-      out_sa_row_idx_pre <= shadow_pof_per_core + 1 - (sa_counter - (row_num_in_sa * 2 - 1  //sa_cnt == 31
-      + row_num_in_sa * 2 - (shadow_pof_per_core << 1)  //sa_cnt += (0~15)*2
-      + row_num_in_sa - 2));
-    end else if (loop_sa_counter_add_begin && (sa_counter == row_num_in_sa * 2 - 1  //sa_cnt == 31
-        + row_num_in_sa * 2 - (shadow_pof_per_core << 1)  //
-        + row_num_in_sa + shadow_pof_per_core - 2 + 1)) begin  //add delay before sum out
+      // end else if (loop_sa_counter_add_begin && (sa_counter >= 6'd15) && (sa_counter < 6'd31)) begin  //a cycle before sa_rst
+      //   out_sa_row_idx_pre <= (sa_counter + 1 - 6'd15);
+      // end else if (loop_sa_counter_add_begin && (sa_counter >= 6'd15 + 1) && (sa_counter < 6'd31 + 1)) begin  //add delay before sum out
+    end else if (loop_sa_counter_add_begin && (sa_counter >= 1 + row_num_in_sa - 1) && (sa_counter <= 1 + row_num_in_sa + shadow_pof_per_core - 2)) begin  //add delay before sum out
+      out_sa_row_idx_pre <= (sa_counter - (row_num_in_sa - 1));
+      // end else if (loop_sa_counter_add_begin && (sa_counter == 6'd31)) begin
+      // end else if (loop_sa_counter_add_begin && (sa_counter == 6'd31 + 1)) begin  //add delay before sum out
+    end else if (loop_sa_counter_add_begin && (sa_counter == 1 + row_num_in_sa + shadow_pof_per_core - 1)) begin  //add delay before sum out
       out_sa_row_idx_pre <= 0;
     end else begin
       out_sa_row_idx_pre <= out_sa_row_idx_pre;
@@ -263,16 +263,12 @@ module quan_CBR_kernel_controller_v6(
     end else if (loop_sa_counter_add_begin == 0) begin
       core_sum_E_recieve_en_pre <= 0;
       // end else if ((sa_counter >= 6'd15 + 1) && (sa_counter < 6'd15 + 1 + shadow_pof_per_core)) begin  //add delay before sum out
-    end else if (loop_sa_counter_add_begin && (sa_counter >= row_num_in_sa * 2 - 1  //sa_cnt == 31
-        + row_num_in_sa * 2 - (shadow_pof_per_core << 1)  //sa_cnt += (0~15)*2
-        + row_num_in_sa - 2 + 1)  //delay sum out
-        && (sa_counter <= row_num_in_sa * 2 - 1  //sa_cnt == 31
-        + row_num_in_sa * 2 - (shadow_pof_per_core << 1)  //
-        + row_num_in_sa + shadow_pof_per_core - 1 - 2 + 1)) begin  //add delay before sum out
+    end else if ((sa_counter >= 1 + row_num_in_sa - 1) && (sa_counter <= 1 + row_num_in_sa + shadow_pof_per_core - 2)) begin  //add delay before sum out
       core_sum_E_recieve_en_pre <= 1;
-    end else if (loop_sa_counter_add_begin && (sa_counter == row_num_in_sa * 2 - 1  //sa_cnt == 31
-        + row_num_in_sa * 2 - (shadow_pof_per_core << 1)  //
-        + row_num_in_sa + shadow_pof_per_core - 2 + 1)) begin  //add delay before sum out
+      // end else if (loop_sa_counter_add_begin && (sa_counter == 6'd31)) begin  //a cycle before c_out_en
+      // end else if (loop_sa_counter_add_begin && (sa_counter == 6'd31 + 1)) begin  //add delay before sum out
+      // end else if ((sa_counter == 6'd15 + 1 + shadow_pof_per_core)) begin  //add delay before sum out, of maybe less than 16
+    end else if ((sa_counter == 1 + row_num_in_sa + shadow_pof_per_core - 1)) begin  //add delay before sum out, of maybe less than 16
       core_sum_E_recieve_en_pre <= 0;
     end else begin
       core_sum_E_recieve_en_pre <= core_sum_E_recieve_en_pre;
@@ -326,9 +322,7 @@ module quan_CBR_kernel_controller_v6(
     if (reset == 1'b1) begin
       channel_out_add_end_pre <= 0;
       // end else if (loop_sa_counter_add_begin && (sa_counter == 6'd15 + 1 + shadow_pof_per_core)) begin
-    end else if (loop_sa_counter_add_begin && (sa_counter == row_num_in_sa * 2 - 1  //sa_cnt == 31
-        + row_num_in_sa * 2 - (shadow_pof_per_core << 1)  //
-        + row_num_in_sa + shadow_pof_per_core - 2 + 1)) begin  //add delay before sum out
+    end else if (loop_sa_counter_add_begin && (sa_counter == 1 + row_num_in_sa + shadow_pof_per_core - 1)) begin
       channel_out_add_end_pre <= 1;
     end else if (channel_out_add_end_pre == 1) begin
       channel_out_add_end_pre <= 0;

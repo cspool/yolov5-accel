@@ -170,8 +170,8 @@ module conv_compute_kernel_controller_v4 #(
   wire loop_if_add_begin, loop_if_add_end;
   reg [15:0] tile_y_start, tile_x_start, tile_f_start;  // tile_f_start is the inner loop
 
-  wire [15:0] row_num;
-  reg  [15:0] row_base_mod_3s;
+  reg [15:0] row_num;
+  reg [15:0] row_base_mod_3s;
 
   wire loop_ky_add_begin, loop_ky_add_end;
 
@@ -189,6 +189,7 @@ module conv_compute_kernel_controller_v4 #(
       nif         <= nif_init;
       nif_in_2pow <= nif_in_2pow_init;
       ix_in_2pow  <= ix_in_2pow_init;
+      row_num     <= (mode_init == 0) ? row_num_in_mode0 : (mode_init == 1) ? row_num_in_mode1 : 0;
     end else begin
       mode        <= mode;
       k           <= k;
@@ -202,11 +203,22 @@ module conv_compute_kernel_controller_v4 #(
       nif         <= nif;
       nif_in_2pow <= nif_in_2pow;
       ix_in_2pow  <= ix_in_2pow;
+      row_num     <= row_num;
     end
   end
+
+  // assign row_num = (mode == 0) ? row_num_in_mode0 : (mode == 1) ? row_num_in_mode1 : 0;
+
+  //stage 3
   //stall signal
   reg  ifx_stall;
   wire loop_if_stall_counter_add_end;
+
+  reg conv_compute_pipe_1, conv_compute_pipe_2;
+  always @(posedge clk) begin
+    conv_compute_pipe_1 <= conv_compute;
+    conv_compute_pipe_2 <= conv_compute_pipe_1;
+  end
 
   always @(posedge clk) begin
     if (reset == 1'b1) begin
@@ -220,11 +232,10 @@ module conv_compute_kernel_controller_v4 #(
     end
   end
 
-  assign loop_if_stall_counter_add_end = (ifx_stall == 1'b1) && (conv_compute == 1'b1);
+  // assign loop_if_stall_counter_add_end = (ifx_stall == 1'b1) && (conv_compute == 1'b1); 
+  assign loop_if_stall_counter_add_end = (ifx_stall == 1'b1) && (conv_compute_pipe_2 == 1'b1);  //conv_compute_pipe_2
 
   //conv tiling module
-  assign row_num                       = (mode == 0) ? row_num_in_mode0 : (mode == 1) ? row_num_in_mode1 : 0;
-
   //loop if
   always @(posedge clk) begin
     if (reset == 1'b1) begin
@@ -309,26 +320,7 @@ module conv_compute_kernel_controller_v4 #(
   end
 
   assign loop_y_add_begin = (loop_x_add_end == 1'b1);
-
   assign loop_y_add_end   = loop_y_add_begin && ((tile_y_start + sa_column_num) > oy);
-
-  assign ox_start         = tile_x_start;
-
-  assign oy_start         = tile_y_start;
-
-  assign of_start         = tile_f_start;
-
-  assign pox              = (tile_x_start + pixels_in_row - 1 > ox) ? (ox - tile_x_start + 1) : pixels_in_row;
-
-  assign poy              = (tile_y_start + sa_column_num - 1 > oy) ? (oy - tile_y_start + 1) : sa_column_num;
-
-  assign pof              = (tile_f_start + row_num - 1 > of) ? (of - tile_f_start + 1) : row_num;
-
-  assign com_control_end  = loop_y_add_end;
-
-  assign if_idx           = if_start;
-
-  assign iy_start         = (s == 4'd1) ? tile_y_start : (s == 4'd2) ? (tile_y_start << 1) - 1 : 0;
 
   //conv rows
   //conv row 1
@@ -350,7 +342,18 @@ module conv_compute_kernel_controller_v4 #(
   assign loop_ky_add_end     = loop_ky_add_begin && ((ky + 1) == (k));
 
   assign conv_pixels_add_end = loop_adr1_add_end;
+  assign com_control_end     = loop_y_add_end;
 
+  assign ox_start            = tile_x_start;
+  assign oy_start            = tile_y_start;
+  assign of_start            = tile_f_start;
+  assign pox                 = (tile_x_start + pixels_in_row - 1 > ox) ? (ox - tile_x_start + 1) : pixels_in_row;
+  assign poy                 = (tile_y_start + sa_column_num - 1 > oy) ? (oy - tile_y_start + 1) : sa_column_num;
+  assign pof                 = (tile_f_start + row_num - 1 > of) ? (of - tile_f_start + 1) : row_num;
+  assign if_idx              = if_start;
+  assign iy_start            = (s == 4'd1) ? tile_y_start : (s == 4'd2) ? (tile_y_start << 1) - 1 : 0;
+
+  //stage 1-2
   conv_compute_pixel_controller #(
       .pixels_in_row(pixels_in_row)
   ) conv_compute_pixel_ctrl (
@@ -361,10 +364,12 @@ module conv_compute_kernel_controller_v4 #(
       .p_init         (p_init),
       .ix_init        (ix_init),
       .ix_in_2pow_init(ix_in_2pow_init),
-      .tile_x_start   (tile_x_start),
-      .pox            (pox),
 
-      .conv_compute  (conv_compute),
+      .tile_x_start(tile_x_start),
+      .pox         (pox),
+
+      // .conv_compute  (conv_compute),
+      .conv_compute  (conv_compute_pipe_2),  //conv_compute_pipe_2
       .loop_y_add_end(loop_y_add_end),
       .ifx_stall     (ifx_stall),
 

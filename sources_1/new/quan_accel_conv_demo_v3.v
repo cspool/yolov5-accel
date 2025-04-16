@@ -3,9 +3,9 @@
 // Company: 
 // Engineer: 
 // 
-// Create Date: 2025/03/29 21:27:16
+// Create Date: 2025/04/13 22:11:58
 // Design Name: 
-// Module Name: quan_CBR_v10_tb
+// Module Name: quan_accel_conv_demo_v3
 // Project Name: 
 // Target Devices: 
 // Tool Versions: 
@@ -20,12 +20,26 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module quan_CBR_v10_tb(
+module quan_accel_conv_demo_v3(
+  clk,  //i
+  reset, //i
+  //DDR MIG
+  ddr_cmd_ready, //i
+  ddr_rd_data_valid, //i
+  ddr_wt_data_ready, //i
 
-    );
-    //SA
+  cmd_ddr_base_adr, //o
+  cmd_ddr_length, //o
+  valid_cmd, //o
+  ddr_mode, //o
+
+  ddr_rd_data,
+  ddr_wt_data,
+  valid_ddr_wt_data
+);
+  //SA
   parameter sa_row_num = 4;  //how many rows in conv core
-  parameter sa_column_num = 1;  //how many columns in conv core, [1,buffers_num]
+  parameter sa_column_num = 1;  //how many columns in conv core
   parameter row_num_in_sa = 16;  // how many rows in a sa, row_num
   parameter column_num_in_sa = 16;  // how many columns in a sa
   parameter pixels_in_row = 32;
@@ -126,9 +140,15 @@ module quan_CBR_v10_tb(
   parameter weights_in_tile_mode0 = 64;  // 8bit; //amount of weights needed in a computation tile
   parameter weights_in_tile_mode1 = 128;  // 1bit
 
-  reg clk, reset;
+  input clk, reset;
   //DDR MIG
-  reg ddr_en;
+  input ddr_cmd_ready;
+  input ddr_rd_data_valid;
+  input ddr_wt_data_ready;
+  input [511:0] ddr_rd_data;
+  output [511:0] ddr_wt_data;
+  output valid_ddr_wt_data;
+  // wire ddr_en = 1;
   reg start; //top start
   always@(posedge clk) begin
       if (reset) begin
@@ -141,10 +161,10 @@ module quan_CBR_v10_tb(
           start <= start;
       end
   end
-  //conv decoder
+ //conv decoder
   reg  conv_decode;
   reg [511:0] conv_instr_args;
-  reg [511:0] conv_instr_args_mem [0:0]; //instr mem for sim
+  // reg [511:0] conv_instr_args_mem [0:0]; //instr mem for sim
   wire conv_start_pre;
   reg conv_start;
   //all below come from instr
@@ -177,7 +197,7 @@ module quan_CBR_v10_tb(
   wire [ 7:0] tiley_last_iy_row_num;
   wire [ 7:0] tiley_mid_iy_row_num;
   wire [15:0] ix_index_num, iy_index_num;
-//conv controller
+  //conv controller
   wire conv_load_weights;
   wire conv_load_input;
   wire conv_compute;
@@ -186,20 +206,19 @@ module quan_CBR_v10_tb(
   wire last_conv_compute;
   wire conv_fin;
   //DDR
-  wire DDR_en;
-  wire DDR_en_wr;
-  wire [511:0] DDR_in;
-  wire [ 31:0] DDR_adr;
-  wire [511:0] DDR_out;  //o
-  wire DDR_valid;
+  output [31:0] cmd_ddr_base_adr;
+  output [15:0] cmd_ddr_length;
+  output valid_cmd;
+  output ddr_mode; //rd or wt
+
   //DDR data
-  reg valid_load_input;
-  // wire valid_load_input;
+  // reg valid_load_input;
+  wire valid_load_input;
   wire [511:0] load_input_word;
   reg [511:0] last_load_input_word;
   reg state_valid_load_input;
-  reg valid_load_weights; //ddr words is loaded from ddr
-  // wire valid_load_weights;
+  // reg valid_load_weights; //ddr words is loaded from ddr
+  wire valid_load_weights;
   //conv compute ctrl
   reg [15:0] ox_start, oy_start, of_start, pox, poy, pof, if_idx;
   wire [15:0] ox_start_delay, oy_start_delay, of_start_delay, pox_delay, poy_delay, pof_delay, if_idx_delay;  
@@ -221,7 +240,7 @@ module quan_CBR_v10_tb(
   wire [15:0] row3_buf_adr;
   wire [1:0] row3_buf_idx;
   wire row3_buf_word_select;
-  reg [15:0] row_slab_start_idx;
+  // reg [15:0] row_slab_start_idx;
   wire [15:0] row_slab_start_idx_delay;
   wire [15:0] row1_slab_adr;
   wire [1:0] row1_slab_idx;
@@ -243,16 +262,35 @@ module quan_CBR_v10_tb(
   wire conv_pixels_add_end_delay;
   wire conv_nif_add_end_delay;
   //cv kernel
-  reg [15:0] if_start;
-  reg [15:0] row_base_in_3s;
-  reg valid_adr; 
-  reg [15:0] iy_start;
-  reg [15:0] ky;
+  // reg [15:0] if_start;
+  // reg [15:0] row_base_in_3s;
+  // reg valid_adr; 
+  // reg [15:0] iy_start;
+  // reg [15:0] ky;
   wire [15:0] if_start_delay;
   wire [15:0] row_base_in_3s_delay;
   wire valid_adr_delay; 
   wire [15:0] iy_start_delay;
   wire [15:0] ky_delay;
+  //stage 1-2 waiting for shell
+  reg [15:0] ox_start_stage_1,ox_start_stage_2,
+    oy_start_stage_1,oy_start_stage_2,
+    of_start_stage_1,of_start_stage_2,
+    pox_stage_1,pox_stage_2,
+    poy_stage_1,poy_stage_2,
+    pof_stage_1,pof_stage_2,
+    if_idx_stage_1,if_idx_stage_2;
+  reg [ 3:0] west_pad_stage_1,west_pad_stage_2,
+    slab_num_stage_1,slab_num_stage_2,
+    east_pad_stage_1,east_pad_stage_2;
+  reg [15:0] row_start_idx_stage_1,row_start_idx_stage_2,
+    row_end_idx_stage_1,row_end_idx_stage_2;
+  reg [15:0] reg_start_idx_stage_1,reg_start_idx_stage_2,
+    reg_end_idx_stage_1,reg_end_idx_stage_2;
+
+  reg        com_control_end_stage_1,com_control_end_stage_2;
+  reg        conv_pixels_add_end_stage_1,conv_pixels_add_end_stage_2;
+  reg        conv_nif_add_end_stage_1,conv_nif_add_end_stage_2;
   //conv_load_input_controller
   wire [15:0] load_input_row_idx;
   wire [15:0] load_input_row_start_idx;
@@ -263,6 +301,9 @@ module quan_CBR_v10_tb(
   wire [31:0] input_word_ddr_adr_rd;
   wire input_word_load_info_fifo_en_wt;
   wire [31:0] input_word_load_info_fifo_wt;
+  wire [31:0] load_input_ddr_base_adr;
+  wire [15:0] load_input_ddr_length;
+  wire valid_load_input_ddr_cmd;
   wire conv_load_input_fin;
   wire state_conv_load_input;
   //load input info fifo
@@ -391,7 +432,6 @@ module quan_CBR_v10_tb(
   wire [pixels_in_row*8-1:0] re_rowi_pixels[buffers_num-1 : 0];
   reg [pixels_in_row*8-1:0] delay_re_row2_pixels, delay_1_re_row3_pixels, delay_2_re_row3_pixels;
   wire [pixels_in_row*8-1:0] delay_re_rowi_pixels[buffers_num-1 : 0];
-
   //input buffer 1-3
   wire in_buf1_en_wr;
   wire [11 : 0] in_buf1_adr_wr;
@@ -414,6 +454,9 @@ module quan_CBR_v10_tb(
   //load weights controller
   wire weights_word_ddr_en_rd; //o: read ddr
   wire [31:0] weights_word_ddr_adr_rd;//o
+  wire [31:0] load_weights_ddr_base_adr;
+  wire [15:0] load_weights_ddr_length;
+  wire valid_load_weights_ddr_cmd;
   wire weights_word_buf_en_wt; //o: write buf
   wire [15:0] weights_word_buf_adr_wt;//o
   wire conv_load_weights_fin;
@@ -467,7 +510,6 @@ module quan_CBR_v10_tb(
   wire [15:0] weights_bank_4_pong_adr;  // o
   wire [128-1 : 0] weights_bank_4_pong_in;  //o:port in of weights ping buf
   wire [128-1 : 0] weights_bank_4_pong_out;  //i:port out of weights ping buf
-
   //conv args refresh
   //args buf rd adr
   wire [15:0] E_buf_adr_rd;
@@ -587,42 +629,43 @@ module quan_CBR_v10_tb(
 
   //sum_mult_E_vecOp
   wire [sum_vector_in_mult_A_width_width-1 : 0] //24 bit * 32 pixels * 2 channel
-  sum_vector_in_mult_A_width_rowi_channel_setj[buffers_num-1 : 0][sa_row_num-1 : 0];
+  sum_vector_in_mult_A_width_rowi_channel_setj[sa_column_num-1 : 0][sa_row_num-1 : 0];
   wire [E_vector_in_mult_B_width_width-1 : 0] //16 bit * 32 pixels * 2 channel
-  E_vector_in_mult_B_width_rowi_channel_setj[buffers_num-1 : 0][sa_row_num-1 : 0];
+  E_vector_in_mult_B_width_rowi_channel_setj[sa_column_num-1 : 0][sa_row_num-1 : 0];
   wire [sum_mult_E_vector_in_mult_P_width_width-1 :0] //40 bit * 32 pixels * 2 channel
-  sum_mult_E_vector_in_mult_P_width_rowi_channel_setj[buffers_num-1 : 0][sa_row_num-1 : 0];
+  sum_mult_E_vector_in_mult_P_width_rowi_channel_setj[sa_column_num-1 : 0][sa_row_num-1 : 0];
   //product add bias
   wire [product_add_bias_vector_width-1 :0] //40 bit * 32 pixels * 2 channel
-  product_add_bias_vector_rowi_channel_setj[buffers_num-1 : 0][sa_row_num-1 : 0];
+  product_add_bias_vector_rowi_channel_setj[sa_column_num-1 : 0][sa_row_num-1 : 0];
   
   wire [quantize_vector_width-1 : 0] //8 bit * 32 pixels * 2 channel
-  quantize_rowi_channel_setj[buffers_num-1 : 0][sa_row_num-1 : 0];
+  quantize_rowi_channel_setj[sa_column_num-1 : 0][sa_row_num-1 : 0];
   //conv fifo
-  wire fifo_rowi_channel_seti_rd_en[buffers_num-1 : 0][sa_row_num-1 : 0];
+  wire fifo_rowi_channel_seti_rd_en[sa_column_num-1 : 0][sa_row_num-1 : 0];
   wire [quantize_vector_width-1 : 0] //fifos out
-  fifo_rowi_channel_seti_dout[buffers_num-1 : 0][sa_row_num-1 : 0];
+  fifo_rowi_channel_seti_dout[sa_column_num-1 : 0][sa_row_num-1 : 0];
   wire fifo_rowi_channel_seti_full //fifos full
-  [buffers_num-1 : 0][sa_row_num-1 : 0];
+  [sa_column_num-1 : 0][sa_row_num-1 : 0];
   wire fifo_rowi_channel_seti_empty //fifos empty
-  [buffers_num-1 : 0][sa_row_num-1 : 0];
+  [sa_column_num-1 : 0][sa_row_num-1 : 0];
   wire [8 : 0] data_counts //fifos counts
-  [buffers_num-1 : 0][sa_row_num-1 : 0];
-  //conv fifo out ctrl
+  [sa_column_num-1 : 0][sa_row_num-1 : 0];
+  //conv store ctrl
   //cycle 0 in conv store
   //cycle 1 in
   wire [quantize_vector_width-1 : 0] fifo_data;
   //cycle 0 out
-  wire [sa_row_num * buffers_num-1:0] fifo_rds;
+  wire [sa_row_num * sa_column_num-1:0] fifo_rds;
+  wire [31:0] store_ddr_base_adr;
+  wire [15:0] store_ddr_length;
+  wire valid_store_ddr_cmd;
   //cycle 1 out
-  wire valid_conv_out_ddr_adr;
   wire [31:0] conv_out_ddr_adr;
   wire [511:0] conv_out_ddr_data;
+  wire valid_conv_out_ddr_data;
   wire [3:0] fifo_column_no, fifo_row_no;
-  wire valid_conv_out;
   wire [15:0] out_y_idx, out_x_idx, out_f_idx;
   wire conv_fifo_out_tile_add_end;
-  wire [out_data_width-1 : 0] conv_out_data;
   wire conv_store_fin;
 
   //top control sim
@@ -641,80 +684,56 @@ module quan_CBR_v10_tb(
     end
   end
 
+  // always @(posedge clk) begin
+  //   if (reset) begin
+  //     conv_instr_args <= 512'b0;
+  //   end
+  //   else if (start == 1'b1) begin
+  //     conv_instr_args <= conv_instr_args_mem[0];
+  //   end
+  //   else begin
+  //     conv_instr_args <= conv_instr_args;
+  //   end
+  // end
+
   always @(posedge clk) begin
     if (reset) begin
       conv_instr_args <= 512'b0;
     end
     else if (start == 1'b1) begin
-      conv_instr_args <= conv_instr_args_mem[0];
+      conv_instr_args <= 512'h00000303030202020404040100060001030204010101000000000000002700000000000000000000000000020000002420004000650020000650020200041131;
     end
     else begin
       conv_instr_args <= conv_instr_args;
     end
   end
 
-  // //DDR
-//   DDR DDR (
-//       .clka (clk),                    // input wire clka
-//       .ena  (DDR_en),   // input wire ena
-//       .wea  (DDR_en_wr),                      // input wire [0 : 0] wea
-//       .addra(DDR_adr),  // input wire [31 : 0] addra
-//       .dina (DDR_in),                      // input wire [511 : 0] dina
-//       .douta(DDR_out)                 // output wire [511 : 0] douta
-//   );
-//   assign DDR_en          = ((input_word_ddr_en_rd == 1'b1) || (weights_word_ddr_en_rd == 1'b1)) ? 1'b1 : 1'b0;
-//   assign DDR_en_wr       = 0;
-//   assign DDR_adr         = (input_word_ddr_en_rd == 1)? input_word_ddr_adr_rd :
-//    (weights_word_ddr_en_rd == 1)? weights_word_ddr_adr_rd : 0;
-//   assign DDR_in          = 512'b0;
-//   assign load_input_word = (valid_load_input == 1'b1) ? DDR_out : 0;
-//   assign weights_word_buf_wt = (valid_load_weights == 1'b1) ? DDR_out : 0;
-  //DDR reg mem
-  parameter DDR_mem_limit = 1000000; //4096*16
-  reg[511:0] DDR_mem [DDR_mem_limit - 1:0];
-  reg [511:0] DDR_mem_out;
-  always @(posedge clk) begin
-    if (reset) begin
-      DDR_mem_out <= 0;
-    end
-    else if (DDR_en == 1'b1) begin
-      DDR_mem_out <= DDR_mem[DDR_adr];
-    end
-    else begin
-      DDR_mem_out <= DDR_mem_out;
-    end
-  end
-  // assign DDR_en          = ((input_word_ddr_en_rd == 1'b1) || (weights_word_ddr_en_rd == 1'b1)) ? 1'b1 : 1'b0;
-  // assign DDR_en_wr       = 0;
-  // assign DDR_adr         = (input_word_ddr_en_rd == 1)? input_word_ddr_adr_rd :
-  //  (weights_word_ddr_en_rd == 1)? weights_word_ddr_adr_rd : 0;
-  // assign DDR_in          = 0;
-  // assign load_input_word = (valid_load_input == 1'b1) ? DDR_mem_out : 0;
-  // assign weights_word_buf_wt = (valid_load_weights == 1'b1) ? DDR_mem_out : 0;
-  assign DDR_en          = ((input_word_ddr_en_rd == 1'b1) || (weights_word_ddr_en_rd == 1'b1) || (valid_conv_out_ddr_adr == 1'b1)) ? 1'b1 : 1'b0;
-  assign DDR_en_wr       = (valid_conv_out_ddr_adr == 1'b1)? 1 : 0;
-  assign DDR_adr         = (input_word_ddr_en_rd == 1)? input_word_ddr_adr_rd :
-   (weights_word_ddr_en_rd == 1)? weights_word_ddr_adr_rd : 
-   (valid_conv_out_ddr_adr == 1)? conv_out_ddr_adr : 0;
-  assign DDR_in          = (valid_conv_out_ddr_adr == 1)? conv_out_ddr_data : 512'b0;
-  //DDR sim
-  assign load_input_word = (valid_load_input == 1'b1) ? DDR_mem_out : 512'b0;
-  assign weights_word_buf_wt = (valid_load_weights == 1'b1) ? DDR_mem_out : 512'b0;
   //DDR
-  // assign load_input_word = (valid_load_weights) ? DDR_out : 512'b0; 
-  // assign weights_word_buf_wt = (valid_load_input) ? DDR_out : 512'b0;
+  assign cmd_ddr_base_adr = (valid_load_input_ddr_cmd == 1)? load_input_ddr_base_adr:
+  (valid_load_weights_ddr_cmd == 1)? load_weights_ddr_base_adr:
+  (valid_store_ddr_cmd == 1)? store_ddr_base_adr: 0;
+  assign cmd_ddr_length = (valid_load_input_ddr_cmd == 1)? load_input_ddr_length:
+  (valid_load_weights_ddr_cmd == 1)? load_weights_ddr_length:
+  (valid_store_ddr_cmd == 1)? store_ddr_length: 0;
+  assign valid_cmd = (valid_load_input_ddr_cmd == 1) || (valid_load_weights_ddr_cmd == 1) || (valid_store_ddr_cmd == 1);
+  assign ddr_mode = ((valid_cmd == 1) && (valid_store_ddr_cmd == 1)? 0: 1);
+
+  assign load_input_word = (valid_load_input) ? ddr_rd_data : 512'b0; 
+  assign weights_word_buf_wt = (valid_load_weights) ? ddr_rd_data : 512'b0;
+  assign ddr_wt_data = (valid_ddr_wt_data == 1)? conv_out_ddr_data : 512'b0;
+  assign valid_ddr_wt_data = valid_conv_out_ddr_data;
 
   //DDR input load
-  always @(posedge clk) begin
-    if (reset) begin
-      valid_load_input <= 0;
-    end else begin
-      valid_load_input <= input_word_ddr_en_rd;  //DDR sim
-    end
-  end
-
+  //DDR sim version
+  // always @(posedge clk) begin
+  //   if (reset) begin
+  //     valid_load_input <= 0;
+  //   end else begin
+  //     valid_load_input <= input_word_ddr_en_rd;  //DDR sim
+  //   end
+  // end
+  //true DDR version
   // assign valid_load_input = ((state_conv_load_input == 1) && (DDR_valid == 1));
-  
   always @(posedge clk) begin
     if (reset == 1'b1) begin
       last_load_input_word   <= 0;
@@ -734,14 +753,15 @@ module quan_CBR_v10_tb(
   assign input_word_buf_wr    = last_load_input_word;
   assign input_word_buf_en_wr = state_valid_load_input;
   //DDR weights load
-  always @(posedge clk) begin
-    if (reset) begin
-      valid_load_weights <= 0;
-    end else begin
-      valid_load_weights <= weights_word_ddr_en_rd;  //DDR sim
-    end
-  end
-
+  //DDR sim version
+  // always @(posedge clk) begin
+  //   if (reset) begin
+  //     valid_load_weights <= 0;
+  //   end else begin
+  //     valid_load_weights <= weights_word_ddr_en_rd;  //DDR sim
+  //   end
+  // end
+  // true DDR version
   // assign valid_load_weights = ((state_conv_load_weights == 1) && (DDR_valid == 1));
 
   //conv decoder
@@ -813,12 +833,13 @@ module quan_CBR_v10_tb(
       .last_conv_compute(last_conv_compute),
       .conv_fin(conv_fin)
   );
-//conv load input ctrl
-  conv_load_input_controller cv_load_input_ctrl (
+  //conv load input ctrl
+  conv_load_input_ddr_controller_v2 cv_load_input_ddr_ctrl (
       .clk                                    (clk),
       .conv_load_input                        (conv_load_input),
       .reset                                  ((reset == 1) || (conv_start == 1)),
-      .ddr_en                                 (ddr_en),
+      .ddr_cmd_ready                                 (ddr_cmd_ready),
+      .ddr_rd_data_valid(ddr_rd_data_valid),
       .load_input_info_fifo_empty(load_input_info_fifo_empty),
       .mode_init                              (mode),
       .of_init                                (of),
@@ -860,6 +881,10 @@ module quan_CBR_v10_tb(
       .input_word_ddr_adr_rd                  (input_word_ddr_adr_rd),
       .input_word_load_info_fifo_en_wt        (input_word_load_info_fifo_en_wt),
       .input_word_load_info_fifo_wt           (input_word_load_info_fifo_wt),
+      .load_input_ddr_base_adr(load_input_ddr_base_adr),
+      .load_input_ddr_length(load_input_ddr_length),
+      .valid_load_input_ddr_cmd(valid_load_input_ddr_cmd),
+      .valid_load_input(valid_load_input),
       .conv_load_input_fin                    (conv_load_input_fin),
       .state_conv_load_input(state_conv_load_input)
   );
@@ -878,26 +903,35 @@ module quan_CBR_v10_tb(
   assign input_word_load_info_fifo_en_rd = valid_load_input;
   assign input_word_buf_idx_wr           = (state_valid_load_input == 1) ? input_word_load_info_fifo_rd[16+:16] : 0;
   assign input_word_buf_adr_wr           = (state_valid_load_input == 1) ? input_word_load_info_fifo_rd[0+:16] : 0;
-//conv load weights ctrl
-  conv_load_weights_controller cv_load_weights_controller (
+  //conv load weights ctrl
+  conv_load_weights_ddr_controller cv_load_weights_ddr_controller (
       .clk               (clk),
       .reset             ((reset == 1) || (conv_start == 1)),
       .conv_load_weights (conv_load_weights),  //load weight start
-      .ddr_en            (ddr_en),             //mig fifo can accept new load instr
-      .valid_load_weights(valid_load_weights), //ddr weights is loaded from ddr
+      .ddr_cmd_ready            (ddr_cmd_ready),             //mig fifo can accept new load instr
+      .ddr_rd_data_valid(ddr_rd_data_valid),
+      
       .weights_layer_base_ddr_adr_rd_init(weights_layer_base_ddr_adr_rd),
       .mode_init                         (mode),
       .nif_mult_k_mult_k_init            (nif_mult_k_mult_k),
       .of_init                           (of),
+      //ddr rd info
       .weights_word_ddr_en_rd (weights_word_ddr_en_rd),   //read ddr instr
       .weights_word_ddr_adr_rd(weights_word_ddr_adr_rd),
+      //ddr cmd
+      .load_weights_ddr_base_adr(load_weights_ddr_base_adr),
+      .load_weights_ddr_length(load_weights_ddr_length),
+      .valid_load_weights_ddr_cmd(valid_load_weights_ddr_cmd),
+      //buf wt
+      .valid_load_weights(valid_load_weights), //ddr weights is loaded from ddr
       .weights_word_buf_en_wt (weights_word_buf_en_wt),   //write buf instr
       .weights_word_buf_adr_wt(weights_word_buf_adr_wt),
       .conv_load_weights_fin  (conv_load_weights_fin),
       .state_conv_load_weights(state_conv_load_weights)
   );
-    //conv compute ctrl
-  conv_compute_kernel_controller_v4 #(.sa_column_num(sa_column_num)) 
+
+  //conv compute ctrl
+    conv_compute_kernel_controller_v4 #(.sa_column_num(sa_column_num)) 
   cv_compute_kernel_controller(
     .clk                 (clk),
     .reset               ((reset == 1) || (conv_start == 1)),
@@ -942,15 +976,15 @@ module quan_CBR_v10_tb(
     .conv_nif_add_end_delay    (conv_nif_add_end_delay)
   );
 
-  conv_compute_shell1_controller_v3 #(.sa_column_num(sa_column_num)) 
+  conv_compute_shell1_controller_v4 #(.sa_column_num(sa_column_num)) 
   cv_compute_shell1_controller(
      .clk                 (clk),
     .reset               ((reset == 1) || (conv_start == 1)),
-    .s(s),
-    .p(p),
-    .iy(iy),
-    .nif_in_2pow(nif_in_2pow),
-    .ix_in_2pow(ix_in_2pow),
+    .s_init(s),
+    .p_init(p),
+    .iy_init(iy),
+    .nif_in_2pow_init(nif_in_2pow),
+    .ix_in_2pow_init(ix_in_2pow),
 
     .poy(poy_delay),
     .valid_adr(valid_adr_delay),
@@ -962,26 +996,26 @@ module quan_CBR_v10_tb(
     .slab_num(slab_num_delay),
     .row_slab_start_idx(row_slab_start_idx_delay),
 
-    .row1_idx_delay            (row1_idx),
-    .row1_buf_adr_delay        (row1_buf_adr),
-    .row1_buf_idx_delay        (row1_buf_idx),
-    .row1_buf_word_select_delay(row1_buf_word_select),
-    .row1_slab_adr_delay       (row1_slab_adr),
-    .row1_slab_idx_delay       (row1_slab_idx),
-    .row1_slab_adr_to_wr_delay(row1_slab_adr_to_wr),
-    .row1_slab_idx_to_wr_delay(row1_slab_idx_to_wr),
-    .valid_row1_adr_delay      (valid_row1_adr)
+    .row1_idx            (row1_idx),
+    .row1_buf_adr        (row1_buf_adr),
+    .row1_buf_idx        (row1_buf_idx),
+    .row1_buf_word_select(row1_buf_word_select),
+    .row1_slab_adr       (row1_slab_adr),
+    .row1_slab_idx       (row1_slab_idx),
+    .row1_slab_adr_to_wr(row1_slab_adr_to_wr),
+    .row1_slab_idx_to_wr(row1_slab_idx_to_wr),
+    .valid_row1_adr      (valid_row1_adr)
   );
 
-  conv_compute_shell2_controller_v3 #(.sa_column_num(sa_column_num)) 
+  conv_compute_shell2_controller_v4 #(.sa_column_num(sa_column_num)) 
   cv_compute_shell2_controller(
         .clk                 (clk),
     .reset               ((reset == 1) || (conv_start == 1)),
-    .s(s),
-    .p(p),
-    .iy(iy),
-    .nif_in_2pow(nif_in_2pow),
-    .ix_in_2pow(ix_in_2pow),
+    .s_init(s),
+    .p_init(p),
+    .iy_init(iy),
+    .nif_in_2pow_init(nif_in_2pow),
+    .ix_in_2pow_init(ix_in_2pow),
 
     .poy(poy_delay),
     .valid_adr(valid_adr_delay),
@@ -993,26 +1027,26 @@ module quan_CBR_v10_tb(
     .slab_num(slab_num_delay),
     .row_slab_start_idx(row_slab_start_idx_delay),
 
-    .row2_idx_delay            (row2_idx),
-    .row2_buf_adr_delay        (row2_buf_adr),
-    .row2_buf_idx_delay        (row2_buf_idx),
-    .row2_buf_word_select_delay(row2_buf_word_select),
-    .row2_slab_adr_delay       (row2_slab_adr),
-    .row2_slab_idx_delay       (row2_slab_idx),
-    .row2_slab_adr_to_wr_delay(row2_slab_adr_to_wr),
-    .row2_slab_idx_to_wr_delay(row2_slab_idx_to_wr),
-    .valid_row2_adr_delay      (valid_row2_adr)
+    .row2_idx            (row2_idx),
+    .row2_buf_adr        (row2_buf_adr),
+    .row2_buf_idx        (row2_buf_idx),
+    .row2_buf_word_select(row2_buf_word_select),
+    .row2_slab_adr       (row2_slab_adr),
+    .row2_slab_idx       (row2_slab_idx),
+    .row2_slab_adr_to_wr(row2_slab_adr_to_wr),
+    .row2_slab_idx_to_wr(row2_slab_idx_to_wr),
+    .valid_row2_adr      (valid_row2_adr)
   );
 
-  conv_compute_shell3_controller_v3 #(.sa_column_num(sa_column_num)) 
+  conv_compute_shell3_controller_v4 #(.sa_column_num(sa_column_num)) 
   cv_compute_shell3_controller(
         .clk                 (clk),
     .reset               ((reset == 1) || (conv_start == 1)),
-    .s(s),
-    .p(p),
-    .iy(iy),
-    .nif_in_2pow(nif_in_2pow),
-    .ix_in_2pow(ix_in_2pow),
+    .s_init(s),
+    .p_init(p),
+    .iy_init(iy),
+    .nif_in_2pow_init(nif_in_2pow),
+    .ix_in_2pow_init(ix_in_2pow),
 
     .poy(poy_delay),
     .valid_adr(valid_adr_delay),
@@ -1024,76 +1058,85 @@ module quan_CBR_v10_tb(
     .slab_num(slab_num_delay),
     .row_slab_start_idx(row_slab_start_idx_delay),
 
-    .row3_idx_delay            (row3_idx),
-    .row3_buf_adr_delay        (row3_buf_adr),
-    .row3_buf_idx_delay        (row3_buf_idx),
-    .row3_buf_word_select_delay(row3_buf_word_select),
-    .row3_slab_adr_delay       (row3_slab_adr),
-    .row3_slab_idx_delay       (row3_slab_idx),
-    .row3_slab_adr_to_wr_delay(row3_slab_adr_to_wr),
-    .row3_slab_idx_to_wr_delay(row3_slab_idx_to_wr),
-    .valid_row3_adr_delay      (valid_row3_adr)
+    .row3_idx            (row3_idx),
+    .row3_buf_adr        (row3_buf_adr),
+    .row3_buf_idx        (row3_buf_idx),
+    .row3_buf_word_select(row3_buf_word_select),
+    .row3_slab_adr       (row3_slab_adr),
+    .row3_slab_idx       (row3_slab_idx),
+    .row3_slab_adr_to_wr(row3_slab_adr_to_wr),
+    .row3_slab_idx_to_wr(row3_slab_idx_to_wr),
+    .valid_row3_adr      (valid_row3_adr)
   );
-
+  //stage 1
   always @(posedge clk) begin
-    if ((reset == 1) || (conv_start == 1)) begin
-          ox_start            <=0;
-    oy_start            <=0;
-    of_start            <=0;
-    pox                 <=0;
-    pof                 <=0;
-    if_idx              <=0;
-    west_pad            <=0;
-    east_pad            <=0;
-    row_end_idx         <=0;
-    reg_start_idx       <=0;
-    reg_end_idx         <=0;
-    //ctrl signal to shell  
-    poy                 <=0;
-    valid_adr<=0;
-    iy_start<=0;
-    ky<=0;
-    row_base_in_3s<=0;
-    row_start_idx       <=0;
-    if_start<=0;
-    slab_num            <=0;
-    row_slab_start_idx  <=0;
+    ox_start_stage_1            <=ox_start_delay;
+    oy_start_stage_1            <=oy_start_delay;
+    of_start_stage_1            <=of_start_delay;
+    pox_stage_1                 <=pox_delay;
+    pof_stage_1                 <=pof_delay;
+    if_idx_stage_1              <=if_idx_delay;
+    west_pad_stage_1            <=west_pad_delay;
+    east_pad_stage_1            <=east_pad_delay;
+    row_end_idx_stage_1         <=row_end_idx_delay;
+    reg_start_idx_stage_1       <=reg_start_idx_delay;
+    reg_end_idx_stage_1         <=reg_end_idx_delay;
     //general ctrl signal 2
-    com_control_end            <=0;
-    conv_pixels_add_end <=0;
-    conv_nif_add_end    <=0;
-    end else begin
-       ox_start            <=ox_start_delay;
-    oy_start            <=oy_start_delay;
-    of_start            <=of_start_delay;
-    pox                 <=pox_delay;
-    pof                 <=pof_delay;
-    if_idx              <=if_idx_delay;
-    west_pad            <=west_pad_delay;
-    east_pad            <=east_pad_delay;
-    row_end_idx         <=row_end_idx_delay;
-    reg_start_idx       <=reg_start_idx_delay;
-    reg_end_idx         <=reg_end_idx_delay;
+    com_control_end_stage_1            <=com_control_end_delay;
+    conv_pixels_add_end_stage_1 <=conv_pixels_add_end_delay;
+    conv_nif_add_end_stage_1    <=conv_nif_add_end_delay;
     //ctrl signal to shell  
-    poy                 <=poy_delay;
-    valid_adr<=valid_adr_delay;
-    iy_start<=iy_start_delay;
-    ky<=ky_delay;
-    row_base_in_3s<=row_base_in_3s_delay;
-    row_start_idx       <=row_start_idx_delay;
-    if_start<=if_start_delay;
-    slab_num            <=slab_num_delay;
-    row_slab_start_idx  <=row_slab_start_idx_delay;
-    //general ctrl signal 2
-    com_control_end            <=com_control_end_delay;
-    conv_pixels_add_end <=conv_pixels_add_end_delay;
-    conv_nif_add_end    <=conv_nif_add_end_delay;
-    end
+    poy_stage_1                 <=poy_delay;
+    row_start_idx_stage_1       <=row_start_idx_delay;
+    slab_num_stage_1            <=slab_num_delay;
   end
-
+  //stage 2
+  always @(posedge clk) begin
+    ox_start_stage_2            <=ox_start_stage_1;
+    oy_start_stage_2            <=oy_start_stage_1;
+    of_start_stage_2            <=of_start_stage_1;
+    pox_stage_2                 <=pox_stage_1;
+    pof_stage_2                 <=pof_stage_1;
+    if_idx_stage_2              <=if_idx_stage_1;
+    west_pad_stage_2            <=west_pad_stage_1;
+    east_pad_stage_2            <=east_pad_stage_1;
+    row_end_idx_stage_2         <=row_end_idx_stage_1;
+    reg_start_idx_stage_2       <=reg_start_idx_stage_1;
+    reg_end_idx_stage_2         <=reg_end_idx_stage_1;
+    //general ctrl signal 2
+    com_control_end_stage_2            <=com_control_end_stage_1;
+    conv_pixels_add_end_stage_2 <=conv_pixels_add_end_stage_1;
+    conv_nif_add_end_stage_2    <=conv_nif_add_end_stage_1;
+    //ctrl signal to shell  
+    poy_stage_2                 <=poy_stage_1;
+    row_start_idx_stage_2       <=row_start_idx_stage_1;
+    slab_num_stage_2            <=slab_num_stage_1;
+  end
+  //stage 3
+  always @(posedge clk) begin
+    ox_start            <=ox_start_stage_2;
+    oy_start            <=oy_start_stage_2;
+    of_start            <=of_start_stage_2;
+    pox                 <=pox_stage_2;
+    pof                 <=pof_stage_2;
+    if_idx              <=if_idx_stage_2;
+    west_pad            <=west_pad_stage_2;
+    east_pad            <=east_pad_stage_2;
+    row_end_idx         <=row_end_idx_stage_2;
+    reg_start_idx       <=reg_start_idx_stage_2;
+    reg_end_idx         <=reg_end_idx_stage_2;
+    //general ctrl signal 2
+    com_control_end            <=com_control_end_stage_2;
+    conv_pixels_add_end <=conv_pixels_add_end_stage_2;
+    conv_nif_add_end    <=conv_nif_add_end_stage_2;
+    //ctrl signal to shell  
+    poy                 <=poy_stage_2;
+    row_start_idx       <=row_start_idx_stage_2;
+    slab_num            <=slab_num_stage_2;
+  end
   //store chunk index
   always @(posedge clk) begin
-    if ((reset == 1) || (conv_start == 1)) begin
+    if (reset == 1'b1) begin
       shadow_ox_start <= 0;
       shadow_oy_start <= 0;
       shadow_of_start <= 0;
@@ -1117,7 +1160,7 @@ module quan_CBR_v10_tb(
     end
   end
   always @(posedge clk) begin
-    if ((reset == 1) || (conv_start == 1)) begin
+    if (reset == 1'b1) begin
       store_ox_start <= 0;
       store_oy_start <= 0;
       store_of_start <= 0;
@@ -1330,7 +1373,6 @@ module quan_CBR_v10_tb(
       conv_start <= conv_start_pre;
     end
   end
-
   //img2col
   //row regs
   Row_Regs_v2 row_regs (
@@ -1487,10 +1529,11 @@ module quan_CBR_v10_tb(
       .doutb(slab3_pixels_2)         // output wire [15 : 0] doutb
   );
   //cv_weights_handler
-  conv_weights_handler_v2 cv_weights_handler (
+  quan_conv_weights_controller conv_weights_controller (
       .clk                    (clk),
       .reset                  ((reset == 1) || (conv_start == 1)),
-      .mode                   (mode),
+      .mode_init(mode),
+      .nif_mult_k_mult_k_init(nif_mult_k_mult_k),
       //cycle 0 in
       .re_fm_en               (re_fm_en),                 //the first input is needed in next cycle
       .re_fm_end              (re_fm_end),                //the last input is needed in cur cycle
@@ -1502,7 +1545,7 @@ module quan_CBR_v10_tb(
       // //cycle 1 out
       // .weights_vector         (weights_vector)            //weights vector flush into PEs
   );
-//ping-pong weights buf interface
+  //ping-pong weights buf interface
   conv_weights_ping_pong_controller_v2 cv_weights_ping_pong_controller (
       .reset            ((reset == 1) || (conv_start == 1)),
       .clk              (clk),
@@ -1662,7 +1705,7 @@ module quan_CBR_v10_tb(
       .scale_buf_en_rd(scale_buf_en_rd)
   );
 
-//E buf
+  //E buf
   // E_buffer E_buffer (
   //     .clka (clk),                     // input wire clka
   //     .ena  (E_buf_en),     // input wire ena
@@ -1671,74 +1714,46 @@ module quan_CBR_v10_tb(
   //     .dina (E_buf_wr),     // input wire [511 : 0] dina
   //     .douta(E_buf_rd)      // output wire [511 : 0] douta
   // );
-  // assign E_buf_adr = 
-  // ((E_buf_en_rd == 1'b0) && (E_buf_en_wr == 1'b1)) ? E_buf_adr_wr[8 : 0] : //wt E buf
-  // ((E_buf_en_rd == 1'b1) && (E_buf_en_wr == 1'b0)) ? E_buf_adr_rd[8 : 0] : 0; //rd E buf
-  // assign E_buf_en  = ((E_buf_en_rd == 1'b1) || (E_buf_en_wr == 1'b1)) ? 1 : 0;
-  // assign E_buf_en_wr = 1'b0;
-  // assign E_buf_wr = 512'b0;
-  //E buf mem
-  parameter E_buffer_mem_limit = 512;
-  reg [511:0] E_buffer_mem [E_buffer_mem_limit-1:0];
-  reg [511:0] E_buffer_mem_out;
-  always @(posedge clk) begin
-    if (reset) begin
-      E_buffer_mem_out <= 0;
-    end
-    else if (E_buf_en == 1'b1) begin
-      E_buffer_mem_out <= E_buffer_mem[E_buf_adr];
-    end
-    else begin
-      E_buffer_mem_out <= E_buffer_mem_out;
-    end
-  end
+  E_buffer_rom E_buffer (
+      .clka (clk),                     // input wire clka
+      .ena  (E_buf_en),     // input wire ena
+      // .wea  (E_buf_en_wr),  // input wire [0 : 0] wea
+      .addra(E_buf_adr),    // input wire [8 : 0] addra
+      // .dina (E_buf_wr),     // input wire [511 : 0] dina
+      .douta(E_buf_rd)      // output wire [511 : 0] douta
+  );
   assign E_buf_adr = 
   ((E_buf_en_rd == 1'b0) && (E_buf_en_wr == 1'b1)) ? E_buf_adr_wr[8 : 0] : //wt E buf
   ((E_buf_en_rd == 1'b1) && (E_buf_en_wr == 1'b0)) ? E_buf_adr_rd[8 : 0] : 0; //rd E buf
   assign E_buf_en  = ((E_buf_en_rd == 1'b1) || (E_buf_en_wr == 1'b1)) ? 1 : 0;
   assign E_buf_en_wr = 1'b0;
   assign E_buf_wr = 512'b0;
-  assign E_buf_rd = E_buffer_mem_out;
 
-  // //bias buf
-//   bias_buffer bias_buffer (
-//       .clka (clk),             // input wire clka
-//       .ena  (bias_buf_en),     // input wire ena
-//       .wea  (bias_buf_en_wr),  // input wire [0 : 0] wea
-//       .addra(bias_buf_adr),    // input wire [8 : 0] addra
-//       .dina (bias_buf_wr),     // input wire [511 : 0] dina
-//       .douta(bias_buf_rd)      // output wire [511 : 0] douta
-//   );
-//   assign bias_buf_adr = 
-//   ((bias_buf_en_rd == 1'b0) && (bias_buf_en_wr == 1'b1)) ?bias_buf_adr_wr[8 : 0] : //wt bias buf
-//   ((bias_buf_en_rd == 1'b1) && (bias_buf_en_wr == 1'b0)) ?bias_buf_adr_rd[8 : 0] : 0; //rd bias buf
-//   assign bias_buf_en  = ((bias_buf_en_rd == 1'b1) || (bias_buf_en_wr == 1'b1)) ? 1 : 0;
-//   assign bias_buf_en_wr = 0;
-//   assign bias_buf_wr = 512'b0;
-  //bias buf reg mem
-  parameter bias_buffer_mem_limit = 512;
-  reg [511:0] bias_buffer_mem [bias_buffer_mem_limit-1:0];
-  reg [511:0] bias_buffer_mem_out;
-  always @(posedge clk) begin
-    if (reset) begin
-      bias_buffer_mem_out <= 0;
-    end
-    else if (bias_buf_en == 1'b1) begin
-      bias_buffer_mem_out <= bias_buffer_mem[bias_buf_adr];
-    end
-    else begin
-      bias_buffer_mem_out <= bias_buffer_mem_out;
-    end
-  end
+  //bias buf
+  // bias_buffer bias_buffer (
+  //     .clka (clk),             // input wire clka
+  //     .ena  (bias_buf_en),     // input wire ena
+  //     .wea  (bias_buf_en_wr),  // input wire [0 : 0] wea
+  //     .addra(bias_buf_adr),    // input wire [8 : 0] addra
+  //     .dina (bias_buf_wr),     // input wire [511 : 0] dina
+  //     .douta(bias_buf_rd)      // output wire [511 : 0] douta
+  // );
+  bias_buffer_rom bias_buffer (
+      .clka (clk),             // input wire clka
+      .ena  (bias_buf_en),     // input wire ena
+      // .wea  (bias_buf_en_wr),  // input wire [0 : 0] wea
+      .addra(bias_buf_adr),    // input wire [8 : 0] addra
+      // .dina (bias_buf_wr),     // input wire [511 : 0] dina
+      .douta(bias_buf_rd)      // output wire [511 : 0] douta
+  );
   assign bias_buf_adr = 
   ((bias_buf_en_rd == 1'b0) && (bias_buf_en_wr == 1'b1)) ?bias_buf_adr_wr[8 : 0] : //wt bias buf
   ((bias_buf_en_rd == 1'b1) && (bias_buf_en_wr == 1'b0)) ?bias_buf_adr_rd[8 : 0] : 0; //rd bias buf
   assign bias_buf_en  = ((bias_buf_en_rd == 1'b1) || (bias_buf_en_wr == 1'b1)) ? 1 : 0;
   assign bias_buf_en_wr = 0;
   assign bias_buf_wr = 512'b0;
-  assign bias_buf_rd = bias_buffer_mem_out;
 
-  // //scale buf
+  //scale buf
   // scale_buffer scale_buffer (
   //     .clka (clk),                     // input wire clka
   //     .ena  (scale_buf_en),     // input wire ena
@@ -1747,36 +1762,22 @@ module quan_CBR_v10_tb(
   //     .dina (scale_buf_wr),     // input wire [511 : 0] dina
   //     .douta(scale_buf_rd)      // output wire [511 : 0] douta
   // );
-  // assign scale_buf_adr = 
-  // ((scale_buf_en_rd == 1'b0) && (scale_buf_en_wr == 1'b1)) ? scale_buf_adr_wr[8 : 0] : //wt scale buf
-  // ((scale_buf_en_rd == 1'b1) && (scale_buf_en_wr == 1'b0)) ? scale_buf_adr_rd[8 : 0] : 0; //rd scale buf
-  // assign scale_buf_en  = ((scale_buf_en_rd == 1'b1) || (scale_buf_en_wr == 1'b1)) ? 1 : 0;
-  // assign scale_buf_en_wr = 1'b0;
-  // assign scale_buf_wr = 512'b0;
-  //scale buf mem
-  parameter scale_buffer_mem_limit = 512;
-  reg [511:0] scale_buffer_mem [scale_buffer_mem_limit-1:0];
-  reg [511:0] scale_buffer_mem_out;
-  always @(posedge clk) begin
-    if (reset) begin
-      scale_buffer_mem_out <= 0;
-    end
-    else if (scale_buf_en == 1'b1) begin
-      scale_buffer_mem_out <= scale_buffer_mem[scale_buf_adr];
-    end
-    else begin
-      scale_buffer_mem_out <= scale_buffer_mem_out;
-    end
-  end
+  scale_buffer_rom scale_buffer (
+      .clka (clk),                     // input wire clka
+      .ena  (scale_buf_en),     // input wire ena
+      // .wea  (scale_buf_en_wr),  // input wire [0 : 0] wea
+      .addra(scale_buf_adr),    // input wire [8 : 0] addra
+      // .dina (scale_buf_wr),     // input wire [511 : 0] dina
+      .douta(scale_buf_rd)      // output wire [511 : 0] douta
+  );
   assign scale_buf_adr = 
   ((scale_buf_en_rd == 1'b0) && (scale_buf_en_wr == 1'b1)) ? scale_buf_adr_wr[8 : 0] : //wt scale buf
   ((scale_buf_en_rd == 1'b1) && (scale_buf_en_wr == 1'b0)) ? scale_buf_adr_rd[8 : 0] : 0; //rd scale buf
   assign scale_buf_en  = ((scale_buf_en_rd == 1'b1) || (scale_buf_en_wr == 1'b1)) ? 1 : 0;
   assign scale_buf_en_wr = 1'b0;
   assign scale_buf_wr = 512'b0;
-  assign scale_buf_rd = scale_buffer_mem_out;
 
-  //E regs
+//E regs
   quan_E_Regs_v3 E_regs (
       .clk                   (clk),
       .reset                 ((reset == 1) || (conv_start == 1)),
@@ -1860,7 +1861,7 @@ module quan_CBR_v10_tb(
     end
     for (i = 1; i <= sa_column_num; i = i + 1) begin : sa_column  //poy, rows
       for (j = 1; j <= sa_row_num; j = j + 1) begin : sa_row  //output channel
-        quan_SA_sum_E_v9 sa (
+        quan_SA_sum_E_v10 sa (
             .clk              (clk),
 
             .reset(((i == 1) && (j == 1)) ? ((reset == 1) || (conv_start == 1) || (conv_compute_fin == 1)):
@@ -1886,15 +1887,15 @@ module quan_CBR_v10_tb(
             .column_in     ((j == 1)? delay_rowi_pixels[i-1]: core_column_in_array[i-1][j-1-1]), //pixels   
             .row_in_out(core_row_in_array[i-1][j-1]),
             .column_in_out(core_column_in_array[i-1][j-1]),
-            // .sa_E_in(extra_sa_vector_Bs[i-1][j-1]),
-            // .sa_sum_in(extra_sa_vector_As[i-1][j-1]),
+      //       .sa_E_in(extra_sa_vector_Bs[i-1][j-1]),
+      //       .sa_sum_in(extra_sa_vector_As[i-1][j-1]),
       //       .mult_array_mode_pre(((i == 1) && (j == 1)) ? (core_mult_array_mode_pre):
       // ((i > 1) && (j == 1))? core_mult_array_mode_array[i-1-1][j-1]:
       // ((i == 1) && (j > 1))? core_mult_array_mode_array[i-1][j-1-1]:
       // (core_mult_array_mode_array[i-1-1][j-1] | core_mult_array_mode_array[i-1][j-1-1])),
       //       .mult_array_mode_out  (core_mult_array_mode_array[i-1][j-1]),
 
-            // .row0_out         (sa_row0_outs[i-1][j-1]),
+      //       .row0_out         (sa_row0_outs[i-1][j-1]),
             .out              (out_rowi_channel_seti[i-1][j-1])
         );
 
@@ -2037,10 +2038,11 @@ module quan_CBR_v10_tb(
     end
   endgenerate
   // sa control
-  quan_CBR_kernel_controller_v4 quan_CBR_kernel_ctrl(
+  quan_CBR_kernel_controller_v6 quan_CBR_kernel_ctrl(
     .clk              (clk),
     .reset            ((reset == 1) || (conv_start == 1)),  //next tile need clr
     .re_fm_en         (re_fm_en),
+    .re_fm_end(re_fm_end),
     .mode_init             (mode),
     .nif_mult_k_mult_k_init(nif_mult_k_mult_k),
     .shadow_pof(shadow_pof),
@@ -2051,7 +2053,7 @@ module quan_CBR_v10_tb(
 
     //for kernel ctrl
     .core_cell_en_pre(core_cell_en_pre),
-    .core_cell_reset_pre(core_cell_reset_pre),
+    // .core_cell_reset_pre(core_cell_reset_pre),
     .core_cell_output_en_pre(core_cell_output_en_pre),
     .core_sum_E_recieve_en_pre(core_sum_E_recieve_en_pre),
     // .core_sum_mult_E_en_pre(core_sum_mult_E_en_pre),
@@ -2096,30 +2098,33 @@ module quan_CBR_v10_tb(
   assign sum_mult_E_vector_B = //mode 0 or 1
   (mode == 0)? sum_mult_E_vector_B_mode0:
   (mode == 1)? sum_mult_E_vector_B_mode1: {(vector_B_width){1'b0}};
-
   assign vector_A         = sum_mult_E_vector_A;
   assign vector_B         = sum_mult_E_vector_B;
   // assign sum_mult_E_vector_P = (product_add_bias_en == 1'b1) ? vector_P : 0;
   assign sum_mult_E_vector_P = vector_P;
   
-//conv store ctrl
-  conv_fifo_out_controller cv_fifo_out_controller (  // conv_out_handler
+  //conv store ctrl
+  conv_store_ddr_controller cv_store_ddr_controller (  // conv_out_handler
       //cycle 0 in
       .clk                       (clk),
       .reset                     ((reset == 1) || (conv_start == 1)),
-      .conv_fifo_out_start       (conv_store),
-      .ddr_en(ddr_en),
-      .output_ddr_layer_base_adr(output_ddr_layer_base_adr),
+      .conv_store_start          (conv_store),
+      .ddr_cmd_ready             (ddr_cmd_ready),
+      .ddr_wt_data_ready         (ddr_wt_data_ready),
+      .output_ddr_layer_base_adr (output_ddr_layer_base_adr),
       .mode                      (mode),
-      .of_in_2pow(of_in_2pow), 
-      .ox_in_2pow(ox_in_2pow),
+      .of_in_2pow                (of_in_2pow),
+      .ox_in_2pow                (ox_in_2pow),
       .cur_ox_start              (store_ox_start),
       .cur_oy_start              (store_oy_start),
       .cur_of_start              (store_of_start),
       .cur_pox                   (store_pox),
       .cur_poy                   (store_poy),
       .cur_pof                   (store_pof),
-      
+      //store cmd
+      .store_ddr_base_adr        (store_ddr_base_adr),
+      .store_ddr_length          (store_ddr_length),
+      .valid_store_ddr_cmd       (valid_store_ddr_cmd),
       //cycle 0 out
       .fifo_rds                  (fifo_rds),
       //cycle 1 in
@@ -2127,30 +2132,28 @@ module quan_CBR_v10_tb(
       //cycle 1 out
       .fifo_column_no            (fifo_column_no),
       .fifo_row_no               (fifo_row_no),
-      .valid_conv_out    (valid_conv_out),
       .out_y_idx                 (out_y_idx),
       .out_x_idx                 (out_x_idx),
       .out_f_idx                 (out_f_idx),
-      .conv_out_data             (conv_out_data),
       .conv_fifo_out_tile_add_end(conv_fifo_out_tile_add_end),
-      .valid_conv_out_ddr_adr(valid_conv_out_ddr_adr),
-      .conv_out_ddr_adr(conv_out_ddr_adr),
-      .conv_out_ddr_data(conv_out_ddr_data)
+      //store ddr data
+      .conv_out_ddr_adr          (conv_out_ddr_adr),
+      .valid_conv_out_ddr_data   (valid_conv_out_ddr_data),
+      .conv_out_ddr_data         (conv_out_ddr_data),
+      .conv_store_fin            (conv_store_fin)
   );
-  assign fifo_data      = fifo_rowi_channel_seti_dout[fifo_column_no][fifo_row_no];
+  assign fifo_data = fifo_rowi_channel_seti_dout[fifo_column_no][fifo_row_no];
   assign conv_store_fin = conv_fifo_out_tile_add_end;  //demo store ctrl
 
-  always begin
-    #5;
-    clk <= ~clk;
-  end
-
+`ifdef SIMULATION
+  // fin and stop
   always @(posedge clk) begin
     if (conv_fin == 1) begin
-    #100;
       $stop;
     end
   end
+
+`endif
 
   integer file; 
   integer file01, file02, file03, file04, file05, file06;
@@ -2159,28 +2162,28 @@ module quan_CBR_v10_tb(
   integer n;
   initial begin
     // initial data
-    for (n = 0; n < 1000000; n = n + 1) begin //DDR_mem_limit
-      DDR_mem[n] = 512'b0;
-    end
-    for (n = 0; n < bias_buffer_mem_limit; n = n + 1) begin
-      bias_buffer_mem[n] = 512'b0;
-    end
-    for (n = 0; n < E_buffer_mem_limit; n = n + 1) begin
-      E_buffer_mem[n] = 512'b0;
-    end
-    for (n = 0; n < scale_buffer_mem_limit; n = n + 1) begin
-      scale_buffer_mem[n] = 512'b0;
-    end
-    $readmemh("D:\\project\\Vivado\\yolov5_accel\\yolov5_accel.srcs\\DDR_init.txt", DDR_mem);
-    // // 打印读取的数据以验证
     // for (n = 0; n < 1000000; n = n + 1) begin //DDR_mem_limit
-    //   $display("DDR_mem[%d] = %h", n, DDR_mem[n]);
+    //   DDR_mem[n] = 512'b0;
     // end
-    $readmemh("D:\\project\\Vivado\\yolov5_accel\\yolov5_accel.srcs\\instr_args_hex_num_init.txt", conv_instr_args_mem);
-    // $display("conv_instr_args_mem[%d] = %h", 0, conv_instr_args_mem[0]);
-    $readmemh("D:\\project\\Vivado\\yolov5_accel\\yolov5_accel.srcs\\bias_buffer_init.txt", bias_buffer_mem);
-    $readmemh("D:\\project\\Vivado\\yolov5_accel\\yolov5_accel.srcs\\E_buffer_init.txt", E_buffer_mem);
-    $readmemh("D:\\project\\Vivado\\yolov5_accel\\yolov5_accel.srcs\\scale_buffer_init.txt", scale_buffer_mem);
+    // for (n = 0; n < bias_buffer_mem_limit; n = n + 1) begin
+    //   bias_buffer_mem[n] = 512'b0;
+    // end
+    // for (n = 0; n < E_buffer_mem_limit; n = n + 1) begin
+    //   E_buffer_mem[n] = 512'b0;
+    // end
+    // for (n = 0; n < scale_buffer_mem_limit; n = n + 1) begin
+    //   scale_buffer_mem[n] = 512'b0;
+    // end
+    // $readmemh("D:\\project\\Vivado\\yolov5_accel\\yolov5_accel.srcs\\DDR_init.txt", DDR_mem);
+    // // // 打印读取的数据以验证
+    // // for (n = 0; n < 1000000; n = n + 1) begin //DDR_mem_limit
+    // //   $display("DDR_mem[%d] = %h", n, DDR_mem[n]);
+    // // end
+    // $readmemh("D:\\project\\Vivado\\yolov5_accel\\yolov5_accel.srcs\\instr_args_hex_num_init.txt", conv_instr_args_mem);
+    // // $display("conv_instr_args_mem[%d] = %h", 0, conv_instr_args_mem[0]);
+    // $readmemh("D:\\project\\Vivado\\yolov5_accel\\yolov5_accel.srcs\\bias_buffer_init.txt", bias_buffer_mem);
+    // $readmemh("D:\\project\\Vivado\\yolov5_accel\\yolov5_accel.srcs\\E_buffer_init.txt", E_buffer_mem);
+    // $readmemh("D:\\project\\Vivado\\yolov5_accel\\yolov5_accel.srcs\\scale_buffer_init.txt", scale_buffer_mem);
     // collect conv res file
     file = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/conv_result.txt", "w");
     $display("Time\tvalid\tout_f_idx\tout_y_idx\tout_x_idx");
@@ -2190,12 +2193,12 @@ module quan_CBR_v10_tb(
     end
     // 写入文件
     $fdisplay(file, "Time\tvalid\tout_f_idx\tout_y_idx\tout_x_idx\tresult_word");
-    // 监控信号变化并写�?
-    $fmonitor(file, "%t\t%b\t%d\t%d\t%d\t%h", $time, valid_conv_out, out_f_idx, out_y_idx, out_x_idx, conv_out_data);
+    // 监控信号变化并写入
+    $fmonitor(file, "%t\t%b\t%d\t%d\t%d\t%h", $time, valid_conv_out_ddr_data, out_f_idx, out_y_idx, out_x_idx, conv_out_ddr_data);
 
     // collect product add bias file
     file01 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_00.txt", "w");
-    $fmonitor(file01, "%d\t%d\t%d\t%d\t%h", core_sum_E_recieve_en_array[0][0], shadow_of_start, shadow_oy_start, shadow_ox_start, out_rowi_channel_seti[0][0]);
+    $fmonitor(file01, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, out_rowi_channel_seti[0][0]);
     file02 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_in_A_00.txt", "w");
     $fmonitor(file02, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, sum_vector_in_mult_A_width_rowi_channel_setj[0][0]);
     file03 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_mult_E_00.txt", "w");
@@ -2208,7 +2211,7 @@ module quan_CBR_v10_tb(
     $fmonitor(file06, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, E_vector_in_mult_B_width_rowi_channel_setj[0][0]);
 
     file11 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_10.txt", "w");
-    $fmonitor(file11, "%d\t%d\t%d\t%d\t%h", core_sum_E_recieve_en_array[1][0], shadow_of_start, shadow_oy_start, shadow_ox_start, out_rowi_channel_seti[1][0]);
+    $fmonitor(file11, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, out_rowi_channel_seti[1][0]);
     file12 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_in_A_10.txt", "w");
     $fmonitor(file12, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, sum_vector_in_mult_A_width_rowi_channel_setj[1][0]);
     file13 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_mult_E_10.txt", "w");
@@ -2221,7 +2224,7 @@ module quan_CBR_v10_tb(
     $fmonitor(file16, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, E_vector_in_mult_B_width_rowi_channel_setj[1][0]);
 
     file21 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_20.txt", "w");
-    $fmonitor(file21, "%d\t%d\t%d\t%d\t%h", core_sum_E_recieve_en_array[2][0], shadow_of_start, shadow_oy_start, shadow_ox_start, out_rowi_channel_seti[2][0]);
+    $fmonitor(file21, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, out_rowi_channel_seti[2][0]);
     file22 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_in_A_20.txt", "w");
     $fmonitor(file22, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, sum_vector_in_mult_A_width_rowi_channel_setj[2][0]);
     file23 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_mult_E_20.txt", "w");
@@ -2232,17 +2235,7 @@ module quan_CBR_v10_tb(
     $fmonitor(file25, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, quantize_rowi_channel_setj[2][0]);
     file26 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/E_in_B_20.txt", "w");
     $fmonitor(file26, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, E_vector_in_mult_B_width_rowi_channel_setj[2][0]);
-    //begin simulation
-    clk   = 0;
-    reset = 1;
-    ddr_en = 1;
-
-    #30; //3 cycle
-    reset       = 0;
-
   end
 
 endmodule
-
-
 

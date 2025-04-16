@@ -3,9 +3,9 @@
 // Company: 
 // Engineer: 
 // 
-// Create Date: 2025/03/29 21:27:16
+// Create Date: 2025/04/10 19:20:23
 // Design Name: 
-// Module Name: quan_CBR_v10_tb
+// Module Name: quan_CBR_v11_tb
 // Project Name: 
 // Target Devices: 
 // Tool Versions: 
@@ -20,7 +20,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module quan_CBR_v10_tb(
+module quan_CBR_v11_tb(
 
     );
     //SA
@@ -221,7 +221,7 @@ module quan_CBR_v10_tb(
   wire [15:0] row3_buf_adr;
   wire [1:0] row3_buf_idx;
   wire row3_buf_word_select;
-  reg [15:0] row_slab_start_idx;
+  // reg [15:0] row_slab_start_idx;
   wire [15:0] row_slab_start_idx_delay;
   wire [15:0] row1_slab_adr;
   wire [1:0] row1_slab_idx;
@@ -243,16 +243,35 @@ module quan_CBR_v10_tb(
   wire conv_pixels_add_end_delay;
   wire conv_nif_add_end_delay;
   //cv kernel
-  reg [15:0] if_start;
-  reg [15:0] row_base_in_3s;
-  reg valid_adr; 
-  reg [15:0] iy_start;
-  reg [15:0] ky;
+  // reg [15:0] if_start;
+  // reg [15:0] row_base_in_3s;
+  // reg valid_adr; 
+  // reg [15:0] iy_start;
+  // reg [15:0] ky;
   wire [15:0] if_start_delay;
   wire [15:0] row_base_in_3s_delay;
   wire valid_adr_delay; 
   wire [15:0] iy_start_delay;
   wire [15:0] ky_delay;
+  //stage 1-2 waiting for shell
+  reg [15:0] ox_start_stage_1,ox_start_stage_2,
+    oy_start_stage_1,oy_start_stage_2,
+    of_start_stage_1,of_start_stage_2,
+    pox_stage_1,pox_stage_2,
+    poy_stage_1,poy_stage_2,
+    pof_stage_1,pof_stage_2,
+    if_idx_stage_1,if_idx_stage_2;
+  reg [ 3:0] west_pad_stage_1,west_pad_stage_2,
+    slab_num_stage_1,slab_num_stage_2,
+    east_pad_stage_1,east_pad_stage_2;
+  reg [15:0] row_start_idx_stage_1,row_start_idx_stage_2,
+    row_end_idx_stage_1,row_end_idx_stage_2;
+  reg [15:0] reg_start_idx_stage_1,reg_start_idx_stage_2,
+    reg_end_idx_stage_1,reg_end_idx_stage_2;
+
+  reg        com_control_end_stage_1,com_control_end_stage_2;
+  reg        conv_pixels_add_end_stage_1,conv_pixels_add_end_stage_2;
+  reg        conv_nif_add_end_stage_1,conv_nif_add_end_stage_2;
   //conv_load_input_controller
   wire [15:0] load_input_row_idx;
   wire [15:0] load_input_row_start_idx;
@@ -541,7 +560,7 @@ module quan_CBR_v10_tb(
 
   // sa control
   wire core_cell_en_pre;
-  wire core_cell_reset_pre;
+  // wire core_cell_reset_pre;
   wire core_cell_output_en_pre;
   wire core_reset_array[buffers_num-1 : 0][sa_row_num-1 : 0];
   wire core_en_array[buffers_num-1 : 0][sa_row_num-1 : 0];
@@ -896,7 +915,7 @@ module quan_CBR_v10_tb(
       .conv_load_weights_fin  (conv_load_weights_fin),
       .state_conv_load_weights(state_conv_load_weights)
   );
-    //conv compute ctrl
+  //conv compute ctrl
   conv_compute_kernel_controller_v4 #(.sa_column_num(sa_column_num)) 
   cv_compute_kernel_controller(
     .clk                 (clk),
@@ -942,15 +961,15 @@ module quan_CBR_v10_tb(
     .conv_nif_add_end_delay    (conv_nif_add_end_delay)
   );
 
-  conv_compute_shell1_controller_v3 #(.sa_column_num(sa_column_num)) 
+  conv_compute_shell1_controller_v4 #(.sa_column_num(sa_column_num)) 
   cv_compute_shell1_controller(
      .clk                 (clk),
     .reset               ((reset == 1) || (conv_start == 1)),
-    .s(s),
-    .p(p),
-    .iy(iy),
-    .nif_in_2pow(nif_in_2pow),
-    .ix_in_2pow(ix_in_2pow),
+    .s_init(s),
+    .p_init(p),
+    .iy_init(iy),
+    .nif_in_2pow_init(nif_in_2pow),
+    .ix_in_2pow_init(ix_in_2pow),
 
     .poy(poy_delay),
     .valid_adr(valid_adr_delay),
@@ -962,26 +981,26 @@ module quan_CBR_v10_tb(
     .slab_num(slab_num_delay),
     .row_slab_start_idx(row_slab_start_idx_delay),
 
-    .row1_idx_delay            (row1_idx),
-    .row1_buf_adr_delay        (row1_buf_adr),
-    .row1_buf_idx_delay        (row1_buf_idx),
-    .row1_buf_word_select_delay(row1_buf_word_select),
-    .row1_slab_adr_delay       (row1_slab_adr),
-    .row1_slab_idx_delay       (row1_slab_idx),
-    .row1_slab_adr_to_wr_delay(row1_slab_adr_to_wr),
-    .row1_slab_idx_to_wr_delay(row1_slab_idx_to_wr),
-    .valid_row1_adr_delay      (valid_row1_adr)
+    .row1_idx            (row1_idx),
+    .row1_buf_adr        (row1_buf_adr),
+    .row1_buf_idx        (row1_buf_idx),
+    .row1_buf_word_select(row1_buf_word_select),
+    .row1_slab_adr       (row1_slab_adr),
+    .row1_slab_idx       (row1_slab_idx),
+    .row1_slab_adr_to_wr(row1_slab_adr_to_wr),
+    .row1_slab_idx_to_wr(row1_slab_idx_to_wr),
+    .valid_row1_adr      (valid_row1_adr)
   );
 
-  conv_compute_shell2_controller_v3 #(.sa_column_num(sa_column_num)) 
+  conv_compute_shell2_controller_v4 #(.sa_column_num(sa_column_num)) 
   cv_compute_shell2_controller(
         .clk                 (clk),
     .reset               ((reset == 1) || (conv_start == 1)),
-    .s(s),
-    .p(p),
-    .iy(iy),
-    .nif_in_2pow(nif_in_2pow),
-    .ix_in_2pow(ix_in_2pow),
+    .s_init(s),
+    .p_init(p),
+    .iy_init(iy),
+    .nif_in_2pow_init(nif_in_2pow),
+    .ix_in_2pow_init(ix_in_2pow),
 
     .poy(poy_delay),
     .valid_adr(valid_adr_delay),
@@ -993,26 +1012,26 @@ module quan_CBR_v10_tb(
     .slab_num(slab_num_delay),
     .row_slab_start_idx(row_slab_start_idx_delay),
 
-    .row2_idx_delay            (row2_idx),
-    .row2_buf_adr_delay        (row2_buf_adr),
-    .row2_buf_idx_delay        (row2_buf_idx),
-    .row2_buf_word_select_delay(row2_buf_word_select),
-    .row2_slab_adr_delay       (row2_slab_adr),
-    .row2_slab_idx_delay       (row2_slab_idx),
-    .row2_slab_adr_to_wr_delay(row2_slab_adr_to_wr),
-    .row2_slab_idx_to_wr_delay(row2_slab_idx_to_wr),
-    .valid_row2_adr_delay      (valid_row2_adr)
+    .row2_idx            (row2_idx),
+    .row2_buf_adr        (row2_buf_adr),
+    .row2_buf_idx        (row2_buf_idx),
+    .row2_buf_word_select(row2_buf_word_select),
+    .row2_slab_adr       (row2_slab_adr),
+    .row2_slab_idx       (row2_slab_idx),
+    .row2_slab_adr_to_wr(row2_slab_adr_to_wr),
+    .row2_slab_idx_to_wr(row2_slab_idx_to_wr),
+    .valid_row2_adr      (valid_row2_adr)
   );
 
-  conv_compute_shell3_controller_v3 #(.sa_column_num(sa_column_num)) 
+  conv_compute_shell3_controller_v4 #(.sa_column_num(sa_column_num)) 
   cv_compute_shell3_controller(
         .clk                 (clk),
     .reset               ((reset == 1) || (conv_start == 1)),
-    .s(s),
-    .p(p),
-    .iy(iy),
-    .nif_in_2pow(nif_in_2pow),
-    .ix_in_2pow(ix_in_2pow),
+    .s_init(s),
+    .p_init(p),
+    .iy_init(iy),
+    .nif_in_2pow_init(nif_in_2pow),
+    .ix_in_2pow_init(ix_in_2pow),
 
     .poy(poy_delay),
     .valid_adr(valid_adr_delay),
@@ -1024,71 +1043,81 @@ module quan_CBR_v10_tb(
     .slab_num(slab_num_delay),
     .row_slab_start_idx(row_slab_start_idx_delay),
 
-    .row3_idx_delay            (row3_idx),
-    .row3_buf_adr_delay        (row3_buf_adr),
-    .row3_buf_idx_delay        (row3_buf_idx),
-    .row3_buf_word_select_delay(row3_buf_word_select),
-    .row3_slab_adr_delay       (row3_slab_adr),
-    .row3_slab_idx_delay       (row3_slab_idx),
-    .row3_slab_adr_to_wr_delay(row3_slab_adr_to_wr),
-    .row3_slab_idx_to_wr_delay(row3_slab_idx_to_wr),
-    .valid_row3_adr_delay      (valid_row3_adr)
+    .row3_idx            (row3_idx),
+    .row3_buf_adr        (row3_buf_adr),
+    .row3_buf_idx        (row3_buf_idx),
+    .row3_buf_word_select(row3_buf_word_select),
+    .row3_slab_adr       (row3_slab_adr),
+    .row3_slab_idx       (row3_slab_idx),
+    .row3_slab_adr_to_wr(row3_slab_adr_to_wr),
+    .row3_slab_idx_to_wr(row3_slab_idx_to_wr),
+    .valid_row3_adr      (valid_row3_adr)
   );
-
+  //stage 1
   always @(posedge clk) begin
-    if ((reset == 1) || (conv_start == 1)) begin
-          ox_start            <=0;
-    oy_start            <=0;
-    of_start            <=0;
-    pox                 <=0;
-    pof                 <=0;
-    if_idx              <=0;
-    west_pad            <=0;
-    east_pad            <=0;
-    row_end_idx         <=0;
-    reg_start_idx       <=0;
-    reg_end_idx         <=0;
-    //ctrl signal to shell  
-    poy                 <=0;
-    valid_adr<=0;
-    iy_start<=0;
-    ky<=0;
-    row_base_in_3s<=0;
-    row_start_idx       <=0;
-    if_start<=0;
-    slab_num            <=0;
-    row_slab_start_idx  <=0;
+    ox_start_stage_1            <=ox_start_delay;
+    oy_start_stage_1            <=oy_start_delay;
+    of_start_stage_1            <=of_start_delay;
+    pox_stage_1                 <=pox_delay;
+    pof_stage_1                 <=pof_delay;
+    if_idx_stage_1              <=if_idx_delay;
+    west_pad_stage_1            <=west_pad_delay;
+    east_pad_stage_1            <=east_pad_delay;
+    row_end_idx_stage_1         <=row_end_idx_delay;
+    reg_start_idx_stage_1       <=reg_start_idx_delay;
+    reg_end_idx_stage_1         <=reg_end_idx_delay;
     //general ctrl signal 2
-    com_control_end            <=0;
-    conv_pixels_add_end <=0;
-    conv_nif_add_end    <=0;
-    end else begin
-       ox_start            <=ox_start_delay;
-    oy_start            <=oy_start_delay;
-    of_start            <=of_start_delay;
-    pox                 <=pox_delay;
-    pof                 <=pof_delay;
-    if_idx              <=if_idx_delay;
-    west_pad            <=west_pad_delay;
-    east_pad            <=east_pad_delay;
-    row_end_idx         <=row_end_idx_delay;
-    reg_start_idx       <=reg_start_idx_delay;
-    reg_end_idx         <=reg_end_idx_delay;
+    com_control_end_stage_1            <=com_control_end_delay;
+    conv_pixels_add_end_stage_1 <=conv_pixels_add_end_delay;
+    conv_nif_add_end_stage_1    <=conv_nif_add_end_delay;
     //ctrl signal to shell  
-    poy                 <=poy_delay;
-    valid_adr<=valid_adr_delay;
-    iy_start<=iy_start_delay;
-    ky<=ky_delay;
-    row_base_in_3s<=row_base_in_3s_delay;
-    row_start_idx       <=row_start_idx_delay;
-    if_start<=if_start_delay;
-    slab_num            <=slab_num_delay;
-    row_slab_start_idx  <=row_slab_start_idx_delay;
+    poy_stage_1                 <=poy_delay;
+    row_start_idx_stage_1       <=row_start_idx_delay;
+    slab_num_stage_1            <=slab_num_delay;
+  end
+  //stage 2
+  always @(posedge clk) begin
+    ox_start_stage_2            <=ox_start_stage_1;
+    oy_start_stage_2            <=oy_start_stage_1;
+    of_start_stage_2            <=of_start_stage_1;
+    pox_stage_2                 <=pox_stage_1;
+    pof_stage_2                 <=pof_stage_1;
+    if_idx_stage_2              <=if_idx_stage_1;
+    west_pad_stage_2            <=west_pad_stage_1;
+    east_pad_stage_2            <=east_pad_stage_1;
+    row_end_idx_stage_2         <=row_end_idx_stage_1;
+    reg_start_idx_stage_2       <=reg_start_idx_stage_1;
+    reg_end_idx_stage_2         <=reg_end_idx_stage_1;
     //general ctrl signal 2
-    com_control_end            <=com_control_end_delay;
-    conv_pixels_add_end <=conv_pixels_add_end_delay;
-    conv_nif_add_end    <=conv_nif_add_end_delay;
-    end
+    com_control_end_stage_2            <=com_control_end_stage_1;
+    conv_pixels_add_end_stage_2 <=conv_pixels_add_end_stage_1;
+    conv_nif_add_end_stage_2    <=conv_nif_add_end_stage_1;
+    //ctrl signal to shell  
+    poy_stage_2                 <=poy_stage_1;
+    row_start_idx_stage_2       <=row_start_idx_stage_1;
+    slab_num_stage_2            <=slab_num_stage_1;
+  end
+  //stage 3
+  always @(posedge clk) begin
+    ox_start            <=ox_start_stage_2;
+    oy_start            <=oy_start_stage_2;
+    of_start            <=of_start_stage_2;
+    pox                 <=pox_stage_2;
+    pof                 <=pof_stage_2;
+    if_idx              <=if_idx_stage_2;
+    west_pad            <=west_pad_stage_2;
+    east_pad            <=east_pad_stage_2;
+    row_end_idx         <=row_end_idx_stage_2;
+    reg_start_idx       <=reg_start_idx_stage_2;
+    reg_end_idx         <=reg_end_idx_stage_2;
+    //general ctrl signal 2
+    com_control_end            <=com_control_end_stage_2;
+    conv_pixels_add_end <=conv_pixels_add_end_stage_2;
+    conv_nif_add_end    <=conv_nif_add_end_stage_2;
+    //ctrl signal to shell  
+    poy                 <=poy_stage_2;
+    row_start_idx       <=row_start_idx_stage_2;
+    slab_num            <=slab_num_stage_2;
   end
 
   //store chunk index
@@ -1487,10 +1516,11 @@ module quan_CBR_v10_tb(
       .doutb(slab3_pixels_2)         // output wire [15 : 0] doutb
   );
   //cv_weights_handler
-  conv_weights_handler_v2 cv_weights_handler (
+  quan_conv_weights_controller conv_weights_controller (
       .clk                    (clk),
       .reset                  ((reset == 1) || (conv_start == 1)),
-      .mode                   (mode),
+      .mode_init(mode),
+      .nif_mult_k_mult_k_init(nif_mult_k_mult_k),
       //cycle 0 in
       .re_fm_en               (re_fm_en),                 //the first input is needed in next cycle
       .re_fm_end              (re_fm_end),                //the last input is needed in cur cycle
@@ -1860,7 +1890,7 @@ module quan_CBR_v10_tb(
     end
     for (i = 1; i <= sa_column_num; i = i + 1) begin : sa_column  //poy, rows
       for (j = 1; j <= sa_row_num; j = j + 1) begin : sa_row  //output channel
-        quan_SA_sum_E_v9 sa (
+        quan_SA_sum_E_v10 sa (
             .clk              (clk),
 
             .reset(((i == 1) && (j == 1)) ? ((reset == 1) || (conv_start == 1) || (conv_compute_fin == 1)):
@@ -2037,10 +2067,11 @@ module quan_CBR_v10_tb(
     end
   endgenerate
   // sa control
-  quan_CBR_kernel_controller_v4 quan_CBR_kernel_ctrl(
+  quan_CBR_kernel_controller_v6 quan_CBR_kernel_ctrl(
     .clk              (clk),
     .reset            ((reset == 1) || (conv_start == 1)),  //next tile need clr
     .re_fm_en         (re_fm_en),
+    .re_fm_end(re_fm_end),
     .mode_init             (mode),
     .nif_mult_k_mult_k_init(nif_mult_k_mult_k),
     .shadow_pof(shadow_pof),
@@ -2051,7 +2082,7 @@ module quan_CBR_v10_tb(
 
     //for kernel ctrl
     .core_cell_en_pre(core_cell_en_pre),
-    .core_cell_reset_pre(core_cell_reset_pre),
+    // .core_cell_reset_pre(core_cell_reset_pre),
     .core_cell_output_en_pre(core_cell_output_en_pre),
     .core_sum_E_recieve_en_pre(core_sum_E_recieve_en_pre),
     // .core_sum_mult_E_en_pre(core_sum_mult_E_en_pre),
@@ -2147,7 +2178,7 @@ module quan_CBR_v10_tb(
 
   always @(posedge clk) begin
     if (conv_fin == 1) begin
-    #100;
+        #100;
       $stop;
     end
   end

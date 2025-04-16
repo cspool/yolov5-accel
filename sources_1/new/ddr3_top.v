@@ -192,7 +192,7 @@ Control flow:
   wire conv_ddr_cmd;
   wire [512-1:0] conv_ddr_wt_data;
   wire conv_ddr_wt_data_valid;
-  quan_accel_conv_demo_v2 quan_accel_conv_demo_inst (
+  quan_accel_conv_demo_v3 quan_accel_conv_demo_inst (
       // input
       .clk                (ui_clk),
       .reset              (~init_done),
