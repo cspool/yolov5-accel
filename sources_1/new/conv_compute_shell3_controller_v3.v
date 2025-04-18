@@ -188,10 +188,38 @@ module conv_compute_shell3_controller_v3 #(
   )
   );
 
+  // assign row3_buf_adr_in_row = 
+  // ((poy < 3) || ((ky + iy_start + {{11'b0}, s, {1'b0}}) < p_plus_1) || ((ky + iy_start + {{11'b0}, s, {1'b0}}) > p_plus_iy))? 16'hffff:
+  // (
+  // (s == 4'd1)? (
+  // ((row3_bias0[15] == 1'b1) || (row3_bias0 == 0))? (
+  // ((row3_bias0 + {12'b0, {s_mult_3}}) <= 16'd6)?
+  // (((row3_bias0 + {12'b0, {s_mult_3}}) <= 16'd3)? (row_base_in_3s - 1): (row_base_in_3s - 1) + 1) :
+  // (((row3_bias0 + {12'b0, {s_mult_3}}) <= 16'd9)? (row_base_in_3s - 1) + 2: (row_base_in_3s - 1) + 3)
+  // ):
+  // (
+  // (row3_bias0 <= 6)?
+  // ((row3_bias0 <= 3)? row_base_in_3s: row_base_in_3s + 1) :
+  // ((row3_bias0 <= 9)? row_base_in_3s + 2: row_base_in_3s + 3)
+  // )
+  // ):
+  // (s == 4'd2)? (
+  // ((row3_bias0[15] == 1'b1) || (row3_bias0 == 0))? (
+  // ((row3_bias0 + {12'b0, {s_mult_3}}) <= 16'd6)?
+  // (((row3_bias0 + {12'b0, {s_mult_3}}) <= 16'd3)? ((row_base_in_3s - 1) << 1): ((row_base_in_3s - 1) << 1) + 1) :
+  // (((row3_bias0 + {12'b0, {s_mult_3}}) <= 16'd9)? ((row_base_in_3s - 1) << 1) + 2: ((row_base_in_3s - 1) << 1) + 3)
+  // ):
+  // (
+  // (row3_bias0 <= 6)?
+  // ((row3_bias0 <= 3)? (row_base_in_3s << 1): (row_base_in_3s << 1) + 1) :
+  // ((row3_bias0 <= 9)? (row_base_in_3s << 1) + 2: (row_base_in_3s << 1) + 3)
+  // )
+  // ):
+  // 0
+  // );
   assign row3_buf_adr_in_row = 
   ((poy < 3) || ((ky + iy_start + {{11'b0}, s, {1'b0}}) < p_plus_1) || ((ky + iy_start + {{11'b0}, s, {1'b0}}) > p_plus_iy))? 16'hffff:
   (
-  (s == 4'd1)? (
   ((row3_bias0[15] == 1'b1) || (row3_bias0 == 0))? (
   ((row3_bias0 + {12'b0, {s_mult_3}}) <= 16'd6)?
   (((row3_bias0 + {12'b0, {s_mult_3}}) <= 16'd3)? (row_base_in_3s - 1): (row_base_in_3s - 1) + 1) :
@@ -202,20 +230,6 @@ module conv_compute_shell3_controller_v3 #(
   ((row3_bias0 <= 3)? row_base_in_3s: row_base_in_3s + 1) :
   ((row3_bias0 <= 9)? row_base_in_3s + 2: row_base_in_3s + 3)
   )
-  ):
-  (s == 4'd2)? (
-  ((row3_bias0[15] == 1'b1) || (row3_bias0 == 0))? (
-  ((row3_bias0 + {12'b0, {s_mult_3}}) <= 16'd6)?
-  (((row3_bias0 + {12'b0, {s_mult_3}}) <= 16'd3)? ((row_base_in_3s - 1) << 1): ((row_base_in_3s - 1) << 1) + 1) :
-  (((row3_bias0 + {12'b0, {s_mult_3}}) <= 16'd9)? ((row_base_in_3s - 1) << 1) + 2: ((row_base_in_3s - 1) << 1) + 3)
-  ):
-  (
-  (row3_bias0 <= 6)?
-  ((row3_bias0 <= 3)? (row_base_in_3s << 1): (row_base_in_3s << 1) + 1) :
-  ((row3_bias0 <= 9)? (row_base_in_3s << 1) + 2: (row_base_in_3s << 1) + 3)
-  )
-  ):
-  0
   );
 
   assign row3_buf_adr = 

@@ -1,61 +1,60 @@
 //------------------------------------------------------------------------------
 // : ddr3_rw
-// ģ�鹦������:
-// ��Ҫ����:
-//    - DDR3�洢����д����ģ��
-//    - ����DDR3��д��������ݴ���
-//    - ����DDR3�ӿ�ʱ���״̬
+// 模块功能描述:
+// 主要功能:
+//    - DDR3存储器读写控制模块
+//    - 处理DDR3读写请求和数据传输
+//    - 管理DDR3接口时序和状态
 //
-// �ӿ�˵��:
-//    �����ź�:
-//    - clk_100M: ddrϵͳʱ��
-//    - rst_n: �͵�ƽ��Ч��λ�ź�
-//    - ena: ģ��ʹ���ź�
-//    - app_cmd: DDR3����(3λ)
-//    - cmd_valid: ������Ч��־
-//    - ddr3_base_addr: DDR3����ַ(29λ)
-//    - ddr3_rw_size: ��д���ݴ�С(10λ)
-//    - app_wdf_data: д����(UI_WIDTHλ)
-//    - app_wdf_data_valid: д������Ч��־
+// 接口说明:
+//    输入信号:
+//    - clk_100M: ddr系统时钟
+//    - rst_n: 低电平有效复位信号
+//    - ena: 模块使能信号
+//    - app_cmd: DDR3命令(3位)
+//    - cmd_valid: 命令有效标志
+//    - ddr3_base_addr: DDR3基地址(29位)
+//    - ddr3_rw_size: 读写数据大小(10位)
+//    - app_wdf_data: 写数据(UI_WIDTH位)
+//    - app_wdf_data_valid: 写数据有效标志
 
-//    ����ź�:
-//    - ui_clk: �û��ӿ�ʱ��
-//    - ui_rst: �û��ӿڸ�λ
-//    - cmd_rdy: ���������־
-//    - app_rd_data: ��ȡ������(UI_WIDTHλ)
-//    - app_rd_data_valid: ��������Ч��־
-//    - app_wr_data_rdy: д���ݾ�����־
-//    - ddr3_rd_finish: ��������ɱ�־
-//    - ddr3_rd_addr_finish: ����ַ������ɱ�־
-//    - ddr3_wr_finish: д������ɱ�־
-//    - init_calib_complete: DDR3��ʼ��У׼��ɱ�־
-//    - error_flag: �����־
-//    - test_rdy: ���Ծ�����־
+//    输出信号:
+//    - ui_clk: 用户接口时钟
+//    - ui_rst: 用户接口复位
+//    - cmd_rdy: 命令就绪标志
+//    - app_rd_data: 读取的数据(UI_WIDTH位)
+//    - app_rd_data_valid: 读数据有效标志
+//    - app_wr_data_rdy: 写数据就绪标志
+//    - ddr3_rd_finish: 读操作完成标志
+//    - ddr3_rd_addr_finish: 读地址传输完成标志
+//    - ddr3_wr_finish: 写操作完成标志
+//    - init_calib_complete: DDR3初始化校准完成标志
+//    - error_flag: 错误标志
+//    - test_rdy: 测试就绪标志
 //
-//    DDR3�ӿ��ź�:
-//    - ddr3_addr: DDR3��ַ����(15λ)
-//    - ddr3_ba: DDR3 bank��ַ(3λ)
-//    - ddr3_cas_n: �е�ַѡͨ�ź�
-//    - ddr3_ck_n/p: DDR3ʱ�Ӳ�ֶ�
-//    - ddr3_cke: ʱ��ʹ��
-//    - ddr3_ras_n: �е�ַѡͨ�ź�
-//    - ddr3_reset_n: DDR3��λ�ź�
-//    - ddr3_we_n: дʹ���ź�
-//    - ddr3_dq: ��������(DDR_WIDTHλ)
-//    - ddr3_dqs_n/p: ����ѡͨ��ֶ�
-//    - ddr3_cs_n: Ƭѡ�ź�
-//    - ddr3_dm: ��������
-//    - ddr3_odt: ��̬�ն�
+//    DDR3接口信号:
+//    - ddr3_addr: DDR3地址总线(15位)
+//    - ddr3_ba: DDR3 bank地址(3位)
+//    - ddr3_cas_n: 列地址选通信号
+//    - ddr3_ck_n/p: DDR3时钟差分对
+//    - ddr3_cke: 时钟使能
+//    - ddr3_ras_n: 行地址选通信号
+//    - ddr3_reset_n: DDR3复位信号
+//    - ddr3_we_n: 写使能信号
+//    - ddr3_dq: 数据总线(DDR_WIDTH位)
+//    - ddr3_dqs_n/p: 数据选通差分对
+//    - ddr3_cs_n: 片选信号
+//    - ddr3_dm: 数据掩码
+//    - ddr3_odt: 动态终端
 //------------------------------------------------------------------------------
 `timescale 1ps / 1ps
 `include "ddr3_defines.vh"
 
 module ddr3_rw #(
-    parameter DDR_WIDTH     = 64,
-    parameter UI_WIDTH      = DDR_WIDTH * 8,
-    parameter ADDR_OFFSET   = 8,
-    parameter ADDR_WIDTH    = 29,
-    parameter TIMEOUT_VALUE = 32'hffffffff    // ��ʱ����ֵ
+    parameter DDR_WIDTH   = 64,
+    parameter UI_WIDTH    = DDR_WIDTH * 8,
+    parameter ADDR_OFFSET = 8,
+    parameter ADDR_WIDTH  = 29
 ) (
     input                    clk_100M,
     input                    clk_200M,
@@ -102,45 +101,62 @@ module ddr3_rw #(
 
   // `default_nettype none
 
-  // �ڲ��źŶ���
+  // 内部信号定义
   wire init_calib_complete_sync;
-  wire reset_needed;
+  wire user_rst;
   reg init_calib_complete_r1, init_calib_complete_r2;
-  reg [15:0] timeout_cnt;
-  reg        soft_rst_req;
-  reg [ 2:0] retry_cnt;
-  localparam MAX_RETRY = 3'd2;
+  reg soft_rst_req = 1'b0;
 
-  // ״̬������
-  localparam STATE_RESET = 4'd0, STATE_IDLE = 4'd1, STATE_INIT = 4'd2, STATE_READ = 4'd3, STATE_WRITE = 4'd4, STATE_FINISH = 4'd5, STATE_ERROR = 4'd6, STATE_RETRY = 4'd7;
+`ifdef CMD_DATA_SYNC
+  reg [UI_WIDTH - 1:0] app_wdf_data_sync;
+  reg                  app_wdf_data_valid_sync;
+  always @(posedge ui_clk or posedge ui_rst) begin
+    if (ui_rst) begin
+      app_wdf_data_sync       <= {UI_WIDTH{1'b0}};
+      app_wdf_data_valid_sync <= 1'b0;
+    end else begin
+      app_wdf_data_sync       <= app_wdf_data;
+      app_wdf_data_valid_sync <= app_wdf_data_valid;
+    end
+  end
+`else
+  wire [UI_WIDTH - 1:0] app_wdf_data_sync;
+  wire                  app_wdf_data_valid_sync;
+  assign app_wdf_data_sync       = app_wdf_data;
+  assign app_wdf_data_valid_sync = app_wdf_data_valid;
+`endif
 
-  // DDR3�����
+  // 状态机定义
+  localparam STATE_RESET = 4'd0, STATE_IDLE = 4'd1, STATE_INIT = 4'd2, STATE_READ = 4'd3, STATE_WRITE = 4'd4, STATE_FINISH = 4'd5;
+
+  // DDR3命令定义
   localparam CMD_WRITE = 3'd0, CMD_READ = 3'd1, CMD_IDLE = 3'd2;
 
-  // ��������״̬�Ĵ���
+  // 计数器和状态寄存器
   reg [9:0] cnt_write_addr;
   reg [9:0] cnt_write_data;
   reg [9:0] cnt_read_addr;
   reg [9:0] cnt_read_data;
   reg write_data_over, write_addr_over;
   reg read_addr_over, read_data_over;
-  reg                                                  [3:0] state;
-  reg                                                  [3:0] next_state;
-  // ��ʱ�ʹ�����
-  wire timeout_error = (timeout_cnt >= TIMEOUT_VALUE);
+  reg [3:0] state;
+  reg [3:0] next_state;
 
-  reg                                                  [9:0] ddr3_rw_size_valid;
+  reg [9:0] ddr3_rw_size_valid;
+  reg [2:0] app_cmd_valid;
   always @(posedge ui_clk or posedge ui_rst) begin
     if (ui_rst) begin
       ddr3_rw_size_valid <= 10'd0;
+      app_cmd_valid      <= CMD_IDLE;
     end else if (state == STATE_INIT && cmd_rdy && cmd_valid) begin
       ddr3_rw_size_valid <= ddr3_rw_size;
+      app_cmd_valid      <= app_cmd;
     end
   end
 
-  assign reset_needed = ui_rst || soft_rst_req;
+  assign user_rst = ui_rst;
 
-  // ��init_calib_complete�źŽ���ͬ��������ʹ�������������Կ�ʱ�����źŽ���ͬ������ֹ����̬
+  // 对init_calib_complete信号进行同步处理，使用两级触发器对跨时钟域信号进行同步，防止亚稳态
   // init_calib_complete -> init_calib_complete_r1 -> init_calib_complete_r2 -> init_calib_complete_sync
   always @(posedge ui_clk or posedge ui_rst)
     if (ui_rst) begin
@@ -153,30 +169,7 @@ module ddr3_rw #(
 
   assign init_calib_complete_sync = init_calib_complete_r2;
 
-  // ��ʱ������
-  always @(posedge ui_clk or posedge ui_rst) begin
-    if (ui_rst || state == STATE_INIT) begin
-      timeout_cnt <= 16'd0;
-    end else if (state == STATE_IDLE || state == STATE_FINISH) begin
-      timeout_cnt <= 16'd0;
-    end else if (state == STATE_READ || state == STATE_WRITE) begin
-      timeout_cnt <= timeout_cnt + 16'd1;
-    end
-
-  end
-
-  // ���Լ�����
-  always @(posedge ui_clk or posedge ui_rst) begin
-    if (ui_rst || state == STATE_INIT) begin
-      retry_cnt <= 3'd0;
-    end else if (state == STATE_RETRY) begin
-      retry_cnt <= retry_cnt + 3'd1;
-    end else if (state == STATE_IDLE) begin
-      retry_cnt <= 3'd0;
-    end
-  end
-
-  // DDR3�ӿڿ����ź�
+  // DDR3接口控制信号
   wire                    app_en;
   reg  [ADDR_WIDTH - 1:0] app_addr;
   wire                    app_wdf_rdy;
@@ -186,20 +179,24 @@ module ddr3_rw #(
   wire                    app_wr_addr_valid;
   wire                    app_rd_addr_valid;
 
-  // �����źŸ�ֵ
-  assign app_en              = ((state == STATE_WRITE && ~ddr3_wr_finish) || (state == STATE_READ && ~ddr3_rd_addr_finish));
-  assign app_wdf_wren        = (app_wr_data_rdy && app_wdf_data_valid);
-  assign app_wdf_end         = app_wdf_wren;
-  assign app_wr_data_rdy     = (state == STATE_WRITE && app_wdf_rdy && ~write_data_over);
+  // 控制信号赋值
+  assign app_en       = ((state == STATE_WRITE && ~ddr3_wr_finish) || (state == STATE_READ && ~ddr3_rd_addr_finish));
+  assign app_wdf_wren = (app_wr_data_rdy && app_wdf_data_valid_sync);
+  assign app_wdf_end  = app_wdf_wren;
+`ifdef CMD_DATA_SYNC
+  assign app_wr_data_rdy = (app_wdf_rdy && ~write_data_over);
+`else
+  assign app_wr_data_rdy = (state == STATE_WRITE && app_wdf_rdy && ~write_data_over);
+`endif
   assign app_wr_addr_valid   = (state == STATE_WRITE && app_rdy && ~write_addr_over);
   assign app_rd_addr_valid   = (state == STATE_READ && app_rdy && ~read_addr_over);
 
-  // ����źŸ�ֵ
+  // 完成信号赋值
   assign ddr3_rd_addr_finish = read_addr_over;
   assign ddr3_rd_finish      = (read_addr_over && read_data_over);
   assign ddr3_wr_finish      = (write_data_over && write_addr_over);
 
-  // ״̬��ʵ��
+  // 状态机实现
   always @(posedge ui_clk or posedge ui_rst) begin
     if (ui_rst) begin
       state <= STATE_RESET;
@@ -208,7 +205,7 @@ module ddr3_rw #(
     end
   end
 
-  // ״̬������߼�
+  // 状态机组合逻辑
   always @(*) begin
     case (state)
       STATE_RESET: begin
@@ -242,9 +239,7 @@ module ddr3_rw #(
       end
 
       STATE_WRITE: begin
-        if (timeout_error) begin
-          next_state = STATE_ERROR;
-        end else if (ddr3_wr_finish) begin
+        if (ddr3_wr_finish) begin
           next_state = STATE_FINISH;
         end else begin
           next_state = STATE_WRITE;
@@ -252,28 +247,14 @@ module ddr3_rw #(
       end
 
       STATE_READ: begin
-        if (timeout_error) begin
-          next_state = STATE_ERROR;
-        end else if (ddr3_rd_finish) begin
+        if (ddr3_rd_finish) begin
           next_state = STATE_FINISH;
         end else begin
           next_state = STATE_READ;
         end
       end
 
-      STATE_ERROR: begin
-        if (retry_cnt < MAX_RETRY) begin
-          next_state = STATE_RETRY;
-        end else begin
-          if (reset_needed) begin
-            next_state = STATE_RESET;
-          end else begin
-            next_state = STATE_ERROR;
-          end
-        end
-      end
-
-      STATE_FINISH, STATE_RETRY: begin
+      STATE_FINISH: begin
         next_state = STATE_IDLE;
       end
 
@@ -283,7 +264,7 @@ module ddr3_rw #(
     endcase
   end
 
-  // ��ɱ�־����
+  // 完成标志控制
   always @(posedge ui_clk or posedge ui_rst) begin
     if (ui_rst || state == STATE_INIT) begin
       write_data_over <= 1'd0;
@@ -292,7 +273,7 @@ module ddr3_rw #(
       read_data_over  <= 1'd0;
     end else begin
       if (state == STATE_WRITE) begin
-        if (cnt_write_data == ddr3_rw_size_valid - 1 && app_wdf_data_valid && app_wdf_rdy) begin
+        if (cnt_write_data == ddr3_rw_size_valid - 1 && app_wdf_data_valid_sync && app_wdf_rdy) begin
           write_data_over <= 1'b1;
         end
         if (cnt_write_addr == ddr3_rw_size_valid - 1 && app_rdy) begin
@@ -309,7 +290,7 @@ module ddr3_rw #(
     end
   end
 
-  // ��ַ����
+  // 地址控制
   always @(posedge ui_clk or posedge ui_rst) begin
     if (ui_rst) begin
       app_addr <= {ADDR_WIDTH{1'b0}};
@@ -322,7 +303,7 @@ module ddr3_rw #(
     end
   end
 
-  // д���ݼ�����
+  // 写数据计数器
   always @(posedge ui_clk or posedge ui_rst) begin
     if (ui_rst || state == STATE_INIT) begin
       cnt_write_addr <= 10'd0;
@@ -335,13 +316,19 @@ module ddr3_rw #(
     if (ui_rst || state == STATE_INIT) begin
       cnt_write_data <= 10'd0;
     end else begin
-      if (app_wr_data_rdy && app_wdf_data_valid && cnt_write_data < ddr3_rw_size_valid) begin
+`ifdef CMD_DATA_SYNC
+      if (state == STATE_WRITE && app_wr_data_rdy && app_wdf_data_valid_sync && cnt_write_data < ddr3_rw_size_valid) begin
         cnt_write_data <= cnt_write_data + 10'd1;
       end
+`else
+      if (app_wr_data_rdy && app_wdf_data_valid_sync && cnt_write_data < ddr3_rw_size_valid) begin
+        cnt_write_data <= cnt_write_data + 10'd1;
+      end
+`endif
     end
   end
 
-  // �����ݼ�����
+  // 读数据计数器
   always @(posedge ui_clk or posedge ui_rst) begin
     if (ui_rst || state == STATE_INIT) begin
       cnt_read_addr <= 10'd0;
@@ -358,16 +345,7 @@ module ddr3_rw #(
     end
   end
 
-  // ��������λ�����߼�
-  always @(posedge ui_clk or posedge ui_rst) begin
-    if (ui_rst || state == STATE_INIT) begin
-      soft_rst_req <= 1'b0;
-    end else if (state == STATE_ERROR && retry_cnt >= MAX_RETRY) begin
-      soft_rst_req <= 1'b1;
-    end
-  end
-
-  // cmd ready�ź�
+  // cmd ready信号
   always @(posedge ui_clk or posedge ui_rst) begin
     if (ui_rst) begin
       cmd_rdy <= 1'b0;
@@ -378,7 +356,7 @@ module ddr3_rw #(
     end
   end
 
-  // test ready�ź�
+  // test ready信号
   always @(posedge ui_clk or posedge ui_rst) begin
     if (ui_rst) begin
       test_rdy <= 1'b0;
@@ -392,13 +370,11 @@ module ddr3_rw #(
   always @(posedge ui_clk or posedge ui_rst) begin
     if (ui_rst || state == STATE_INIT) begin
       error_flag <= 1'b0;
-    end else if (state == STATE_ERROR) begin
-      error_flag <= 1'b1;
     end
   end
 
-  // DDR3 IP��ʵ����
-  mig_7series_1 mig_7series_0_inst (
+  // DDR3 IP核实例化
+  mig_7series_1 mig_7series_1_inst (
       // DDR interface Signals
       .ddr3_addr          (ddr3_addr),
       .ddr3_ba            (ddr3_ba),
@@ -419,9 +395,9 @@ module ddr3_rw #(
 
       // Application interface Signals
       .app_addr         (app_addr),
-      .app_cmd          (app_cmd),
+      .app_cmd          (app_cmd_valid),
       .app_en           (app_en),
-      .app_wdf_data     (app_wdf_data),
+      .app_wdf_data     (app_wdf_data_sync),
       .app_wdf_end      (app_wdf_end),
       .app_wdf_wren     (app_wdf_wren),
       .app_rd_data      (app_rd_data),
@@ -442,8 +418,8 @@ module ddr3_rw #(
 
       .sys_clk_i    (clk_200M),
 `ifdef ONLINE
-      .sys_rst      (rst_n),
-      .device_temp_i(12'd0)
+      .device_temp_i(12'd0),
+      .sys_rst      (rst_n)
 `else
       .device_temp  (),
       .sys_rst      (rst_n)
@@ -457,32 +433,29 @@ module ddr3_rw #(
       .clk    (ui_clk),
       .probe0 (ena),                // 1 bit
       .probe1 (state),              // 4 bit
-      .probe2 (test_rdy),           // 1 bit
-      .probe4 (app_en),             // 1 bit
-      .probe5 (app_cmd),            // 3 bit
-      .probe6 (app_rdy),            // 1 bit
-      .probe7 (app_addr),           // 29 bit
+      .probe2 (app_en),             // 1 bit
+      .probe3 (app_cmd),            // 3 bit
+      .probe4 (app_rdy),            // 1 bit
+      .probe5 (app_addr),           // 29 bit
       // For Write
-      .probe8 (app_wdf_wren),       // 1 bit
-      .probe9 (app_wdf_rdy),        // 1 bit
-      .probe10(app_wr_data_rdy),    // 1 bit
-      .probe11(app_wr_addr_valid),  // 1 bit
-      .probe12(app_wdf_data),       // 512 biW
-      .probe13(cnt_write_addr),     // 10 bit
-      .probe14(cnt_write_data),     // 10 bit
-      .probe15(write_data_over),    // 1 bit
-      .probe16(write_addr_over),    // 1 bit
+      .probe6 (app_wdf_wren),       // 1 bit
+      .probe7 (app_wdf_rdy),        // 1 bit
+      .probe8 (app_wr_data_rdy),    // 1 bit
+      .probe9 (app_wr_addr_valid),  // 1 bit
+      .probe10(app_wdf_data),       // 512 bit
+      .probe11(cnt_write_addr),     // 10 bit
+      .probe12(cnt_write_data),     // 10 bit
+      .probe13(write_data_over),    // 1 bit
+      .probe14(write_addr_over),    // 1 bit
       // For Read
-      .probe17(app_rd_data),        // 512 bit
-      .probe18(app_rd_data_valid),  // 1 bit
-      .probe19(app_rd_addr_valid),  // 1 bit
-      .probe20(cnt_read_addr),      // 10 bit
-      .probe21(cnt_read_data),      // 10 bit
-      .probe22(read_addr_over),     // 1 bit
-      .probe23(read_data_over),     // 1 bit
-      // For Error
-      .probe24(error_flag)
-  );  // 1 bit
+      .probe15(app_rd_data),        // 512 bit
+      .probe16(app_rd_data_valid),  // 1 bit
+      .probe17(app_rd_addr_valid),  // 1 bit
+      .probe18(cnt_read_addr),      // 10 bit
+      .probe19(cnt_read_data),      // 10 bit
+      .probe20(read_addr_over),     // 1 bit
+      .probe21(read_data_over)      // 1 bit
+  );
 `endif
 
   // `default_nettype wire

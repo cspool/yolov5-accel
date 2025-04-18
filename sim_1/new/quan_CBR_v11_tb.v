@@ -833,7 +833,9 @@ module quan_CBR_v11_tb(
       .conv_fin(conv_fin)
   );
 //conv load input ctrl
-  conv_load_input_controller cv_load_input_ctrl (
+  conv_load_input_controller #(
+     .sa_column_num(sa_column_num)
+) cv_load_input_ctrl (
       .clk                                    (clk),
       .conv_load_input                        (conv_load_input),
       .reset                                  ((reset == 1) || (conv_start == 1)),

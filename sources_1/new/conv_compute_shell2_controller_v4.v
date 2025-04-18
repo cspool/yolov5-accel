@@ -23,17 +23,8 @@
 module conv_compute_shell2_controller_v4 #(
     parameter sa_column_num = 2,  //how many columns in conv core
     parameter pixels_in_row = 32,
-    parameter pixels_in_row_mult_2 = pixels_in_row * 2,
-    parameter pixels_in_row_mult_2_minus_1 = pixels_in_row_mult_2 - 1,
-    parameter pixels_in_row_mult_2_minus_2 = pixels_in_row_mult_2 - 2,
-    parameter pixels_in_row_mult_2_minus_3 = pixels_in_row_mult_2 - 3,
-    parameter pixels_in_row_mult_2_minus_4 = pixels_in_row_mult_2 - 4,
     parameter pixels_in_row_in_2pow = 5,
     parameter buffers_num = 3,
-    parameter pixels_in_row_minus_1 = pixels_in_row - 1,
-    parameter pixels_in_row_minus_2 = pixels_in_row - 2,
-    parameter pixels_in_row_minus_3 = pixels_in_row - 3,
-    parameter buffers_num_minus_1 = buffers_num - 1,
     parameter row_num_in_mode0 = 64,  // 64 in 8 bit, 128 in 1 bit
     parameter row_num_in_mode1 = 128,  // 64 in 8 bit, 128 in 1 bit
     parameter ifs_in_row_2pow = 1,
@@ -175,12 +166,8 @@ module conv_compute_shell2_controller_v4 #(
   //     ) : 0;
   always @(posedge clk) begin
     row2_base_in_3_stage_1 <=  //
-    (s == 4'd1) ?  //
     (((ky + iy_start + {{12'b0}, s}) <= ({{12'b0}, p} + row_base_in_3s + (row_base_in_3s << 1))) ?  //
-    (row_base_in_3s - 1) : row_base_in_3s) :  //
-    (s == 4'd2) ?  //
-    (((ky + iy_start + {{12'b0}, s}) <= ({{12'b0}, p} + row_base_in_3s + (row_base_in_3s << 1))) ?  //
-    ((row_base_in_3s - 1) << 1) : (row_base_in_3s << 1)) : 0;
+    (row_base_in_3s - 1) : row_base_in_3s);
   end
 
   reg [15:0] row2_bias_stage_1;

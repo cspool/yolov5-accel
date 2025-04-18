@@ -35,19 +35,19 @@ def generate_conv_E_quantize_tests():
   #       for quantize_type in quantize_types:
   #          conv_test(conv_type, mode_type, quantize_type)
   
-  conv_type, mode_type, quantize_type = (1,0,0)
+  conv_type, mode_type, quantize_type = (2,1,0)
   conv_E_quantize_test(conv_type, mode_type, quantize_type)
 
 def conv_E_quantize_test(conv_type, mode_type, quantize_type):
-    # standard_conv_E_quantize(conv_type, mode_type, quantize_type)
-    fpga_conv_E_quantize(conv_type, mode_type, quantize_type)
+    standard_conv_E_quantize(conv_type, mode_type, quantize_type)
+    # fpga_conv_E_quantize(conv_type, mode_type, quantize_type)
 
 def standard_conv_E_quantize(conv_type, mode_type, quantize_type):
   # def basic conv op
   mode = mode_type
   k,s,p = conv_type_mapping[conv_type]
   of = 128
-  ox = 128
+  ox = 64
   oy = 6
   ix = ox if s == 1 else ox*2
   iy = oy if s == 1 else oy*2
@@ -156,7 +156,7 @@ def fpga_conv_E_quantize(conv_type, mode_type, quantize_type):
   mode = mode_type
   k,s,p = conv_type_mapping[conv_type]
   of = 128
-  ox = 128
+  ox = 64
   oy = 6
   ix = ox if s == 1 else ox*2
   iy = oy if s == 1 else oy*2
@@ -758,7 +758,7 @@ def generate_instr_args_init(mode,k,s,p,of,ox,oy,ix,iy,nif,input_base_adr):
   scale_layer_base_buf_adr_rd_integer = 0
   weights_layer_base_ddr_adr_rd_integer = 0
   input_ddr_layer_base_adr_integer = input_base_adr
-  output_ddr_layer_base_adr_integer = 0
+  output_ddr_layer_base_adr_integer = int(math.pow(16,5))
   ix_index_num_real = math.ceil(ix_integer / pixels_in_row_real)
   iy_index_num_real = math.ceil(iy_integer)
   tilex_first_ix_word_num_real = math.ceil(((pixels_in_row - 1) * s_real + k_real - p_real) / pixels_in_row) \

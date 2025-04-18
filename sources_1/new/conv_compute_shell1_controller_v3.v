@@ -23,17 +23,8 @@
 module conv_compute_shell1_controller_v3 #(
     parameter sa_column_num = 2,  //how many columns in conv core
     parameter pixels_in_row = 32,
-    parameter pixels_in_row_mult_2 = pixels_in_row * 2,
-    parameter pixels_in_row_mult_2_minus_1 = pixels_in_row_mult_2 - 1,
-    parameter pixels_in_row_mult_2_minus_2 = pixels_in_row_mult_2 - 2,
-    parameter pixels_in_row_mult_2_minus_3 = pixels_in_row_mult_2 - 3,
-    parameter pixels_in_row_mult_2_minus_4 = pixels_in_row_mult_2 - 4,
     parameter pixels_in_row_in_2pow = 5,
     parameter buffers_num = 3,
-    parameter pixels_in_row_minus_1 = pixels_in_row - 1,
-    parameter pixels_in_row_minus_2 = pixels_in_row - 2,
-    parameter pixels_in_row_minus_3 = pixels_in_row - 3,
-    parameter buffers_num_minus_1 = buffers_num - 1,
     parameter row_num_in_mode0 = 64,  // 64 in 8 bit, 128 in 1 bit
     parameter row_num_in_mode1 = 128,  // 64 in 8 bit, 128 in 1 bit
     parameter ifs_in_row_2pow = 1,
@@ -195,10 +186,38 @@ module conv_compute_shell1_controller_v3 #(
     )
     );
 
+  // assign row1_buf_adr_in_row = 
+  //   ((poy < 1) || ((ky + iy_start) < p_plus_1) || ((ky + iy_start) > p_plus_iy))? 16'hffff:
+  //   (
+  //   (s == 4'd1)? (
+  //   ((row1_bias0[15] == 1'b1) || (row1_bias0 == 0))? (
+  //   ((row1_bias0 + {12'b0, {s_mult_3}}) <= 16'd6)?
+  //   (((row1_bias0 + {12'b0, {s_mult_3}}) <= 16'd3)? (row_base_in_3s - 1): (row_base_in_3s - 1) + 1) :
+  //   (((row1_bias0 + {12'b0, {s_mult_3}}) <= 16'd9)? (row_base_in_3s - 1) + 2: (row_base_in_3s - 1) + 3)
+  //   ):
+  //   (
+  //   (row1_bias0 <= 6)?
+  //   ((row1_bias0 <= 3)? row_base_in_3s: row_base_in_3s + 1) :
+  //   ((row1_bias0 <= 9)? row_base_in_3s + 2: row_base_in_3s + 3)
+  //   )
+  //   ):
+  //   (s == 4'd2)? (
+  //   ((row1_bias0[15] == 1'b1) || (row1_bias0 == 0))? (
+  //   ((row1_bias0 + {12'b0, {s_mult_3}}) <= 16'd6)?
+  //   (((row1_bias0 + {12'b0, {s_mult_3}}) <= 16'd3)? ((row_base_in_3s - 1) << 1): ((row_base_in_3s - 1) << 1) + 1) :
+  //   (((row1_bias0 + {12'b0, {s_mult_3}}) <= 16'd9)? ((row_base_in_3s - 1) << 1) + 2: ((row_base_in_3s - 1) << 1) + 3)
+  //   ):
+  //   (
+  //   (row1_bias0 <= 6)?
+  //   ((row1_bias0 <= 3)? (row_base_in_3s << 1): (row_base_in_3s << 1) + 1) :
+  //   ((row1_bias0 <= 9)? (row_base_in_3s << 1) + 2: (row_base_in_3s << 1) + 3)
+  //   )
+  //   ):
+  //   0
+  //   );
   assign row1_buf_adr_in_row = 
     ((poy < 1) || ((ky + iy_start) < p_plus_1) || ((ky + iy_start) > p_plus_iy))? 16'hffff:
     (
-    (s == 4'd1)? (
     ((row1_bias0[15] == 1'b1) || (row1_bias0 == 0))? (
     ((row1_bias0 + {12'b0, {s_mult_3}}) <= 16'd6)?
     (((row1_bias0 + {12'b0, {s_mult_3}}) <= 16'd3)? (row_base_in_3s - 1): (row_base_in_3s - 1) + 1) :
@@ -209,20 +228,6 @@ module conv_compute_shell1_controller_v3 #(
     ((row1_bias0 <= 3)? row_base_in_3s: row_base_in_3s + 1) :
     ((row1_bias0 <= 9)? row_base_in_3s + 2: row_base_in_3s + 3)
     )
-    ):
-    (s == 4'd2)? (
-    ((row1_bias0[15] == 1'b1) || (row1_bias0 == 0))? (
-    ((row1_bias0 + {12'b0, {s_mult_3}}) <= 16'd6)?
-    (((row1_bias0 + {12'b0, {s_mult_3}}) <= 16'd3)? ((row_base_in_3s - 1) << 1): ((row_base_in_3s - 1) << 1) + 1) :
-    (((row1_bias0 + {12'b0, {s_mult_3}}) <= 16'd9)? ((row_base_in_3s - 1) << 1) + 2: ((row_base_in_3s - 1) << 1) + 3)
-    ):
-    (
-    (row1_bias0 <= 6)?
-    ((row1_bias0 <= 3)? (row_base_in_3s << 1): (row_base_in_3s << 1) + 1) :
-    ((row1_bias0 <= 9)? (row_base_in_3s << 1) + 2: (row_base_in_3s << 1) + 3)
-    )
-    ):
-    0
     );
   //the adr is the virtual adr. when tile is small, it equals the phisical adr,
   // when tile is bigger, need mapping logic and schedule logic.

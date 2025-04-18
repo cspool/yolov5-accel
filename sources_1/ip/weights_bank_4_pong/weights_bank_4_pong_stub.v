@@ -1,11 +1,11 @@
 // Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
 // Tool Version: Vivado v.2018.3 (win64) Build 2405991 Thu Dec  6 23:38:27 MST 2018
-// Date        : Tue Mar 25 12:22:50 2025
+// Date        : Fri Apr 18 10:50:55 2025
 // Host        : zack running 64-bit major release  (build 9200)
 // Command     : write_verilog -force -mode synth_stub -rename_top weights_bank_4_pong -prefix
-//               weights_bank_4_pong_ weights_bank_1_ping_stub.v
-// Design      : weights_bank_1_ping
+//               weights_bank_4_pong_ weights_bank_2_ping_stub.v
+// Design      : weights_bank_2_ping
 // Purpose     : Stub declaration of top-level module interface
 // Device      : xc7vx690tffg1761-2
 // --------------------------------------------------------------------------------

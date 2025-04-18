@@ -1,11 +1,11 @@
 -- Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2018.3 (win64) Build 2405991 Thu Dec  6 23:38:27 MST 2018
--- Date        : Tue Mar 25 12:22:50 2025
+-- Date        : Fri Apr 18 10:50:55 2025
 -- Host        : zack running 64-bit major release  (build 9200)
 -- Command     : write_vhdl -force -mode funcsim -rename_top weights_bank_3_pong -prefix
---               weights_bank_3_pong_ weights_bank_1_ping_sim_netlist.vhdl
--- Design      : weights_bank_1_ping
+--               weights_bank_3_pong_ weights_bank_2_ping_sim_netlist.vhdl
+-- Design      : weights_bank_2_ping
 -- Purpose     : This VHDL netlist is a functional simulation representation of the design and should not be modified or
 --               synthesized. This netlist cannot be used for SDF annotated simulation.
 -- Device      : xc7vx690tffg1761-2
@@ -5574,7 +5574,7 @@ entity weights_bank_3_pong_blk_mem_gen_v8_4_2 is
   attribute C_INITB_VAL : string;
   attribute C_INITB_VAL of weights_bank_3_pong_blk_mem_gen_v8_4_2 : entity is "0";
   attribute C_INIT_FILE : string;
-  attribute C_INIT_FILE of weights_bank_3_pong_blk_mem_gen_v8_4_2 : entity is "weights_bank_1_ping.mem";
+  attribute C_INIT_FILE of weights_bank_3_pong_blk_mem_gen_v8_4_2 : entity is "weights_bank_2_ping.mem";
   attribute C_INIT_FILE_NAME : string;
   attribute C_INIT_FILE_NAME of weights_bank_3_pong_blk_mem_gen_v8_4_2 : entity is "no_coe_file_loaded";
   attribute C_INTERFACE_TYPE : integer;
@@ -5982,7 +5982,7 @@ entity weights_bank_3_pong is
   attribute NotValidForBitStream : boolean;
   attribute NotValidForBitStream of weights_bank_3_pong : entity is true;
   attribute CHECK_LICENSE_TYPE : string;
-  attribute CHECK_LICENSE_TYPE of weights_bank_3_pong : entity is "weights_bank_1_ping,blk_mem_gen_v8_4_2,{}";
+  attribute CHECK_LICENSE_TYPE of weights_bank_3_pong : entity is "weights_bank_2_ping,blk_mem_gen_v8_4_2,{}";
   attribute downgradeipidentifiedwarnings : string;
   attribute downgradeipidentifiedwarnings of weights_bank_3_pong : entity is "yes";
   attribute x_core_info : string;
@@ -6093,7 +6093,7 @@ architecture STRUCTURE of weights_bank_3_pong is
   attribute C_INITB_VAL : string;
   attribute C_INITB_VAL of U0 : label is "0";
   attribute C_INIT_FILE : string;
-  attribute C_INIT_FILE of U0 : label is "weights_bank_1_ping.mem";
+  attribute C_INIT_FILE of U0 : label is "weights_bank_2_ping.mem";
   attribute C_INIT_FILE_NAME : string;
   attribute C_INIT_FILE_NAME of U0 : label is "no_coe_file_loaded";
   attribute C_INTERFACE_TYPE : integer;

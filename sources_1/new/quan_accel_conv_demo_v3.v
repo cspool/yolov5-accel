@@ -35,7 +35,9 @@ module quan_accel_conv_demo_v3(
 
   ddr_rd_data,
   ddr_wt_data,
-  valid_ddr_wt_data
+  valid_ddr_wt_data,
+
+  conv_fin
 );
   //SA
   parameter sa_row_num = 4;  //how many rows in conv core
@@ -148,6 +150,7 @@ module quan_accel_conv_demo_v3(
   input [511:0] ddr_rd_data;
   output [511:0] ddr_wt_data;
   output valid_ddr_wt_data;
+  output conv_fin;
   // wire ddr_en = 1;
   reg start; //top start
   always@(posedge clk) begin
@@ -204,7 +207,7 @@ module quan_accel_conv_demo_v3(
   wire conv_store;
   wire last_conv_store;
   wire last_conv_compute;
-  wire conv_fin;
+  // wire conv_fin;
   //DDR
   output [31:0] cmd_ddr_base_adr;
   output [15:0] cmd_ddr_length;
@@ -701,7 +704,7 @@ module quan_accel_conv_demo_v3(
       conv_instr_args <= 512'b0;
     end
     else if (start == 1'b1) begin
-      conv_instr_args <= 512'h00000303030202020404040100060001030204010101000000000000002700000000000000000000000000020000002420004000650020000650020200041131;
+      conv_instr_args <= 512'h000004040404040404040401000C0004020202020202001000000000002C000000000000000000000000000C0000002420004000C70080000660040700801231;
     end
     else begin
       conv_instr_args <= conv_instr_args;
@@ -834,7 +837,9 @@ module quan_accel_conv_demo_v3(
       .conv_fin(conv_fin)
   );
   //conv load input ctrl
-  conv_load_input_ddr_controller_v2 cv_load_input_ddr_ctrl (
+  conv_load_input_ddr_controller_v2 #(
+     .sa_column_num(sa_column_num)
+) cv_load_input_ddr_ctrl (
       .clk                                    (clk),
       .conv_load_input                        (conv_load_input),
       .reset                                  ((reset == 1) || (conv_start == 1)),
@@ -1134,6 +1139,7 @@ module quan_accel_conv_demo_v3(
     row_start_idx       <=row_start_idx_stage_2;
     slab_num            <=slab_num_stage_2;
   end
+
   //store chunk index
   always @(posedge clk) begin
     if (reset == 1'b1) begin
@@ -2198,7 +2204,7 @@ module quan_accel_conv_demo_v3(
 
     // collect product add bias file
     file01 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_00.txt", "w");
-    $fmonitor(file01, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, out_rowi_channel_seti[0][0]);
+    $fmonitor(file01, "%d\t%d\t%d\t%d\t%h", core_sum_E_recieve_en_array[0][0], shadow_of_start, shadow_oy_start, shadow_ox_start, out_rowi_channel_seti[0][0]);
     file02 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_in_A_00.txt", "w");
     $fmonitor(file02, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, sum_vector_in_mult_A_width_rowi_channel_setj[0][0]);
     file03 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_mult_E_00.txt", "w");
@@ -2211,7 +2217,7 @@ module quan_accel_conv_demo_v3(
     $fmonitor(file06, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, E_vector_in_mult_B_width_rowi_channel_setj[0][0]);
 
     file11 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_10.txt", "w");
-    $fmonitor(file11, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, out_rowi_channel_seti[1][0]);
+    $fmonitor(file11, "%d\t%d\t%d\t%d\t%h", core_sum_E_recieve_en_array[1][0], shadow_of_start, shadow_oy_start, shadow_ox_start, out_rowi_channel_seti[1][0]);
     file12 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_in_A_10.txt", "w");
     $fmonitor(file12, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, sum_vector_in_mult_A_width_rowi_channel_setj[1][0]);
     file13 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_mult_E_10.txt", "w");
@@ -2224,7 +2230,7 @@ module quan_accel_conv_demo_v3(
     $fmonitor(file16, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, E_vector_in_mult_B_width_rowi_channel_setj[1][0]);
 
     file21 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_20.txt", "w");
-    $fmonitor(file21, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, out_rowi_channel_seti[2][0]);
+    $fmonitor(file21, "%d\t%d\t%d\t%d\t%h", core_sum_E_recieve_en_array[2][0], shadow_of_start, shadow_oy_start, shadow_ox_start, out_rowi_channel_seti[2][0]);
     file22 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_in_A_20.txt", "w");
     $fmonitor(file22, "%d\t%d\t%d\t%h", shadow_of_start, shadow_oy_start, shadow_ox_start, sum_vector_in_mult_A_width_rowi_channel_setj[2][0]);
     file23 = $fopen("D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sum_mult_E_20.txt", "w");

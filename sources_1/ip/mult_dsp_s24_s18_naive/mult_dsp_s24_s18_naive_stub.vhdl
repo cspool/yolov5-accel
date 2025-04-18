@@ -1,11 +1,11 @@
 -- Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2018.3 (win64) Build 2405991 Thu Dec  6 23:38:27 MST 2018
--- Date        : Thu Feb 20 20:05:49 2025
+-- Date        : Fri Apr 18 10:41:01 2025
 -- Host        : zack running 64-bit major release  (build 9200)
 -- Command     : write_vhdl -force -mode synth_stub -rename_top mult_dsp_s24_s18_naive -prefix
---               mult_dsp_s24_s18_naive_ mult_dsp_s24_s18_stub.vhdl
--- Design      : mult_dsp_s24_s18
+--               mult_dsp_s24_s18_naive_ signed_mult_dsp_stub.vhdl
+-- Design      : signed_mult_dsp
 -- Purpose     : Stub declaration of top-level module interface
 -- Device      : xc7vx690tffg1761-2
 -- --------------------------------------------------------------------------------
