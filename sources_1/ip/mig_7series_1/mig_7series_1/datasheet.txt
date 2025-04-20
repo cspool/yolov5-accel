@@ -113,9 +113,6 @@ Bank Selections:
 		Byte Group T1:	DQ[8-15]
 		Byte Group T2:	DQ[16-23]
 		Byte Group T3:	DQ[24-31]
-	Bank: 37
-	Bank: 38
-	Bank: 39
 
 
 System_Control: 
