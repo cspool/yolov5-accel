@@ -351,13 +351,27 @@ module conv_load_input_ddr_controller_v3 #(
   //loop ddr_word_counter
   always @(posedge clk) begin
     if (reset == 1'b1) begin
-      input_ddr_word_signal <= 0;
+      input_ddr_word_signal <= 0;  //chunk loading
     end else if ((conv_load_input == 1'b1) && (state_load_input_tile_fin == 0) && (chunk_ix_size_mult_chunk_iy_size > 0)) begin
       input_ddr_word_signal <= 1;
     end else if (loop_input_ddr_word_chunk_counter_add_end == 1'b1) begin
       input_ddr_word_signal <= 0;
     end else begin
       input_ddr_word_signal <= input_ddr_word_signal;
+    end
+  end
+
+  reg lock_ddr_cmd_gen;
+  always @(posedge clk) begin
+    if (reset == 1'b1) begin
+      lock_ddr_cmd_gen <= 0;
+    end else if (valid_load_input_ddr_cmd == 1'b1) begin
+      lock_ddr_cmd_gen <= 0;
+    end else if ((state_conv_load_input == 0)  //no valid load process at now
+        && (input_ddr_word_signal == 1'b1) && (ddr_cmd_ready == 1'b1)) begin
+      lock_ddr_cmd_gen <= 1;
+    end else begin
+      lock_ddr_cmd_gen <= lock_ddr_cmd_gen;
     end
   end
 
@@ -403,8 +417,9 @@ module conv_load_input_ddr_controller_v3 #(
       if_start <= if_start;
     end
   end
-  assign loop_if_add_begin = (state_conv_load_input == 0)  //no valid load process at now
- && (input_ddr_word_signal == 1'b1) && (ddr_cmd_ready == 1'b1);
+  //   assign loop_if_add_begin = (state_conv_load_input == 0)  //no valid load process at now
+  //  && (input_ddr_word_signal == 1'b1) && (ddr_cmd_ready == 1'b1);
+  assign loop_if_add_begin = valid_load_input_ddr_cmd;
   assign loop_if_add_end   = loop_if_add_begin && ((if_start + (load_input_ddr_length << ifs_in_row_2pow)) > nif);
 
   always @(posedge clk) begin
@@ -597,7 +612,7 @@ module conv_load_input_ddr_controller_v3 #(
   assign loop_load_for_com_tile_y_add_end   = loop_load_for_com_tile_y_add_begin && ((load_for_com_tile_y_start + sa_column_num) > oy);
 
   //stage 2
-  reg conv_load_input_stage_1;
+  reg conv_load_input_stage_1;  //wait other val prepared
   always @(posedge clk) begin
     conv_load_input_stage_1 <= conv_load_input_sig;
   end
@@ -716,6 +731,7 @@ module conv_load_input_ddr_controller_v3 #(
     //tiley_mid_iy_row_num = buffers_num * s
     tiley_mid_iy_row_num_rectified : 0;
   end
+  assign chunk_iy_size = chunk_iy_size_stage_1;
 
   reg [7:0] input_tile_of_split_size_stage_1;
   // assign input_tile_of_split_size = (load_for_com_tile_y_start == 1) ? (
@@ -866,8 +882,11 @@ module conv_load_input_ddr_controller_v3 #(
   // assign valid_load_input_ddr_cmd = //
   // ((iy_load_index > iy_index_num) || (ix_load_index > ix_index_num)) ? 0 : loop_if_add_begin;
   always @(posedge clk) begin
-    valid_load_input_ddr_cmd_stage_1 <= //
-  ((iy_load_index > iy_index_num) || (ix_load_index > ix_index_num)) ? 0 : loop_if_add_begin;
+    valid_load_input_ddr_cmd_stage_1 <=  //
+    ((iy_load_index > iy_index_num) || (ix_load_index > ix_index_num)) ? 0 :  //
+    (state_conv_load_input == 0)  //no valid load process at now
+    && (input_ddr_word_signal == 1'b1) && (ddr_cmd_ready == 1'b1)  //can accept cmd
+    && (lock_ddr_cmd_gen == 0);  //a cmd gen once a time
   end
   assign valid_load_input_ddr_cmd = valid_load_input_ddr_cmd_stage_1;
 
@@ -914,8 +933,11 @@ module conv_load_input_ddr_controller_v3 #(
   // assign input_word_ddr_en_rd = //
   // ((iy_load_index > iy_index_num) || (ix_load_index > ix_index_num)) ? 0 : loop_if_add_begin;
   always @(posedge clk) begin
-    input_word_ddr_en_rd_stage_1 <= //
-  ((iy_load_index > iy_index_num) || (ix_load_index > ix_index_num)) ? 0 : loop_if_add_begin;
+    input_word_ddr_en_rd_stage_1 <=  //
+    ((iy_load_index > iy_index_num) || (ix_load_index > ix_index_num)) ? 0 :  //
+    (state_conv_load_input == 0)  //no valid load process at now
+    && (input_ddr_word_signal == 1'b1) && (ddr_cmd_ready == 1'b1)  //can accept cmd
+    && (lock_ddr_cmd_gen == 0);  //a cmd gen once a time
   end
   assign input_word_ddr_en_rd = input_word_ddr_en_rd_stage_1;
 

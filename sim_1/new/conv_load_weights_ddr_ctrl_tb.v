@@ -25,6 +25,8 @@ module conv_load_weights_ddr_ctrl_tb ();
   //load weights controller
   reg clk, reset;
   reg         conv_load_weights;  //begin weights loading
+  reg         conv_load_weights_pre;  //begin weights loading
+
   reg         ddr_cmd_ready;  //mig fifo can accept request
   reg         ddr_rd_data_valid;  //ddr words is loaded from ddr
   reg  [ 3:0] mode_init;
@@ -72,13 +74,17 @@ module conv_load_weights_ddr_ctrl_tb ();
     end
   end
 
-  // always @(posedge clk) begin
-  //   if (reset == 1) begin
-  //     conv_load_weights <= 1;
-  //   end else if (conv_load_weights == 1) begin
-  //     conv_load_weights <= 0;
-  //   end
-  // end
+  always @(posedge clk) begin
+    if (reset == 1) begin
+      conv_load_weights_pre <= 1;
+    end else if (conv_load_weights_pre == 1) begin
+      conv_load_weights_pre <= 0;
+    end
+  end
+
+  always @(posedge clk) begin
+    conv_load_weights <= conv_load_weights_pre;
+  end
 
   always @(posedge clk) begin
     if (reset == 1) begin
@@ -110,12 +116,12 @@ module conv_load_weights_ddr_ctrl_tb ();
     end
   end
 
-  conv_load_weights_ddr_controller cv_load_weights_ddr_controller (
-      .clk              (clk),
-      .reset            (reset),
-      .conv_load_weights(conv_load_weights),  //load weight start
-      .ddr_cmd_ready    (ddr_cmd_ready),      //mig fifo can accept new load instr
-      .ddr_rd_data_valid(ddr_rd_data_valid),  //ddr weights is loaded from ddr
+  conv_load_weights_ddr_controller_v2 cv_load_weights_ddr_controller (
+      .clk                  (clk),
+      .reset                (reset),
+      .conv_load_weights_sig(conv_load_weights),  //load weight start
+      .ddr_cmd_ready        (ddr_cmd_ready),      //mig fifo can accept new load instr
+      .ddr_rd_data_valid    (ddr_rd_data_valid),  //ddr weights is loaded from ddr
 
       .weights_layer_base_ddr_adr_rd_init(weights_layer_base_ddr_adr_rd_init),
       .mode_init                         (mode_init),
@@ -145,19 +151,19 @@ module conv_load_weights_ddr_ctrl_tb ();
     reset                              = 1;
 
     #10;
-    reset             = 0;
-    conv_load_weights = 1;
+    reset = 0;
+    // conv_load_weights = 1;
 
-    #10;
-    conv_load_weights = 0;
+    // #10;
+    // conv_load_weights = 0;
 
-    #500;
+    // #500;
 
-    #10;
-    conv_load_weights = 1;
+    // #10;
+    // conv_load_weights = 1;
 
-    #10;
-    conv_load_weights = 0;
+    // #10;
+    // conv_load_weights = 0;
 
   end
 

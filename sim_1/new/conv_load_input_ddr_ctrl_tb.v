@@ -32,6 +32,7 @@ module conv_load_input_ddr_ctrl_tb ();
   parameter input_buffer_size_2pow = 12;  //4096
 
   //conv_load_input_controller
+  reg conv_load_input_pre;
   reg clk, conv_load_input, reset;  //load input means fin of the last execuation term
   reg       ddr_cmd_ready;
   reg       ddr_rd_data_valid;
@@ -112,9 +113,9 @@ module conv_load_input_ddr_ctrl_tb ();
   wire         load_input_info_fifo_empty;
   wire [  8:0] load_input_info_fifo_data_count;
 
-  conv_load_input_ddr_controller cv_load_input_ddr_controller (
+  conv_load_input_ddr_controller_v3 cv_load_input_ddr_controller (
       .clk                       (clk),
-      .conv_load_input           (conv_load_input),
+      .conv_load_input_sig       (conv_load_input),
       .reset                     (reset),
       .ddr_cmd_ready             (ddr_cmd_ready),
       .ddr_rd_data_valid         (ddr_rd_data_valid),
@@ -199,10 +200,14 @@ module conv_load_input_ddr_ctrl_tb ();
 
   always @(posedge clk) begin
     if (reset == 1) begin
-      conv_load_input <= 1;
-    end else if (conv_load_input == 1) begin
-      conv_load_input <= 0;
+      conv_load_input_pre <= 1;
+    end else if (conv_load_input_pre == 1) begin
+      conv_load_input_pre <= 0;
     end
+  end
+
+  always @(posedge clk) begin
+    conv_load_input <= conv_load_input_pre;
   end
 
   always @(posedge clk) begin
@@ -322,7 +327,9 @@ module conv_load_input_ddr_ctrl_tb ();
     tiley_mid_tilex_mid_split_size_init     = conv_instr_args_mem[0][488+:8];  //8
 
     clk                                     = 0;
-    reset                                   = 1;
+
+    #6;
+    reset = 1;
     #10;
     reset = 0;
 

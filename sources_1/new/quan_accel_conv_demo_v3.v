@@ -842,7 +842,7 @@ module quan_accel_conv_demo_v3(
 ) cv_load_input_ddr_ctrl (
       .clk                                    (clk),
       .conv_load_input_sig                        (conv_load_input),
-      .reset                                  ((reset == 1) || (conv_start == 1)),
+      .reset                                  ((reset == 1) || (conv_start_pre == 1)),
       .ddr_cmd_ready                                 (ddr_cmd_ready),
       .ddr_rd_data_valid(ddr_rd_data_valid),
       .load_input_info_fifo_empty(load_input_info_fifo_empty),
@@ -909,10 +909,10 @@ module quan_accel_conv_demo_v3(
   assign input_word_buf_idx_wr           = (state_valid_load_input == 1) ? input_word_load_info_fifo_rd[16+:16] : 0;
   assign input_word_buf_adr_wr           = (state_valid_load_input == 1) ? input_word_load_info_fifo_rd[0+:16] : 0;
   //conv load weights ctrl
-  conv_load_weights_ddr_controller cv_load_weights_ddr_controller (
+  conv_load_weights_ddr_controller_v2 cv_load_weights_ddr_controller (
       .clk               (clk),
-      .reset             ((reset == 1) || (conv_start == 1)),
-      .conv_load_weights (conv_load_weights),  //load weight start
+      .reset             ((reset == 1) || (conv_start_pre == 1)),
+      .conv_load_weights_sig (conv_load_weights),  //load weight start
       .ddr_cmd_ready            (ddr_cmd_ready),             //mig fifo can accept new load instr
       .ddr_rd_data_valid(ddr_rd_data_valid),
       
@@ -939,7 +939,7 @@ module quan_accel_conv_demo_v3(
     conv_compute_kernel_controller_v4 #(.sa_column_num(sa_column_num)) 
   cv_compute_kernel_controller(
     .clk                 (clk),
-    .reset               ((reset == 1) || (conv_start == 1)),
+    .reset               ((reset == 1) || (conv_start_pre == 1)),
     .conv_compute        (conv_compute),
     .mode_init           (mode),
     .of_init             (of),
@@ -984,7 +984,7 @@ module quan_accel_conv_demo_v3(
   conv_compute_shell1_controller_v4 #(.sa_column_num(sa_column_num)) 
   cv_compute_shell1_controller(
      .clk                 (clk),
-    .reset               ((reset == 1) || (conv_start == 1)),
+    .reset               ((reset == 1) || (conv_start_pre == 1)),
     .s_init(s),
     .p_init(p),
     .iy_init(iy),
@@ -1015,7 +1015,7 @@ module quan_accel_conv_demo_v3(
   conv_compute_shell2_controller_v4 #(.sa_column_num(sa_column_num)) 
   cv_compute_shell2_controller(
         .clk                 (clk),
-    .reset               ((reset == 1) || (conv_start == 1)),
+    .reset               ((reset == 1) || (conv_start_pre == 1)),
     .s_init(s),
     .p_init(p),
     .iy_init(iy),
@@ -1046,7 +1046,7 @@ module quan_accel_conv_demo_v3(
   conv_compute_shell3_controller_v4 #(.sa_column_num(sa_column_num)) 
   cv_compute_shell3_controller(
         .clk                 (clk),
-    .reset               ((reset == 1) || (conv_start == 1)),
+    .reset               ((reset == 1) || (conv_start_pre == 1)),
     .s_init(s),
     .p_init(p),
     .iy_init(iy),
@@ -2046,7 +2046,7 @@ module quan_accel_conv_demo_v3(
   // sa control
   quan_CBR_kernel_controller_v6 quan_CBR_kernel_ctrl(
     .clk              (clk),
-    .reset            ((reset == 1) || (conv_start == 1)),  //next tile need clr
+    .reset            ((reset == 1) || (conv_start_pre == 1)),  //next tile need clr
     .re_fm_en         (re_fm_en),
     .re_fm_end(re_fm_end),
     .mode_init             (mode),
