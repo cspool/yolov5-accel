@@ -41,6 +41,7 @@ module conv_store_ctrl_tb ();
   //cycle 0 in
   reg clk, reset;
   reg        conv_store_start;
+  reg        conv_store_start_pre;
   reg        ddr_cmd_ready;
   reg        ddr_wt_data_ready;
   reg [31:0] output_ddr_layer_base_adr;
@@ -66,15 +67,15 @@ module conv_store_ctrl_tb ();
   wire         valid_store_ddr_cmd;
   wire         conv_store_fin;
 
-  conv_store_ddr_controller cv_store_ddr_controller (
+  conv_store_ddr_controller_v2 cv_store_ddr_controller (
       .clk                       (clk),
       .reset                     (reset),
       //cycle 0 in
-      .conv_store_start          (conv_store_start),
+      .conv_store_start_sig      (conv_store_start),
       .ddr_cmd_ready             (ddr_cmd_ready),
       .ddr_wt_data_ready         (ddr_wt_data_ready),
-      .output_ddr_layer_base_adr (output_ddr_layer_base_adr),
-      .mode                      (mode),
+      .output_ddr_layer_base_adr_init (output_ddr_layer_base_adr),
+      .mode_init                      (mode),
       .of_in_2pow                (of_in_2pow),
       .ox_in_2pow                (ox_in_2pow),
       .cur_ox_start              (cur_ox_start),
@@ -135,10 +136,14 @@ module conv_store_ctrl_tb ();
 
   always @(posedge clk) begin
     if (reset == 1) begin
-      conv_store_start <= 1;
-    end else if (conv_store_start == 1) begin
-      conv_store_start <= 0;
+      conv_store_start_pre <= 1;
+    end else if (conv_store_start_pre == 1) begin
+      conv_store_start_pre <= 0;
     end
+  end
+
+  always @(posedge clk) begin
+    conv_store_start <= conv_store_start_pre;
   end
 
   always @(posedge clk) begin

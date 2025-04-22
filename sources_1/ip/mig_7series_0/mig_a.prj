@@ -13,7 +13,7 @@
 
   <LowPower_En>ON</LowPower_En>
 
-  <XADC_En>Enabled</XADC_En>
+  <XADC_En>Disabled</XADC_En>
 
   <TargetFPGA>xc7vx690t-ffg1761/-2</TargetFPGA>
 

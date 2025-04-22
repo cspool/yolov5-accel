@@ -1,10 +1,10 @@
 -- Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2018.3 (win64) Build 2405991 Thu Dec  6 23:38:27 MST 2018
--- Date        : Sat Apr 19 00:21:45 2025
+-- Date        : Mon Apr 21 23:42:41 2025
 -- Host        : zack running 64-bit major release  (build 9200)
 -- Command     : write_vhdl -force -mode synth_stub
---               D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sources_1/ip/mig_7series_0/mig_7series_0_stub.vhdl
+--               d:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sources_1/ip/mig_7series_0/mig_7series_0_stub.vhdl
 -- Design      : mig_7series_0
 -- Purpose     : Stub declaration of top-level module interface
 -- Device      : xc7vx690tffg1761-2

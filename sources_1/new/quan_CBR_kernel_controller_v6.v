@@ -27,7 +27,8 @@ module quan_CBR_kernel_controller_v6 (
     re_fm_end,
     mode_init,
     nif_mult_k_mult_k_init,
-    shadow_pof,
+    // shadow_pof,
+    shadow_pof_per_core,
 
     //for shell ctrl
     // sa_en_pre,
@@ -62,9 +63,10 @@ module quan_CBR_kernel_controller_v6 (
   input re_fm_en, re_fm_end;
   input [3:0] mode_init;
   input [31:0] nif_mult_k_mult_k_init;
-  input [15:0] shadow_pof;
-  wire [ 7:0] shadow_pof_per_core;
-  wire [ 1:0] log_pof_per_cell;
+  // input [15:0] shadow_pof;
+  // wire [ 7:0] shadow_pof_per_core;
+  input [7:0] shadow_pof_per_core;
+  // wire [ 1:0] log_pof_per_cell;
   reg  [ 3:0] mode;
   reg  [31:0] nif_mult_k_mult_k;
   reg         pixels_counter_signal;
@@ -202,13 +204,13 @@ module quan_CBR_kernel_controller_v6 (
   // assign loop_sa_counter_add_begin = (sa_counter_signal == 1'b1) || (loop_pixels_counter_add_end == 1'b1);
   assign loop_sa_counter_add_begin = (sa_counter_signal == 1'b1);  //1 means cell(0,0) has a valid sum out
   // assign loop_sa_counter_add_end   = loop_sa_counter_add_begin && (sa_counter == 6'd32);
-  assign loop_sa_counter_add_end = loop_sa_counter_add_begin && (sa_counter == 1 + row_num_in_sa - 1 + shadow_pof_per_core);  //add delay before sum out
+  assign loop_sa_counter_add_end   = loop_sa_counter_add_begin && (sa_counter == 1 + row_num_in_sa - 1 + shadow_pof_per_core);  //add delay before sum out
 
-  assign log_pof_per_cell = (mode == 0) ? 0 : (mode == 1) ? 1 : 0;
-  assign shadow_pof_per_core = ((shadow_pof >> log_pof_per_cell) <= row_num_in_sa)? (shadow_pof >> log_pof_per_cell):
-  (((shadow_pof >> log_pof_per_cell) > row_num_in_sa) && ((shadow_pof >> log_pof_per_cell) <= row_num_in_sa + row_num_in_sa))? (shadow_pof >> log_pof_per_cell) - row_num_in_sa:
-  (((shadow_pof >> log_pof_per_cell) > row_num_in_sa + row_num_in_sa) && ((shadow_pof >> log_pof_per_cell) <= row_num_in_sa + row_num_in_sa + row_num_in_sa))? (shadow_pof >> log_pof_per_cell) - row_num_in_sa - row_num_in_sa:
-  (shadow_pof >> log_pof_per_cell) - row_num_in_sa - row_num_in_sa - row_num_in_sa;
+  // assign log_pof_per_cell = (mode == 0) ? 0 : (mode == 1) ? 1 : 0;
+  // assign shadow_pof_per_core = ((shadow_pof >> log_pof_per_cell) <= row_num_in_sa)? (shadow_pof >> log_pof_per_cell):
+  // (((shadow_pof >> log_pof_per_cell) > row_num_in_sa) && ((shadow_pof >> log_pof_per_cell) <= row_num_in_sa + row_num_in_sa))? (shadow_pof >> log_pof_per_cell) - row_num_in_sa:
+  // (((shadow_pof >> log_pof_per_cell) > row_num_in_sa + row_num_in_sa) && ((shadow_pof >> log_pof_per_cell) <= row_num_in_sa + row_num_in_sa + row_num_in_sa))? (shadow_pof >> log_pof_per_cell) - row_num_in_sa - row_num_in_sa:
+  // (shadow_pof >> log_pof_per_cell) - row_num_in_sa - row_num_in_sa - row_num_in_sa;
 
   // always @(posedge clk) begin
   //   if (reset == 1'b1) begin

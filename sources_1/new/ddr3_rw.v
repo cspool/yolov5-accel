@@ -374,7 +374,7 @@ module ddr3_rw #(
   end
 
   // DDR3 IP核实例化
-  mig_7series_1 mig_7series_1_inst (
+  mig_7series_0 mig_7series_0_inst (
       // DDR interface Signals
       .ddr3_addr          (ddr3_addr),
       .ddr3_ba            (ddr3_ba),

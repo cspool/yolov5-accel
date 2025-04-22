@@ -585,6 +585,8 @@ module quan_accel_conv_demo_v3(
   // extra_sa_vector_Ps[buffers_num-1 : 0][sa_row_num-1 : 0];
 
   // sa control
+  reg [ 7:0] shadow_pof_per_core;
+  reg [ 1:0] log_pof_per_cell;
   wire core_cell_en_pre;
   wire core_cell_reset_pre;
   wire core_cell_output_en_pre;
@@ -1142,13 +1144,15 @@ module quan_accel_conv_demo_v3(
 
   //store chunk index
   always @(posedge clk) begin
-    if (reset == 1'b1) begin
+    if ((reset == 1) || (conv_start == 1)) begin
       shadow_ox_start <= 0;
       shadow_oy_start <= 0;
       shadow_of_start <= 0;
       shadow_pox      <= 0;
       shadow_poy      <= 0;
       shadow_pof      <= 0;
+      shadow_pof_per_core <= 0;
+      log_pof_per_cell <= (mode == 0) ? 0 : (mode == 1) ? 1 : 0;
     end else if (conv_nif_add_end == 1'b1) begin
       shadow_ox_start <= ox_start;
       shadow_oy_start <= oy_start;
@@ -1156,6 +1160,10 @@ module quan_accel_conv_demo_v3(
       shadow_pox      <= pox;
       shadow_poy      <= poy;
       shadow_pof      <= pof;
+      shadow_pof_per_core <= ((pof >> log_pof_per_cell) <= row_num_in_sa)? (pof >> log_pof_per_cell):
+  (((pof >> log_pof_per_cell) > row_num_in_sa) && ((pof >> log_pof_per_cell) <= row_num_in_sa + row_num_in_sa))? (pof >> log_pof_per_cell) - row_num_in_sa:
+  (((pof >> log_pof_per_cell) > row_num_in_sa + row_num_in_sa) && ((pof >> log_pof_per_cell) <= row_num_in_sa + row_num_in_sa + row_num_in_sa))? (pof >> log_pof_per_cell) - row_num_in_sa - row_num_in_sa:
+  (pof >> log_pof_per_cell) - row_num_in_sa - row_num_in_sa - row_num_in_sa;
     end else begin
       shadow_ox_start <= shadow_ox_start;
       shadow_oy_start <= shadow_oy_start;
@@ -1163,6 +1171,8 @@ module quan_accel_conv_demo_v3(
       shadow_pox      <= shadow_pox;
       shadow_poy      <= shadow_poy;
       shadow_pof      <= shadow_pof;
+      shadow_pof_per_core <= shadow_pof_per_core;
+      log_pof_per_cell <= log_pof_per_cell;
     end
   end
   always @(posedge clk) begin
@@ -2051,7 +2061,8 @@ module quan_accel_conv_demo_v3(
     .re_fm_end(re_fm_end),
     .mode_init             (mode),
     .nif_mult_k_mult_k_init(nif_mult_k_mult_k),
-    .shadow_pof(shadow_pof),
+    // .shadow_pof(shadow_pof),
+    .shadow_pof_per_core(shadow_pof_per_core),
 
     //for shell ctrl
     .out_sa_row_idx_pre(out_sa_row_idx_pre),
@@ -2110,15 +2121,15 @@ module quan_accel_conv_demo_v3(
   assign sum_mult_E_vector_P = vector_P;
   
   //conv store ctrl
-  conv_store_ddr_controller cv_store_ddr_controller (  // conv_out_handler
+  conv_store_ddr_controller_v2 cv_store_ddr_controller (  // conv_out_handler
       //cycle 0 in
       .clk                       (clk),
       .reset                     ((reset == 1) || (conv_start == 1)),
-      .conv_store_start          (conv_store),
+      .conv_store_start_sig          (conv_store),
       .ddr_cmd_ready             (ddr_cmd_ready),
       .ddr_wt_data_ready         (ddr_wt_data_ready),
-      .output_ddr_layer_base_adr (output_ddr_layer_base_adr),
-      .mode                      (mode),
+      .output_ddr_layer_base_adr_init (output_ddr_layer_base_adr),
+      .mode_init                      (mode),
       .of_in_2pow                (of_in_2pow),
       .ox_in_2pow                (ox_in_2pow),
       .cur_ox_start              (store_ox_start),

@@ -39,8 +39,8 @@ def generate_conv_E_quantize_tests():
   conv_E_quantize_test(conv_type, mode_type, quantize_type)
 
 def conv_E_quantize_test(conv_type, mode_type, quantize_type):
-    standard_conv_E_quantize(conv_type, mode_type, quantize_type)
-    # fpga_conv_E_quantize(conv_type, mode_type, quantize_type)
+    # standard_conv_E_quantize(conv_type, mode_type, quantize_type)
+    fpga_conv_E_quantize(conv_type, mode_type, quantize_type)
 
 def standard_conv_E_quantize(conv_type, mode_type, quantize_type):
   # def basic conv op
