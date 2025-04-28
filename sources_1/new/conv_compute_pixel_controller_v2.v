@@ -305,8 +305,8 @@ module conv_compute_pixel_controller_v2 #(
       if ((loop_adr1_add_end == 1'b1) && (loop_y_add_end == 1'b1)) begin  // the last pixels word all end
         stall_in_row_counter <= 0;
       end else if ((loop_adr1_add_end == 1'b1) && (loop_y_add_end == 1'b0)) begin
-        // stall_in_row_counter <= (k - row_length - 2); //row regs need extra 2 cycle delay
-        stall_in_row_counter <= ((k - row_length) >= 2 + 2) ? (k - row_length - 2) : 2;
+        // stall_in_row_counter <= (k - row_length - 2 - 1); //row regs need extra 2 cycle delay, buf interface need extra 1 cycle
+        stall_in_row_counter <= ((k - row_length) >= 2 + 2 + 1) ? (k - row_length - 2 - 1) : 2;
       end else begin
         stall_in_row_counter <= 2;  //3-stage pipeline
       end

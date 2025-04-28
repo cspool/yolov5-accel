@@ -395,11 +395,15 @@ module quan_accel_conv_demo_v4(
   wire buf3_en_wr;
   //last regs
   reg [3:0] last_west_pad, last_slab_num, last_east_pad;
+  reg [3:0] last_row_west_pad, last_row_slab_num, last_row_east_pad; //used for row regs
   reg [15:0] last_row1_idx, last_row2_idx, last_row3_idx;
   reg [15:0] last_row_start_idx, last_row_end_idx;
   reg [15:0] last_reg_start_idx, last_reg_end_idx;
+  reg [15:0] last_row_reg_start_idx, last_row_reg_end_idx; //used for row regs
   reg state_valid_row1_adr, state_valid_row2_adr, state_valid_row3_adr;
+  reg last_state_valid_row1_adr, last_state_valid_row2_adr, last_state_valid_row3_adr; //used for rowi adr
   reg state_conv_pixels_add_end;
+  reg last_state_conv_pixels_add_end; //used for row regs
   reg [1:0] last_row1_buf_idx;
   reg [1:0] last_row2_buf_idx;
   reg [1:0] last_row3_buf_idx;
@@ -1202,7 +1206,7 @@ module quan_accel_conv_demo_v4(
 
   //conv buffers mapping interface
   //////////////////////////////////////////////////////////////
-  conv_buffers_interface cv_buffers_interface (
+  conv_buffers_interface_v2 cv_buffers_interface (
       .reset                ((reset == 1) || (conv_start == 1)),
       .clk                  (clk),
       //cycle 0 in/ input rows rd info
@@ -1305,19 +1309,30 @@ module quan_accel_conv_demo_v4(
   always @(posedge clk) begin
     if ((reset == 1) || (conv_start == 1)) begin
       state_conv_pixels_add_end   <= 0;
+      last_state_conv_pixels_add_end   <= 0;
       state_valid_row1_adr        <= 0;
+      last_state_valid_row1_adr        <= 0;
       state_valid_row2_adr        <= 0;
+      last_state_valid_row2_adr        <= 0;
       state_valid_row3_adr        <= 0;
+      last_state_valid_row3_adr        <= 0;
+
       last_west_pad               <= 0;
+      last_row_west_pad               <= 0;
       last_slab_num               <= 0;
+      last_row_slab_num               <= 0;
       last_east_pad               <= 0;
+      last_row_east_pad               <= 0;
+
       last_row1_idx               <= 16'hffff;
       last_row2_idx               <= 16'hffff;
       last_row3_idx               <= 16'hffff;
       last_row_start_idx          <= 16'hffff;
       last_row_end_idx            <= 16'hffff;
       last_reg_start_idx          <= 16'hffff;
+      last_row_reg_start_idx          <= 16'hffff;
       last_reg_end_idx            <= 16'hffff;
+      last_row_reg_end_idx            <= 16'hffff;
       last_row1_buf_idx           <= 0;
       last_row2_buf_idx           <= 0;
       last_row3_buf_idx           <= 0;
@@ -1347,19 +1362,28 @@ module quan_accel_conv_demo_v4(
       conv_start <= 0;
     end else if (state == 4'b0001) begin  //conv op
       state_conv_pixels_add_end   <= conv_pixels_add_end;
+      last_state_conv_pixels_add_end   <= state_conv_pixels_add_end;
       state_valid_row1_adr        <= valid_row1_adr;
+      last_state_valid_row1_adr        <= state_valid_row1_adr;
       state_valid_row2_adr        <= valid_row2_adr;
+      last_state_valid_row2_adr        <= state_valid_row2_adr;
       state_valid_row3_adr        <= valid_row3_adr;
+      last_state_valid_row3_adr        <= state_valid_row3_adr;
       last_west_pad               <= west_pad;
+      last_row_west_pad               <= last_west_pad;
       last_slab_num               <= slab_num;
+      last_row_slab_num               <= last_slab_num;
       last_east_pad               <= east_pad;
+      last_row_east_pad               <= last_east_pad;
       last_row1_idx               <= row1_idx;
       last_row2_idx               <= row2_idx;
       last_row3_idx               <= row3_idx;
       last_row_start_idx          <= row_start_idx;
       last_row_end_idx            <= row_end_idx;
       last_reg_start_idx          <= reg_start_idx;
+      last_row_reg_start_idx          <= last_reg_start_idx;
       last_reg_end_idx            <= reg_end_idx;
+      last_row_reg_end_idx            <= last_reg_end_idx;
       last_row1_buf_idx           <= row1_buf_idx;
       last_row2_buf_idx           <= row2_buf_idx;
       last_row3_buf_idx           <= row3_buf_idx;
@@ -1394,22 +1418,15 @@ module quan_accel_conv_demo_v4(
   Row_Regs_v3 row_regs (
       .reset                    ((reset == 1) || (conv_start == 1)),
       .clk                      (clk),
-      // .k                        (k),
-      // .s                        (s),
-      .state_valid_row1_adr     (state_valid_row1_adr),
-      .state_valid_row2_adr     (state_valid_row2_adr),
-      .state_valid_row3_adr     (state_valid_row3_adr),
-      .state_conv_pixels_add_end(state_conv_pixels_add_end),
-      .last_west_pad            (last_west_pad),
-      .last_slab_num            (last_slab_num),
-      .last_east_pad            (last_east_pad),
-      .last_row1_idx            (last_row1_idx),
-      .last_row2_idx            (last_row2_idx),
-      .last_row3_idx            (last_row3_idx),
-      .last_row_start_idx       (last_row_start_idx),
-      .last_row_end_idx         (last_row_end_idx),
-      .last_reg_start_idx       (last_reg_start_idx),
-      .last_reg_end_idx         (last_reg_end_idx),
+      .last_state_valid_row1_adr     (last_state_valid_row1_adr),
+      .last_state_valid_row2_adr     (last_state_valid_row2_adr),
+      .last_state_valid_row3_adr     (last_state_valid_row3_adr),
+      .last_state_conv_pixels_add_end(last_state_conv_pixels_add_end),
+      .last_row_west_pad            (last_row_west_pad),
+      .last_row_slab_num            (last_row_slab_num),
+      .last_row_east_pad            (last_row_east_pad),
+      .last_row_reg_start_idx       (last_row_reg_start_idx),
+      .last_row_reg_end_idx         (last_row_reg_end_idx),
       .last_row1_pixels_32      (last_row1_pixels_32),
       .last_row2_pixels_32      (last_row2_pixels_32),
       .last_row3_pixels_32      (last_row3_pixels_32),
