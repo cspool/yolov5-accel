@@ -1,11 +1,11 @@
 -- Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2018.3 (win64) Build 2405991 Thu Dec  6 23:38:27 MST 2018
--- Date        : Fri Apr 18 10:50:55 2025
+-- Date        : Thu Apr 24 18:20:18 2025
 -- Host        : zack running 64-bit major release  (build 9200)
--- Command     : write_vhdl -force -mode funcsim -rename_top weights_bank_3_ping -prefix
---               weights_bank_3_ping_ weights_bank_2_ping_sim_netlist.vhdl
--- Design      : weights_bank_2_ping
+-- Command     : write_vhdl -force -mode funcsim
+--               D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sources_1/ip/weights_bank_3_ping/weights_bank_3_ping_sim_netlist.vhdl
+-- Design      : weights_bank_3_ping
 -- Purpose     : This VHDL netlist is a functional simulation representation of the design and should not be modified or
 --               synthesized. This netlist cannot be used for SDF annotated simulation.
 -- Device      : xc7vx690tffg1761-2
@@ -20,6 +20,8 @@ entity weights_bank_3_ping_bindec is
     addra : in STD_LOGIC_VECTOR ( 2 downto 0 );
     ena : in STD_LOGIC
   );
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of weights_bank_3_ping_bindec : entity is "bindec";
 end weights_bank_3_ping_bindec;
 
 architecture STRUCTURE of weights_bank_3_ping_bindec is
@@ -70,6 +72,8 @@ entity weights_bank_3_ping_blk_mem_gen_mux is
     \douta[111]\ : in STD_LOGIC_VECTOR ( 1 downto 0 );
     \douta[127]\ : in STD_LOGIC_VECTOR ( 15 downto 0 )
   );
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of weights_bank_3_ping_blk_mem_gen_mux : entity is "blk_mem_gen_mux";
 end weights_bank_3_ping_blk_mem_gen_mux;
 
 architecture STRUCTURE of weights_bank_3_ping_blk_mem_gen_mux is
@@ -1628,6 +1632,8 @@ entity weights_bank_3_ping_blk_mem_gen_prim_wrapper is
     dina : in STD_LOGIC_VECTOR ( 3 downto 0 );
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of weights_bank_3_ping_blk_mem_gen_prim_wrapper : entity is "blk_mem_gen_prim_wrapper";
 end weights_bank_3_ping_blk_mem_gen_prim_wrapper;
 
 architecture STRUCTURE of weights_bank_3_ping_blk_mem_gen_prim_wrapper is
@@ -4375,6 +4381,8 @@ entity weights_bank_3_ping_blk_mem_gen_prim_width is
     dina : in STD_LOGIC_VECTOR ( 3 downto 0 );
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of weights_bank_3_ping_blk_mem_gen_prim_width : entity is "blk_mem_gen_prim_width";
 end weights_bank_3_ping_blk_mem_gen_prim_width;
 
 architecture STRUCTURE of weights_bank_3_ping_blk_mem_gen_prim_width is
@@ -4801,6 +4809,8 @@ entity weights_bank_3_ping_blk_mem_gen_generic_cstr is
     dina : in STD_LOGIC_VECTOR ( 127 downto 0 );
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of weights_bank_3_ping_blk_mem_gen_generic_cstr : entity is "blk_mem_gen_generic_cstr";
 end weights_bank_3_ping_blk_mem_gen_generic_cstr;
 
 architecture STRUCTURE of weights_bank_3_ping_blk_mem_gen_generic_cstr is
@@ -5380,6 +5390,8 @@ entity weights_bank_3_ping_blk_mem_gen_top is
     dina : in STD_LOGIC_VECTOR ( 127 downto 0 );
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of weights_bank_3_ping_blk_mem_gen_top : entity is "blk_mem_gen_top";
 end weights_bank_3_ping_blk_mem_gen_top;
 
 architecture STRUCTURE of weights_bank_3_ping_blk_mem_gen_top is
@@ -5407,6 +5419,8 @@ entity weights_bank_3_ping_blk_mem_gen_v8_4_2_synth is
     dina : in STD_LOGIC_VECTOR ( 127 downto 0 );
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of weights_bank_3_ping_blk_mem_gen_v8_4_2_synth : entity is "blk_mem_gen_v8_4_2_synth";
 end weights_bank_3_ping_blk_mem_gen_v8_4_2_synth;
 
 architecture STRUCTURE of weights_bank_3_ping_blk_mem_gen_v8_4_2_synth is
@@ -5574,7 +5588,7 @@ entity weights_bank_3_ping_blk_mem_gen_v8_4_2 is
   attribute C_INITB_VAL : string;
   attribute C_INITB_VAL of weights_bank_3_ping_blk_mem_gen_v8_4_2 : entity is "0";
   attribute C_INIT_FILE : string;
-  attribute C_INIT_FILE of weights_bank_3_ping_blk_mem_gen_v8_4_2 : entity is "weights_bank_2_ping.mem";
+  attribute C_INIT_FILE of weights_bank_3_ping_blk_mem_gen_v8_4_2 : entity is "weights_bank_3_ping.mem";
   attribute C_INIT_FILE_NAME : string;
   attribute C_INIT_FILE_NAME of weights_bank_3_ping_blk_mem_gen_v8_4_2 : entity is "no_coe_file_loaded";
   attribute C_INTERFACE_TYPE : integer;
@@ -5641,6 +5655,8 @@ entity weights_bank_3_ping_blk_mem_gen_v8_4_2 is
   attribute C_WRITE_WIDTH_B of weights_bank_3_ping_blk_mem_gen_v8_4_2 : entity is 128;
   attribute C_XDEVICEFAMILY : string;
   attribute C_XDEVICEFAMILY of weights_bank_3_ping_blk_mem_gen_v8_4_2 : entity is "virtex7";
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of weights_bank_3_ping_blk_mem_gen_v8_4_2 : entity is "blk_mem_gen_v8_4_2";
   attribute downgradeipidentifiedwarnings : string;
   attribute downgradeipidentifiedwarnings of weights_bank_3_ping_blk_mem_gen_v8_4_2 : entity is "yes";
 end weights_bank_3_ping_blk_mem_gen_v8_4_2;
@@ -5982,7 +5998,7 @@ entity weights_bank_3_ping is
   attribute NotValidForBitStream : boolean;
   attribute NotValidForBitStream of weights_bank_3_ping : entity is true;
   attribute CHECK_LICENSE_TYPE : string;
-  attribute CHECK_LICENSE_TYPE of weights_bank_3_ping : entity is "weights_bank_2_ping,blk_mem_gen_v8_4_2,{}";
+  attribute CHECK_LICENSE_TYPE of weights_bank_3_ping : entity is "weights_bank_3_ping,blk_mem_gen_v8_4_2,{}";
   attribute downgradeipidentifiedwarnings : string;
   attribute downgradeipidentifiedwarnings of weights_bank_3_ping : entity is "yes";
   attribute x_core_info : string;
@@ -6093,7 +6109,7 @@ architecture STRUCTURE of weights_bank_3_ping is
   attribute C_INITB_VAL : string;
   attribute C_INITB_VAL of U0 : label is "0";
   attribute C_INIT_FILE : string;
-  attribute C_INIT_FILE of U0 : label is "weights_bank_2_ping.mem";
+  attribute C_INIT_FILE of U0 : label is "weights_bank_3_ping.mem";
   attribute C_INIT_FILE_NAME : string;
   attribute C_INIT_FILE_NAME of U0 : label is "no_coe_file_loaded";
   attribute C_INTERFACE_TYPE : integer;

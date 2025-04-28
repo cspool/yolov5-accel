@@ -50,9 +50,9 @@ Controller Options :
 
    Memory Type                   : Components
 
-   Memory Part                   : MT41J256m16XX-125
+   Memory Part                   : MT41K256M16XX-125
 
-   Equivalent Part(s)            : MT41J256M16HA-125
+   Equivalent Part(s)            : MT41K256M16RE-125
 
    Data Width                    : 64
 

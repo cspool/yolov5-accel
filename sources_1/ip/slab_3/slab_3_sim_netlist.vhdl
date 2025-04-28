@@ -1,11 +1,11 @@
 -- Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2018.3 (win64) Build 2405991 Thu Dec  6 23:38:27 MST 2018
--- Date        : Sat Apr 19 00:20:26 2025
+-- Date        : Thu Apr 24 18:16:26 2025
 -- Host        : zack running 64-bit major release  (build 9200)
--- Command     : write_vhdl -force -mode funcsim -rename_top slab_3 -prefix
---               slab_3_ slab_2_sim_netlist.vhdl
--- Design      : slab_2
+-- Command     : write_vhdl -force -mode funcsim
+--               D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sources_1/ip/slab_3/slab_3_sim_netlist.vhdl
+-- Design      : slab_3
 -- Purpose     : This VHDL netlist is a functional simulation representation of the design and should not be modified or
 --               synthesized. This netlist cannot be used for SDF annotated simulation.
 -- Device      : xc7vx690tffg1761-2
@@ -20,6 +20,8 @@ entity slab_3_bindec is
     addra : in STD_LOGIC_VECTOR ( 0 to 0 );
     ena : in STD_LOGIC
   );
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of slab_3_bindec : entity is "bindec";
 end slab_3_bindec;
 
 architecture STRUCTURE of slab_3_bindec is
@@ -313,6 +315,8 @@ entity slab_3_blk_mem_gen_prim_wrapper is
     dina : in STD_LOGIC_VECTOR ( 8 downto 0 );
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of slab_3_blk_mem_gen_prim_wrapper : entity is "blk_mem_gen_prim_wrapper";
 end slab_3_blk_mem_gen_prim_wrapper;
 
 architecture STRUCTURE of slab_3_blk_mem_gen_prim_wrapper is
@@ -1347,6 +1351,8 @@ entity slab_3_blk_mem_gen_prim_width is
     dina : in STD_LOGIC_VECTOR ( 8 downto 0 );
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of slab_3_blk_mem_gen_prim_width : entity is "blk_mem_gen_prim_width";
 end slab_3_blk_mem_gen_prim_width;
 
 architecture STRUCTURE of slab_3_blk_mem_gen_prim_width is
@@ -1485,6 +1491,8 @@ entity slab_3_blk_mem_gen_generic_cstr is
     dina : in STD_LOGIC_VECTOR ( 15 downto 0 );
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of slab_3_blk_mem_gen_generic_cstr : entity is "blk_mem_gen_generic_cstr";
 end slab_3_blk_mem_gen_generic_cstr;
 
 architecture STRUCTURE of slab_3_blk_mem_gen_generic_cstr is
@@ -1577,6 +1585,8 @@ entity slab_3_blk_mem_gen_top is
     dina : in STD_LOGIC_VECTOR ( 15 downto 0 );
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of slab_3_blk_mem_gen_top : entity is "blk_mem_gen_top";
 end slab_3_blk_mem_gen_top;
 
 architecture STRUCTURE of slab_3_blk_mem_gen_top is
@@ -1610,6 +1620,8 @@ entity slab_3_blk_mem_gen_v8_4_2_synth is
     dina : in STD_LOGIC_VECTOR ( 15 downto 0 );
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of slab_3_blk_mem_gen_v8_4_2_synth : entity is "blk_mem_gen_v8_4_2_synth";
 end slab_3_blk_mem_gen_v8_4_2_synth;
 
 architecture STRUCTURE of slab_3_blk_mem_gen_v8_4_2_synth is
@@ -1780,7 +1792,7 @@ entity slab_3_blk_mem_gen_v8_4_2 is
   attribute C_INITB_VAL : string;
   attribute C_INITB_VAL of slab_3_blk_mem_gen_v8_4_2 : entity is "0";
   attribute C_INIT_FILE : string;
-  attribute C_INIT_FILE of slab_3_blk_mem_gen_v8_4_2 : entity is "slab_2.mem";
+  attribute C_INIT_FILE of slab_3_blk_mem_gen_v8_4_2 : entity is "slab_3.mem";
   attribute C_INIT_FILE_NAME : string;
   attribute C_INIT_FILE_NAME of slab_3_blk_mem_gen_v8_4_2 : entity is "no_coe_file_loaded";
   attribute C_INTERFACE_TYPE : integer;
@@ -1847,6 +1859,8 @@ entity slab_3_blk_mem_gen_v8_4_2 is
   attribute C_WRITE_WIDTH_B of slab_3_blk_mem_gen_v8_4_2 : entity is 16;
   attribute C_XDEVICEFAMILY : string;
   attribute C_XDEVICEFAMILY of slab_3_blk_mem_gen_v8_4_2 : entity is "virtex7";
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of slab_3_blk_mem_gen_v8_4_2 : entity is "blk_mem_gen_v8_4_2";
   attribute downgradeipidentifiedwarnings : string;
   attribute downgradeipidentifiedwarnings of slab_3_blk_mem_gen_v8_4_2 : entity is "yes";
 end slab_3_blk_mem_gen_v8_4_2;
@@ -1972,7 +1986,7 @@ entity slab_3 is
   attribute NotValidForBitStream : boolean;
   attribute NotValidForBitStream of slab_3 : entity is true;
   attribute CHECK_LICENSE_TYPE : string;
-  attribute CHECK_LICENSE_TYPE of slab_3 : entity is "slab_2,blk_mem_gen_v8_4_2,{}";
+  attribute CHECK_LICENSE_TYPE of slab_3 : entity is "slab_3,blk_mem_gen_v8_4_2,{}";
   attribute downgradeipidentifiedwarnings : string;
   attribute downgradeipidentifiedwarnings of slab_3 : entity is "yes";
   attribute x_core_info : string;
@@ -2083,7 +2097,7 @@ architecture STRUCTURE of slab_3 is
   attribute C_INITB_VAL : string;
   attribute C_INITB_VAL of U0 : label is "0";
   attribute C_INIT_FILE : string;
-  attribute C_INIT_FILE of U0 : label is "slab_2.mem";
+  attribute C_INIT_FILE of U0 : label is "slab_3.mem";
   attribute C_INIT_FILE_NAME : string;
   attribute C_INIT_FILE_NAME of U0 : label is "no_coe_file_loaded";
   attribute C_INTERFACE_TYPE : integer;

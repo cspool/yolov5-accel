@@ -56,7 +56,7 @@ module ddr3_rw #(
     parameter ADDR_OFFSET = 8,
     parameter ADDR_WIDTH  = 29
 ) (
-    input                    clk_100M,
+    input                    clk_400M,
     input                    clk_200M,
     input                    rst_n,
     input                    ena,
@@ -417,6 +417,7 @@ module ddr3_rw #(
       .app_wdf_mask   ({DDR_WIDTH{1'b0}}),
 
       .sys_clk_i    (clk_200M),
+      // .clk_ref_i    (clk_400M),
 `ifdef ONLINE
       .device_temp_i(12'd0),
       .sys_rst      (rst_n)

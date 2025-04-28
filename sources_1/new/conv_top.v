@@ -54,7 +54,7 @@ Control flow:
   wire        ui_rst;
 
   // Clk wiz
-  clk_wiz_0 clk_wiz_40M_inst (
+  clk_wiz_40M clk_wiz_40M_inst (
       .clk_out3(clk_200M),
       .clk_out2(clk_150M),
       .clk_out1(clk_40M),
@@ -91,7 +91,7 @@ Control flow:
   wire         DDR_valid;  //i
   wire [511:0] DDR_out;  //i
 
-  quan_CBR_8 quan_CBR_inst (
+  quan_CBR_v8 quan_CBR_inst (
       .clk   (clk_150M),
       .reset (reset),
       .ddr_en(ddr_en),    //i,1bit
@@ -106,17 +106,17 @@ Control flow:
 
   assign reset = ~rst_n;
 
-  vio_0 DDR_vio (
-      .clk       (clk_150M),         // input wire clk
-      .probe_in0 (DDR_en),           // input wire [0 : 0] probe_in0
-      .probe_in1 (DDR_en_wr),        // input wire [0 : 0] probe_in1
-      .probe_in2 (DDR_adr),          // input wire [31 : 0] probe_in2
-      .probe_in3 (DDR_in[255:0]),    // input wire [255 : 0] probe_in3
-      .probe_in4 (DDR_in[511:256]),  // input wire [255 : 0] probe_in4
-      .probe_out0(ddr_en),           // output wire [0 : 0] probe_out0
-      .probe_out1(DDR_valid),        // output wire [0 : 0] probe_out1
-      .probe_out2(DDR_out[255:0]),   // output wire [255 : 0] probe_out2
-      .probe_out3(DDR_out[511:256])  // output wire [255 : 0] probe_out3
-  );
+  // vio_0 DDR_vio (
+  //     .clk       (clk_150M),         // input wire clk
+  //     .probe_in0 (DDR_en),           // input wire [0 : 0] probe_in0
+  //     .probe_in1 (DDR_en_wr),        // input wire [0 : 0] probe_in1
+  //     .probe_in2 (DDR_adr),          // input wire [31 : 0] probe_in2
+  //     .probe_in3 (DDR_in[255:0]),    // input wire [255 : 0] probe_in3
+  //     .probe_in4 (DDR_in[511:256]),  // input wire [255 : 0] probe_in4
+  //     .probe_out0(ddr_en),           // output wire [0 : 0] probe_out0
+  //     .probe_out1(DDR_valid),        // output wire [0 : 0] probe_out1
+  //     .probe_out2(DDR_out[255:0]),   // output wire [255 : 0] probe_out2
+  //     .probe_out3(DDR_out[511:256])  // output wire [255 : 0] probe_out3
+  // );
 
 endmodule

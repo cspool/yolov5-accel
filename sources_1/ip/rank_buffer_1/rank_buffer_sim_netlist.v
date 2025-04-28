@@ -1,18 +1,18 @@
 // Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
 // Tool Version: Vivado v.2018.3 (win64) Build 2405991 Thu Dec  6 23:38:27 MST 2018
-// Date        : Fri Apr 18 10:44:26 2025
+// Date        : Thu Apr 24 18:19:30 2025
 // Host        : zack running 64-bit major release  (build 9200)
-// Command     : write_verilog -force -mode funcsim -rename_top rank_buffer -prefix
-//               rank_buffer_ scale_buffer_sim_netlist.v
-// Design      : scale_buffer
+// Command     : write_verilog -force -mode funcsim
+//               D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sources_1/ip/rank_buffer_1/rank_buffer_sim_netlist.v
+// Design      : rank_buffer
 // Purpose     : This verilog netlist is a functional simulation representation of the design and should not be modified
 //               or synthesized. This netlist cannot be used for SDF annotated simulation.
 // Device      : xc7vx690tffg1761-2
 // --------------------------------------------------------------------------------
 `timescale 1 ps / 1 ps
 
-(* CHECK_LICENSE_TYPE = "scale_buffer,blk_mem_gen_v8_4_2,{}" *) (* downgradeipidentifiedwarnings = "yes" *) (* x_core_info = "blk_mem_gen_v8_4_2,Vivado 2018.3" *) 
+(* CHECK_LICENSE_TYPE = "rank_buffer,blk_mem_gen_v8_4_2,{}" *) (* downgradeipidentifiedwarnings = "yes" *) (* x_core_info = "blk_mem_gen_v8_4_2,Vivado 2018.3" *) 
 (* NotValidForBitStream *)
 module rank_buffer
    (clka,
@@ -96,7 +96,7 @@ module rank_buffer
   (* C_HAS_SOFTECC_OUTPUT_REGS_B = "0" *) 
   (* C_INITA_VAL = "0" *) 
   (* C_INITB_VAL = "0" *) 
-  (* C_INIT_FILE = "scale_buffer.mem" *) 
+  (* C_INIT_FILE = "rank_buffer.mem" *) 
   (* C_INIT_FILE_NAME = "no_coe_file_loaded" *) 
   (* C_INTERFACE_TYPE = "0" *) 
   (* C_LOAD_INIT_FILE = "0" *) 
@@ -197,6 +197,7 @@ module rank_buffer
         .web(1'b0));
 endmodule
 
+(* ORIG_REF_NAME = "blk_mem_gen_generic_cstr" *) 
 module rank_buffer_blk_mem_gen_generic_cstr
    (douta,
     clka,
@@ -276,6 +277,7 @@ module rank_buffer_blk_mem_gen_generic_cstr
         .wea(wea));
 endmodule
 
+(* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
 module rank_buffer_blk_mem_gen_prim_width
    (douta,
     clka,
@@ -523,6 +525,7 @@ module rank_buffer_blk_mem_gen_prim_width__parameterized6
         .wea(wea));
 endmodule
 
+(* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper_init" *) 
 module rank_buffer_blk_mem_gen_prim_wrapper_init
    (douta,
     clka,
@@ -2378,6 +2381,7 @@ module rank_buffer_blk_mem_gen_prim_wrapper_init__parameterized6
         .WEBWE({1'b0,1'b0,1'b0,1'b0,wea,wea,wea,wea}));
 endmodule
 
+(* ORIG_REF_NAME = "blk_mem_gen_top" *) 
 module rank_buffer_blk_mem_gen_top
    (douta,
     clka,
@@ -2421,7 +2425,7 @@ endmodule
 (* C_HAS_MEM_OUTPUT_REGS_B = "0" *) (* C_HAS_MUX_OUTPUT_REGS_A = "0" *) (* C_HAS_MUX_OUTPUT_REGS_B = "0" *) 
 (* C_HAS_REGCEA = "0" *) (* C_HAS_REGCEB = "0" *) (* C_HAS_RSTA = "0" *) 
 (* C_HAS_RSTB = "0" *) (* C_HAS_SOFTECC_INPUT_REGS_A = "0" *) (* C_HAS_SOFTECC_OUTPUT_REGS_B = "0" *) 
-(* C_INITA_VAL = "0" *) (* C_INITB_VAL = "0" *) (* C_INIT_FILE = "scale_buffer.mem" *) 
+(* C_INITA_VAL = "0" *) (* C_INITB_VAL = "0" *) (* C_INIT_FILE = "rank_buffer.mem" *) 
 (* C_INIT_FILE_NAME = "no_coe_file_loaded" *) (* C_INTERFACE_TYPE = "0" *) (* C_LOAD_INIT_FILE = "0" *) 
 (* C_MEM_TYPE = "0" *) (* C_MUX_PIPELINE_STAGES = "0" *) (* C_PRIM_TYPE = "1" *) 
 (* C_READ_DEPTH_A = "512" *) (* C_READ_DEPTH_B = "512" *) (* C_READ_LATENCY_A = "1" *) 
@@ -2433,7 +2437,7 @@ endmodule
 (* C_WEA_WIDTH = "1" *) (* C_WEB_WIDTH = "1" *) (* C_WRITE_DEPTH_A = "512" *) 
 (* C_WRITE_DEPTH_B = "512" *) (* C_WRITE_MODE_A = "WRITE_FIRST" *) (* C_WRITE_MODE_B = "WRITE_FIRST" *) 
 (* C_WRITE_WIDTH_A = "512" *) (* C_WRITE_WIDTH_B = "512" *) (* C_XDEVICEFAMILY = "virtex7" *) 
-(* downgradeipidentifiedwarnings = "yes" *) 
+(* ORIG_REF_NAME = "blk_mem_gen_v8_4_2" *) (* downgradeipidentifiedwarnings = "yes" *) 
 module rank_buffer_blk_mem_gen_v8_4_2
    (clka,
     rsta,
@@ -3647,6 +3651,7 @@ module rank_buffer_blk_mem_gen_v8_4_2
         .wea(wea));
 endmodule
 
+(* ORIG_REF_NAME = "blk_mem_gen_v8_4_2_synth" *) 
 module rank_buffer_blk_mem_gen_v8_4_2_synth
    (douta,
     clka,

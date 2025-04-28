@@ -1,11 +1,11 @@
 -- Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2018.3 (win64) Build 2405991 Thu Dec  6 23:38:27 MST 2018
--- Date        : Fri Apr 18 10:44:26 2025
+-- Date        : Thu Apr 24 18:19:02 2025
 -- Host        : zack running 64-bit major release  (build 9200)
--- Command     : write_vhdl -force -mode funcsim -rename_top bias_buffer -prefix
---               bias_buffer_ scale_buffer_sim_netlist.vhdl
--- Design      : scale_buffer
+-- Command     : write_vhdl -force -mode funcsim
+--               D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sources_1/ip/bias_buffer_1/bias_buffer_sim_netlist.vhdl
+-- Design      : bias_buffer
 -- Purpose     : This VHDL netlist is a functional simulation representation of the design and should not be modified or
 --               synthesized. This netlist cannot be used for SDF annotated simulation.
 -- Device      : xc7vx690tffg1761-2
@@ -23,6 +23,8 @@ entity bias_buffer_blk_mem_gen_prim_wrapper_init is
     dina : in STD_LOGIC_VECTOR ( 35 downto 0 );
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of bias_buffer_blk_mem_gen_prim_wrapper_init : entity is "blk_mem_gen_prim_wrapper_init";
 end bias_buffer_blk_mem_gen_prim_wrapper_init;
 
 architecture STRUCTURE of bias_buffer_blk_mem_gen_prim_wrapper_init is
@@ -2157,6 +2159,8 @@ entity bias_buffer_blk_mem_gen_prim_width is
     dina : in STD_LOGIC_VECTOR ( 35 downto 0 );
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of bias_buffer_blk_mem_gen_prim_width : entity is "blk_mem_gen_prim_width";
 end bias_buffer_blk_mem_gen_prim_width;
 
 architecture STRUCTURE of bias_buffer_blk_mem_gen_prim_width is
@@ -2387,6 +2391,8 @@ entity bias_buffer_blk_mem_gen_generic_cstr is
     dina : in STD_LOGIC_VECTOR ( 511 downto 0 );
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of bias_buffer_blk_mem_gen_generic_cstr : entity is "blk_mem_gen_generic_cstr";
 end bias_buffer_blk_mem_gen_generic_cstr;
 
 architecture STRUCTURE of bias_buffer_blk_mem_gen_generic_cstr is
@@ -2477,6 +2483,8 @@ entity bias_buffer_blk_mem_gen_top is
     dina : in STD_LOGIC_VECTOR ( 511 downto 0 );
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of bias_buffer_blk_mem_gen_top : entity is "blk_mem_gen_top";
 end bias_buffer_blk_mem_gen_top;
 
 architecture STRUCTURE of bias_buffer_blk_mem_gen_top is
@@ -2504,6 +2512,8 @@ entity bias_buffer_blk_mem_gen_v8_4_2_synth is
     dina : in STD_LOGIC_VECTOR ( 511 downto 0 );
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of bias_buffer_blk_mem_gen_v8_4_2_synth : entity is "blk_mem_gen_v8_4_2_synth";
 end bias_buffer_blk_mem_gen_v8_4_2_synth;
 
 architecture STRUCTURE of bias_buffer_blk_mem_gen_v8_4_2_synth is
@@ -2671,7 +2681,7 @@ entity bias_buffer_blk_mem_gen_v8_4_2 is
   attribute C_INITB_VAL : string;
   attribute C_INITB_VAL of bias_buffer_blk_mem_gen_v8_4_2 : entity is "0";
   attribute C_INIT_FILE : string;
-  attribute C_INIT_FILE of bias_buffer_blk_mem_gen_v8_4_2 : entity is "scale_buffer.mem";
+  attribute C_INIT_FILE of bias_buffer_blk_mem_gen_v8_4_2 : entity is "bias_buffer.mem";
   attribute C_INIT_FILE_NAME : string;
   attribute C_INIT_FILE_NAME of bias_buffer_blk_mem_gen_v8_4_2 : entity is "no_coe_file_loaded";
   attribute C_INTERFACE_TYPE : integer;
@@ -2738,6 +2748,8 @@ entity bias_buffer_blk_mem_gen_v8_4_2 is
   attribute C_WRITE_WIDTH_B of bias_buffer_blk_mem_gen_v8_4_2 : entity is 512;
   attribute C_XDEVICEFAMILY : string;
   attribute C_XDEVICEFAMILY of bias_buffer_blk_mem_gen_v8_4_2 : entity is "virtex7";
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of bias_buffer_blk_mem_gen_v8_4_2 : entity is "blk_mem_gen_v8_4_2";
   attribute downgradeipidentifiedwarnings : string;
   attribute downgradeipidentifiedwarnings of bias_buffer_blk_mem_gen_v8_4_2 : entity is "yes";
 end bias_buffer_blk_mem_gen_v8_4_2;
@@ -3841,7 +3853,7 @@ entity bias_buffer is
   attribute NotValidForBitStream : boolean;
   attribute NotValidForBitStream of bias_buffer : entity is true;
   attribute CHECK_LICENSE_TYPE : string;
-  attribute CHECK_LICENSE_TYPE of bias_buffer : entity is "scale_buffer,blk_mem_gen_v8_4_2,{}";
+  attribute CHECK_LICENSE_TYPE of bias_buffer : entity is "bias_buffer,blk_mem_gen_v8_4_2,{}";
   attribute downgradeipidentifiedwarnings : string;
   attribute downgradeipidentifiedwarnings of bias_buffer : entity is "yes";
   attribute x_core_info : string;
@@ -3952,7 +3964,7 @@ architecture STRUCTURE of bias_buffer is
   attribute C_INITB_VAL : string;
   attribute C_INITB_VAL of U0 : label is "0";
   attribute C_INIT_FILE : string;
-  attribute C_INIT_FILE of U0 : label is "scale_buffer.mem";
+  attribute C_INIT_FILE of U0 : label is "bias_buffer.mem";
   attribute C_INIT_FILE_NAME : string;
   attribute C_INIT_FILE_NAME of U0 : label is "no_coe_file_loaded";
   attribute C_INTERFACE_TYPE : integer;

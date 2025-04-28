@@ -41,7 +41,7 @@ Control flow:
   reg                     rst_n;
   wire                    clk_40M;
   wire                    clk_40MHz_locked;
-  wire                    clk_100M;
+  wire                    clk_400M;
   wire                    clk_200M;
   reg  [            15:0] rst_cnt;
 
@@ -72,7 +72,7 @@ Control flow:
   // Clk wiz
   clk_wiz_40M clk_wiz_40M_inst (
       .clk_out3(clk_200M),
-      .clk_out2(clk_100M),
+      .clk_out2(clk_400M),
       .clk_out1(clk_40M),
       .locked  (clk_40MHz_locked),
       .clk_in1 (F1_GCLK_40M)
@@ -227,7 +227,7 @@ Control flow:
   wire           conv_ddr_cmd;
   wire [512-1:0] conv_ddr_wt_data;
   wire           conv_ddr_wt_data_valid;
-  quan_accel_conv_demo_v3 quan_accel_conv_demo_inst (
+  quan_accel_conv_demo_v4 quan_accel_conv_demo_inst (
       // input
       .clk              (ui_clk),
       .reset            (~init_done),
@@ -294,7 +294,7 @@ Control flow:
       .UI_WIDTH (UI_WIDTH)
   ) ddr3_rw_inst (
       // input
-      .clk_100M          (clk_100M),
+      .clk_400M          (clk_400M),
       .clk_200M          (clk_200M),
       .rst_n             (rst_n),
       .ena               (ddr_start),

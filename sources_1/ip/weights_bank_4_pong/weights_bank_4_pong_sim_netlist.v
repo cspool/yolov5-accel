@@ -1,18 +1,18 @@
 // Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
 // Tool Version: Vivado v.2018.3 (win64) Build 2405991 Thu Dec  6 23:38:27 MST 2018
-// Date        : Fri Apr 18 10:50:55 2025
+// Date        : Thu Apr 24 18:20:19 2025
 // Host        : zack running 64-bit major release  (build 9200)
-// Command     : write_verilog -force -mode funcsim -rename_top weights_bank_4_pong -prefix
-//               weights_bank_4_pong_ weights_bank_2_ping_sim_netlist.v
-// Design      : weights_bank_2_ping
+// Command     : write_verilog -force -mode funcsim
+//               D:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sources_1/ip/weights_bank_4_pong/weights_bank_4_pong_sim_netlist.v
+// Design      : weights_bank_4_pong
 // Purpose     : This verilog netlist is a functional simulation representation of the design and should not be modified
 //               or synthesized. This netlist cannot be used for SDF annotated simulation.
 // Device      : xc7vx690tffg1761-2
 // --------------------------------------------------------------------------------
 `timescale 1 ps / 1 ps
 
-(* CHECK_LICENSE_TYPE = "weights_bank_2_ping,blk_mem_gen_v8_4_2,{}" *) (* downgradeipidentifiedwarnings = "yes" *) (* x_core_info = "blk_mem_gen_v8_4_2,Vivado 2018.3" *) 
+(* CHECK_LICENSE_TYPE = "weights_bank_4_pong,blk_mem_gen_v8_4_2,{}" *) (* downgradeipidentifiedwarnings = "yes" *) (* x_core_info = "blk_mem_gen_v8_4_2,Vivado 2018.3" *) 
 (* NotValidForBitStream *)
 module weights_bank_4_pong
    (clka,
@@ -96,7 +96,7 @@ module weights_bank_4_pong
   (* C_HAS_SOFTECC_OUTPUT_REGS_B = "0" *) 
   (* C_INITA_VAL = "0" *) 
   (* C_INITB_VAL = "0" *) 
-  (* C_INIT_FILE = "weights_bank_2_ping.mem" *) 
+  (* C_INIT_FILE = "weights_bank_4_pong.mem" *) 
   (* C_INIT_FILE_NAME = "no_coe_file_loaded" *) 
   (* C_INTERFACE_TYPE = "0" *) 
   (* C_LOAD_INIT_FILE = "0" *) 
@@ -197,6 +197,7 @@ module weights_bank_4_pong
         .web(1'b0));
 endmodule
 
+(* ORIG_REF_NAME = "bindec" *) 
 module weights_bank_4_pong_bindec
    (ena_array,
     addra,
@@ -219,6 +220,7 @@ module weights_bank_4_pong_bindec
         .O(ena_array));
 endmodule
 
+(* ORIG_REF_NAME = "blk_mem_gen_generic_cstr" *) 
 module weights_bank_4_pong_blk_mem_gen_generic_cstr
    (douta,
     clka,
@@ -529,6 +531,7 @@ module weights_bank_4_pong_blk_mem_gen_generic_cstr
         .wea(wea));
 endmodule
 
+(* ORIG_REF_NAME = "blk_mem_gen_mux" *) 
 module weights_bank_4_pong_blk_mem_gen_mux
    (douta,
     addra,
@@ -1764,6 +1767,7 @@ module weights_bank_4_pong_blk_mem_gen_mux
         .R(1'b0));
 endmodule
 
+(* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
 module weights_bank_4_pong_blk_mem_gen_prim_width
    (douta,
     clka,
@@ -2241,6 +2245,7 @@ module weights_bank_4_pong_blk_mem_gen_prim_width__parameterized9
         .wea(wea));
 endmodule
 
+(* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper" *) 
 module weights_bank_4_pong_blk_mem_gen_prim_wrapper
    (douta,
     clka,
@@ -4869,6 +4874,7 @@ module weights_bank_4_pong_blk_mem_gen_prim_wrapper__parameterized9
         .WEBWE({1'b0,1'b0,1'b0,1'b0,wea,wea,wea,wea}));
 endmodule
 
+(* ORIG_REF_NAME = "blk_mem_gen_top" *) 
 module weights_bank_4_pong_blk_mem_gen_top
    (douta,
     clka,
@@ -4912,7 +4918,7 @@ endmodule
 (* C_HAS_MEM_OUTPUT_REGS_B = "0" *) (* C_HAS_MUX_OUTPUT_REGS_A = "0" *) (* C_HAS_MUX_OUTPUT_REGS_B = "0" *) 
 (* C_HAS_REGCEA = "0" *) (* C_HAS_REGCEB = "0" *) (* C_HAS_RSTA = "0" *) 
 (* C_HAS_RSTB = "0" *) (* C_HAS_SOFTECC_INPUT_REGS_A = "0" *) (* C_HAS_SOFTECC_OUTPUT_REGS_B = "0" *) 
-(* C_INITA_VAL = "0" *) (* C_INITB_VAL = "0" *) (* C_INIT_FILE = "weights_bank_2_ping.mem" *) 
+(* C_INITA_VAL = "0" *) (* C_INITB_VAL = "0" *) (* C_INIT_FILE = "weights_bank_4_pong.mem" *) 
 (* C_INIT_FILE_NAME = "no_coe_file_loaded" *) (* C_INTERFACE_TYPE = "0" *) (* C_LOAD_INIT_FILE = "0" *) 
 (* C_MEM_TYPE = "0" *) (* C_MUX_PIPELINE_STAGES = "0" *) (* C_PRIM_TYPE = "1" *) 
 (* C_READ_DEPTH_A = "2560" *) (* C_READ_DEPTH_B = "2560" *) (* C_READ_LATENCY_A = "1" *) 
@@ -4924,7 +4930,7 @@ endmodule
 (* C_WEA_WIDTH = "1" *) (* C_WEB_WIDTH = "1" *) (* C_WRITE_DEPTH_A = "2560" *) 
 (* C_WRITE_DEPTH_B = "2560" *) (* C_WRITE_MODE_A = "WRITE_FIRST" *) (* C_WRITE_MODE_B = "WRITE_FIRST" *) 
 (* C_WRITE_WIDTH_A = "128" *) (* C_WRITE_WIDTH_B = "128" *) (* C_XDEVICEFAMILY = "virtex7" *) 
-(* downgradeipidentifiedwarnings = "yes" *) 
+(* ORIG_REF_NAME = "blk_mem_gen_v8_4_2" *) (* downgradeipidentifiedwarnings = "yes" *) 
 module weights_bank_4_pong_blk_mem_gen_v8_4_2
    (clka,
     rsta,
@@ -5376,6 +5382,7 @@ module weights_bank_4_pong_blk_mem_gen_v8_4_2
         .wea(wea));
 endmodule
 
+(* ORIG_REF_NAME = "blk_mem_gen_v8_4_2_synth" *) 
 module weights_bank_4_pong_blk_mem_gen_v8_4_2_synth
    (douta,
     clka,

@@ -2,9 +2,9 @@
 `ifndef DDR3_DEFINES_VH
 `define DDR3_DEFINES_VH
 
-`define SIMULATION
+// `define SIMULATION
 // `define CMD_DATA_SYNC
 //`define DEBUG
-//`define ONLINE
+`define ONLINE
 
 `endif  // DDR3_DEFINES_VH
