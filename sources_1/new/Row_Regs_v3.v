@@ -27,8 +27,8 @@ module Row_Regs_v3 (
     last_row_west_pad,
     last_row_slab_num,
     last_row_east_pad,
-    last_row_reg_start_idx,
-    last_row_reg_end_idx,
+    last_reg_start_idx,
+    last_reg_end_idx,
     last_row1_pixels_32,
     last_row2_pixels_32,
     last_row3_pixels_32,
@@ -54,7 +54,17 @@ module Row_Regs_v3 (
   input [2 * 8 - 1:0] last_row1_slab_2, last_row2_slab_2, last_row3_slab_2;
   input last_state_conv_pixels_add_end;
   input [3:0] last_row_west_pad, last_row_slab_num, last_row_east_pad;
-  input [15:0] last_row_reg_start_idx, last_row_reg_end_idx;
+  input [15:0] last_reg_start_idx, last_reg_end_idx;
+  reg [15:0] last_row_reg_start_idx, last_row_reg_end_idx;
+  always @(posedge clk) begin
+    if (reset) begin
+      last_row_reg_start_idx <= 16'hffff;
+      last_row_reg_end_idx   <= 16'hffff;
+    end else begin
+      last_row_reg_start_idx <= last_reg_start_idx;
+      last_row_reg_end_idx   <= last_reg_end_idx;
+    end
+  end
   input last_state_valid_row1_adr, last_state_valid_row2_adr, last_state_valid_row3_adr;
   output reg [shift_regs_num * 8 -1 : 0] row_regs_1;
   output reg [shift_regs_num * 8 -1 : 0] row_regs_2;
@@ -75,21 +85,30 @@ module Row_Regs_v3 (
   //001111111...11 && ...
   wire [shift_regs_num * 8 - 1 : 0] row1_buf_mask, row2_buf_mask, row3_buf_mask;
   wire [shift_regs_num * 8 - 1 : 0] row1_buf_pix, row2_buf_pix, row3_buf_pix;
-  wire [                      15:0] ops_right_shift;
-  wire [                      15:0] ops_left_shift;
-  wire [ shift_regs_num * 2 -1 : 0] ops_0_buf_0;
+  wire [                     15:0] ops_right_shift;
+  wire [                     15:0] ops_left_shift;
+  wire [shift_regs_num * 2 -1 : 0] ops_0_buf_0;
 
+
+  reg  [                     15:0] row_buf_mask_shift_num;
+  reg  [                     15:0] row_buf_pix_shift_num;
+  always @(posedge clk) begin
+    row_buf_mask_shift_num <= ((shift_regs_num - last_reg_end_idx) << 3);
+    row_buf_pix_shift_num  <= ((last_reg_start_idx - 1) << 3);
+  end
   //row 1 ctrl
   //stage 1
-  reg  [shift_regs_num * 8 - 1 : 0] row1_buf_mask_stage_1;
-  reg  [shift_regs_num * 8 - 1 : 0] row1_buf_pix_stage_1;
+  reg [shift_regs_num * 8 - 1 : 0] row1_buf_mask_stage_1;
+  reg [shift_regs_num * 8 - 1 : 0] row1_buf_pix_stage_1;
   // assign row1_buf_mask = {(shift_regs_num) {8'hff}} >> ((shift_regs_num - last_row_reg_end_idx) << 3);
   always @(posedge clk) begin
-    row1_buf_mask_stage_1 <= {(shift_regs_num) {8'hff}} >> ((shift_regs_num - last_row_reg_end_idx) << 3);
+    // row1_buf_mask_stage_1 <= {(shift_regs_num) {8'hff}} >> ((shift_regs_num - last_row_reg_end_idx) << 3);
+    row1_buf_mask_stage_1 <= {(shift_regs_num) {8'hff}} >> row_buf_mask_shift_num;
   end
   // assign row1_buf_pix = last_row1_pixels_32 << ((last_row_reg_start_idx - 1) << 3);
   always @(posedge clk) begin
-    row1_buf_pix_stage_1 <= last_row1_pixels_32 << ((last_row_reg_start_idx - 1) << 3);
+    // row1_buf_pix_stage_1 <= last_row1_pixels_32 << ((last_row_reg_start_idx - 1) << 3);
+    row1_buf_pix_stage_1 <= last_row1_pixels_32 << row_buf_pix_shift_num;
   end
 
   reg [        3:0] last_slab_num_stage_1;
@@ -127,11 +146,13 @@ module Row_Regs_v3 (
   reg [shift_regs_num * 8 - 1 : 0] row2_buf_pix_stage_1;
   // assign row2_buf_mask = {(shift_regs_num) {8'hff}} >> ((shift_regs_num - last_row_reg_end_idx) << 3);
   always @(posedge clk) begin
-    row2_buf_mask_stage_1 <= {(shift_regs_num) {8'hff}} >> ((shift_regs_num - last_row_reg_end_idx) << 3);
+    // row2_buf_mask_stage_1 <= {(shift_regs_num) {8'hff}} >> ((shift_regs_num - last_row_reg_end_idx) << 3);
+    row2_buf_mask_stage_1 <= {(shift_regs_num) {8'hff}} >> row_buf_mask_shift_num;
   end
-  assign row2_buf_pix = last_row2_pixels_32 << ((last_row_reg_start_idx - 1) << 3);
+  // assign row2_buf_pix = last_row2_pixels_32 << ((last_row_reg_start_idx - 1) << 3);
   always @(posedge clk) begin
-    row2_buf_pix_stage_1 <= last_row2_pixels_32 << ((last_row_reg_start_idx - 1) << 3);
+    // row2_buf_pix_stage_1 <= last_row2_pixels_32 << ((last_row_reg_start_idx - 1) << 3);
+    row2_buf_pix_stage_1 <= last_row2_pixels_32 << row_buf_pix_shift_num;
   end
 
   reg [2 * 8 - 1:0] last_row2_slab_2_stage_1;
@@ -165,11 +186,13 @@ module Row_Regs_v3 (
   reg [shift_regs_num * 8 - 1 : 0] row3_buf_pix_stage_1;
   // assign row3_buf_mask = {(shift_regs_num) {8'hff}} >> ((shift_regs_num - last_row_reg_end_idx) << 3);
   always @(posedge clk) begin
-    row3_buf_mask_stage_1 <= {(shift_regs_num) {8'hff}} >> ((shift_regs_num - last_row_reg_end_idx) << 3);
+    // row3_buf_mask_stage_1 <= {(shift_regs_num) {8'hff}} >> ((shift_regs_num - last_row_reg_end_idx) << 3);
+    row3_buf_mask_stage_1 <= {(shift_regs_num) {8'hff}} >> row_buf_mask_shift_num;
   end
   // assign row3_buf_pix = last_row3_pixels_32 << ((last_row_reg_start_idx - 1) << 3);
   always @(posedge clk) begin
-    row3_buf_pix_stage_1 <= last_row3_pixels_32 << ((last_row_reg_start_idx - 1) << 3);
+    // row3_buf_pix_stage_1 <= last_row3_pixels_32 << ((last_row_reg_start_idx - 1) << 3);
+    row3_buf_pix_stage_1 <= last_row3_pixels_32 << row_buf_pix_shift_num;
   end
 
   reg [2 * 8 - 1:0] last_row3_slab_2_stage_1;

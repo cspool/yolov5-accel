@@ -374,7 +374,7 @@ module quan_CBR_v12_tb(
   reg [15:0] last_row1_idx, last_row2_idx, last_row3_idx;
   reg [15:0] last_row_start_idx, last_row_end_idx;
   reg [15:0] last_reg_start_idx, last_reg_end_idx;
-  reg [15:0] last_row_reg_start_idx, last_row_reg_end_idx; //used for row regs
+  // reg [15:0] last_row_reg_start_idx, last_row_reg_end_idx; //used for row regs
   reg state_valid_row1_adr, state_valid_row2_adr, state_valid_row3_adr;
   reg last_state_valid_row1_adr, last_state_valid_row2_adr, last_state_valid_row3_adr; //used for rowi adr
   reg state_conv_pixels_add_end;
@@ -1312,9 +1312,9 @@ module quan_CBR_v12_tb(
       last_row_start_idx          <= 16'hffff;
       last_row_end_idx            <= 16'hffff;
       last_reg_start_idx          <= 16'hffff;
-      last_row_reg_start_idx          <= 16'hffff;
+      // last_row_reg_start_idx          <= 16'hffff;
       last_reg_end_idx            <= 16'hffff;
-      last_row_reg_end_idx            <= 16'hffff;
+      // last_row_reg_end_idx            <= 16'hffff;
       last_row1_buf_idx           <= 0;
       last_row2_buf_idx           <= 0;
       last_row3_buf_idx           <= 0;
@@ -1363,9 +1363,9 @@ module quan_CBR_v12_tb(
       last_row_start_idx          <= row_start_idx;
       last_row_end_idx            <= row_end_idx;
       last_reg_start_idx          <= reg_start_idx;
-      last_row_reg_start_idx          <= last_reg_start_idx;
+      // last_row_reg_start_idx          <= last_reg_start_idx;
       last_reg_end_idx            <= reg_end_idx;
-      last_row_reg_end_idx            <= last_reg_end_idx;
+      // last_row_reg_end_idx            <= last_reg_end_idx;
       last_row1_buf_idx           <= row1_buf_idx;
       last_row2_buf_idx           <= row2_buf_idx;
       last_row3_buf_idx           <= row3_buf_idx;
@@ -1408,8 +1408,8 @@ module quan_CBR_v12_tb(
       .last_row_west_pad            (last_row_west_pad),
       .last_row_slab_num            (last_row_slab_num),
       .last_row_east_pad            (last_row_east_pad),
-      .last_row_reg_start_idx       (last_row_reg_start_idx),
-      .last_row_reg_end_idx         (last_row_reg_end_idx),
+      .last_reg_start_idx       (last_reg_start_idx),
+      .last_reg_end_idx         (last_reg_end_idx),
       .last_row1_pixels_32      (last_row1_pixels_32),
       .last_row2_pixels_32      (last_row2_pixels_32),
       .last_row3_pixels_32      (last_row3_pixels_32),

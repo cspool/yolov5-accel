@@ -210,15 +210,15 @@ module conv_buffers_interface_v2 (
   input [1:0] input_word_buf_idx_wr;
   input [15:0] input_word_buf_adr_wr;
   //cycle 0 out/ buf wt ctrl
-  output [511:0] buf1_wr;
-  output [511:0] buf2_wr;
-  output [511:0] buf3_wr;
-  output [15:0] buf1_adr_wr;
-  output [15:0] buf2_adr_wr;
-  output [15:0] buf3_adr_wr;
-  output buf1_en_wr;
-  output buf2_en_wr;
-  output buf3_en_wr;
+  output reg [511:0] buf1_wr;
+  output reg [511:0] buf2_wr;
+  output reg [511:0] buf3_wr;
+  output reg [15:0] buf1_adr_wr;
+  output reg [15:0] buf2_adr_wr;
+  output reg [15:0] buf3_adr_wr;
+  output reg buf1_en_wr;
+  output reg buf2_en_wr;
+  output reg buf3_en_wr;
 
   //in buffer
   //cycle 0
@@ -344,15 +344,28 @@ module conv_buffers_interface_v2 (
   // assign slab3_en_wr       = valid_buf3_data;
 
   //load data into buf
-  assign buf1_wr           = (input_word_buf_idx_wr == 2'd1) ? input_word_buf_wr : 0;
-  assign buf2_wr           = (input_word_buf_idx_wr == 2'd2) ? input_word_buf_wr : 0;
-  assign buf3_wr           = (input_word_buf_idx_wr == 2'd3) ? input_word_buf_wr : 0;
-  assign buf1_adr_wr       = (input_word_buf_idx_wr == 2'd1) ? input_word_buf_adr_wr : 0;
-  assign buf2_adr_wr       = (input_word_buf_idx_wr == 2'd2) ? input_word_buf_adr_wr : 0;
-  assign buf3_adr_wr       = (input_word_buf_idx_wr == 2'd3) ? input_word_buf_adr_wr : 0;
-  assign buf1_en_wr        = (input_word_buf_idx_wr == 2'd1) ? input_word_buf_en_wr : 0;
-  assign buf2_en_wr        = (input_word_buf_idx_wr == 2'd2) ? input_word_buf_en_wr : 0;
-  assign buf3_en_wr        = (input_word_buf_idx_wr == 2'd3) ? input_word_buf_en_wr : 0;
+  // assign buf1_wr           = (input_word_buf_idx_wr == 2'd1) ? input_word_buf_wr : 0;
+  // assign buf2_wr           = (input_word_buf_idx_wr == 2'd2) ? input_word_buf_wr : 0;
+  // assign buf3_wr           = (input_word_buf_idx_wr == 2'd3) ? input_word_buf_wr : 0;
+  // assign buf1_adr_wr       = (input_word_buf_idx_wr == 2'd1) ? input_word_buf_adr_wr : 0;
+  // assign buf2_adr_wr       = (input_word_buf_idx_wr == 2'd2) ? input_word_buf_adr_wr : 0;
+  // assign buf3_adr_wr       = (input_word_buf_idx_wr == 2'd3) ? input_word_buf_adr_wr : 0;
+  // assign buf1_en_wr        = (input_word_buf_idx_wr == 2'd1) ? input_word_buf_en_wr : 0;
+  // assign buf2_en_wr        = (input_word_buf_idx_wr == 2'd2) ? input_word_buf_en_wr : 0;
+  // assign buf3_en_wr        = (input_word_buf_idx_wr == 2'd3) ? input_word_buf_en_wr : 0;
+
+  always @(posedge clk) begin
+    buf1_wr     <= (input_word_buf_idx_wr == 2'd1) ? input_word_buf_wr : 0;
+    buf2_wr     <= (input_word_buf_idx_wr == 2'd2) ? input_word_buf_wr : 0;
+    buf3_wr     <= (input_word_buf_idx_wr == 2'd3) ? input_word_buf_wr : 0;
+    buf1_adr_wr <= (input_word_buf_idx_wr == 2'd1) ? input_word_buf_adr_wr : 0;
+    buf2_adr_wr <= (input_word_buf_idx_wr == 2'd2) ? input_word_buf_adr_wr : 0;
+    buf3_adr_wr <= (input_word_buf_idx_wr == 2'd3) ? input_word_buf_adr_wr : 0;
+    buf1_en_wr  <= (input_word_buf_idx_wr == 2'd1) ? input_word_buf_en_wr : 0;
+    buf2_en_wr  <= (input_word_buf_idx_wr == 2'd2) ? input_word_buf_en_wr : 0;
+    buf3_en_wr  <= (input_word_buf_idx_wr == 2'd3) ? input_word_buf_en_wr : 0;
+
+  end
 
 endmodule
 
