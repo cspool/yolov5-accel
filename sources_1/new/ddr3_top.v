@@ -41,7 +41,7 @@ Control flow:
   reg                     rst_n;
   wire                    clk_40M;
   wire                    clk_40MHz_locked;
-  wire                    clk_400M;
+  wire                    clk_150M;
   wire                    clk_200M;
   reg  [            15:0] rst_cnt;
 
@@ -72,7 +72,7 @@ Control flow:
   // Clk wiz
   clk_wiz_40M clk_wiz_40M_inst (
       .clk_out3(clk_200M),
-      .clk_out2(clk_400M),
+      .clk_out2(clk_150M),
       .clk_out1(clk_40M),
       .locked  (clk_40MHz_locked),
       .clk_in1 (F1_GCLK_40M)
@@ -294,7 +294,7 @@ Control flow:
       .UI_WIDTH (UI_WIDTH)
   ) ddr3_rw_inst (
       // input
-      .clk_400M          (clk_400M),
+      .clk_ref_M         (clk_200M),
       .clk_200M          (clk_200M),
       .rst_n             (rst_n),
       .ena               (ddr_start),

@@ -41,7 +41,7 @@ module quan_accel_conv_demo_v4(
 );
   //SA
   parameter sa_row_num = 4;  //how many rows in conv core
-  parameter sa_column_num = 1;  //how many columns in conv core
+  parameter sa_column_num = 2;  //how many columns in conv core
   parameter row_num_in_sa = 16;  // how many rows in a sa, row_num
   parameter column_num_in_sa = 16;  // how many columns in a sa
   parameter pixels_in_row = 32;
@@ -710,7 +710,8 @@ module quan_accel_conv_demo_v4(
       conv_instr_args <= 512'b0;
     end
     else if (start == 1'b1) begin
-      conv_instr_args <= 512'h000004040404040404040401000C0004020202020202001000000000002C000000000000000000000000000C0000002420004000C70080000660040700801231;
+      conv_instr_args <= 512'h000004020604020608040C01000C00040202040201030010000000000098000000000000000000000000000C0000009020004000C70080000660040700802261
+;
     end
     else begin
       conv_instr_args <= conv_instr_args;
@@ -957,8 +958,7 @@ module quan_accel_conv_demo_v4(
     .k_init              (k),
     .s_init              (s),
     .p_init              (p),
-    .nif_in_2pow_init    (nif_in_2pow),
-    .ix_in_2pow_init     (ix_in_2pow),
+    .ix_in_2pow_init(ix_in_2pow),
     //general ctrl signal 1
     .ox_start_delay            (ox_start_delay),
     .oy_start_delay            (oy_start_delay),

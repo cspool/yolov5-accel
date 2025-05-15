@@ -53,8 +53,7 @@ module conv_compute_kernel_controller_v5 #(
     ix_init,
     iy_init,
     nif_init,
-    input [ 3:0] nif_in_2pow_init,
-    ix_in_2pow_init,
+    input [ 3:0] ix_in_2pow_init,
 
     output reg [15:0] ox_start_delay,
     oy_start_delay,
@@ -162,7 +161,7 @@ module conv_compute_kernel_controller_v5 #(
   reg [3:0] mode;
   reg [3:0] k, s, p;
   reg [15:0] of, ox, oy, ix, iy, nif;
-  reg [3:0] nif_in_2pow, ix_in_2pow;
+  reg [3:0] ix_in_2pow;
 
   //conv tile module
   wire loop_y_add_begin, loop_y_add_end;
@@ -178,33 +177,31 @@ module conv_compute_kernel_controller_v5 #(
 
   always @(posedge clk) begin
     if (reset == 1'b1) begin  //set
-      mode        <= mode_init;
-      k           <= k_init;
-      s           <= s_init;
-      p           <= p_init;
-      of          <= of_init;
-      ox          <= ox_init;
-      oy          <= oy_init;
-      ix          <= ix_init;
-      iy          <= iy_init;
-      nif         <= nif_init;
-      nif_in_2pow <= nif_in_2pow_init;
-      ix_in_2pow  <= ix_in_2pow_init;
-      row_num     <= (mode_init == 0) ? row_num_in_mode0 : (mode_init == 1) ? row_num_in_mode1 : 0;
+      mode       <= mode_init;
+      k          <= k_init;
+      s          <= s_init;
+      p          <= p_init;
+      of         <= of_init;
+      ox         <= ox_init;
+      oy         <= oy_init;
+      ix         <= ix_init;
+      iy         <= iy_init;
+      nif        <= nif_init;
+      ix_in_2pow <= ix_in_2pow_init;
+      row_num    <= (mode_init == 0) ? row_num_in_mode0 : (mode_init == 1) ? row_num_in_mode1 : 0;
     end else begin
-      mode        <= mode;
-      k           <= k;
-      s           <= s;
-      p           <= p;
-      of          <= of;
-      ox          <= ox;
-      oy          <= oy;
-      ix          <= ix;
-      iy          <= iy;
-      nif         <= nif;
-      nif_in_2pow <= nif_in_2pow;
-      ix_in_2pow  <= ix_in_2pow;
-      row_num     <= row_num;
+      mode       <= mode;
+      k          <= k;
+      s          <= s;
+      p          <= p;
+      of         <= of;
+      ox         <= ox;
+      oy         <= oy;
+      ix         <= ix;
+      iy         <= iy;
+      nif        <= nif;
+      ix_in_2pow <= ix_in_2pow;
+      row_num    <= row_num;
     end
   end
 

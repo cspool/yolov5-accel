@@ -1,4 +1,4 @@
-SET_FLAG MODE BATCH
+SET_FLAG MODE INTERACTIVE
 SET_FLAG STANDALONE_MODE TRUE
 SET_PREFERENCE ipi_mode no
 SET_PREFERENCE is_ip_locked false
@@ -9,8 +9,8 @@ SET_PREFERENCE package ffg1761
 SET_PREFERENCE verilogsim true
 SET_PREFERENCE vhdlsim false
 SET_PREFERENCE designentry Verilog
-SET_PREFERENCE outputdirectory d:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sources_1/ip/mig_7series_0/_tmp/
-SET_PREFERENCE subworkingdirectory d:/project/Vivado/yolov5_accel/yolov5_accel.srcs/sources_1/ip/mig_7series_0/_tmp/
+SET_PREFERENCE outputdirectory d:/vivado_temp/.Xil_asus/Vivado-80564-zack/coregen/mig_7series_0/_tmp/
+SET_PREFERENCE subworkingdirectory d:/vivado_temp/.Xil_asus/Vivado-80564-zack/coregen/mig_7series_0/_tmp/
 SET_PREFERENCE flowvendor Other
 SET_PREFERENCE tool vivado
 SET_PREFERENCE compnamestatus 0

@@ -27,7 +27,7 @@ def generate_conv_E_quantize_tests():
     # 过程数值限制在[-(1<<19),(1<<19)-1]内。
     # 每种卷积下分3种情况测试，分别是(E=1)&&(scale=0), scale=0, E和scale任一uint8数。
   conv_types = [0,1,2,3] #  (1,1,0)/(3,1,1)/(3,2,1)/(6,2,2)
-  mode_types = [0,1] # w8a8/w1a8
+  mode_types = [0,1,2] # w8a8/w1a8
   quantize_types = [0,1,2] #(E=1)&&(scale=0), scale=0, E和scale任一uint8数
 
   # for conv_type in conv_types:
@@ -35,16 +35,17 @@ def generate_conv_E_quantize_tests():
   #       for quantize_type in quantize_types:
   #          conv_test(conv_type, mode_type, quantize_type)
   
-  conv_type, mode_type, quantize_type = (0,1,0)
-  conv_E_quantize_test(conv_type, mode_type, quantize_type)
+  conv_type, mode_type, quantize_type = (1,1,0)
+  isReLU = False
+  conv_E_quantize_test(conv_type, mode_type, quantize_type, isReLU)
 
-def conv_E_quantize_test(conv_type, mode_type, quantize_type):
-    # standard_conv_E_quantize(conv_type, mode_type, quantize_type)
-    fpga_conv_E_quantize(conv_type, mode_type, quantize_type)
+def conv_E_quantize_test(conv_type, mode_type, quantize_type, isReLU):
+    # standard_conv_E_quantize(conv_type, mode_type, quantize_type, isReLU)
+    fpga_conv_E_quantize(conv_type, mode_type, quantize_type, isReLU)
 
-def standard_conv_E_quantize(conv_type, mode_type, quantize_type):
+def standard_conv_E_quantize(conv_type, mode_type, quantize_type, isReLU):
   # def basic conv op
-  mode = mode_type
+  mode = mode_type if isReLU else mode_type + 8
   k,s,p = conv_type_mapping[conv_type]
   of = 128
   ox = 64
@@ -132,9 +133,10 @@ def standard_conv_E_quantize(conv_type, mode_type, quantize_type):
                   f.write("\n")  # 每一行结束后换行
   print(f"conv_out tensor saved to {output_file}")
   # 对每个输出通道的值应用 ReLU 激活函数
-  conv_out = F.relu(conv_out)
+  conv_out = F.relu(conv_out) if isReLU else conv_out
   # 对每个通道的值进行逻辑右移 rank[i] 位
-  output_tensor = torch.clamp(torch.bitwise_right_shift(conv_out, scale_data), 0, 255)  # 使用广播机制
+  output_tensor = torch.clamp(torch.bitwise_right_shift(conv_out, scale_data), 0, 255) if isReLU \
+     else torch.clamp(torch.bitwise_right_shift(conv_out, scale_data), -128, 127)  # 使用广播机制
   # 将张量保存到txt文件
   output_file = "output_tensor.txt"
   with open(output_file, "w") as f: 
@@ -151,9 +153,9 @@ def standard_conv_E_quantize(conv_type, mode_type, quantize_type):
   print(f"Output tensor saved to {output_file}")
 
 #fpga conv
-def fpga_conv_E_quantize(conv_type, mode_type, quantize_type):
+def fpga_conv_E_quantize(conv_type, mode_type, quantize_type, isReLU):
   # def basic conv op
-  mode = mode_type
+  mode = mode_type if isReLU else mode_type + 8
   k,s,p = conv_type_mapping[conv_type]
   of = 128
   ox = 64
@@ -162,12 +164,12 @@ def fpga_conv_E_quantize(conv_type, mode_type, quantize_type):
   iy = oy if s == 1 else oy*2
   nif = 4
   #fpga conv results
-  collect_result(of, oy, ox)
+  collect_result(of, oy, ox, isReLU)
   #compare the fpga result with std conv
   compare_files("D:\\project\\Vivado\\yolov5_accel\\yolov5_accel.srcs\\fpga_output_tensors.txt", 
                 "D:\\project\\Vivado\\yolov5_accel\\yolov5_accel.srcs\\output_tensor.txt")
 
-def collect_result(of, oy, ox):
+def collect_result(of, oy, ox, isReLU):
     # collect the result from txt file
     fpga_output_tensors = torch.zeros(size=(1, of, oy, ox), dtype=torch.int8)
     with open("conv_result.txt", "r") as f:
@@ -193,7 +195,7 @@ def collect_result(of, oy, ox):
             # 将数据写入张量，编号小的数写入坐标大的位置
             fpga_output_tensors[0, start_idx[0], start_idx[1], start_idx[2]:end_idx[2]] = torch.tensor(decimal_values[::-1], dtype=torch.uint8)
 
-    fpga_output_tensors = fpga_output_tensors.to(dtype=torch.uint8)
+    fpga_output_tensors = fpga_output_tensors.to(dtype=torch.uint8) if isReLU else fpga_output_tensors.to(dtype=torch.int8)
     with open("fpga_output_tensors.txt", "w") as f:
         # 写入张量的维度信息
         f.write(" ".join(map(str, fpga_output_tensors.shape)) + "\n")

@@ -189,11 +189,11 @@ module mig_7series_0_mig #
                                      // DDR2 SDRAM: Burst Type (Mode Register).
                                      // # = "SEQ" - (Sequential),
                                      //   = "INT" - (Interleaved).
-   parameter CL                    = 11,
+   parameter CL                    = 9,
                                      // in number of clock cycles
                                      // DDR3 SDRAM: CAS Latency (Mode Register 0).
                                      // DDR2 SDRAM: CAS Latency (Mode Register).
-   parameter CWL                   = 8,
+   parameter CWL                   = 7,
                                      // in number of clock cycles
                                      // DDR3 SDRAM: CAS Write Latency (Mode Register 2).
                                      // DDR2 SDRAM: Can be ignored
@@ -228,9 +228,9 @@ module mig_7series_0_mig #
    // The following parameters are multiplier and divisor factors for PLLE2.
    // Based on the selected design frequency these parameters vary.
    //***************************************************************************
-   parameter CLKIN_PERIOD          = 5000,
+   parameter CLKIN_PERIOD          = 5001,
                                      // Input Clock Period
-   parameter CLKFBOUT_MULT         = 8,
+   parameter CLKFBOUT_MULT         = 6,
                                      // write PLL VCO multiplier
    parameter DIVCLK_DIVIDE         = 1,
                                      // write PLL VCO divisor
@@ -244,9 +244,9 @@ module mig_7series_0_mig #
                                      // VCO output divisor for PLL output clock (CLKOUT2)
    parameter CLKOUT3_DIVIDE        = 8,
                                      // VCO output divisor for PLL output clock (CLKOUT3)
-   parameter MMCM_VCO              = 800,
+   parameter MMCM_VCO              = 1199,
                                      // Max Freq (MHz) of MMCM VCO
-   parameter MMCM_MULT_F           = 4,
+   parameter MMCM_MULT_F           = 8,
                                      // write MMCM VCO multiplier
    parameter MMCM_DIVCLK_DIVIDE    = 1,
                                      // write MMCM VCO divisor
@@ -410,10 +410,10 @@ module mig_7series_0_mig #
                                      // Calibration bank address will be used for
                                      // calibration read and write operations
    parameter TCQ                   = 100,
-   parameter IDELAY_ADJ            = "ON",
-   parameter FINE_PER_BIT          = "ON",
-   parameter CENTER_COMP_MODE      = "ON",
-   parameter PI_VAL_ADJ            = "ON",
+   parameter IDELAY_ADJ            = "OFF",
+   parameter FINE_PER_BIT          = "OFF",
+   parameter CENTER_COMP_MODE      = "OFF",
+   parameter PI_VAL_ADJ            = "OFF",
    parameter IODELAY_GRP0          = "MIG_7SERIES_0_IODELAY_MIG0",
                                      // It is associated to a set of IODELAYs with
                                      // an IDELAYCTRL that have same IODELAY CONTROLLER
@@ -441,7 +441,7 @@ module mig_7series_0_mig #
    parameter CAL_WIDTH             = "HALF",
    parameter STARVE_LIMIT          = 2,
                                      // # = 2,3,4.
-   parameter REF_CLK_MMCM_IODELAY_CTRL    = "TRUE",
+   parameter REF_CLK_MMCM_IODELAY_CTRL    = "FALSE",
       
 
    //***************************************************************************
@@ -455,7 +455,7 @@ module mig_7series_0_mig #
    //***************************************************************************
    // System clock frequency parameters
    //***************************************************************************
-   parameter tCK                   = 1250,
+   parameter tCK                   = 1667,
                                      // memory tCK paramter.
                                      // # = Clock Period in pS.
    parameter nCK_PER_CLK           = 4,

@@ -123,6 +123,7 @@ module quan_CBR_kernel_controller_v6 (
   reg        product_add_bias_add_end_pre;
   // reg        relu_scale_add_end;
   reg        relu_scale_add_end_pre;
+  reg        clamp_add_end_pre;
   // output reg conv_fifo_add_end;
   output reg conv_fifo_add_end_pre;
 

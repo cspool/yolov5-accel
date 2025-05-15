@@ -939,8 +939,7 @@ module quan_CBR_v12_tb(
     .k_init              (k),
     .s_init              (s),
     .p_init              (p),
-    .nif_in_2pow_init    (nif_in_2pow),
-    .ix_in_2pow_init     (ix_in_2pow),
+    .ix_in_2pow_init(ix_in_2pow),
     //general ctrl signal 1
     .ox_start_delay            (ox_start_delay),
     .oy_start_delay            (oy_start_delay),
