@@ -42,32 +42,32 @@ module quan_branch_relu_scale_vecOp #(
 ) (
 
 
-    input                                               clk,
+    input                                            clk,
     noReLU,
     core_relu_scale_en_pre,
     core_clamp_en_pre,
-    output reg                                          core_relu_scale_en_out,
-    output reg                                          core_clamp_en_out,
-    input         [              scale_set_width-1 : 0] next_scale_set,
-    output reg    [              scale_set_width-1 : 0] scale_set,
-    input  signed [product_add_bias_vector_width - 1:0] product_add_bias_vector,
+    output reg                                       core_relu_scale_en_out,
+    output reg                                       core_clamp_en_out,
+    input      [              scale_set_width-1 : 0] next_scale_set,
+    output reg [              scale_set_width-1 : 0] scale_set,
+    input      [product_add_bias_vector_width - 1:0] product_add_bias_vector,
     //40 bit * 32 pixels * 2 channel
 
     output reg [quantize_vector_width-1 : 0] quantize_vector  //clamp
 );
-  reg         [product_add_bias_vector_width-1 : 0] relu_scale_vector;
-  reg signed  [product_add_bias_vector_width-1 : 0] scale_vector;
+  reg  [product_add_bias_vector_width-1 : 0] relu_scale_vector;
+  reg  [product_add_bias_vector_width-1 : 0] scale_vector;
 
   //8 bit * 2 channel
   // wire [scale_width-1 : 0] scale_88;
-  reg         [                  scale_width-1 : 0] scale_88_vector                       [pe_parallel_pixel_18 * column_num_in_sa-1:0];
+  reg  [                  scale_width-1 : 0] scale_88_vector                       [pe_parallel_pixel_18 * column_num_in_sa-1:0];
   // wire [scale_width-1 : 0] scale_18_1, scale_18_2;
   // reg  [          scale_width-1 : 0] scale_18_1_vector   [pe_parallel_pixel_18 * column_num_in_sa-1:0];
-  reg         [                  scale_width-1 : 0] scale_18_2_vector                     [pe_parallel_pixel_18 * column_num_in_sa-1:0];
+  reg  [                  scale_width-1 : 0] scale_18_2_vector                     [pe_parallel_pixel_18 * column_num_in_sa-1:0];
 
-  wire        [product_add_bias_vector_width-1 : 0] relu_scale_vector_val;  //clamp
-  wire signed [product_add_bias_vector_width-1 : 0] scale_vector_val;  //clamp
-  reg         [        quantize_vector_width-1 : 0] branch_relu_clamp_vector_val;  //clamp
+  wire [product_add_bias_vector_width-1 : 0] relu_scale_vector_val;  //clamp
+  wire [product_add_bias_vector_width-1 : 0] scale_vector_val;  //clamp
+  wire [        quantize_vector_width-1 : 0] branch_relu_clamp_vector_val;  //clamp
   //8 bit * 32 pixels * 2 channel
 
   always @(posedge clk) begin
@@ -90,44 +90,38 @@ module quan_branch_relu_scale_vecOp #(
       end
 
       assign relu_scale_vector_val[i*(add_bias_width)+:(add_bias_width)] =  //mode 0
-  // ReLU and val >= 0
- (product_add_bias_vector[i*add_bias_width+add_bias_width-1] == 1'b0) ? (  //
- (product_add_bias_vector[i*add_bias_width+:add_bias_width]) >> (scale_88_vector[i])) :  // ReLU and val < 0
- 0;
+          // ReLU and val >= 0
+          (product_add_bias_vector[i*add_bias_width+add_bias_width-1] == 1'b0) ? (  //
+          (product_add_bias_vector[i*add_bias_width+:add_bias_width]) >> (scale_88_vector[i])) :  // ReLU and val < 0
+          0;
 
-      assign scale_vector_val[i*(add_bias_width)+:(add_bias_width)]      =  //mode 0
- ($signed(product_add_bias_vector[i*add_bias_width+:add_bias_width]) >>> (scale_88_vector[i])) + 32'd128;
-      // (product_add_bias_vector[i*add_bias_width+:add_bias_width] >>> (scale_88_vector[i]));
+      assign scale_vector_val[i*(add_bias_width)+:(add_bias_width)] =  //
+          //mode 0
+          //val >= 0
+          (product_add_bias_vector[(i)*add_bias_width+add_bias_width-1] == 1'b0) ?  //
+          ((product_add_bias_vector[(i)*(add_bias_width)+:(add_bias_width)] >> (scale_88_vector[i]))  //
+          ) :  //
+          //val < 0
+          ((product_add_bias_vector[(i)*(add_bias_width)+:(add_bias_width)] >> (scale_88_vector[i]))  //
+          | (~(32'hffffffff >> scale_88_vector[i])));
 
-      always @(*) begin
-        if (noReLU == 0) begin
-          branch_relu_clamp_vector_val[i*(quantize_pixel_width)+:(quantize_pixel_width)] =  //
+      assign branch_relu_clamp_vector_val[i*(quantize_pixel_width)+:(quantize_pixel_width)] =
+          //mode 0
+          // ReLU
+          (noReLU == 0) ? (  //overflow
           relu_scale_vector[i*(add_bias_width)+:(add_bias_width)] > 255 ? 8'hff :
           //0-255
-          relu_scale_vector[i*(add_bias_width)+:(add_bias_width)];
-        end else begin
-          branch_relu_clamp_vector_val[i*(quantize_pixel_width)+:(quantize_pixel_width)] =  //
-          (scale_vector[i*(add_bias_width)+(add_bias_width)-1] == 1'b1) ? 8'h80 :  //
-          ((scale_vector[i*(add_bias_width)+(add_bias_width)-1] == 1'b0) && (scale_vector[i*(add_bias_width)+:(add_bias_width)] > (32'd255))) ? 8'h7f :  //
-          scale_vector[i*(add_bias_width)+:(add_bias_width)] - 32'd128;
-        end
-      end
-      // assign branch_relu_clamp_vector_val[i*(quantize_pixel_width)+:(quantize_pixel_width)] =
-      //     //mode 0
-      //     // ReLU
-      //     (noReLU == 0) ? (  //overflow
-      //     relu_scale_vector[i*(add_bias_width)+:(add_bias_width)] > 255 ? 8'hff :
-      //     //0-255
-      //     relu_scale_vector[i*(add_bias_width)+:(add_bias_width)]) :
-      //     //no ReLU
-      //     (  //overflow
-      //     (scale_vector[i*(add_bias_width)+(add_bias_width)-1] == 1'b1) ? 8'h80 :  //
-      //     ((scale_vector[i*(add_bias_width)+(add_bias_width)-1] == 1'b0) && (scale_vector[i*(add_bias_width)+:(add_bias_width)] > (32'd255))) ? 8'h7f :  //
-      //     scale_vector[i*(add_bias_width)+:(add_bias_width)] - 32'd128
-      //     // (scale_vector[i*(add_bias_width)+(add_bias_width)-1] < -32'd128) ? 8'h80 :  //
-      //     // (scale_vector[i*(add_bias_width)+:(add_bias_width)] > (32'd127)) ? 8'h7f :  //
-      //     // scale_vector[i*(add_bias_width)+:(add_bias_width)]  //
-      //     );
+          relu_scale_vector[i*(add_bias_width)+:(add_bias_width)]) :
+          //no ReLU
+          (  //overflow
+          // - and < -128
+          ((scale_vector[i*(add_bias_width)+(add_bias_width)-1] == 1'b1) &&  //
+          (scale_vector[i*(add_bias_width)+:(add_bias_width)] < -32'd128)  //
+          ) ? 8'h80 :  //
+          // + and > 127
+          ((scale_vector[i*(add_bias_width)+(add_bias_width)-1] == 1'b0) &&  //
+          (scale_vector[i*(add_bias_width)+:(add_bias_width)] > 32'd127)) ? 8'h7f :  //
+          scale_vector[i*(add_bias_width)+:(add_bias_width)]);
     end
     //mode 1
     for (i = 0; i < pe_parallel_pixel_18 * column_num_in_sa; i = i + 1) begin
@@ -145,40 +139,31 @@ module quan_branch_relu_scale_vecOp #(
 
       assign scale_vector_val[(pe_parallel_pixel_18*column_num_in_sa+i)*(add_bias_width)+:(add_bias_width)] =
           //mode 1
-          ($signed(
-              product_add_bias_vector[(pe_parallel_pixel_18*column_num_in_sa+i)*(add_bias_width)+:(add_bias_width)]
-          ) >>> (scale_18_2_vector[i])) + 32'd128;
-      // (product_add_bias_vector[(pe_parallel_pixel_18*column_num_in_sa+i)*(add_bias_width)+:(add_bias_width)] >>> (scale_18_2_vector[i]));
+          //val >= 0
+          (product_add_bias_vector[(pe_parallel_pixel_18*column_num_in_sa+i)*add_bias_width+add_bias_width-1] == 1'b0) ?  //
+          ((product_add_bias_vector[(pe_parallel_pixel_18*column_num_in_sa+i)*(add_bias_width)+:(add_bias_width)] >> (scale_18_2_vector[i]))  //
+          ) :  //
+          //val < 0
+          ((product_add_bias_vector[(pe_parallel_pixel_18*column_num_in_sa+i)*(add_bias_width)+:(add_bias_width)] >> (scale_18_2_vector[i]))  //
+          | (~(32'hffffffff >> scale_18_2_vector[i])));
 
-      always @(*) begin
-        if (noReLU == 0) begin
-          branch_relu_clamp_vector_val[(pe_parallel_pixel_18*column_num_in_sa+i)*(quantize_pixel_width)+:(quantize_pixel_width)] =  //
+      assign branch_relu_clamp_vector_val[(pe_parallel_pixel_18*column_num_in_sa+i)*(quantize_pixel_width)+:(quantize_pixel_width)] =
+          //mode 1
+          // ReLU
+          (noReLU == 0) ? (  //overflow
           relu_scale_vector[(pe_parallel_pixel_18*column_num_in_sa+i)*(add_bias_width)+:(add_bias_width)] > 255 ? 255 :
           //0-255
-          relu_scale_vector[(pe_parallel_pixel_18*column_num_in_sa+i)*(add_bias_width)+:(add_bias_width)];
-        end else begin
-          branch_relu_clamp_vector_val[(pe_parallel_pixel_18*column_num_in_sa+i)*(quantize_pixel_width)+:(quantize_pixel_width)] =  //
-          (scale_vector[(pe_parallel_pixel_18*column_num_in_sa+i)*(add_bias_width)+(add_bias_width)-1] == 1'b1) ? 8'h80 :  //
-          ((scale_vector[(pe_parallel_pixel_18*column_num_in_sa+i)*(add_bias_width)+(add_bias_width)-1] == 1'b0) && (scale_vector[(pe_parallel_pixel_18*column_num_in_sa+i)*(add_bias_width)+:(add_bias_width)] > (32'd255))) ? 8'h7f :  //
-          scale_vector[(pe_parallel_pixel_18*column_num_in_sa+i)*(add_bias_width)+:(add_bias_width)] - 32'd128;
-        end
-      end
-      // assign branch_relu_clamp_vector_val[(pe_parallel_pixel_18*column_num_in_sa+i)*(quantize_pixel_width)+:(quantize_pixel_width)] =
-      //     //mode 1
-      //     // ReLU
-      //     (noReLU == 0) ? (  //overflow
-      //     relu_scale_vector[(pe_parallel_pixel_18*column_num_in_sa+i)*(add_bias_width)+:(add_bias_width)] > 255 ? 255 :
-      //     //0-255
-      //     relu_scale_vector[(pe_parallel_pixel_18*column_num_in_sa+i)*(add_bias_width)+:(add_bias_width)]) :
-      //     //no ReLU
-      //     (  //overflow
-      //     (scale_vector[(pe_parallel_pixel_18*column_num_in_sa+i)*(add_bias_width)+(add_bias_width)-1] == 1'b1) ? 8'h80 :  //
-      //     ((scale_vector[(pe_parallel_pixel_18*column_num_in_sa+i)*(add_bias_width)+(add_bias_width)-1] == 1'b0) && (scale_vector[(pe_parallel_pixel_18*column_num_in_sa+i)*(add_bias_width)+:(add_bias_width)] > (32'd255))) ? 8'h7f :  //
-      //     scale_vector[(pe_parallel_pixel_18*column_num_in_sa+i)*(add_bias_width)+:(add_bias_width)] - 32'd128  //
-      // (scale_vector[(pe_parallel_pixel_18*column_num_in_sa+i)*(add_bias_width)+(add_bias_width)-1] < -32'd128) ? 8'h80 :  //
-      // (scale_vector[(pe_parallel_pixel_18*column_num_in_sa+i)*(add_bias_width)+:(add_bias_width)] > (32'd127)) ? 8'h7f :  //
-      // scale_vector[(pe_parallel_pixel_18*column_num_in_sa+i)*(add_bias_width)+:(add_bias_width)]  //
-      // );
+          relu_scale_vector[(pe_parallel_pixel_18*column_num_in_sa+i)*(add_bias_width)+:(add_bias_width)]) :
+          //no ReLU
+          (  //overflow
+          // - and < -128
+          ((scale_vector[(pe_parallel_pixel_18*column_num_in_sa+i)*(add_bias_width)+(add_bias_width)-1] == 1'b1) &&  //
+          (scale_vector[(pe_parallel_pixel_18*column_num_in_sa+i)*(add_bias_width)+:(add_bias_width)] < -32'd128)  //
+          ) ? 8'h80 :  //
+          // + and > 127
+          ((scale_vector[(pe_parallel_pixel_18*column_num_in_sa+i)*(add_bias_width)+(add_bias_width)-1] == 1'b0) &&  //
+          (scale_vector[(pe_parallel_pixel_18*column_num_in_sa+i)*(add_bias_width)+:(add_bias_width)] > 32'd127)) ? 8'h7f :  //
+          scale_vector[(pe_parallel_pixel_18*column_num_in_sa+i)*(add_bias_width)+:(add_bias_width)]);
 
     end
 
