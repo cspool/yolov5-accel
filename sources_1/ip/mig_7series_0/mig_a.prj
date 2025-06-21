@@ -35,12 +35,12 @@
 
   <Controller number="0">
     <MemoryDevice>DDR3_SDRAM/Components/MT41K256M16XX-125</MemoryDevice>
-    <TimePeriod>1250</TimePeriod>
+    <TimePeriod>1667</TimePeriod>
     <VccAuxIO>2.0V</VccAuxIO>
     <PHYRatio>4:1</PHYRatio>
-    <InputClkFreq>200</InputClkFreq>
+    <InputClkFreq>199.96</InputClkFreq>
     <UIExtraClocks>0</UIExtraClocks>
-    <MMCM_VCO>800</MMCM_VCO>
+    <MMCM_VCO>1199</MMCM_VCO>
     <MMCMClkOut0> 1.000</MMCMClkOut0>
     <MMCMClkOut1>1</MMCMClkOut1>
     <MMCMClkOut2>1</MMCMClkOut2>
@@ -186,7 +186,7 @@
     </TimingParameters>
     <mrBurstLength name="Burst Length">8 - Fixed</mrBurstLength>
     <mrBurstType name="Read Burst Type and Length">Sequential</mrBurstType>
-    <mrCasLatency name="CAS Latency">11</mrCasLatency>
+    <mrCasLatency name="CAS Latency">9</mrCasLatency>
     <mrMode name="Mode">Normal</mrMode>
     <mrDllReset name="DLL Reset">No</mrDllReset>
     <mrPdMode name="DLL control for precharge PD">Slow Exit</mrPdMode>
@@ -200,7 +200,7 @@
     <emrDQS name="TDQS enable">Enabled</emrDQS>
     <emrRDQS name="Qoff">Output Buffer Enabled</emrRDQS>
     <mr2PartialArraySelfRefresh name="Partial-Array Self Refresh">Full Array</mr2PartialArraySelfRefresh>
-    <mr2CasWriteLatency name="CAS write latency">8</mr2CasWriteLatency>
+    <mr2CasWriteLatency name="CAS write latency">7</mr2CasWriteLatency>
     <mr2AutoSelfRefresh name="Auto Self Refresh">Enabled</mr2AutoSelfRefresh>
     <mr2SelfRefreshTempRange name="High Temparature Self Refresh Rate">Normal</mr2SelfRefreshTempRange>
     <mr2RTTWR name="RTT_WR - Dynamic On Die Termination (ODT)">Dynamic ODT off</mr2RTTWR>

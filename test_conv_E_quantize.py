@@ -35,7 +35,7 @@ def generate_conv_E_quantize_tests():
   #       for quantize_type in quantize_types:
   #          conv_test(conv_type, mode_type, quantize_type)
   
-  conv_type, mode_type, quantize_type = (0,1,0)
+  conv_type, mode_type, quantize_type = (0,0,0)
   isReLU = False
   conv_E_quantize_test(conv_type, mode_type, quantize_type, isReLU)
 
