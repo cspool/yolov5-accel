@@ -402,7 +402,7 @@ module conv_store_ddr_controller_v2 (
       valid_lock_mode0 <= 0;
     end else if (loop_channel_counter_add_begin && (channel_counter[0] == 1'b0)) begin
       valid_lock_mode0 <= 1;
-    end else if (ddr_wt_data_ready) begin
+    end else if (valid_conv_out_ddr_data) begin
       valid_lock_mode0 <= 0;
     end else begin
       valid_lock_mode0 <= valid_lock_mode0;
@@ -413,7 +413,7 @@ module conv_store_ddr_controller_v2 (
       valid_lock_mode1 <= 0;
     end else if (loop_channel_counter_add_begin) begin
       valid_lock_mode1 <= 1;
-    end else if (ddr_wt_data_ready) begin
+    end else if (valid_conv_out_ddr_data) begin  //valid
       valid_lock_mode1 <= 0;
     end else begin
       valid_lock_mode1 <= valid_lock_mode1;
@@ -433,7 +433,7 @@ module conv_store_ddr_controller_v2 (
   always @(posedge clk) begin
     if (reset) begin
       valid_conv_out_ddr_data_mode0 <= 0;
-    end else if (valid_lock_mode0 == 0) begin
+    end else begin
       valid_conv_out_ddr_data_mode0 <= loop_channel_counter_add_begin && (channel_counter[0] == 1'b0);  //even channel num
     end
   end
@@ -441,12 +441,12 @@ module conv_store_ddr_controller_v2 (
   always @(posedge clk) begin
     if (reset) begin
       valid_conv_out_ddr_data_mode1 <= 0;
-    end else if (valid_lock_mode1 == 0) begin
+    end else begin
       valid_conv_out_ddr_data_mode1 <= loop_channel_counter_add_begin;
     end
   end
 
-  assign valid_conv_out_ddr_data = ((mode == 0) && (valid_lock_mode0 == 0)) ? valid_conv_out_ddr_data_mode0 : ((mode == 1) && (valid_lock_mode1 == 0)) ? valid_conv_out_ddr_data_mode1 : 0;
+  assign valid_conv_out_ddr_data = ((mode == 0) && (ddr_wt_data_ready == 1)) ? valid_conv_out_ddr_data_mode0 : ((mode == 1) && (ddr_wt_data_ready == 1)) ? valid_conv_out_ddr_data_mode1 : 0;
 
   assign conv_out_ddr_data       = (valid_conv_out_ddr_data == 1) ? ((mode == 0) ? {conv_out_data_mode0, last_conv_out_data_mode0} : (mode == 1) ? fifo_data : 512'b0) : 512'b0;
 
