@@ -692,7 +692,7 @@ module quan_accel_conv_demo_v5(
   wire valid_conv_out_ddr_data;
   wire [3:0] fifo_column_no, fifo_row_no;
   wire [15:0] out_y_idx, out_x_idx, out_f_idx;
-  wire conv_fifo_out_tile_add_end;
+  // wire conv_fifo_out_tile_add_end;
   wire conv_store_fin;
 
   //top control sim
@@ -2209,7 +2209,7 @@ module quan_accel_conv_demo_v5(
       .out_y_idx                 (out_y_idx),
       .out_x_idx                 (out_x_idx),
       .out_f_idx                 (out_f_idx),
-      .conv_fifo_out_tile_add_end(conv_fifo_out_tile_add_end),
+      // .conv_fifo_out_tile_add_end(conv_fifo_out_tile_add_end),
       //store ddr data
       .conv_out_ddr_adr          (conv_out_ddr_adr),
       .valid_conv_out_ddr_data   (valid_conv_out_ddr_data),
@@ -2217,7 +2217,7 @@ module quan_accel_conv_demo_v5(
       .conv_store_fin            (conv_store_fin)
   );
   assign fifo_data = fifo_rowi_channel_seti_dout[fifo_column_no][fifo_row_no];
-  assign conv_store_fin = conv_fifo_out_tile_add_end;  //demo store ctrl
+  // assign conv_store_fin = conv_fifo_out_tile_add_end;  //demo store ctrl
 
 `ifdef SIMULATION
   // fin and stop

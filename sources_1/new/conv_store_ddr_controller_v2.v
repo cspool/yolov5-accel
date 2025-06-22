@@ -52,7 +52,7 @@ module conv_store_ddr_controller_v2 (
     out_y_idx,
     out_x_idx,
     out_f_idx,
-    conv_fifo_out_tile_add_end,
+    // conv_fifo_out_tile_add_end,
     //store ddr data
     conv_out_ddr_adr,
     valid_conv_out_ddr_data,
@@ -98,15 +98,16 @@ module conv_store_ddr_controller_v2 (
   output reg [3:0] fifo_column_no, fifo_row_no;
   // output reg valid_conv_out;
   output reg [15:0] out_y_idx, out_x_idx, out_f_idx;
-  output reg conv_fifo_out_tile_add_end;
+  // output reg conv_fifo_out_tile_add_end;
+  reg conv_fifo_out_tile_add_end;
   // output [conv_out_data_width-1 : 0] conv_out_data;
   output [511:0] conv_out_ddr_data;
   output valid_conv_out_ddr_data;
   reg valid_conv_out_ddr_data_mode0, valid_conv_out_ddr_data_mode1;
   output reg [31:0] conv_out_ddr_adr;
   reg [conv_out_data_width-1 : 0] last_conv_out_data_mode0;
-  // output conv_store_fin;
-  output reg conv_store_fin;
+  output conv_store_fin;
+  // output reg conv_store_fin;
 
 
   //out data ctrl
@@ -375,16 +376,16 @@ module conv_store_ddr_controller_v2 (
   end
 
   // assign conv_store_fin = conv_fifo_out_tile_add_end;
-  // assign conv_store_fin = (valid_conv_out_ddr_data == 1) ? conv_fifo_out_tile_add_end : 0;
-  always @(posedge clk) begin
-    if (reset) begin
-      conv_store_fin <= 0;
-    end else if (conv_store_fin) begin
-      conv_store_fin <= 0;
-    end else if (valid_conv_out_ddr_data) begin
-      conv_store_fin <= conv_fifo_out_tile_add_end;
-    end
-  end
+  assign conv_store_fin = (valid_conv_out_ddr_data == 1) ? conv_fifo_out_tile_add_end : 0;
+  // always @(posedge clk) begin
+  //   if (reset) begin
+  //     conv_store_fin <= 0;
+  //   end else if (conv_store_fin) begin
+  //     conv_store_fin <= 0;
+  //   end else if (valid_conv_out_ddr_data) begin
+  //     conv_store_fin <= conv_fifo_out_tile_add_end;
+  //   end
+  // end
 
   //save conv words into ddr words
   always @(posedge clk) begin
