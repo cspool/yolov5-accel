@@ -434,7 +434,7 @@ module conv_store_ddr_controller_v2 (
   always @(posedge clk) begin
     if (reset) begin
       valid_conv_out_ddr_data_mode0 <= 0;
-    end else begin
+    end else if(valid_lock_mode0 == 0) begin
       valid_conv_out_ddr_data_mode0 <= loop_channel_counter_add_begin && (channel_counter[0] == 1'b0);  //even channel num
     end
   end
@@ -442,7 +442,7 @@ module conv_store_ddr_controller_v2 (
   always @(posedge clk) begin
     if (reset) begin
       valid_conv_out_ddr_data_mode1 <= 0;
-    end else begin
+    end else if(valid_lock_mode1 == 0) begin
       valid_conv_out_ddr_data_mode1 <= loop_channel_counter_add_begin;
     end
   end
