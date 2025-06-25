@@ -863,11 +863,14 @@ module quan_accel_conv_demo_v5(
       .conv_fin(conv_fin)
   );
   //conv load input ctrl
-  conv_load_input_ddr_controller_v3 #(
+  // conv_load_input_ddr_controller_v3 #(
+  //v3 has pipline bugs
+  conv_load_input_ddr_controller_v2 #(
      .sa_column_num(sa_column_num)
 ) cv_load_input_ddr_ctrl (
       .clk                                    (clk),
-      .conv_load_input_sig                        (conv_load_input),
+      // .conv_load_input_sig                        (conv_load_input), //v3 port
+      .conv_load_input                        (conv_load_input), //v2 port
       .reset                                  ((reset == 1) || (conv_start_pre == 1)),
       .ddr_cmd_ready                                 (ddr_cmd_ready),
       .ddr_rd_data_valid(ddr_rd_data_valid),

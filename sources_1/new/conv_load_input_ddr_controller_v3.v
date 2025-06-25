@@ -207,7 +207,7 @@ module conv_load_input_ddr_controller_v3 #(
   //adr mod mapping
   wire [ 3:0] row_num_limit_input_buffer_2pow = input_buffer_size_2pow - (nif_in_2pow - ifs_in_row_2pow + ix_in_2pow - pixels_in_row_in_2pow);
   wire [15:0] row_num_limit_mask_input_buffer = 16'hffff >> (16 - row_num_limit_input_buffer_2pow);
-  wire [15:0]                                                                                                                                  load_input_row_buf_adr_in_row;
+  wire [15:0] load_input_row_buf_adr_in_row;
 
   always @(posedge clk) begin
     if (reset == 1'b1) //layer start?
@@ -682,6 +682,7 @@ module conv_load_input_ddr_controller_v3 #(
   end
   assign tilex_mid_ix_word_num_rectified = tilex_mid_ix_word_num_rectified_stage_1;
 
+  ////////////////the stage pipline have not spand completely, some bug //////////////////
   reg [7:0] chunk_ix_size_stage_1;
   // assign chunk_ix_size = (load_for_com_tile_x_start == 1) ? (
   //     //tilex_first_ix_word_num = ceil(((pixels_in_row - 1) * s + k - p)/pixels_in_row)
@@ -718,6 +719,7 @@ module conv_load_input_ddr_controller_v3 #(
   end
   assign tiley_mid_iy_row_num_rectified = tiley_mid_iy_row_num_rectified_stage_1;
 
+  ////////////////the stage pipline have not spand completely, some bug //////////////////
   reg [7:0] chunk_iy_size_stage_1;
   // assign chunk_iy_size = (load_for_com_tile_y_start == 1) ? (
   //     //tiley_first_iy_row_num = (buffers_num - 1) * s + k - p
@@ -733,6 +735,7 @@ module conv_load_input_ddr_controller_v3 #(
   end
   assign chunk_iy_size = chunk_iy_size_stage_1;
 
+  ////////////////the stage pipline have not spand completely, some bug //////////////////
   reg [7:0] input_tile_of_split_size_stage_1;
   // assign input_tile_of_split_size = (load_for_com_tile_y_start == 1) ? (
   //     //tiley_first_iy_row_num = (buffers_num - 1) * s + k - p
@@ -824,6 +827,7 @@ module conv_load_input_ddr_controller_v3 #(
   end
   assign input_tile_of_split_size = input_tile_of_split_size_stage_1;
 
+  ////////////////the stage pipline have not spand completely, some bug //////////////////
   reg [7:0] chunk_ix_size_mult_chunk_iy_size_stage_1;
   // assign chunk_ix_size_mult_chunk_iy_size =  //
   //     (chunk_ix_size == 0) ? 0 :  //
@@ -839,6 +843,7 @@ module conv_load_input_ddr_controller_v3 #(
   end
   assign chunk_ix_size_mult_chunk_iy_size = chunk_ix_size_mult_chunk_iy_size_stage_1;
 
+  ////////////////the stage pipline have not spand completely, some bug //////////////////
   reg [15:0] load_input_if_idx_stage_1;
   // assign load_input_if_idx = if_start;
   always @(posedge clk) begin
@@ -846,6 +851,7 @@ module conv_load_input_ddr_controller_v3 #(
   end
   assign load_input_if_idx = load_input_if_idx_stage_1;
 
+  ////////////////the stage pipline have not spand completely, some bug //////////////////
   reg [31:0] load_input_ddr_base_adr_stage_1;
   // assign load_input_ddr_base_adr = ((iy_load_index > iy_index_num) || (ix_load_index > ix_index_num)) ? 0 :  //no need reading
   //     (input_ddr_layer_base_adr +  //
@@ -861,6 +867,7 @@ module conv_load_input_ddr_controller_v3 #(
   end
   assign load_input_ddr_base_adr = load_input_ddr_base_adr_stage_1;
 
+  ////////////////the stage pipline have not spand completely, some bug //////////////////
   reg [15:0] load_input_ddr_length_stage_1;
   // assign load_input_ddr_length = ((if_start + (ddr_cmd_word_num << ifs_in_row_2pow)) > nif) ? ((((nif - if_start + 1) & 16'b1) == 0) ?  //even length
   //     ((nif - if_start + 1) >> ifs_in_row_2pow) :  //even length
@@ -876,7 +883,7 @@ module conv_load_input_ddr_controller_v3 #(
   end
   assign load_input_ddr_length = load_input_ddr_length_stage_1;
 
-
+  ////////////////the stage pipline have not spand completely, some bug //////////////////
   // assign valid_load_input_ddr_cmd = input_word_ddr_en_rd;
   reg valid_load_input_ddr_cmd_stage_1;
   // assign valid_load_input_ddr_cmd = //
@@ -890,6 +897,7 @@ module conv_load_input_ddr_controller_v3 #(
   end
   assign valid_load_input_ddr_cmd = valid_load_input_ddr_cmd_stage_1;
 
+  ////////////////the stage pipline have not spand completely, some bug //////////////////
   //cal DDR rd adr, buf wt index, adr
   reg [15:0] load_input_row_idx_stage_1;
   // assign load_input_row_idx = ((iy_load_index > iy_index_num) || (ix_load_index > ix_index_num)) ? 0 : iy_load_index;
@@ -900,6 +908,7 @@ module conv_load_input_ddr_controller_v3 #(
   end
   assign load_input_row_idx = load_input_row_idx_stage_1;
 
+  ////////////////the stage pipline have not spand completely, some bug //////////////////
   reg [15:0] load_input_row_start_idx_stage_1;
   // assign load_input_row_start_idx = //
   // ((iy_load_index > iy_index_num) || (ix_load_index > ix_index_num)) ? 0 : //
@@ -911,6 +920,7 @@ module conv_load_input_ddr_controller_v3 #(
   end
   assign load_input_row_start_idx = load_input_row_start_idx_stage_1;
 
+  ////////////////the stage pipline have not spand completely, some bug //////////////////
   //load ddr words instr generate
   reg [31:0] input_word_ddr_adr_rd_stage_1;
   // assign input_word_ddr_adr_rd =  //
@@ -929,6 +939,7 @@ module conv_load_input_ddr_controller_v3 #(
   end
   assign input_word_ddr_adr_rd = input_word_ddr_adr_rd_stage_1;
 
+  ////////////////the stage pipline have not spand completely, some bug //////////////////
   reg input_word_ddr_en_rd_stage_1;
   // assign input_word_ddr_en_rd = //
   // ((iy_load_index > iy_index_num) || (ix_load_index > ix_index_num)) ? 0 : loop_if_add_begin;
@@ -941,6 +952,7 @@ module conv_load_input_ddr_controller_v3 #(
   end
   assign input_word_ddr_en_rd = input_word_ddr_en_rd_stage_1;
 
+  ////////////////the stage pipline have not spand completely, some bug //////////////////
   // ddr words of input row write into input buffer
   // consider the rows whose row_idx is in [p+1, p+iy], the rest of rows dont need address translation
   //row buf index
@@ -955,6 +967,7 @@ module conv_load_input_ddr_controller_v3 #(
   end
   assign load_input_row_buf_idx = load_input_row_buf_idx_stage_1;
 
+  ////////////////the stage pipline have not spand completely, some bug //////////////////
   //row buf adr of the row index
   reg [15:0] load_input_row_buf_adr_in_row_stage_1;
   // assign load_input_row_buf_adr_in_row = //
@@ -967,6 +980,7 @@ module conv_load_input_ddr_controller_v3 #(
   end
   assign load_input_row_buf_adr_in_row = load_input_row_buf_adr_in_row_stage_1;
 
+  ////////////////the stage pipline have not spand completely, some bug //////////////////
   reg [15:0] load_input_row_buf_adr_stage_1;
   // assign load_input_row_buf_adr =
   // ((iy_load_index > iy_index_num) || (ix_load_index > ix_index_num))? 0:
